@@ -1,0 +1,257 @@
+#######################################
+# Syntax coloring map for TouchButton,
+# TouchButtonAutorepeat and TouchSlider
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+BlueDisplay	KEYWORD1
+BDButton	KEYWORD1
+BDSlider	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+# from BlueDisplay.h
+initCommunication	KEYWORD2
+sendSync	KEYWORD2
+setFlagsAndSize	KEYWORD2
+setCodePage	KEYWORD2
+setCharacterMapping	KEYWORD2
+
+playTone	KEYWORD2
+playFeedbackTone	KEYWORD2
+setLongTouchDownTimeout	KEYWORD2
+
+clearDisplay	KEYWORD2
+drawDisplayDirect	KEYWORD2
+setScreenOrientationLock	KEYWORD2
+
+drawPixel	KEYWORD2
+drawCircle	KEYWORD2
+fillCircle	KEYWORD2
+drawRect	KEYWORD2
+drawRectRel	KEYWORD2
+fillRect	KEYWORD2
+fillRectRel	KEYWORD2
+drawChar	KEYWORD2
+drawText	KEYWORD2
+drawByte	KEYWORD2
+drawUnsignedByte	KEYWORD2
+drawShort	KEYWORD2
+drawLong	KEYWORD2
+
+setPrintfSizeAndColorAndFlag	KEYWORD2
+setPrintfPosition	KEYWORD2
+setPrintfPositionColumnLine	KEYWORD2
+writeString	KEYWORD2
+
+debugMessage	KEYWORD2
+debug	KEYWORD2
+
+drawLine	KEYWORD2
+drawLineRel	KEYWORD2
+drawLineFastOneX	KEYWORD2
+drawVectorDegrees	KEYWORD2
+drawVectorRadian	KEYWORD2
+drawLineWithThickness	KEYWORD2
+drawLineRelWithThickness	KEYWORD2
+
+drawChartByteBuffer	KEYWORD2
+
+getMaxDisplaySize	KEYWORD2
+getMaxDisplayWidth	KEYWORD2
+getMaxDisplayHeight	KEYWORD2
+getActualDisplaySize	KEYWORD2
+getActualDisplayWidth	KEYWORD2
+getActualDisplayHeight	KEYWORD2
+getReferenceDisplaySize	KEYWORD2
+getDisplayWidth	KEYWORD2
+getDisplayHeight	KEYWORD2
+isDisplayOrientationLandscape	KEYWORD2
+
+refreshVector	KEYWORD2
+
+getNumber	KEYWORD2
+getNumberWithShortPrompt	KEYWORD2
+getInfo	KEYWORD2
+requestMaxCanvasSize	KEYWORD2
+
+setSensor	KEYWORD2
+
+drawMLText	KEYWORD2
+drawTextPGM	KEYWORD2
+getNumberWithShortPromptPGM	KEYWORD2
+printVCCAndTemperaturePeriodically	KEYWORD2
+
+clearDisplayAndDisableButtonsAndSliders	KEYWORD2
+
+getTextHeight	KEYWORD2
+getTextWidth	KEYWORD2
+getTextAscend	KEYWORD2
+getTextAscendMinusDescend	KEYWORD2
+getTextMiddle	KEYWORD2
+
+# Button stuff from BlueDisplay.h
+createButton	KEYWORD2
+createButtonPGM	KEYWORD2
+drawButton	KEYWORD2
+removeButton	KEYWORD2
+drawButtonCaption	KEYWORD2
+setButtonCaptionPGM	KEYWORD2
+setButtonCaption	KEYWORD2
+setButtonValue	KEYWORD2
+setButtonValueAndDraw	KEYWORD2
+setButtonColor	KEYWORD2
+setButtonColorAndDraw	KEYWORD2
+setButtonPosition	KEYWORD2
+setButtonAutorepeatTiming	KEYWORD2
+activateButton	KEYWORD2
+deactivateButton	KEYWORD2
+activateAllButtons	KEYWORD2
+deactivateAllButtons	KEYWORD2
+setButtonsGlobalFlags	KEYWORD2
+setButtonsTouchTone	KEYWORD2
+
+# from BDButton.h
+resetAllButtons	KEYWORD2
+activateAllButtons	KEYWORD2
+deactivateAllButtons	KEYWORD2
+setButtonsTouchTone	KEYWORD2
+setGlobalFlags	KEYWORD2
+init	KEYWORD2
+initPGM	KEYWORD2
+drawButton	KEYWORD2
+removeButton	KEYWORD2
+drawCaption	KEYWORD2
+setCaption	KEYWORD2
+setCaptionPGM	KEYWORD2
+setCaptionForValueTrue	KEYWORD2
+setCaptionAndDraw	KEYWORD2
+setValue	KEYWORD2
+setValueAndDraw	KEYWORD2
+setButtonColor	KEYWORD2
+setButtonColorAndDraw	KEYWORD2
+setPosition	KEYWORD2
+setButtonAutorepeatTiming	KEYWORD2
+activate	KEYWORD2
+deactivate	KEYWORD2
+
+# Slider stuff from BlueDisplay.h
+createSlider	KEYWORD2
+drawSlider	KEYWORD2
+drawSliderBorder	KEYWORD2
+setSliderActualValueAndDrawBar	KEYWORD2
+setSliderColorBarThreshold	KEYWORD2
+setSliderColorBarBackground	KEYWORD2
+setSliderCaptionProperties	KEYWORD2
+setSliderCaption	KEYWORD2
+activateSlider	KEYWORD2
+deactivateSlider	KEYWORD2
+activateAllSliders	KEYWORD2
+deactivateAllSliders	KEYWORD2
+clearDisplayAndDisableButtonsAndSliders	KEYWORD2
+
+# from BDSlider.h
+resetAllSliders	KEYWORD2
+activateAllSliders	KEYWORD2
+deactivateAllSliders	KEYWORD2#
+init	KEYWORD2
+drawSlider	KEYWORD2
+drawBorder	KEYWORD2
+setActualValue	KEYWORD2
+setActualValueAndDrawBar	KEYWORD2
+setBarColor	KEYWORD2
+setBarThresholdColor	KEYWORD2
+setBarBackgroundColor	KEYWORD2
+setCaptionProperties	KEYWORD2
+setCaption	KEYWORD2
+setValueUnitString	KEYWORD2
+setValueFormatString	KEYWORD2
+setPrintValueProperties	KEYWORD2
+printValue	KEYWORD2
+setScaleFactor	KEYWORD2
+setValueScaleFactor	KEYWORD2
+activate	KEYWORD2
+deactivate	KEYWORD2
+
+# from BlueSerial.h
+sendUSARTArgs	KEYWORD2
+sendUSARTArgsAndByteBuffer	KEYWORD2
+sendUSART5Args	KEYWORD2
+sendUSART5ArgsAndByteBuffer	KEYWORD2
+USART_isBluetoothPaired	KEYWORD2
+initSimpleSerial	KEYWORD2
+USART_send	KEYWORD2
+
+# from EventHandler.h
+delayMillisWithCheckAndHandleEvents	KEYWORD2
+checkAndHandleEvents	KEYWORD2
+registerLongTouchDownCallback	KEYWORD2
+registerSwipeEndCallback	KEYWORD2
+setSwipeEndCallbackEnabled	KEYWORD2
+registerConnectCallback	KEYWORD2
+registerReorientationCallback   KEYWORD2
+registerRedrawCallback	KEYWORD2
+getRedrawCallback	KEYWORD2
+registerSensorChangeCallback	KEYWORD2
+
+registerTouchDownCallback	KEYWORD2
+registerTouchMoveCallback	KEYWORD2
+registerTouchUpCallback	KEYWORD2
+setTouchUpCallbackEnabled	KEYWORD2
+getTouchUpCallback	KEYWORD2
+handleEvent	KEYWORD2
+
+#ifdef LOCAL_DISPLAY_EXISTS
+simpleTouchDownHandler	KEYWORD2
+simpleTouchHandlerOnlyForButtons	KEYWORD2
+simpleTouchDownHandlerOnlyForSlider	KEYWORD2
+simpleTouchMoveHandlerForSlider	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+BD_FLAG_FIRST_RESET_ALL	LITERAL1
+BD_FLAG_TOUCH_DISABLE	LITERAL1
+BD_FLAG_USE_MAX_SIZE	LITERAL1
+
+BUTTON_FLAG_NO_BEEP_ON_TOUCH	LITERAL1
+BUTTON_FLAG_DO_BEEP_ON_TOUCH	LITERAL1
+BUTTON_FLAG_TYPE_TOGGLE_RED_GREEN	LITERAL1
+BUTTON_FLAG_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH	LITERAL1
+BUTTON_FLAG_TYPE_AUTOREPEAT	LITERAL1
+
+TOUCHSLIDER_VERTICAL_SHOW_NOTHING	LITERAL1
+TOUCHSLIDER_VERTICAL_SHOW_NOTHING	LITERAL1
+TOUCHSLIDER_VALUE_BY_CALLBACK	LITERAL1
+TOUCHSLIDER_IS_HORIZONTAL	LITERAL1
+
+SLIDER_VALUE_CAPTION_ALIGN_LEFT	LITERAL1
+SLIDER_VALUE_CAPTION_ALIGN_RIGHT	LITERAL1
+SLIDER_VALUE_CAPTION_ALIGN_MIDDLE	LITERAL1
+SLIDER_VALUE_CAPTION_BELOW	LITERAL1
+SLIDER_VALUE_CAPTION_ABOVE	LITERAL1
+
+TEXT_SIZE_11	LITERAL1
+TEXT_SIZE_22	LITERAL1
+
+RGB	LITERAL1
+COLOR_WHITE	LITERAL1
+COLOR_BLACK	LITERAL1
+COLOR_RED	LITERAL1
+COLOR_GREEN	LITERAL1
+COLOR_BLUE	LITERAL1
+COLOR_YELLOW	LITERAL1
+COLOR_MAGENTA	LITERAL1
+COLOR_CYAN	LITERAL1
+
+FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE  LITERAL1
+FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT   LITERAL1
+FLAG_SCREEN_ORIENTATION_LOCK_ACTUAL LITERAL1
+FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK LITERAL1
+
