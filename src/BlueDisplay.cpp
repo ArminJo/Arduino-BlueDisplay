@@ -91,9 +91,9 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aReor
     // clean up old sent data
     checkAndHandleEvents();
     for (uint8_t i = 0; i < 30; ++i) {
-        // wait for size to be sent back by a reorientation event. Time measured is between 50 and 150 ms
+        // wait for size to be sent back by a reorientation event. Time measured is between 50 and 150 ms (or 80 and 120)
         delayMillisWithCheckAndHandleEvents(10);
-        if (mConnectionEstablished) {
+        if (mConnectionEstablished) { // is set by delayMillisWithCheckAndHandleEvents()
             /*
              * Call handler initially
              */
@@ -943,9 +943,7 @@ void BlueDisplay::getInfo(uint8_t aInfoSubcommand, void (*aInfoHandler)(uint8_t,
  *  This results in a data event
  */
 void BlueDisplay::requestMaxCanvasSize(void) {
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_REQUEST_MAX_CANVAS_SIZE, 0);
-    }
 }
 
 #ifdef AVR
@@ -1359,7 +1357,11 @@ float getVCCVoltage(void) {
 
 float getTemperature(void) {
     // use internal 1.1 Volt as reference
+#ifdef INTERNAL1V1
+    float tTemp = (getADCValue(ADC_TEMPERATURE_CHANNEL, INTERNAL1V1) - 317);
+#else
     float tTemp = (getADCValue(ADC_TEMPERATURE_CHANNEL, INTERNAL) - 317);
+#endif
     return (tTemp / 1.22);
 }
 

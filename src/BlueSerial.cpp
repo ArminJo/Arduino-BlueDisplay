@@ -294,7 +294,7 @@ static uint8_t sReceivedDataSize;
 #ifdef USE_SIMPLE_SERIAL
 bool allowTouchInterrupts = false; // !!do not enable it, if event handling may take more time than receiving a byte (which results in buffer overflow)!!!
 
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
+#if defined(USART1_RX_vect)
 // Use TX1 on MEGA and on Leonardo, which has no TX0
 ISR(USART1_RX_vect) {
     uint8_t tByte = UDR1;

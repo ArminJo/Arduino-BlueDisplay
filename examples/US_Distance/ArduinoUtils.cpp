@@ -265,7 +265,7 @@ unsigned int getUSDistanceAsCentiMeter(unsigned int aTimeoutMicros) {
 #ifdef DEBUG
     delay(2); // to see it on scope
 #else
-    delayMicroseconds(10);
+    delayMicroseconds(50); // 10 micros seems a bit to short. I have modules which have problems with 10us.
 #endif
 // falling edge starts measurement
     digitalWrite(TRIGGER_OUT_PIN, LOW);

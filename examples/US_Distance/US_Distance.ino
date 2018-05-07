@@ -29,6 +29,8 @@
 
 #include "BlueDisplay.h"
 
+#define VERSION_EXAMPLE "1.1"
+
 // Change this if you have reprogrammed the hc05 module for higher baud rate
 //#define HC_05_BAUD_RATE BAUD_9600
 #define HC_05_BAUD_RATE BAUD_115200
@@ -37,6 +39,8 @@ int ECHO_IN_PIN = 2;
 int TRIGGER_OUT_PIN = 3;
 #define TONE_PIN 4
 #define MEASUREMENT_INTERVAL_MS 50
+
+#define DISTANCE_TIMEOUT_CM 350  // cm timeout for US reading
 
 int sActualDisplayWidth;
 int sActualDisplayHeight;
@@ -61,6 +65,10 @@ char sStringBuffer[100];
  */
 void doStartStop(BDButton * aTheTouchedButton, int16_t aValue) {
     doTone = aValue;
+    if (!aValue) {
+        // Stop tone
+        BlueDisplay1.playTone(TONE_SILENCE);
+    }
 }
 
 /*
@@ -137,7 +145,11 @@ void setup(void) {
     pinMode(TONE_PIN, OUTPUT);
     pinMode(ECHO_IN_PIN, INPUT);
 
+#ifndef USE_STANDARD_SERIAL
     initSimpleSerial(HC_05_BAUD_RATE, false);
+#else
+    Serial.begin(HC_05_BAUD_RATE);
+#endif
 
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&handleConnectAndReorientation, &drawGui);
@@ -148,6 +160,8 @@ void setup(void) {
     if (BlueDisplay1.mConnectionEstablished) {
         tone(TONE_PIN, 3000, 50);
         delay(100);
+    } else {
+        Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from  " __DATE__));
     }
     tone(TONE_PIN, 3000, 50);
     delay(100);
@@ -159,8 +173,17 @@ bool sToneIsOff = true;
 
 void loop(void) {
     // Timeout of 20000L is 3.4 meter
-    sCentimeterNew = getUSDistanceAsCentiMeter(20000L);
-    if (sCentimeterNew >= 20000L) {
+    sCentimeterNew = getUSDistanceAsCentiMeterWithCentimeterTimeout(DISTANCE_TIMEOUT_CM);
+    if (!BlueDisplay1.mConnectionEstablished) {
+        Serial.print("cm=");
+        if (sCentimeterNew == DISTANCE_TIMEOUT_CM) {
+            Serial.println("timeout");
+        } else {
+            Serial.println(sCentimeterNew);
+        }
+    }
+
+    if (sCentimeterNew >= DISTANCE_TIMEOUT_CM) {
         // timeout happened
         tone(TONE_PIN, 1000, 50);
         delay(100);
@@ -176,7 +199,7 @@ void loop(void) {
         }
         sCentimeterNew -= sOffset;
         if (sCentimeterNew != sCentimeterOld) {
-            if (sActualDisplayHeight > 0) {
+            if (BlueDisplay1.mConnectionEstablished) {
                 uint16_t tCmXPosition = BlueDisplay1.drawUnsignedByte(getTextWidth(sCaptionTextSize * 2), sValueStartY,
                         sCentimeterNew, sCaptionTextSize * 2, COLOR_YELLOW,
                         COLOR_BLUE);
@@ -189,24 +212,28 @@ void loop(void) {
                  */
                 if (!sToneIsOff) {
                     sToneIsOff = true;
-                    // Stop tone
-                    BlueDisplay1.playTone(TONE_SILENCE);
+                    if (BlueDisplay1.mConnectionEstablished) {
+                        // Stop tone
+                        BlueDisplay1.playTone(TONE_SILENCE);
+                    }
                 }
             } else {
                 sToneIsOff = false;
                 /*
                  * Switch tones only if range changes
                  */
-                if (sCentimeterNew < 40 && sCentimeterNew > 30 && (sCentimeterOld >= 40 || sCentimeterOld <= 30)) {
-                    BlueDisplay1.playTone(22);
-                } else if (sCentimeterNew <= 30 && sCentimeterNew > 20 && (sCentimeterOld >= 30 || sCentimeterOld <= 20)) {
-                    BlueDisplay1.playTone(17);
-                } else if (sCentimeterNew <= 20 && sCentimeterNew > 10 && (sCentimeterOld > 20 || sCentimeterOld <= 10)) {
-                    BlueDisplay1.playTone(18);
-                } else if (sCentimeterNew <= 10 && sCentimeterNew > 3 && (sCentimeterOld > 10 || sCentimeterOld <= 3)) {
-                    BlueDisplay1.playTone(16);
-                } else if (sCentimeterNew <= 3 && sCentimeterOld > 3) {
-                    BlueDisplay1.playTone(36);
+                if (BlueDisplay1.mConnectionEstablished) {
+                    if (sCentimeterNew < 40 && sCentimeterNew > 30 && (sCentimeterOld >= 40 || sCentimeterOld <= 30)) {
+                        BlueDisplay1.playTone(22);
+                    } else if (sCentimeterNew <= 30 && sCentimeterNew > 20 && (sCentimeterOld >= 30 || sCentimeterOld <= 20)) {
+                        BlueDisplay1.playTone(17);
+                    } else if (sCentimeterNew <= 20 && sCentimeterNew > 10 && (sCentimeterOld > 20 || sCentimeterOld <= 10)) {
+                        BlueDisplay1.playTone(18);
+                    } else if (sCentimeterNew <= 10 && sCentimeterNew > 3 && (sCentimeterOld > 10 || sCentimeterOld <= 3)) {
+                        BlueDisplay1.playTone(16);
+                    } else if (sCentimeterNew <= 3 && sCentimeterOld > 3) {
+                        BlueDisplay1.playTone(36);
+                    }
                 }
             }
         }
