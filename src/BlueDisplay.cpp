@@ -88,8 +88,9 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aReor
 // This results in a data event, which sends size and timestamp
     requestMaxCanvasSize();
 
-    // clean up old sent data
+    // consume up old received data
     checkAndHandleEvents();
+
     for (uint8_t i = 0; i < 30; ++i) {
         // wait for size to be sent back by a reorientation event. Time measured is between 50 and 150 ms (or 80 and 120)
         delayMillisWithCheckAndHandleEvents(10);
@@ -845,20 +846,20 @@ void BlueDisplay::drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aString
 uint16_t BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char * aPGMString, uint8_t aTextSize, color16_t aFGColor,
         color16_t aBGColor) {
     uint16_t tRetValue = 0;
-    uint8_t tCaptionLength = strlen_P(aPGMString);
-    if (tCaptionLength > STRING_BUFFER_STACK_SIZE) {
-        tCaptionLength = STRING_BUFFER_STACK_SIZE;
+    uint8_t tTextLength = strlen_P(aPGMString);
+    if (tTextLength > STRING_BUFFER_STACK_SIZE) {
+        tTextLength = STRING_BUFFER_STACK_SIZE;
     }
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-    strncpy_P(tStringBuffer, aPGMString, tCaptionLength);
+    strncpy_P(tStringBuffer, aPGMString, tTextLength);
 #ifdef LOCAL_DISPLAY_EXISTS
     tRetValue = LocalDisplay.drawTextPGM(aPosX, aPosY - getTextAscend(aTextSize), aPGMString, getLocalTextSize(aTextSize), aFGColor,
             aBGColor);
 #endif
     if (USART_isBluetoothPaired()) {
-        tRetValue = aPosX + tCaptionLength * getTextWidth(aTextSize);
+        tRetValue = aPosX + tTextLength * getTextWidth(aTextSize);
         sendUSART5ArgsAndByteBuffer(FUNCTION_DRAW_STRING, aPosX, aPosY, aTextSize, aFGColor, aBGColor, (uint8_t*) tStringBuffer,
-                tCaptionLength);
+                tTextLength);
     }
     return tRetValue;
 }

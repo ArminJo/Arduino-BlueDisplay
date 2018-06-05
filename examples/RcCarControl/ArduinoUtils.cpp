@@ -54,7 +54,6 @@
 //    }
 //    Serial.println(F(" seconds."));
 //}
-
 int8_t checkAndTruncateParamValue(int8_t aParam, int8_t aParamMax, int8_t aParamMin) {
     if (aParam > aParamMax) {
         aParam = aParamMax;
@@ -132,49 +131,52 @@ void stopBlinkLed(void) {
 /********************************************
  * US SENSOR STUFF - HC SR04
  *******************************************/
-
-// must not be constant, since then we get an undefined reference error at link time
+/*
+ * This NON BLOCKING version only blocks for ca. 12 microseconds for code + generation of trigger pulse
+ * Be sure to have the right interrupt vector below.
+ * check with: while (!isUSDistanceMeasureFinished()) {<do something> };
+ * Result is in sUSDistanceCentimeter;
+ */
+// MUST be provided by main program. Must not be constant, since then we get an undefined reference error at link time
 extern uint8_t TRIGGER_OUT_PIN;
 extern uint8_t ECHO_IN_PIN;
+int sUSDistanceCentimeter;
+volatile unsigned long sUSPulseMicros;
 
-// Outcomment the line according to the ECHO_IN_PIN if using the non blocking version
+// Outcomment the line according to the ECHO_IN_PIN if using the non blocking version or define symbol for compiler
 //#define USE_PIN_CHANGE_INTERRUPT_D0_TO_D7  // using PCINT2_vect - PORT D
 //#define USE_PIN_CHANGE_INTERRUPT_D8_TO_D13 // using PCINT0_vect - PORT B - Pin 13 is feedback output
 //#define USE_PIN_CHANGE_INTERRUPT_A0_TO_A5  // using PCINT1_vect - PORT C
 
-/*
- * This version only blocks for ca. 12 microseconds for code + generation of trigger pulse
- * Be sure to have the right interrupt vector below
- */
 #if (defined(USE_PIN_CHANGE_INTERRUPT_D0_TO_D7) | defined(USE_PIN_CHANGE_INTERRUPT_D8_TO_D13) | defined(USE_PIN_CHANGE_INTERRUPT_A0_TO_A5))
 volatile bool sUSValueIsValid = false;
-unsigned long sMicrosAtStartOfPulse;
-uint16_t sTimeoutMicros;
-volatile unsigned long sMicrosOfPulse;
+volatile unsigned long sMicrosAtStartOfPulse;
+unsigned int sTimeoutMicros;
 
-// common code for all interrupt handler
-void handlePCInterrupt(uint8_t atPortState) {
-    if (atPortState > 0) {
+/*
+ * common code for all interrupt handler.
+ */
+void handlePCInterrupt(uint8_t aPortState) {
+    if (aPortState > 0) {
         // start of pulse
         sMicrosAtStartOfPulse = micros();
     } else {
         // end of pulse
-        sMicrosOfPulse = micros() - sMicrosAtStartOfPulse;
+        sUSPulseMicros = micros() - sMicrosAtStartOfPulse;
         sUSValueIsValid = true;
     }
-    // echo to output 13
-    digitalWrite(13, atPortState);
+    // for debugging purposes, echo to PIN 13 (do not forget to set it to OUTPUT!)
+    // digitalWrite(13, aPortState);
 }
 #endif
 
 #if defined(USE_PIN_CHANGE_INTERRUPT_D0_TO_D7)
 /*
  * pin change interrupt for D0 to D7 here.
- * state of pin is echoed to output 13 for debugging purpose
  */
 ISR (PCINT2_vect) {
-    // check pin
-    uint8_t tPortState = digitalPinToPort(ECHO_IN_PIN) && bit((digitalPinToPCMSKbit(ECHO_IN_PIN)));
+    // read pin
+    uint8_t tPortState = (*portInputRegister(digitalPinToPort(ECHO_IN_PIN))) & bit((digitalPinToPCMSKbit(ECHO_IN_PIN)));
     handlePCInterrupt(tPortState);
 }
 #endif
@@ -186,7 +188,7 @@ ISR (PCINT2_vect) {
  */
 ISR (PCINT0_vect) {
     // check pin
-    uint8_t tPortState = digitalPinToPort(ECHO_IN_PIN) && bit((digitalPinToPCMSKbit(ECHO_IN_PIN)));
+    uint8_t tPortState = (*portInputRegister(digitalPinToPort(ECHO_IN_PIN))) & bit((digitalPinToPCMSKbit(ECHO_IN_PIN)));
     handlePCInterrupt(tPortState);
 }
 #endif
@@ -198,23 +200,24 @@ ISR (PCINT0_vect) {
  */
 ISR (PCINT1_vect) {
     // check pin
-    uint8_t tPortState = digitalPinToPort(ECHO_IN_PIN) && bit((digitalPinToPCMSKbit(ECHO_IN_PIN)));
+    uint8_t tPortState = (*portInputRegister(digitalPinToPort(ECHO_IN_PIN))) & bit((digitalPinToPCMSKbit(ECHO_IN_PIN)));
     handlePCInterrupt(tPortState);
 }
 #endif
 
 #if (defined(USE_PIN_CHANGE_INTERRUPT_D0_TO_D7) | defined(USE_PIN_CHANGE_INTERRUPT_D8_TO_D13) | defined(USE_PIN_CHANGE_INTERRUPT_A0_TO_A5))
 
-void getUSDistanceAsCentiMeterWithCentimeterTimeoutNonBlocking(uint8_t aTimeoutCentimeter) {
+void startUSDistanceAsCentiMeterWithCentimeterTimeoutNonBlocking(unsigned int aTimeoutCentimeter) {
     // need minimum 10 usec Trigger Pulse
     digitalWrite(TRIGGER_OUT_PIN, HIGH);
     sUSValueIsValid = false;
     sTimeoutMicros = aTimeoutCentimeter * 59;
-    *digitalPinToPCMSK(ECHO_IN_PIN) |= bit(digitalPinToPCMSKbit(ECHO_IN_PIN));// enable pin for pin change interrupt
-    // net 2 registers exists only once!
-    PCICR |= bit(digitalPinToPCICRbit(ECHO_IN_PIN));// enable interrupt for the group
-    PCIFR |= bit(digitalPinToPCICRbit(ECHO_IN_PIN));// clear any outstanding interrupt
-    sMicrosOfPulse = 0;
+    *digitalPinToPCMSK(ECHO_IN_PIN) |= bit(digitalPinToPCMSKbit(ECHO_IN_PIN)); // enable pin for pin change interrupt
+    // the 2 registers exists only once!
+    PCICR |= bit(digitalPinToPCICRbit(ECHO_IN_PIN));    // enable interrupt for the group
+    PCIFR |= bit(digitalPinToPCICRbit(ECHO_IN_PIN));    // clear any outstanding interrupt
+    sUSPulseMicros = 0;
+    sMicrosAtStartOfPulse = 0;
 
 #ifdef DEBUG
     delay(2); // to see it on scope
@@ -230,14 +233,19 @@ void getUSDistanceAsCentiMeterWithCentimeterTimeoutNonBlocking(uint8_t aTimeoutC
  * If ISR interrupts these code, everything is fine, even if we get a timeout and a no null result
  * since we are interested in the result and not in very exact interpreting of the timeout.
  */
-bool isUSDistanceIsMeasureFinished() {
+bool isUSDistanceMeasureFinished() {
     if (sUSValueIsValid) {
+        int tDistance = ((sUSPulseMicros * 10) / 585);
+        sUSDistanceCentimeter = tDistance;
         return true;
     }
-    if (micros() - sMicrosAtStartOfPulse >= sTimeoutMicros) {
-        // Timeout happened value will be 0
-        *digitalPinToPCMSK(ECHO_IN_PIN) &= ~(bit(digitalPinToPCMSKbit(ECHO_IN_PIN)));// disable pin for pin change interrupt
-        return true;
+
+    if (sMicrosAtStartOfPulse != 0) {
+        if ((micros() - sMicrosAtStartOfPulse) >= sTimeoutMicros) {
+            // Timeout happened, value will be 0
+            *digitalPinToPCMSK(ECHO_IN_PIN) &= ~(bit(digitalPinToPCMSKbit(ECHO_IN_PIN))); // disable pin for pin change interrupt
+            return true;
+        }
     }
     return false;
 }
@@ -245,14 +253,12 @@ bool isUSDistanceIsMeasureFinished() {
 
 /*
  * End non blocking implementation
- * Start of standard blocking implementation using pulseIn()
+ * Start of standard blocking implementation using pulseInLong() since PulseIn gives wrong (too small) results :-(
  */
-
-int sLastDistance;
 unsigned int getUSDistanceAsCentiMeterWithCentimeterTimeout(unsigned int aTimeoutCentimeter) {
 // 58,48 us per centimeter (forth and back)
-    // Must be the reciprocal of formula below
-    unsigned int tTimeoutMicros = (aTimeoutCentimeter - 1) * 58;
+// Must be the reciprocal of formula below
+    unsigned int tTimeoutMicros = aTimeoutCentimeter * 59;
     return getUSDistanceAsCentiMeter(tTimeoutMicros);
 }
 /*
@@ -265,7 +271,7 @@ unsigned int getUSDistanceAsCentiMeter(unsigned int aTimeoutMicros) {
 #ifdef DEBUG
     delay(2); // to see it on scope
 #else
-    delayMicroseconds(50); // 10 micros seems a bit to short. I have modules which have problems with 10us.
+    delayMicroseconds(10);
 #endif
 // falling edge starts measurement
     digitalWrite(TRIGGER_OUT_PIN, LOW);
@@ -274,14 +280,13 @@ unsigned int getUSDistanceAsCentiMeter(unsigned int aTimeoutMicros) {
      * Get echo length. 58,48 us per centimeter (forth and back)
      * => 50cm gives 2900 us, 2m gives 11900 us
      */
-    unsigned int tPulseLength = pulseIn(ECHO_IN_PIN, HIGH, aTimeoutMicros);
-    if (tPulseLength == 0) {
-        // timeout happened
-        tPulseLength = aTimeoutMicros;
+    sUSPulseMicros = pulseInLong(ECHO_IN_PIN, HIGH, aTimeoutMicros);
+    if (sUSPulseMicros == 0) {
+// timeout happened
+        sUSPulseMicros = aTimeoutMicros;
     }
-// +1cm was measured at working device
-    unsigned int tDistance = (tPulseLength / 58) + 1;
-    sLastDistance = tDistance;
+    int tDistance = (sUSPulseMicros * 10) / 585;
+    sUSDistanceCentimeter = tDistance;
     return tDistance;
 }
 
@@ -324,11 +329,11 @@ void initSimpleServoPin9_10() {
  */
 void setSimpleServoPulse(int aValue, bool aUsePin9, bool aUpdateFast) {
     if (aValue <= 180) {
-        // modify and use outcommented line for saving 4 bytes ram and n bytes flash
-        //aValue = map(aValue, 0, 180, 1088, 4800);
+// modify and use outcommented line for saving 4 bytes ram and n bytes flash
+//aValue = map(aValue, 0, 180, 1088, 4800);
         aValue = map(aValue, 0, 180, sServoPulseWidthFor0Degree, sServoPulseWidthFor180Degree);
     } else {
-        // since the resolution is 1/2 of microsecond
+// since the resolution is 1/2 of microsecond
         aValue *= 2;
     }
     if (aUpdateFast) {
@@ -349,7 +354,7 @@ void setSimpleServoPulse(int aValue, bool aUsePin9, bool aUpdateFast) {
  * Set the mapping pulse width values for 0 and 180 degree
  */
 void setSimpleServoPulseMicrosFor0And180Degree(int a0DegreeValue, int a180DegreeValue) {
-    // *2 since internal values are meant for the 1/2 microseconds resolution of timer
+// *2 since internal values are meant for the 1/2 microseconds resolution of timer
     sServoPulseWidthFor0Degree = a0DegreeValue * 2;
     sServoPulseWidthFor180Degree = a180DegreeValue * 2;
 }

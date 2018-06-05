@@ -48,6 +48,8 @@
 #include "BDSlider.h" // for BDSliderHandle_t
 #endif
 
+#define VERSION_BLUE_DISPLAY "3.7"
+
 /***************************
  * Origin 0.0 is upper left
  **************************/

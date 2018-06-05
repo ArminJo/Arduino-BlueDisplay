@@ -14,13 +14,14 @@ void stopBlinkLed(void);
 // Timeout of 20000L is 3.4 meter
 unsigned int getUSDistanceAsCentiMeter(unsigned int aTimeoutMicros = US_DISTANCE_DEFAULT_TIMEOUT);
 unsigned int getUSDistanceAsCentiMeterWithCentimeterTimeout(unsigned int aTimeoutCentimeter);
-extern int sLastDistance;
+extern int sUSDistanceCentimeter;
+extern volatile unsigned long sUSPulseMicros;
 
 /*
  * Non blocking version
  */
-void getUSDistanceAsCentiMeterWithCentimeterTimeoutNonBlocking(uint8_t aTimeoutCentimeter);
-bool isUSDistanceIsMeasureFinished();
+void startUSDistanceAsCentiMeterWithCentimeterTimeoutNonBlocking(unsigned int aTimeoutCentimeter);
+bool isUSDistanceMeasureFinished();
 
 /*
  * Simple Servo Library

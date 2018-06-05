@@ -104,17 +104,21 @@ void computePeriodFrequency(void) {
     uint8_t *tDataBufferPointer = &DataBufferControl.DataBuffer[0];
     uint8_t tValue;
     int16_t tCount;
-    uint16_t tStartPositionForPulsPause = 0;
+    uint16_t i;
+    uint16_t tStartPositionForPulsPause = 0; // Start position != 0 for TRIGGER_MODE_FREE, TRIGGER_MODE_EXTERN or delayed trigger.
     uint16_t tFirstEndPositionForPulsPause = 0;
     uint16_t tCountPosition = 0;
-    uint16_t i = 0;
     uint8_t tTriggerStatus = TRIGGER_STATUS_START;
-    uint8_t tActualCompareValue = getDisplayFromRawInputValue(MeasurementControl.RawTriggerLevelHysteresis);
-    uint8_t tActualCompareValueForFirstPeriod = getDisplayFromRawInputValue(MeasurementControl.RawTriggerLevel);
-//    BlueDisplay1.debug("trgr=", MeasurementControl.RawTriggerLevel);
-//    BlueDisplay1.debug("trg=",getDisplayFromRawValue( MeasurementControl.RawTriggerLevel));
-//    BlueDisplay1.debug("tcmp=", tActualCompareValue);
-//    BlueDisplay1.debug("data5=", DataBufferControl.DataBuffer[5]);
+    uint8_t tTriggerStatusForFirstInterval = TRIGGER_STATUS_START;
+
+    uint8_t tActualCompareValue = getDisplayFromRawInputValue(MeasurementControl.RawTriggerLevelHysteresis); // start with hysteresis
+
+    uint8_t tFirstTriggerLevel; // start with opposite hysteresis for measurement of first interval
+    if (MeasurementControl.TriggerSlopeRising) {
+        tFirstTriggerLevel = getDisplayFromRawInputValue(MeasurementControl.RawTriggerLevel + MeasurementControl.RawHysteresis);
+    } else {
+        tFirstTriggerLevel = getDisplayFromRawInputValue(MeasurementControl.RawTriggerLevel - MeasurementControl.RawHysteresis);
+    }
 
     MeasurementControl.PeriodFirst = 0;
     MeasurementControl.PeriodSecond = 0;
@@ -129,7 +133,7 @@ void computePeriodFrequency(void) {
         // First display value is the first after triggering condition so we have at least one trigger, but still no period.
         tCount = 0;
     }
-    for (; i < REMOTE_DISPLAY_WIDTH; ++i) {
+    for (i = 0; i < REMOTE_DISPLAY_WIDTH; ++i) {
 #else
         /**
          * Get period and frequency and average for display
@@ -155,8 +159,16 @@ void computePeriodFrequency(void) {
         int tPeriodMin = 1024;
         int tPeriodMax = 0;
         int tTriggerStatus = TRIGGER_STATUS_START;
+        int tTriggerStatusForFirstInterval = TRIGGER_STATUS_START;
+
         uint16_t tActualCompareValue = MeasurementControl.RawTriggerLevelHysteresis;
-        uint16_t tActualCompareValueForFirstPeriod = MeasurementControl.RawTriggerLevel;
+
+        uint16_t tFirstTriggerLevel; // start with opposite hysteresis for measurement of first interval
+        if (MeasurementControl.TriggerSlopeRising) {
+            tFirstTriggerLevel = MeasurementControl.RawTriggerLevel + MeasurementControl.RawHysteresis;
+        } else {
+            tFirstTriggerLevel = MeasurementControl.RawTriggerLevel - MeasurementControl.RawHysteresis;
+        }
 
         bool tReliableValue = true;
 
@@ -168,40 +180,57 @@ void computePeriodFrequency(void) {
 #endif
         tValue = *tDataBufferPointer;
 
-        bool tValueGreaterRefForFirstPeriod;
-        if (tFirstEndPositionForPulsPause == 00 && tCount == 0) {
-            tValueGreaterRefForFirstPeriod = (tValue > tActualCompareValueForFirstPeriod);
+        bool tValueGreaterCompareValue = (tValue > tActualCompareValue); // variable name is correct for rising slope!
 #ifdef AVR
-            // toggle compare result if TriggerSlopeRising == true since all values are inverted Display values we have to use just the inverted condition
-            tValueGreaterRefForFirstPeriod = tValueGreaterRefForFirstPeriod ^ MeasurementControl.TriggerSlopeRising;
-#else
-            // toggle compare result if TriggerSlopeRising == false
-            tValueGreaterRefForFirstPeriod = tValueGreaterRefForFirstPeriod ^ (!MeasurementControl.TriggerSlopeRising);
-#endif
-        }
-
-        bool tValueGreaterRef = (tValue > tActualCompareValue);
-#ifdef AVR
-        // toggle compare result if TriggerSlopeRising == true since all values are inverted Display values we have to use just the inverted condition
-        tValueGreaterRef = tValueGreaterRef ^ MeasurementControl.TriggerSlopeRising;
+        // Since all values are inverted Display values, we have to use just the inverted condition -> toggle compare result if (TriggerSlopeRising == true)
+        tValueGreaterCompareValue = tValueGreaterCompareValue ^ MeasurementControl.TriggerSlopeRising;
 #else
         // toggle compare result if TriggerSlopeRising == false
-        tValueGreaterRef = tValueGreaterRef ^ (!MeasurementControl.TriggerSlopeRising);
+        tValueGreaterCompareValue = tValueGreaterCompareValue ^ (!MeasurementControl.TriggerSlopeRising);
 #endif
         /*
-         * First value is the first after triggering condition (including delay)
+         * First value is the first sample after triggering condition (including delay)
          */
-        if (tTriggerStatus == TRIGGER_STATUS_START) {
-            // rising slope - wait for value below 1. threshold
-            // falling slope - wait for value above 1. threshold
-            if (tFirstEndPositionForPulsPause == 00 && tCount == 0) {
-                if (!tValueGreaterRefForFirstPeriod) {
+        if (tFirstEndPositionForPulsPause == 0 && tCount == 0) {
+            /*
+             * Compute time of first pulse (pause) here.
+             * First wait for signal to go beyond hysteresis, then check for crossing trigger level
+             */
+            bool tValueLessThanTriggerForFirstPeriod = (tValue < tFirstTriggerLevel);
+#ifdef AVR
+            // Since all values are inverted Display values, we have to use just the inverted condition -> toggle compare result if (TriggerSlopeRising == true)
+            tValueLessThanTriggerForFirstPeriod = tValueLessThanTriggerForFirstPeriod ^ MeasurementControl.TriggerSlopeRising;
+#else
+            // toggle compare result if TriggerSlopeRising == false
+            tValueLessThanTriggerForFirstPeriod = tValueLessThanTriggerForFirstPeriod ^ (!MeasurementControl.TriggerSlopeRising);
+#endif
+
+            if (tTriggerStatusForFirstInterval == TRIGGER_STATUS_START) {
+                // Wait for signal to go beyond hysteresis
+                if (!tValueLessThanTriggerForFirstPeriod) {
+                    tTriggerStatusForFirstInterval = TRIGGER_STATUS_AFTER_HYSTERESIS;
+//                    BlueDisplay1.debug("trg1=", tFirstTriggerLevel);
+//                    BlueDisplay1.debug("i=", i);
+//                    BlueDisplay1.debug("tValue=", tValue);
+                    tFirstTriggerLevel = getDisplayFromRawInputValue(MeasurementControl.RawTriggerLevel);
+                }
+            } else {
+                if (tValueLessThanTriggerForFirstPeriod) {
+                    // signal crosses trigger -> first interval detected
                     tFirstEndPositionForPulsPause = i;
                     MeasurementControl.PeriodFirst = getMicrosFromHorizontalDisplayValue(i - tStartPositionForPulsPause, 1);
+//                    BlueDisplay1.debug("trg2=", tFirstTriggerLevel);
+//                    BlueDisplay1.debug("i=", i);
+//                    BlueDisplay1.debug("tValue=", tValue);
                 }
             }
-            if (!tValueGreaterRef) {
-                tTriggerStatus = TRIGGER_STATUS_BEFORE_THRESHOLD;
+        }
+
+        if (tTriggerStatus == TRIGGER_STATUS_START) {
+            // rising slope - wait for value below hysteresis value
+            // falling slope - wait for value above hysteresis value
+            if (!tValueGreaterCompareValue) {
+                tTriggerStatus = TRIGGER_STATUS_AFTER_HYSTERESIS;
 #ifdef AVR
                 tActualCompareValue = getDisplayFromRawInputValue(MeasurementControl.RawTriggerLevel);
 #else
@@ -209,9 +238,13 @@ void computePeriodFrequency(void) {
 #endif
             }
         } else {
-            // rising slope - wait for value to rise above 2. threshold
-            // falling slope - wait for value to go below 2. threshold
-            if (tValueGreaterRef) {
+            /*
+             * TRIGGER_STATUS_AFTER_HYSTERESIS here
+             * rising slope - wait for inverted Display value to go below trigger value -> wait for value to rise above trigger value
+             * falling slope - wait for inverted Display value to rise above trigger value
+             */
+
+            if (tValueGreaterCompareValue) {
 #ifdef AVR
                 tTriggerStatus = TRIGGER_STATUS_START;
                 tActualCompareValue = getDisplayFromRawInputValue(MeasurementControl.RawTriggerLevelHysteresis);
@@ -237,6 +270,7 @@ void computePeriodFrequency(void) {
                     // set start position for TRIGGER_MODE_FREE, TRIGGER_MODE_EXTERN or delayed trigger.
                     tStartPositionForPulsPause = i;
                 } else if (tCount == 1) {
+                    // first complete period (pulse + pause) is detected here
                     MeasurementControl.PeriodSecond = getMicrosFromHorizontalDisplayValue(i - tFirstEndPositionForPulsPause, 1);
                 }
                 tCountPosition = i;
@@ -279,12 +313,10 @@ void computePeriodFrequency(void) {
             MeasurementControl.RawValueAverage = (tIntegrateValue + (tAcquisitionSize / 2)) / tAcquisitionSize;
 #endif
         MeasurementControl.PeriodMicros = 0;
+        MeasurementControl.FrequencyHertz = 0;
     } else {
 #ifdef AVR
         tCountPosition -= tStartPositionForPulsPause;
-        if (MeasurementControl.TimebaseIndex <= TIMEBASE_INDEX_FAST_MODES + 1) {
-            tCountPosition++; // compensate for 1 measurement delay between trigger detection and acquisition
-        }
         uint32_t tPeriodMicros = getMicrosFromHorizontalDisplayValue(tCountPosition, tCount);
         MeasurementControl.PeriodMicros = tPeriodMicros;
 #else
@@ -315,7 +347,7 @@ void computeAutoTrigger(void) {
         uint16_t tPeakToPeakHalf = tPeakToPeak / 2;
         uint16_t tNewRawTriggerValue = MeasurementControl.RawValueMin + tPeakToPeakHalf;
 
-        //set effective hysteresis to quarter delta
+        //set effective hysteresis to quarter peak to peak
         int tTriggerHysteresis = tPeakToPeakHalf / 2;
 
         // keep reasonable value - avoid jitter - abs does not work, it may give negative values
@@ -326,6 +358,10 @@ void computeAutoTrigger(void) {
         }
         int tOldHysteresis3Quarter = (MeasurementControl.RawHysteresis / 4) * 3;
         if (tTriggerDelta > (tTriggerHysteresis / 4) || tTriggerHysteresis <= tOldHysteresis3Quarter) {
+            /*
+             * (Old - new trigger value) > tPeakToPeak  / 16 - condition for value getting bigger
+             * or new hysteresis <= 3/4 old hysteresis       - condition for value getting smaller
+             */
             setTriggerLevelAndHysteresis(tNewRawTriggerValue, tTriggerHysteresis);
         }
     }
@@ -358,7 +394,7 @@ void setACMode(bool aNewACMode) {
 #endif
     MeasurementControl.isACMode = aNewACMode;
 #ifdef AVR
-    // Allow manual setting of AC mode
+// Allow manual setting of AC mode
     MeasurementControl.ChannelIsACMode = aNewACMode;
 
 #else
@@ -376,7 +412,7 @@ void setACMode(bool aNewACMode) {
     uint8_t tRelaisPin;
     if (aNewACMode) {
         // Change AC_DC_BIAS_PIN pin to input
-        DDRC = 0; // all analog channels set to input
+        DDRC = 0;        // all analog channels set to input
 
         // no OffsetAutomatic for AC mode
         MeasurementControl.OffsetMode = OFFSET_MODE_0_VOLT;
@@ -399,7 +435,7 @@ void setACMode(bool aNewACMode) {
      * New Offset for AC Mode
      */
 #ifdef AVR
-    // must do it here after settings of flags and before drawing
+// must do it here after settings of flags and before drawing
     setACModeButtonCaption();
     if (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS) {
         // hide/show offset
@@ -472,20 +508,19 @@ BDButton TouchButtonChartHistoryOnOff;
 BDButton TouchButtonSlope;
 char SlopeButtonString[] = "Slope A";
 
-BDButton TouchButtonChannels[NUMBER_OF_CHANNEL_WITH_FIXED_ATTENUATOR];
+BDButton TouchButtonChannels[NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR];
 BDButton TouchButtonChannelSelect;
 const char StringChannel0[] PROGMEM = "Ch 0";
 const char StringChannel1[] PROGMEM = "Ch 1";
 const char StringChannel2[] PROGMEM = "Ch 2";
 const char StringChannel3[] PROGMEM = "Ch 3";
 const char StringChannel4[] PROGMEM = "Ch 4";
-const char StringChannel5[] PROGMEM = "Ch 5";
 const char StringTemperature[] PROGMEM = "Temp";
 const char StringVRefint[] PROGMEM = "VRef";
 const char StringVBattDiv2[] PROGMEM = "\xBD" "VBatt";
 #ifdef AVR
 const char * const ADCInputMUXChannelStrings[ADC_CHANNEL_COUNT] = { StringChannel0, StringChannel1, StringChannel2, StringChannel3,
-        StringChannel4, StringChannel5, StringTemperature, StringVRefint };
+        StringChannel4, StringTemperature, StringVRefint };
 #else
 #ifdef STM32F30X
 const char * const ADCInputMUXChannelStrings[ADC_CHANNEL_COUNT] = {StringChannel2, StringChannel3, StringChannel4,
@@ -502,7 +537,7 @@ const uint8_t ADCInputMUXChannels[ADC_CHANNEL_COUNT] = {ADC_CHANNEL_0, ADC_CHANN
 const char ChannelDivBy1ButtonString[] PROGMEM = "\xF7" "1";
 const char ChannelDivBy10ButtonString[] PROGMEM = "\xF7" "10";
 const char ChannelDivBy100ButtonString[] PROGMEM = "\xF7" "100";
-const char * const ChannelDivByButtonStrings[NUMBER_OF_CHANNEL_WITH_FIXED_ATTENUATOR] = { ChannelDivBy1ButtonString,
+const char * const ChannelDivByButtonStrings[NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR] = { ChannelDivBy1ButtonString,
         ChannelDivBy10ButtonString, ChannelDivBy100ButtonString };
 BDButton TouchButtonChannelMode;
 
@@ -533,7 +568,7 @@ void initDSOGUI(void) {
      * Start page
      ***************************/
 // 1. row
-    // Button for Singleshot
+// Button for Singleshot
     TouchButtonSingleshot.initPGM(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, START_PAGE_BUTTON_HEIGHT,
     COLOR_GUI_CONTROL, PSTR("Singleshot"), TEXT_SIZE_14, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doStartSingleshot);
 
@@ -548,7 +583,7 @@ void initDSOGUI(void) {
             COLOR_GUI_SOURCE_TIMEBASE, "Load", TEXT_SIZE_11, BUTTON_FLAG_NO_BEEP_ON_TOUCH, MODE_LOAD, &doStoreLoadAcquisitionData);
 #endif
 
-    // big start stop button
+// big start stop button
     TouchButtonStartStopDSOMeasurement.initPGM(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3,
             (2 * START_PAGE_BUTTON_HEIGHT) + BUTTON_DEFAULT_SPACING, COLOR_GUI_CONTROL, PSTR("Start\nStop"), TEXT_SIZE_26,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doStartStopDSO);
@@ -556,13 +591,13 @@ void initDSOGUI(void) {
 // 4. row
     tPosY += 2 * START_PAGE_ROW_INCREMENT;
 #ifndef AVR
-    // Button for show FFT - only for Start and Chart pages
+// Button for show FFT - only for Start and Chart pages
     TouchButtonFFT.init(0, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, COLOR_GREEN, "FFT",
             TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH, DisplayControl.ShowFFT,
             &doShowFFT);
 #endif
 
-    // Button for settings page
+// Button for settings page
     TouchButtonSettingsPage.initPGM(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, START_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
             PSTR("Settings"), TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doShowSettingsPage);
 
@@ -584,35 +619,36 @@ void initDSOGUI(void) {
     TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH, 0, &doChartHistory);
 #endif
 
-    // Button for slope
+// Button for slope
     TouchButtonSlope.init(BUTTON_WIDTH_3_POS_2, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "",
     TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doTriggerSlope);
     setSlopeButtonCaption();
 
-    // Back button for sub pages
+// Back button for sub pages
     TouchButtonBack.initPGM(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
-            PSTR("Back"), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doDefaultBackButton);
+            PSTR("Back"),
+            TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doDefaultBackButton);
 
 // 2. row
     tPosY += SETTINGS_PAGE_ROW_INCREMENT;
 
 #ifdef AVR
-    // Button for delay
+// Button for delay
     TouchButtonTriggerDelay.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "", TEXT_SIZE_11,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doPromptForTriggerDelay);
     setTriggerDelayCaption();
 #endif
 
-    // Button for trigger mode
+// Button for trigger mode
     TouchButtonTriggerMode.init(BUTTON_WIDTH_3_POS_2, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "",
     TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doTriggerMode);
     setTriggerModeButtonCaption();
 
-    // Button for channel 0
+// Button for channel 0
     TouchButtonChannels[0].init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_6, SETTINGS_PAGE_BUTTON_HEIGHT,
     BUTTON_AUTO_RED_GREEN_FALSE_COLOR, "", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doChannelSelect);
 
-    // Button for channel 1
+// Button for channel 1
     TouchButtonChannels[1].init(REMOTE_DISPLAY_WIDTH - BUTTON_WIDTH_6, tPosY, BUTTON_WIDTH_6, SETTINGS_PAGE_BUTTON_HEIGHT,
     BUTTON_AUTO_RED_GREEN_FALSE_COLOR, "", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 1, &doChannelSelect);
 
@@ -633,17 +669,17 @@ void initDSOGUI(void) {
 #endif
 #endif
 
-    // Button for AutoRange on off
+// Button for AutoRange on off
     TouchButtonAutoRangeOnOff.init(BUTTON_WIDTH_3_POS_2, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "",
     TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doRangeMode);
     setAutoRangeModeAndButtonCaption(true);
 
-    // Button for channel 2
+// Button for channel 2
     TouchButtonChannels[2].init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_6, SETTINGS_PAGE_BUTTON_HEIGHT,
     BUTTON_AUTO_RED_GREEN_FALSE_COLOR, "", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 2, &doChannelSelect);
     setChannelButtonsCaption();
 
-    // Button for channel select
+// Button for channel select
     TouchButtonChannelSelect.initPGM(REMOTE_DISPLAY_WIDTH - BUTTON_WIDTH_6, tPosY, BUTTON_WIDTH_6, SETTINGS_PAGE_BUTTON_HEIGHT,
     BUTTON_AUTO_RED_GREEN_FALSE_COLOR, StringChannel3, TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 42, &doChannelSelect);
 
@@ -651,11 +687,11 @@ void initDSOGUI(void) {
     tPosY += SETTINGS_PAGE_ROW_INCREMENT;
 
 #ifndef AVR
-    // Button for min/max acquisition mode
+// Button for min/max acquisition mode
 #ifdef LOCAL_DISPLAY_EXISTS
     TouchButtonMinMaxMode.init(SLIDER_DEFAULT_BAR_WIDTH + 6, tPosY, BUTTON_WIDTH_3 - (SLIDER_DEFAULT_BAR_WIDTH + 6),
-            SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_DISPLAY_CONTROL, "", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH| FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN,
-            MeasurementControl.isMinMaxMode, &doMinMaxMode);
+            SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_DISPLAY_CONTROL, "", TEXT_SIZE_11,
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, MeasurementControl.isMinMaxMode, &doMinMaxMode);
     setMinMaxModeButtonCaption();
 #else
     TouchButtonMinMaxMode.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_BLACK, "Sample\nmode", TEXT_SIZE_11,
@@ -665,13 +701,13 @@ void initDSOGUI(void) {
 
 #endif
 
-    // Button for auto offset on, 0-Volt, manual
+// Button for auto offset on, 0-Volt, manual
     TouchButtonAutoOffsetMode.init(BUTTON_WIDTH_3_POS_2, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "",
     TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doOffsetMode);
     setAutoOffsetButtonCaption();
 
 #ifdef FUTURE
-    // Button for trigger line mode
+// Button for trigger line mode
     TouchButtonDrawModeTriggerLine.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT,
             COLOR_GUI_DISPLAY_CONTROL, "Trigger\nline", TEXT_SIZE_11,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, DisplayControl.showTriggerInfoLine,
@@ -681,22 +717,22 @@ void initDSOGUI(void) {
 // 5. row
     tPosY = REMOTE_DISPLAY_HEIGHT - SETTINGS_PAGE_BUTTON_HEIGHT;
 
-    // Button for selecting Frequency page.
+// Button for selecting Frequency page.
     TouchButtonFrequencyPage.initPGM(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_RED, PSTR("Frequency\nGenerator"),
     TEXT_SIZE_14, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doShowFrequencyPage);
 
-    // Button for AC / DC
+// Button for AC / DC
     TouchButtonAcDc.init(BUTTON_WIDTH_3_POS_2, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "",
     TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doAcDcMode);
     setACModeButtonCaption();
 
 #ifdef AVR
-    // Button for reference voltage switching
+// Button for reference voltage switching
     TouchButtonADCReference.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT,
     COLOR_GUI_SOURCE_TIMEBASE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doADCReference);
     setReferenceButtonCaption();
 #else
-    // Button for more-settings pages
+// Button for more-settings pages
     TouchButtonDSOMoreSettings.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_5,
             COLOR_GUI_CONTROL, "More", TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doShowMoreSettingsPage);
 
@@ -705,12 +741,12 @@ void initDSOGUI(void) {
      ***************************/
 // 1. row
     tPosY = 0;
-    // Button for voltage calibration
+// Button for voltage calibration
     TouchButtonCalibrateVoltage.init(0, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_4,
             COLOR_GUI_SOURCE_TIMEBASE, "Calibrate U", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doVoltageCalibration);
 // 2. row
     tPosY += SETTINGS_PAGE_ROW_INCREMENT;
-    // Button for system info
+// Button for system info
     TouchButtonShowSystemInfo.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GREEN,
             "System\ninfo", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doShowSystemInfoPage);
 #endif
@@ -840,6 +876,11 @@ void drawStartPage(void) {
     COLOR_BACKGROUND_DSO);
     BlueDisplay1.drawTextPGM(10, BUTTON_HEIGHT_4_LINE_2 + (3 * 32), PSTR("300 kSamples/s"), 22, COLOR_BLUE,
     COLOR_BACKGROUND_DSO);
+    uint8_t tPos = BlueDisplay1.drawTextPGM(10, BUTTON_HEIGHT_4_LINE_2 + (3 * 32) + 22,
+            PSTR("V" VERSION_DSO "/" VERSION_BLUE_DISPLAY), 11, COLOR_BLUE, COLOR_BACKGROUND_DSO);
+    BlueDisplay1.drawTextPGM(tPos, BUTTON_HEIGHT_4_LINE_2 + (3 * 32) + 22, PSTR(" from " __DATE__), 11, COLOR_BLUE,
+    COLOR_BACKGROUND_DSO);
+
 // Hints
 #ifndef AVR
     BlueDisplay1.drawText(BUTTON_WIDTH_3_POS_2, TEXT_SIZE_22_ASCEND, "\xABScale\xBB",
@@ -872,7 +913,7 @@ void drawDSOSettingsPage(void) {
     /*
      * Determine colors for 3 fixed channel buttons
      */
-    for (int i = 0; i < NUMBER_OF_CHANNEL_WITH_FIXED_ATTENUATOR; ++i) {
+    for (int i = 0; i < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR; ++i) {
         if (i == MeasurementControl.ADCInputMUXChannelIndex) {
             tButtonColor = BUTTON_AUTO_RED_GREEN_TRUE_COLOR;
         } else {
@@ -880,7 +921,7 @@ void drawDSOSettingsPage(void) {
         }
         TouchButtonChannels[i].setButtonColorAndDraw(tButtonColor);
     }
-    if (MeasurementControl.ADCInputMUXChannelIndex >= NUMBER_OF_CHANNEL_WITH_FIXED_ATTENUATOR) {
+    if (MeasurementControl.ADCInputMUXChannelIndex >= NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR) {
         tButtonColor = BUTTON_AUTO_RED_GREEN_TRUE_COLOR;
     } else {
         tButtonColor = BUTTON_AUTO_RED_GREEN_FALSE_COLOR;
@@ -915,13 +956,13 @@ void drawDSOSettingsPage(void) {
 //5. Row
     TouchButtonFrequencyPage.drawButton();
 //    if (MeasurementControl.ChannelHasACDCSwitch) {
-        TouchButtonAcDc.drawButton();
+    TouchButtonAcDc.drawButton();
 //    }
 
 #ifdef AVR
     TouchButtonADCReference.drawButton();
 
-    // print minimum stacksize and enable new stack measurement
+// print minimum stacksize and enable new stack measurement
     printFreeStack();
     initStackFreeMeasurement();
 #else
@@ -1174,7 +1215,7 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
  * Button caption section
  ************************************************************************/
 void setChannelButtonsCaption(void) {
-    for (uint8_t i = 0; i < NUMBER_OF_CHANNEL_WITH_FIXED_ATTENUATOR; ++i) {
+    for (uint8_t i = 0; i < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR; ++i) {
         if (MeasurementControl.AttenuatorType == ATTENUATOR_TYPE_FIXED_ATTENUATOR) {
             TouchButtonChannels[i].setCaptionPGM(ChannelDivByButtonStrings[i]);
         } else {
@@ -1540,16 +1581,16 @@ void doChannelSelect(BDButton * aTheTouchedButton, int16_t aValue) {
              */
             uint8_t tOldValue = MeasurementControl.ADCInputMUXChannelIndex;
             // if channel 3 is not selected, increment channel, otherwise select channel 3
-            if (tOldValue < NUMBER_OF_CHANNEL_WITH_FIXED_ATTENUATOR) {
+            if (tOldValue < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR) {
                 // first press on this button -> stay at channel 3
-                tNewChannelValue = NUMBER_OF_CHANNEL_WITH_FIXED_ATTENUATOR;
+                tNewChannelValue = NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR;
             } else {
                 tNewChannelValue = tOldValue + 1;
                 uint8_t tCaptionIndex = tNewChannelValue;
                 if (tNewChannelValue >= ADC_CHANNEL_COUNT) {
                     tNewChannelValue = 0;
-                    //reset caption of 4. button to channel 3
-                    tCaptionIndex = NUMBER_OF_CHANNEL_WITH_FIXED_ATTENUATOR;
+                    //reset caption of 4. button to "Ch 3"
+                    tCaptionIndex = NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR;
                 }
                 TouchButtonChannelSelect.setCaptionPGM(ADCInputMUXChannelStrings[tCaptionIndex]);
             }
@@ -1559,7 +1600,7 @@ void doChannelSelect(BDButton * aTheTouchedButton, int16_t aValue) {
     /*
      * Refresh page if necessary
      */
-    // check it here since it is also called by setup
+// check it here since it is also called by setup
     if (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS) {
         // manage AC/DC and auto offset buttons
         redrawDisplay();
@@ -1601,7 +1642,7 @@ void doStartSingleshot(BDButton * aTheTouchedButton, int16_t aValue) {
     COLOR_BLACK, COLOR_INFO_BACKGROUND);
 #endif
 
-    // prepare info output - which is shown at least 1 sec later
+// prepare info output - which is shown at least 1 sec later
     sMillisSinceLastInfoOutput = 0;
     MeasurementControl.RawValueMax = 0;
     MeasurementControl.RawValueMin = 0;
@@ -1627,19 +1668,19 @@ void doTriggerLevel(BDSlider * aTheTouchedSlider, uint16_t aValue) {
         return;
     }
 
-    // clear old trigger line
+// clear old trigger line
     clearTriggerLine(DisplayControl.TriggerLevelDisplayValue);
 
-    // store actual display value
+// store actual display value
     DisplayControl.TriggerLevelDisplayValue = aValue;
 
-    // modify trigger values according to display value
+// modify trigger values according to display value
     int tRawLevel = getInputRawFromDisplayValue(aValue);
-    setTriggerLevelAndHysteresis(tRawLevel, 2); // 2 = value for effective trigger hysteresis in manual trigger mode
+    setTriggerLevelAndHysteresis(tRawLevel, TRIGGER_HYSTERESIS_FOR_MODE_MANUAL); // 4 = value for effective trigger hysteresis in manual trigger mode
 
-    // draw new line
+// draw new line
     drawTriggerLine();
-    // print value
+// print value
     printTriggerInfo();
 }
 

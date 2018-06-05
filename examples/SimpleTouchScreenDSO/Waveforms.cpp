@@ -2,14 +2,24 @@
  * Waveforms.cpp
  *
  * Code uses 16 bit AVR Timer1 and generates a 62.5 kHz PWM signal with 8 Bit resolution.
- * After every PWM every cycle an interrupt handler sets a new PWM value, resulting in a sine, triangle or sawtooth output.
- * New value is taken by a rolling index from a table, or directly computed from that index.
- * By using a "floating point" index increment, every frequency can be generated.
+ * After every PWM cycle an interrupt handler sets a new PWM value, resulting in a sine, triangle or sawtooth output.
+ * New value is taken by a rolling index from a table for sine, or directly computed from that index for triangle and sawtooth waveforms.
  *
- * In CTC Mode Timer1 generates square wave from 0.119 Hz up to 8 MHz (full range for Timer1).
- * Timer1 is used by Arduino for Servo Library. For 8 bit resolution you could also use Timer2 which is used for Arduino tone().
+ * Maximum values:                                                          Minimum values:
+ * SINE: clip to minimum 8 samples per period => 128us / 7812.5Hz           7,421mHz
+ * SAWTOOTH: clip to minimum 16 samples per period => 256us / 3906.25Hz     3.725mHz
+ * TRIANGLE: clip to minimum 32 samples per period => 512us / 1953.125Hz    1.866mHz
+ * By using a "floating point" index increment, every frequency lower than these maximum values can be generated.
+ *
+ * In CTC Mode Timer1 generates square wave from 0.119 Hz up to 8 MHz (full range of Timer1).
+ * Timer1 is used by Arduino for Servo Library. For 8 bit resolution it may also be possible to use Timer2 which is used for Arduino tone().
  *
  * Output is at PIN 10
+ *
+ * PWM RC-Filter suggestions
+ * Simple: 2k2 Ohm and 100 nF
+ * 2nd order (good for sine and triangle): 1 kOhm and 100 nF -> 4k7 Ohm and 22 nF
+ * 2nd order (better for sawtooth):        1 kOhm and 22 nF  -> 4k7 Ohm and 4.7 nF
  *
  *  Copyright (C) 2017  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
@@ -45,16 +55,11 @@ struct FrequencyInfoStruct sFrequencyInfo;
 #define SIZE_OF_SINE_TABLE_QUARTER 32
 const uint8_t sSineTableQuarter128[SIZE_OF_SINE_TABLE_QUARTER + 1] PROGMEM = { 128, 135, 141, 147, 153, 159, 165, 171, 177, 182,
         188, 193, 199, 204, 209, 213, 218, 222, 226, 230, 234, 237, 240, 243, 245, 248, 250, 251, 253, 254, 254, 255, 255 };
-// Base period, if exact one next value of table is taken at every interrupt
+// Base period, for which exact one next value from table/computation is taken at every interrupt
 // 8 Bit PWM resolution gives 488.28125Hz sine base frequency: 1/16 us * 256 * 128 = 16*128 = 2048us = 488.28125Hz
-#define BASE_PERIOD_FOR_SINE_TABLE 2048UL // ((1/F_CPU) * PWM_RESOLUTION) * (SIZE_OF_SINE_TABLE_QUARTER * 4)
-
-#define BASE_PERIOD_FOR_TRIANGLE 8176UL // (1/F_CPU) * PWM_RESOLUTION * (256+255) Values -> 122.3092Hz
-#define BASE_PERIOD_FOR_SAWTOOTH 4096UL // (1/F_CPU) * PWM_RESOLUTION * 256 Values -> 244.140625Hz
-
-int8_t sSineTableIndex = 0;
-uint8_t sNumberOfQuadrant = 0;
-uint8_t sNextOcrbValue = 0;
+#define BASE_PERIOD_MICROS_FOR_SINE_TABLE 2048UL // ((1/F_CPU) * PWM_RESOLUTION) * (SIZE_OF_SINE_TABLE_QUARTER * 4)
+#define BASE_PERIOD_MICROS_FOR_TRIANGLE 8176UL // (1/F_CPU) * PWM_RESOLUTION * (256+255) Values -> 122.3092Hz
+#define BASE_PERIOD_MICROS_FOR_SAWTOOTH 4096UL // (1/F_CPU) * PWM_RESOLUTION * 256 Values -> 244.140625Hz
 
 const char FrequencyFactorChars[4] = { 'm', ' ', 'k', 'M' };
 
@@ -98,6 +103,9 @@ void setWaveformMode(uint8_t aNewMode) {
     } else {
         initTimer1For8BitPWM();
     }
+    // start timer if not already done
+    startWaveform();
+    // recompute values
     setWaveformFrequency();
 }
 
@@ -123,213 +131,228 @@ const char * getWaveformModePGMString() {
     return tResultString;
 }
 
-void setFrequency(float aValue) {
-    uint8_t tIndex = 1;
+float getPeriodMicros() {
+    // output period use float, since we have 1/8 us for square wave
+    float tPeriodMicros;
     if (sFrequencyInfo.Waveform == WAVEFORM_SQUARE) {
-        // normalize Frequency to 1 - 1000 and compute SquareWaveFrequencyFactor
-        if (aValue < 1) {
-            tIndex = 0; //mHz
-            aValue *= 1000;
-        } else {
-            while (aValue > 1000) {
-                aValue /= 1000;
-                tIndex++;
-            }
-        }
-    }
-    /*
-     * FrequencyFactor is not needed for PWM.
-     * Set to one for PWM since it might be used for display of Frequency
-     */
-    setFrequencyFactor(tIndex);
-    sFrequencyInfo.Frequency = aValue;
-    setWaveformFrequency();
-}
-
-/*
- * SINE: clip to minimum 8 samples per period => 128us / 7812.5Hz
- * SAWTOOTH: clip to minimum 16 samples per period => 256us / 3906.25Hz
- * Triangle: clip to minimum 32 samples per period => 512us / 1953.125Hz
- */
-bool setWaveformFrequency() {
-    bool hasError = false;
-    if (sFrequencyInfo.Waveform == WAVEFORM_SQUARE) {
-        // need initialized sFrequencyInfo structure
-        hasError = setSquareWaveFrequency();
+        // use better resolution here
+        tPeriodMicros = sFrequencyInfo.ControlValue.DividerInt;
+        tPeriodMicros /= 8;
     } else {
-        // use shift 16 to increase resolution but avoid truncation
-        long tBasePeriodShift16 = (BASE_PERIOD_FOR_SINE_TABLE << 16);
-        if (sFrequencyInfo.Waveform == WAVEFORM_TRIANGLE) {
-            tBasePeriodShift16 = (BASE_PERIOD_FOR_TRIANGLE << 16);
-        } else if (sFrequencyInfo.Waveform == WAVEFORM_SAWTOOTH) {
-            tBasePeriodShift16 = (BASE_PERIOD_FOR_SAWTOOTH << 16);
-        }
-        sFrequencyInfo.PeriodMicros = 1000000UL / sFrequencyInfo.Frequency;
-        uint32_t tBaseFrequencyFactorShift16 = tBasePeriodShift16 / sFrequencyInfo.PeriodMicros;
-        if (tBaseFrequencyFactorShift16 > (16L << 16)) {
-            // Clip at factor 16 and recompute values
-            tBaseFrequencyFactorShift16 = (16L << 16);
-            sFrequencyInfo.PeriodMicros = (tBasePeriodShift16 >> 16) / 16;
-            sFrequencyInfo.Frequency = 1000000UL / sFrequencyInfo.PeriodMicros;
-            hasError = true;
-        }
-        sFrequencyInfo.ControlValue.sBaseFrequencyFactorShift16 = tBaseFrequencyFactorShift16;
-
-        sFrequencyInfo.PrescalerRegisterValue = 1;
-        if (sFrequencyInfo.isOutputEnabled) {
-            // start Timer1 for PWM generation
-            TCCR1B &= ~TIMER_PRESCALER_MASK;
-            TCCR1B |= _BV(CS10); // set prescaler to 1 -> gives 16us / 62.5kHz PWM
-        }
+        tPeriodMicros = sFrequencyInfo.PeriodMicros;
     }
-    return hasError;
+    return tPeriodMicros;
 }
 
-bool setSquareWaveFrequency() {
-    bool hasError = false;
-    float tFrequency = sFrequencyInfo.Frequency;
-    /*
-     * Timer runs in toggle mode and has 8 MHz maximum frequency
-     * Divider = (F_CPU/2) / (sFrequency * (sFrequencyFactorTimes1000 / 1000)) = (F_CPU * 500) / (sFrequencyFactorTimes1000 * sFrequency)
-     * Divider= 1, prescaler= 1 => 8 MHz
-     * Divider= 16348 * prescaler= 1024 = 0x200000000 => 8,388,608us => 0.119209Hz
-     *
-     * But F_CPU * 500 does not fit in a 32 bit integer so use half of it which fits and compensate later
-     */
-    bool tFreqWasCompensated = false;
-    uint32_t tDividerInt = ((F_CPU * 250) / sFrequencyInfo.FrequencyFactorTimes1000);
-    if (tDividerInt > 0x7FFFFFFF) { // equivalent to if(FrequencyFactorTimes1000 == 1) but more than 10 bytes less program space
-        // compensate frequency since divider is too big to compensate
-        // in milliHertz range here
-        if (tFrequency > 2) {
-            /*
-             * Values less than 1 are not correctly processed below. Values below 100 milliHertz makes no sense for AVR timer
-             * and are corrected anyway by ComputePeriodAndSetTimer()
-             */
-            tFrequency /= 2;
-        }
-        tFreqWasCompensated = true;
-    } else {
-        // compensate divider to correct value
-        tDividerInt *= 2;
-    }
-    uint32_t tSavedValue = tDividerInt;
-    tDividerInt /= tFrequency;
-
-    if (tDividerInt == 0) {
-        // 8 Mhz / 0.125 us is Max
-        hasError = true;
-        tDividerInt = 1;
-        tFrequency = 8;
-    }
-
-    /*
-     * Determine prescaler and PrescalerRegisterValue from tDividerInt value,
-     * in order to get an tDividerInt value <= 0x10000 (register value is tDividerInt-1)
-     */
-    uint16_t tPrescaler = 1; // direct clock
-    uint8_t tPrescalerRegisterValue = 1;
-    if (tDividerInt > 0x10000) {
-        tDividerInt >>= 3;
-        if (tDividerInt <= 0x10000) {
-            tPrescaler = 8;
-            tPrescalerRegisterValue = 2;
-        } else {
-            tDividerInt >>= 3;
-            if (tDividerInt <= 0x10000) {
-                tPrescaler = 64;
-                tPrescalerRegisterValue = 3;
-            } else {
-                tDividerInt >>= 2;
-                if (tDividerInt <= 0x10000) {
-                    tPrescaler = 256;
-                    tPrescalerRegisterValue = 4;
-                } else {
-                    tDividerInt >>= 2;
-                    tPrescaler = 1024;
-                    tPrescalerRegisterValue = 5;
-                    if (tDividerInt > 0x10000) {
-                        // clip to 16 bit value
-                        tDividerInt = 0x10000;
-                    }
-                }
-            }
-        }
-    }
-    sFrequencyInfo.PrescalerRegisterValue = tPrescalerRegisterValue;
-    if (sFrequencyInfo.isOutputEnabled) {
-        // set values to timer register
-        TCCR1B &= ~TIMER_PRESCALER_MASK;
-        TCCR1B |= tPrescalerRegisterValue;
-    }
-    OCR1A = tDividerInt - 1; // set compare match register
-
-    /*
-     * recompute exact period and frequency for eventually changed 16 bit period
-     * Frequency = ((F_CPU/2) / (DividerInt * Prescaler)) / (sFrequencyFactorTimes1000 / 1000)
-     *           = (FCPU * 500) / (sFrequencyFactorTimes1000 * (DividerInt * Prescaler)
-     */
-    tDividerInt *= tPrescaler;
-
-    // reuse (FCPU * 500) / sFrequencyFactorTimes1000 from above
-    tFrequency = tSavedValue;
-    tFrequency /= tDividerInt;
-    if (tFreqWasCompensated) {
-        // undo compensation from above
-        tFrequency *= 2;
-    }
-    /*
-     * Save values
-     */
-    sFrequencyInfo.Frequency = tFrequency;
-    sFrequencyInfo.ControlValue.DividerInt = tDividerInt;
-    return hasError;
-}
-
-void setFrequencyFactor(int aIndexValue) {
+void setNormalizedFrequencyFactor(int aIndexValue) {
     sFrequencyInfo.FrequencyFactorIndex = aIndexValue;
     uint32_t tFactor = 1;
-    while (aIndexValue > 0) {
+    while (aIndexValue >= 1) {
         tFactor *= 1000;
         aIndexValue--;
     }
     sFrequencyInfo.FrequencyFactorTimes1000 = tFactor;
 }
 
+/*
+ * Set display values sFrequencyNormalized and sFrequencyFactorIndex
+ *
+ * Problem is set e.g. value of 1Hz as 1000 mHz or 1Hz?
+ * so we just try to keep the existing range.
+ * First put value of 1000 to next range,
+ * then undo if value < 1.00001 and existing range is one lower
+ */
+void setNormalizedFrequencyAndFactor(float aValue) {
+    uint8_t tFrequencyFactorIndex = 1;
+    // normalize Frequency to 1 - 1000 and compute FrequencyFactorIndex
+    if (aValue < 1) {
+        tFrequencyFactorIndex = 0; //mHz
+        aValue *= 1000;
+    } else {
+        // 1000.1 to avoid switching to next range because of resolution issues
+        while (aValue >= 1000) {
+            aValue /= 1000;
+            tFrequencyFactorIndex++;
+        }
+    }
+
+    // check if tFrequencyFactorIndex - 1 fits better
+    if (aValue < 1.00001 && sFrequencyInfo.FrequencyFactorIndex == (tFrequencyFactorIndex - 1)) {
+        aValue *= 1000;
+        tFrequencyFactorIndex--;
+    }
+
+    setNormalizedFrequencyFactor(tFrequencyFactorIndex);
+    sFrequencyInfo.FrequencyNormalized = aValue;
+}
+
+bool setWaveformFrequency() {
+    return setWaveformFrequency((sFrequencyInfo.FrequencyNormalized * sFrequencyInfo.FrequencyFactorTimes1000) / 1000);
+}
+/*
+ * SINE: clip to minimum 8 samples per period => 128us / 7812.5Hz
+ * SAWTOOTH: clip to minimum 16 samples per period => 256us / 3906.25Hz
+ * Triangle: clip to minimum 32 samples per period => 512us / 1953.125Hz
+ * return true if clipping occurs
+ */
+bool setWaveformFrequency(float aFrequency) {
+    bool hasError = false;
+    if (sFrequencyInfo.Waveform == WAVEFORM_SQUARE) {
+        // need initialized sFrequencyInfo structure
+        hasError = setSquareWaveFrequency(aFrequency);
+    } else {
+        // use shift 16 to increase resolution but avoid truncation
+        long tBasePeriodShift16 = (BASE_PERIOD_MICROS_FOR_SINE_TABLE << 16);
+        if (sFrequencyInfo.Waveform == WAVEFORM_TRIANGLE) {
+            tBasePeriodShift16 = (BASE_PERIOD_MICROS_FOR_TRIANGLE << 16);
+        } else if (sFrequencyInfo.Waveform == WAVEFORM_SAWTOOTH) {
+            tBasePeriodShift16 = (BASE_PERIOD_MICROS_FOR_SAWTOOTH << 16);
+        }
+        uint32_t tPeriodMicros = 1000000UL / aFrequency;
+        uint32_t tBaseFrequencyFactorShift16 = tBasePeriodShift16 / tPeriodMicros;
+        if (tBaseFrequencyFactorShift16 > (16L << 16)) {
+            // Clip at factor 16 (taking every 16th value) and recompute values
+            tBaseFrequencyFactorShift16 = (16L << 16);
+            tPeriodMicros = (tBasePeriodShift16 >> 16) / 16;
+            hasError = true;
+        } else if (tBaseFrequencyFactorShift16 < 1) {
+            tBaseFrequencyFactorShift16 = 1;
+            tPeriodMicros = tBasePeriodShift16;
+            hasError = true;
+        }
+        // recompute values
+        sFrequencyInfo.Frequency = 1000000.0 / tPeriodMicros;
+        sFrequencyInfo.PeriodMicros = tPeriodMicros;
+        sFrequencyInfo.ControlValue.BaseFrequencyFactorShift16 = tBaseFrequencyFactorShift16;
+
+        sFrequencyInfo.PrescalerRegisterValueBackup = 1;
+        if (sFrequencyInfo.isOutputEnabled) {
+            // start Timer1 for PWM generation
+            TCCR1B &= ~TIMER_PRESCALER_MASK;
+            TCCR1B |= _BV(CS10); // set prescaler to 1 -> gives 16us / 62.5kHz PWM
+        }
+    }
+    setNormalizedFrequencyAndFactor(sFrequencyInfo.Frequency);
+    return hasError;
+}
+
+bool setSquareWaveFrequency(float aFrequency) {
+    bool hasError = false;
+    float tFrequency = aFrequency;
+    /*
+     * Timer runs in toggle mode and has 8 MHz / 0.125 us maximum frequency
+     * Divider = (F_CPU/2) / sFrequency
+     * Divider= 1, prescaler= 1 => 8 MHz
+     * Divider= 16348 * prescaler= 1024 = 0x200000000 => 8,388,608us => 0.119209Hz
+     */
+    uint32_t tDividerInteger = (F_CPU / 2) / tFrequency;
+    if (tDividerInteger == 0) {
+        if (tFrequency < 1) {
+            // for very small frequencies (F_CPU / 2) / tFrequency gives NaN which results in 0
+            tDividerInteger = 0x10000 * 1024; // maximum divider
+        } else {
+            // 8 MHz / 0.125 us is maximum
+            hasError = true;
+            tDividerInteger = 1;
+            tFrequency = 8;
+        }
+    }
+
+    /*
+     * Determine prescaler and PrescalerRegisterValue from tDividerInteger value,
+     * in order to get an tDividerInteger value <= 0x10000 (register value is tDividerInteger-1)
+     */
+    uint16_t tPrescaler = 1; // direct clock
+    uint8_t tPrescalerRegisterValue = 1;
+    if (tDividerInteger > 0x10000) {
+        tDividerInteger >>= 3;
+        if (tDividerInteger <= 0x10000) {
+            tPrescaler = 8;
+            tPrescalerRegisterValue = 2;
+        } else {
+            tDividerInteger >>= 3;
+            if (tDividerInteger <= 0x10000) {
+                tPrescaler = 64;
+                tPrescalerRegisterValue = 3;
+            } else {
+                tDividerInteger >>= 2;
+                if (tDividerInteger <= 0x10000) {
+                    tPrescaler = 256;
+                    tPrescalerRegisterValue = 4;
+                } else {
+                    tDividerInteger >>= 2;
+                    tPrescaler = 1024;
+                    tPrescalerRegisterValue = 5;
+                    if (tDividerInteger > 0x10000) {
+                        // clip to 16 bit value
+                        tDividerInteger = 0x10000;
+                    }
+                }
+            }
+        }
+    }
+    sFrequencyInfo.PrescalerRegisterValueBackup = tPrescalerRegisterValue;
+    if (sFrequencyInfo.isOutputEnabled) {
+        // set values to timer register
+        TCCR1B &= ~TIMER_PRESCALER_MASK;
+        TCCR1B |= tPrescalerRegisterValue;
+    }
+    OCR1A = tDividerInteger - 1; // set compare match register
+
+    /*
+     * recompute exact period and frequency for eventually changed 16 bit period
+     * Frequency = (F_CPU/2) / (DividerInt * Prescaler)
+     */
+    tDividerInteger *= tPrescaler;
+
+    tFrequency = ((float) (F_CPU / 2)) / tDividerInteger;
+    /*
+     * Save values
+     */
+    sFrequencyInfo.Frequency = tFrequency;
+    sFrequencyInfo.ControlValue.DividerInt = tDividerInteger;
+    sFrequencyInfo.PeriodMicros = tDividerInteger / 8;
+    return hasError;
+}
+
 void stopWaveform() {
-    // set prescaler choice to 0 -> timer stops
+// set prescaler choice to 0 -> timer stops
     TCCR1B &= ~TIMER_PRESCALER_MASK;
 }
 
 void startWaveform() {
     TCCR1B &= ~TIMER_PRESCALER_MASK;
-    TCCR1B |= sFrequencyInfo.PrescalerRegisterValue;
+    TCCR1B |= sFrequencyInfo.PrescalerRegisterValueBackup;
 }
 
 //Timer1 overflow interrupt vector handler
 ISR(TIMER1_OVF_vect) {
-    static int32_t sBaseFrequencyFactorAccumulator = 0; // used to handle fractions of factor above
 
-    // output value at start of ISR to avoid jitter
+    static int8_t sSineTableIndex = 0;
+    static uint8_t sNumberOfQuadrant = 0;
+    static uint8_t sNextOcrbValue = 0;
+
+// output value at start of ISR to avoid jitter
     OCR1B = sNextOcrbValue;
     /*
      * Increase index by sBaseFrequencyFactor.
-     * In order to avoid floating point arithmetic use sBaseFrequencyFactorShift16 and handle resulting residual.
+     * In order to avoid floating point arithmetic in ISR, use sBaseFrequencyFactorShift16 and handle resulting residual.
      */
-    int8_t tIndexDelta = sFrequencyInfo.ControlValue.sBaseFrequencyFactorShift16 >> 16;
-    // handle fraction of frequency Factor
-    sBaseFrequencyFactorAccumulator += sFrequencyInfo.ControlValue.sBaseFrequencyFactorShift16 & 0xFFFF;
-    if (sBaseFrequencyFactorAccumulator > 0x8000) {
+    int8_t tIndexDelta = sFrequencyInfo.ControlValue.BaseFrequencyFactorShift16 >> 16;
+// handle fraction of frequency factor
+    sFrequencyInfo.BaseFrequencyFactorAccumulator += sFrequencyInfo.ControlValue.BaseFrequencyFactorShift16 & 0xFFFF;
+    if (sFrequencyInfo.BaseFrequencyFactorAccumulator > 0x8000) {
         /*
          * Accumulated fraction is bigger than "half" so increase index
          */
         tIndexDelta++;
-        sBaseFrequencyFactorAccumulator -= 0x10000;
+        sFrequencyInfo.BaseFrequencyFactorAccumulator -= 0x10000;
     }
     if (tIndexDelta > 0) {
+        uint8_t tNumberOfQuadrant = sNumberOfQuadrant;
         if (sFrequencyInfo.Waveform == WAVEFORM_SINE) {
             uint8_t tQuadrantIncrease = 0;
-            switch (sNumberOfQuadrant) {
+            switch (tNumberOfQuadrant) {
             case 0: // [0,90) Degree, including 0, not including 90 Degree
             case 2: // [180,270) Degree
                 sSineTableIndex += tIndexDelta;
@@ -347,14 +370,14 @@ ISR(TIMER1_OVF_vect) {
                 }
                 break;
             }
-            if (sNumberOfQuadrant & 0x02) {
+            if (tNumberOfQuadrant & 0x02) {
                 // case 2 and 3   -128 -> 128 ; -255 -> 1
                 sNextOcrbValue = -(pgm_read_byte(&sSineTableQuarter128[sSineTableIndex]));
             } else {
                 sNextOcrbValue = pgm_read_byte(&sSineTableQuarter128[sSineTableIndex]);
             }
 
-            sNumberOfQuadrant = (sNumberOfQuadrant + tQuadrantIncrease) & 0x03;
+            tNumberOfQuadrant = (tNumberOfQuadrant + tQuadrantIncrease) & 0x03;
 
             /*
              * the same as loop with variable delay
@@ -385,13 +408,13 @@ ISR(TIMER1_OVF_vect) {
              * One period from 0 to 0 consists of 256 + 255 values!
              */
             uint8_t tOldOcrbValue = sNextOcrbValue;
-            if (sNumberOfQuadrant == 0) {
+            if (tNumberOfQuadrant == 0) {
                 // Value from 1 to FF
                 // increasing value
                 sNextOcrbValue += tIndexDelta;
                 // detect overflow (value > 0xFF)
                 if (sNextOcrbValue < tOldOcrbValue) {
-                    sNumberOfQuadrant = 1;
+                    tNumberOfQuadrant = 1;
                     // 0->FE, 1->FD
                     sNextOcrbValue = (~sNextOcrbValue) - 1;
                 }
@@ -400,7 +423,7 @@ ISR(TIMER1_OVF_vect) {
                 sNextOcrbValue -= tIndexDelta;
                 // detect underflow
                 if (sNextOcrbValue > tOldOcrbValue) {
-                    sNumberOfQuadrant = 0;
+                    tNumberOfQuadrant = 0;
                     // FF -> 1, FE -> 2
                     sNextOcrbValue = -sNextOcrbValue;
                 }
@@ -409,6 +432,8 @@ ISR(TIMER1_OVF_vect) {
         } else if (sFrequencyInfo.Waveform == WAVEFORM_SAWTOOTH) {
             sNextOcrbValue += tIndexDelta;
         }
+        sNumberOfQuadrant = tNumberOfQuadrant;
+
     }
 }
 
@@ -416,10 +441,10 @@ ISR(TIMER1_OVF_vect) {
  * Use it if you need a different size of table e.g. to generate different frequencies or increase accuracy for low frequencies
  */
 void computeSineTableValues(uint8_t aSineTable[], unsigned int aNumber) {
-    //
+//
     float tRadianDelta = (M_PI * 2) / aNumber;
     float tRadian = 0.0;
-    // (i <= aNumber) in order to include value for 360 degree
+// (i <= aNumber) in order to include value for 360 degree
     for (unsigned int i = 0; i < aNumber; ++i) {
         float tSineFloat = (sin(tRadian) * 127) + 128;
         aSineTable[i] = (tSineFloat + 0.5);

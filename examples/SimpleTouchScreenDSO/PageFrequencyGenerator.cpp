@@ -1,8 +1,20 @@
 /*
  * PageFrequencyGenerator.cpp
  *
- * Frequency output from 119 mHz (8.388 second) to 8MHz on Arduino
- * Waveform frequency is not stable and decreased when DSO is running since then not all overflow interrupts can be handled
+ * Frequency output from 119 mHz (8.388 second) to 8MHz square wave on Arduino using timer1.
+ * Sine waveform output from 7,421 mHz to 7812.5 Hz
+ * Triangle from 3.725 mHz to 1953.125 Hz
+ * Sawtooth from 1.866 mHz to 3906.25 Hz
+ *
+ * !!!Do not run DSO acquisition and non square wave waveform generation at the same time!!!
+ * Because of the interrupts at 62kHz rate, DSO is almost not usable during non square wave waveform generation.
+ * Waveform frequency is not stable and decreased, since not all TIMER1 OVERFLOW interrupts are handled.
+ *
+ * PWM RC-Filter suggestions
+ * Simple: 2k2 Ohm and 100 nF
+ * 2nd order (good for sine and triangle): 1 kOhm and 100 nF -> 4k7 Ohm and 22 nF
+ * 2nd order (better for sawtooth):        1 kOhm and 22 nF  -> 4k7 Ohm and 4.7 nF
+ *
  *
  *  Copyright (C) 2015  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
@@ -26,7 +38,6 @@
 
 #ifdef AVR
 #include "PageFrequencyGenerator.h"
-#include "Waveforms.h"
 #include "BlueDisplay.h"
 
 #include "SimpleTouchScreenDSO.h"
@@ -38,6 +49,8 @@
 #include "main.h" // for StringBuffer
 #include "TouchDSO.h"
 #endif
+
+#include "Waveforms.h"
 
 #include <stdio.h>   // for printf
 #include <math.h>   // for pow and log10f
@@ -67,118 +80,28 @@ static void (*sLastRedrawCallback)(void);
  */
 #ifdef AVR
 const uint16_t FixedFrequencyButtonCaptions[NUMBER_OF_FIXED_FREQUENCY_BUTTONS] PROGMEM
-= { 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000 };
+= { 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000};
 
-// the compiler cannot optimize 2 occurrences of the same PROGMEM string
+// the compiler cannot optimize 2 occurrences of the same PROGMEM string :-(
 const char StringmHz[] PROGMEM = "mHz";
 const char StringHz[] PROGMEM = "Hz";
 const char String10Hz[] PROGMEM = "10Hz";
 const char StringkHz[] PROGMEM = "kHz";
 const char StringMHz[] PROGMEM = "MHz";
 
-const char* RangeButtonStrings[5] = { StringmHz, StringHz, String10Hz, StringkHz, StringMHz };
+const char* RangeButtonStrings[5] = {StringmHz, StringHz, String10Hz, StringkHz, StringMHz};
 #else
-const uint16_t FixedFrequencyButtonCaptions[NUMBER_OF_FIXED_FREQUENCY_BUTTONS] = {1, 2, 5, 10, 20, 50, 100, 200, 500, 1000};
-const char* const RangeButtonStrings[5] = {"mHz", "Hz", "10Hz", "kHz", "MHz"};
+const uint16_t FixedFrequencyButtonCaptions[NUMBER_OF_FIXED_FREQUENCY_BUTTONS] = { 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000 };
+const char* const RangeButtonStrings[5] = { "mHz", "Hz", "10Hz", "kHz", "MHz" };
 const char FrequencyFactorChars[4] = { 'm', ' ', 'k', 'M' };
-#endif
-
-#define INDEX_OF_10HZ 2
-
-#ifndef AVR
-
-#define WAVEFORM_SQUARE 0
-#define WAVEFORM_SINE 1
-#define WAVEFORM_TRIANGLE 2
-#define WAVEFORM_SAWTOOTH 3
-
-struct FrequencyInfoStruct {
-    union {
-        uint32_t DividerInt; // Value used by hardware - may be (divider * prescaler)
-        uint32_t sBaseFrequencyFactorShift16;// Value use by ISR
-    }ControlValue;
-    uint32_t PeriodMicros; // for CTC resolution of value of DividerInt is 8 times better
-    // use float, since we have a logarithmic slider readout and therefore a lot of values between 1 and 2.
-    float Frequency;// Computed value derived from sPeriodInt
-    // factor for mHz/Hz/kHz/MHz - times 1000 because of mHz handling
-    uint32_t FrequencyFactorTimes1000;// 1 -> 1 mHz, 1000 -> 1 Hz, 1000000 -> 1 kHz
-    uint8_t FrequencyFactorIndex;// 0->mHz, 1->Hz, 2->kHz, 3->MHz
-    uint8_t Waveform;
-    bool isOutputEnabled;
-};
 struct FrequencyInfoStruct sFrequencyInfo;
 
-void setFrequencyFactor(int aIndexValue) {
-    sFrequencyInfo.FrequencyFactorIndex = aIndexValue;
-    uint32_t tFactor = 1;
-    while (aIndexValue > 0) {
-        tFactor *= 1000;
-        aIndexValue--;
-    }
-    sFrequencyInfo.FrequencyFactorTimes1000 = tFactor;
-}
-
-const char * getWaveformModePGMString() {
-    const char * tResultString;
-    tResultString = PSTR("Square");
-    if (sFrequencyInfo.Waveform == WAVEFORM_SINE) {
-        tResultString = PSTR("Sine");
-    } else if (sFrequencyInfo.Waveform == WAVEFORM_TRIANGLE) {
-        tResultString = PSTR("Triangle");
-    } else if (sFrequencyInfo.Waveform == WAVEFORM_SAWTOOTH) {
-        tResultString = PSTR("Sawtooth");
-    }
-    return tResultString;
-}
-
-bool setWaveformFrequency() {
-    bool hasError = false;
-    if (sFrequencyInfo.Waveform == WAVEFORM_SQUARE) {
-        float tPeriod = (36000000000 / sFrequencyInfo.FrequencyFactorTimes1000) / sFrequencyInfo.Frequency;
-        uint32_t tPeriodInt = tPeriod;
-        if (tPeriodInt < 2) {
-            hasError = true;
-            tPeriodInt = 2;
-        }
-
-#ifdef STM32F30X
-        Synth_Timer32_SetReloadValue(tPeriodInt);
-#else
-        uint32_t tPrescalerValue = (tPeriodInt >> 16) + 1; // +1 since at least divider by 1
-        if (tPrescalerValue > 1) {
-            //we have prescaler > 1 -> adjust reload value to be less than 0x10001
-            tPeriodInt /= tPrescalerValue;
-        }
-        Synth_Timer16_SetReloadValue(tPeriodInt, tPrescalerValue);
-        tPeriodInt *= tPrescalerValue;
 #endif
-        sFrequencyInfo.ControlValue.DividerInt = tPeriodInt;
-    } else {
-        hasError = true;
-    }
-    return hasError;
-}
+#define INDEX_OF_10HZ 2
+static bool is10HzRange = true;
 
-void setFrequency(float aValue) {
-    if (sFrequencyInfo.Waveform == WAVEFORM_SQUARE) {
-        uint8_t tIndex = 1;
-        while (aValue > 1000) {
-            aValue /= 1000;
-            tIndex++;
-        }
-        if (aValue < 1) {
-            tIndex = 0; //mHz
-            aValue *= 1000;
-        }
-        setFrequencyFactor(tIndex);
-    }
-    sFrequencyInfo.Frequency = aValue;
-    setWaveformFrequency();
-}
-#endif
 
 static const int BUTTON_INDEX_SELECTED_INITIAL = 2; // select 10Hz Button
-static bool is10HzRange = true;
 
 /*
  * GUI
@@ -201,8 +124,8 @@ BDButton TouchButton100;
 BDButton TouchButton200;
 BDButton TouchButton500;
 BDButton TouchButton1k;
-BDButton * const TouchButtonFixedFrequency[] = {&TouchButton1, &TouchButton2, &TouchButton5, &TouchButton10, &TouchButton20,
-    &TouchButton50, &TouchButton100, &TouchButton200, &TouchButton500, &TouchButton1k};
+BDButton * const TouchButtonFixedFrequency[] = { &TouchButton1, &TouchButton2, &TouchButton5, &TouchButton10, &TouchButton20,
+        &TouchButton50, &TouchButton100, &TouchButton200, &TouchButton500, &TouchButton1k };
 #else
 BDButton TouchButtonFirstFixedFrequency;
 #endif
@@ -216,10 +139,12 @@ void doFrequencySlider(BDSlider * aTheTouchedSlider, uint16_t aValue);
 void doWaveformMode(BDButton * aTheTouchedButton, int16_t aValue);
 void setWaveformButtonCaption(void);
 void doSetFixedFrequency(BDButton * aTheTouchedButton, int16_t aValue);
-void doChangeFrequencyRange(BDButton * aTheTouchedButton, int16_t aValue);
+void doSetFrequencyRange(BDButton * aTheTouchedButton, int16_t aValue);
 void doFrequencyGeneratorStartStop(BDButton * aTheTouchedButton, int16_t aValue);
 void doGetFrequency(BDButton * aTheTouchedButton, int16_t aValue);
-bool SetWaveformFrequencyAndPrintValues();
+
+bool setWaveformFrequencyAndPrintValues();
+
 void printFrequencyAndPeriod();
 #ifdef AVR
 void initTimer1ForCTC(void);
@@ -234,17 +159,19 @@ void initFrequencyGenerator(void) {
 #ifdef AVR
     initTimer1ForCTC();
 #else
-    // set frequency to 2 kHz
-    Synth_Timer_initialize(36000);
+    Synth_Timer_initialize(4711);
 #endif
 }
 
 void initFrequencyGeneratorPage(void) {
+    initFrequencyGenerator();
     /*
      * Initialize frequency and other fields to 200 Hz
      */
+    sFrequencyInfo.isOutputEnabled = false;
     sFrequencyInfo.Waveform = WAVEFORM_SQUARE;
-    setFrequency(200);
+    setWaveformFrequency(200);
+
     sFrequencyInfo.isOutputEnabled = true; // to start output at first display of page
 
 #ifndef LOCAL_DISPLAY_EXISTS
@@ -260,8 +187,9 @@ void startFrequencyGeneratorPage(void) {
     initFrequencyGeneratorPageGui();
 #endif
 
-    drawFrequencyGeneratorPage();
     setWaveformFrequency();
+
+    drawFrequencyGeneratorPage();
     /*
      * save state
      */
@@ -315,9 +243,9 @@ void initFrequencyGeneratorPageGui() {
         tFrequency = pgm_read_word(tFrequencyCaptionPtr);
         sprintf_P(sStringBuffer, PSTR("%u"), tFrequency);
 #else
-        for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS; ++i) {
-            tFrequency = FixedFrequencyButtonCaptions[i];
-            sprintf(sStringBuffer, "%u", tFrequency);
+    for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS; ++i) {
+        tFrequency = FixedFrequencyButtonCaptions[i];
+        sprintf(sStringBuffer, "%u", tFrequency);
 #endif
 
 #ifdef LOCAL_DISPLAY_EXISTS
@@ -348,8 +276,7 @@ void initFrequencyGeneratorPageGui() {
             tButtonColor = BUTTON_AUTO_RED_GREEN_TRUE_COLOR;
         }
         TouchButtonFrequencyRanges[i].initPGM(tXPos, tYPos, BUTTON_WIDTH_5 + BUTTON_DEFAULT_SPACING_HALF,
-        BUTTON_HEIGHT_5, tButtonColor, RangeButtonStrings[i], TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, i,
-                &doChangeFrequencyRange);
+        BUTTON_HEIGHT_5, tButtonColor, RangeButtonStrings[i], TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, i, &doSetFrequencyRange);
 
         tXPos += BUTTON_WIDTH_5 + BUTTON_DEFAULT_SPACING - 2;
     }
@@ -364,9 +291,11 @@ void initFrequencyGeneratorPageGui() {
     TouchButtonGetFrequency.initPGM(BUTTON_WIDTH_3_POS_2, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
     BUTTON_HEIGHT_4, COLOR_BLUE, PSTR("Hz..."), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetFrequency);
 
+#ifdef AVR
     TouchButtonWaveform.init(BUTTON_WIDTH_3_POS_3, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
-    BUTTON_HEIGHT_4, COLOR_BLUE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, sFrequencyInfo.Waveform, &doWaveformMode);
+            BUTTON_HEIGHT_4, COLOR_BLUE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, sFrequencyInfo.Waveform, &doWaveformMode);
     setWaveformButtonCaption();
+#endif
 }
 
 void drawFrequencyGeneratorPage(void) {
@@ -382,16 +311,16 @@ void drawFrequencyGeneratorPage(void) {
 
 #ifdef AVR
     BlueDisplay1.drawTextPGM(TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, PSTR("1"),
-    TEXT_SIZE_11, COLOR_BLUE, COLOR_BACKGROUND_FREQ);
+            TEXT_SIZE_11, COLOR_BLUE, COLOR_BACKGROUND_FREQ);
     BlueDisplay1.drawTextPGM(REMOTE_DISPLAY_WIDTH - 5 * TEXT_SIZE_11_WIDTH,
-    FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, PSTR("1000"), TEXT_SIZE_11, COLOR_BLUE,
-    COLOR_BACKGROUND_FREQ);
+            FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, PSTR("1000"), TEXT_SIZE_11, COLOR_BLUE,
+            COLOR_BACKGROUND_FREQ);
 #else
     BlueDisplay1.drawText(TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, ("1"),
-            TEXT_SIZE_11, COLOR_BLUE, COLOR_BACKGROUND_FREQ);
+    TEXT_SIZE_11, COLOR_BLUE, COLOR_BACKGROUND_FREQ);
     BlueDisplay1.drawText(BlueDisplay1.getDisplayWidth() - 5 * TEXT_SIZE_11_WIDTH,
-            FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, ("1000"), TEXT_SIZE_11, COLOR_BLUE,
-            COLOR_BACKGROUND_FREQ);
+    FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, ("1000"), TEXT_SIZE_11, COLOR_BLUE,
+    COLOR_BACKGROUND_FREQ);
 #endif
 
     // fixed frequency buttons
@@ -429,25 +358,41 @@ void drawFrequencyGeneratorPage(void) {
 }
 
 /*
+ * correct the GUI values with factor 10 for 10HzRange
+ */
+void setFrequencyNormalizedForGUI(float aGUIFrequencyValue) {
+    if (is10HzRange) {
+        if (aGUIFrequencyValue <= 100) {
+            setNormalizedFrequencyFactor(FREQUENCY_FACTOR_INDEX_HERTZ);
+            aGUIFrequencyValue *= 10;
+        } else {
+            setNormalizedFrequencyFactor(FREQUENCY_FACTOR_INDEX_KILO_HERTZ);
+            aGUIFrequencyValue /= 100;
+        }
+    }
+    sFrequencyInfo.FrequencyNormalized = aGUIFrequencyValue;
+}
+
+/*
  * Slider handlers
  */
 void doFrequencySlider(BDSlider * aTheTouchedSlider, uint16_t aValue) {
-    float tValue = aValue;
-    tValue = tValue / (FREQ_SLIDER_MAX_VALUE / 3); // gives 0-3
-    if (is10HzRange) {
-        tValue += 1;
-    }
+    float tValueFloat = aValue;
+    tValueFloat = tValueFloat / (FREQ_SLIDER_MAX_VALUE / 3); // gives 0-3
     // 950 byte program space needed for pow() and log10f()
-    sFrequencyInfo.Frequency = pow(10, tValue);
-    SetWaveformFrequencyAndPrintValues();
+    tValueFloat = (pow(10, tValueFloat)); // normalize value to 1-1000
+    setFrequencyNormalizedForGUI(tValueFloat);
+    setWaveformFrequencyAndPrintValues();
 }
 
 /*
  * Button handlers
  */
+#ifdef AVR
 void setWaveformButtonCaption(void) {
     TouchButtonWaveform.setCaptionPGM(getWaveformModePGMString(), (DisplayControl.DisplayPage == DISPLAY_PAGE_FREQUENCY));
 }
+#endif
 
 void doWaveformMode(BDButton * aTheTouchedButton, int16_t aValue) {
 #ifdef AVR
@@ -460,26 +405,22 @@ void doWaveformMode(BDButton * aTheTouchedButton, int16_t aValue) {
  * Set frequency to fixed value 1,2,5,10...,1000
  */
 void doSetFixedFrequency(BDButton * aTheTouchedButton, int16_t aValue) {
-    if (is10HzRange) {
-        aValue *= 10;
-    }
-    sFrequencyInfo.Frequency = aValue;
+    setFrequencyNormalizedForGUI(aValue);
+    bool tErrorOrClippingHappend = setWaveformFrequencyAndPrintValues();
 #ifdef LOCAL_DISPLAY_EXISTS
-    FeedbackTone(SetWaveformFrequencyAndPrintValues());
+    FeedbackTone(tErrorOrClippingHappend);
 #else
-    BlueDisplay1.playFeedbackTone(SetWaveformFrequencyAndPrintValues());
+    BlueDisplay1.playFeedbackTone(tErrorOrClippingHappend);
 #endif
 }
 
 /**
- * changes the unit (mHz - MHz)
+ * sets the unit (mHz - MHz)
  * set color for old and new button
  */
-void doChangeFrequencyRange(BDButton * aTheTouchedButton, int16_t aValue) {
+void doSetFrequencyRange(BDButton * aTheTouchedButton, int16_t aValue) {
+
     if (ActiveTouchButtonFrequencyRange != *aTheTouchedButton) {
-        ActiveTouchButtonFrequencyRange.setButtonColorAndDraw( BUTTON_AUTO_RED_GREEN_FALSE_COLOR);
-        ActiveTouchButtonFrequencyRange = *aTheTouchedButton;
-        aTheTouchedButton->setButtonColorAndDraw( BUTTON_AUTO_RED_GREEN_TRUE_COLOR);
         // Handling of 10 Hz button
         if (aValue == INDEX_OF_10HZ) {
             is10HzRange = true;
@@ -489,8 +430,17 @@ void doChangeFrequencyRange(BDButton * aTheTouchedButton, int16_t aValue) {
         if (aValue >= INDEX_OF_10HZ) {
             aValue--;
         }
-        setFrequencyFactor(aValue);
-        SetWaveformFrequencyAndPrintValues();
+
+        // No MHz for PWM waveforms
+        if (aValue != FREQUENCY_FACTOR_INDEX_MEGA_HERTZ || sFrequencyInfo.Waveform == WAVEFORM_SQUARE) {
+
+            ActiveTouchButtonFrequencyRange.setButtonColorAndDraw( BUTTON_AUTO_RED_GREEN_FALSE_COLOR);
+            ActiveTouchButtonFrequencyRange = *aTheTouchedButton;
+            aTheTouchedButton->setButtonColorAndDraw( BUTTON_AUTO_RED_GREEN_TRUE_COLOR);
+
+            setNormalizedFrequencyFactor(aValue);
+            setWaveformFrequencyAndPrintValues();
+        }
     }
 }
 
@@ -508,15 +458,15 @@ void doGetFrequency(BDButton * aTheTouchedButton, int16_t aValue) {
         sFrequencyInfo.Frequency = tNumber;
     }
     drawFrequencyGeneratorPage();
-    SetWaveformFrequencyAndPrintValues();
+    setWaveformFrequencyAndPrintValues();
 }
 #else
 
 /**
- * Handler for number receive event - set frequency to value
+ * Handler for number receive event - set frequency to float value
  */
 void doSetFrequency(float aValue) {
-    setFrequency(aValue);
+    setWaveformFrequency(aValue);
     printFrequencyAndPeriod();
 }
 
@@ -535,7 +485,7 @@ void doFrequencyGeneratorStartStop(BDButton * aTheTouchedButton, int16_t aValue)
 #ifndef AVR
         Synth_Timer_Start();
 #endif
-        SetWaveformFrequencyAndPrintValues();
+        setWaveformFrequencyAndPrintValues();
     } else {
         // Stop timer
 #ifdef AVR
@@ -547,39 +497,34 @@ void doFrequencyGeneratorStartStop(BDButton * aTheTouchedButton, int16_t aValue)
 }
 
 /*
- * uses global value Frequency and sPeriodInt
+ * Prints frequency and period and sets slider accordingly
  */
 void printFrequencyAndPeriod() {
+
     float tPeriodMicros;
 
 #ifdef AVR
-    dtostrf(sFrequencyInfo.Frequency, 9, 3, &sStringBuffer[20]);
+    dtostrf(sFrequencyInfo.FrequencyNormalized, 9, 3, &sStringBuffer[20]);
     sprintf_P(sStringBuffer, PSTR("%s%cHz"), &sStringBuffer[20], FrequencyFactorChars[sFrequencyInfo.FrequencyFactorIndex]);
-    if (sFrequencyInfo.Waveform == WAVEFORM_SQUARE) {
-        tPeriodMicros = sFrequencyInfo.ControlValue.DividerInt;
-        tPeriodMicros /= 8;
-    } else {
-        tPeriodMicros = sFrequencyInfo.PeriodMicros;
-    }
+
 #else
-// recompute exact frequency for given integer period
-    float tPeriodFloat = sFrequencyInfo.ControlValue.DividerInt;
-    float tFrequency = (36000000000 / sFrequencyInfo.FrequencyFactorTimes1000) / tPeriodFloat;
-    snprintf(sStringBuffer, sizeof sStringBuffer, "%9.3f%cHz", tFrequency,
+    snprintf(sStringBuffer, sizeof sStringBuffer, "%9.3f%cHz", sFrequencyInfo.FrequencyNormalized,
             FrequencyFactorChars[sFrequencyInfo.FrequencyFactorIndex]);
-    tPeriodMicros = tPeriodFloat;
-    tPeriodMicros /= 36;
 #endif
+
 // print frequency
     BlueDisplay1.drawText(FREQ_SLIDER_X + 2 * TEXT_SIZE_22_WIDTH, TEXT_SIZE_22_HEIGHT, sStringBuffer, TEXT_SIZE_22,
     COLOR_RED, COLOR_BACKGROUND_FREQ);
 
-// output period
+// output period use float, since we have 1/8 us for square wave
+    tPeriodMicros = getPeriodMicros();
+
     char tUnitChar = '\xB5';    // micro
     if (tPeriodMicros > 10000) {
         tPeriodMicros /= 1000;
         tUnitChar = 'm';
     }
+
 #ifdef AVR
     dtostrf(tPeriodMicros, 10, 3, &sStringBuffer[20]);
     sprintf_P(sStringBuffer, PSTR("%s%cs"), &sStringBuffer[20], tUnitChar);
@@ -590,9 +535,14 @@ void printFrequencyAndPeriod() {
     COLOR_BLUE, COLOR_BACKGROUND_FREQ);
 
 // 950 byte program space needed for pow() and log10f()
-    uint16_t tSliderValue = log10f(sFrequencyInfo.Frequency) * 100;
+    uint16_t tSliderValue;
+    tSliderValue = log10f(sFrequencyInfo.FrequencyNormalized) * (FREQ_SLIDER_MAX_VALUE / 3);
     if (is10HzRange) {
-        tSliderValue -= 100;
+        if (sFrequencyInfo.FrequencyFactorIndex == FREQUENCY_FACTOR_INDEX_KILO_HERTZ) {
+            tSliderValue += 2 * (FREQ_SLIDER_MAX_VALUE / 3);
+        } else {
+            tSliderValue -= (FREQ_SLIDER_MAX_VALUE / 3);
+        }
     }
     TouchSliderFrequency.setActualValueAndDrawBar(tSliderValue);
 }
@@ -600,11 +550,105 @@ void printFrequencyAndPeriod() {
 /**
  * Computes Autoreload value for synthesizer from 8,381 mHz (0xFFFFFFFF) to 18MHz (0x02) and prints frequency value
  * @param aSetSlider
- * @param global variable sFrequency
+ * @param global variable Frequency
  * @return true if error / clipping happened
  */
-bool SetWaveformFrequencyAndPrintValues() {
-    bool hasError = setWaveformFrequency();
+bool setWaveformFrequencyAndPrintValues() {
+    bool tErrorOrClippingHappend;
+
+    tErrorOrClippingHappend = setWaveformFrequency();
     printFrequencyAndPeriod();
+    return tErrorOrClippingHappend;
+}
+
+#ifndef AVR
+// content for AVR is in Waveforms.cpp
+
+#define WAVEFORM_SQUARE 0
+#define WAVEFORM_SINE 1
+#define WAVEFORM_TRIANGLE 2
+#define WAVEFORM_SAWTOOTH 3
+
+void setNormalizedFrequencyFactor(int aIndexValue) {
+    sFrequencyInfo.FrequencyFactorIndex = aIndexValue;
+    uint32_t tFactor = 1;
+    while (aIndexValue > 0) {
+        tFactor *= 1000;
+        aIndexValue--;
+    }
+    sFrequencyInfo.FrequencyFactorTimes1000 = tFactor;
+}
+
+/*
+ * Set display values sFrequencyNormalized and sFrequencyFactorIndex
+ *
+ * Problem is set e.g. value of 1Hz as 1000 mHz or 1Hz?
+ * so we just try to keep the existing range.
+ * First put value of 1000 to next range,
+ * then undo if value < 1.00001 and existing range is one lower
+ */
+void setNormalizedFrequencyAndFactor(float aValue) {
+    uint8_t tFrequencyFactorIndex = 1;
+    // normalize Frequency to 1 - 1000 and compute FrequencyFactorIndex
+    if (aValue < 1) {
+        tFrequencyFactorIndex = 0; //mHz
+        aValue *= 1000;
+    } else {
+        // 1000.1 to avoid switching to next range because of resolution issues
+        while (aValue >= 1000) {
+            aValue /= 1000;
+            tFrequencyFactorIndex++;
+        }
+    }
+
+    // check if tFrequencyFactorIndex - 1 fits better
+    if (aValue < 1.00001 && sFrequencyInfo.FrequencyFactorIndex == (tFrequencyFactorIndex - 1)) {
+        aValue *= 1000;
+        tFrequencyFactorIndex--;
+    }
+
+    setNormalizedFrequencyFactor(tFrequencyFactorIndex);
+    sFrequencyInfo.FrequencyNormalized = aValue;
+}
+
+bool setWaveformFrequency(float aValue) {
+    bool hasError = false;
+    if (sFrequencyInfo.Waveform == WAVEFORM_SQUARE) {
+        float tDivider = 36000000 / aValue;
+        uint32_t tDividerInt = tDivider;
+        if (tDividerInt < 2) {
+            hasError = true;
+            tDividerInt = 2;
+        }
+
+#ifdef STM32F30X
+        Synth_Timer32_SetReloadValue(tDividerInt);
+#else
+        uint32_t tPrescalerValue = (tDividerInt >> 16) + 1; // +1 since at least divider by 1
+        if (tPrescalerValue > 1) {
+            //we have prescaler > 1 -> adjust reload value to be less than 0x10001
+            tDividerInt /= tPrescalerValue;
+        }
+        Synth_Timer16_SetReloadValue(tDividerInt, tPrescalerValue);
+        tDividerInt *= tPrescalerValue;
+#endif
+        sFrequencyInfo.ControlValue.DividerInt = tDividerInt;
+        // recompute frequency
+        sFrequencyInfo.Frequency = 36000000 / tDividerInt;
+        setNormalizedFrequencyAndFactor(sFrequencyInfo.Frequency);
+    } else {
+        hasError = true;
+    }
+
     return hasError;
 }
+
+bool setWaveformFrequency() {
+    return setWaveformFrequency((sFrequencyInfo.FrequencyNormalized * sFrequencyInfo.FrequencyFactorTimes1000) / 1000);
+}
+
+float getPeriodMicros() {
+    return sFrequencyInfo.ControlValue.DividerInt / 36.0f;
+}
+#endif
+

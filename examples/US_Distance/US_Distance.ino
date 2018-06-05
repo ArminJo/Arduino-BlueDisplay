@@ -167,23 +167,28 @@ void setup(void) {
     delay(100);
 }
 
-unsigned int sCentimeterNew = 0;
-unsigned int sCentimeterOld = 50;
+int sCentimeterOld = 50;
 bool sToneIsOff = true;
 
 void loop(void) {
     // Timeout of 20000L is 3.4 meter
-    sCentimeterNew = getUSDistanceAsCentiMeterWithCentimeterTimeout(DISTANCE_TIMEOUT_CM);
+    getUSDistanceAsCentiMeterWithCentimeterTimeout(DISTANCE_TIMEOUT_CM);
+//    startUSDistanceAsCentiMeterWithCentimeterTimeoutNonBlocking(DISTANCE_TIMEOUT_CM);
+//    while (!isUSDistanceMeasureFinished()) {
+//    }
+
     if (!BlueDisplay1.mConnectionEstablished) {
         Serial.print("cm=");
-        if (sCentimeterNew == DISTANCE_TIMEOUT_CM) {
+        if (sUSDistanceCentimeter >= DISTANCE_TIMEOUT_CM) {
             Serial.println("timeout");
         } else {
-            Serial.println(sCentimeterNew);
+            Serial.print(sUSDistanceCentimeter);
+            Serial.print(" micros=");
+            Serial.println(sUSPulseMicros);
         }
     }
 
-    if (sCentimeterNew >= DISTANCE_TIMEOUT_CM) {
+    if (sUSDistanceCentimeter >= DISTANCE_TIMEOUT_CM) {
         // timeout happened
         tone(TONE_PIN, 1000, 50);
         delay(100);
@@ -191,22 +196,22 @@ void loop(void) {
         delay((100 - MEASUREMENT_INTERVAL_MS) - 20);
 
     } else {
-        if (doTone && sCentimeterNew < 100) {
+        if (doTone && sUSDistanceCentimeter < 100) {
             /*
              * local feedback for distances < 100 cm
              */
-            tone(TONE_PIN, sCentimeterNew * 32, MEASUREMENT_INTERVAL_MS + 20);
+            tone(TONE_PIN, sUSDistanceCentimeter * 32, MEASUREMENT_INTERVAL_MS + 20);
         }
-        sCentimeterNew -= sOffset;
-        if (sCentimeterNew != sCentimeterOld) {
+        sUSDistanceCentimeter -= sOffset;
+        if (sUSDistanceCentimeter != sCentimeterOld) {
             if (BlueDisplay1.mConnectionEstablished) {
                 uint16_t tCmXPosition = BlueDisplay1.drawUnsignedByte(getTextWidth(sCaptionTextSize * 2), sValueStartY,
-                        sCentimeterNew, sCaptionTextSize * 2, COLOR_YELLOW,
+                        sUSDistanceCentimeter, sCaptionTextSize * 2, COLOR_YELLOW,
                         COLOR_BLUE);
                 BlueDisplay1.drawText(tCmXPosition, sValueStartY, "cm", sCaptionTextSize, COLOR_WHITE, COLOR_BLUE);
-                SliderShowDistance.setActualValueAndDrawBar(sCentimeterNew);
+                SliderShowDistance.setActualValueAndDrawBar(sUSDistanceCentimeter);
             }
-            if (sCentimeterNew >= 40 || !doTone) {
+            if (sUSDistanceCentimeter >= 40 || !doTone) {
                 /*
                  * Silence here
                  */
@@ -223,15 +228,19 @@ void loop(void) {
                  * Switch tones only if range changes
                  */
                 if (BlueDisplay1.mConnectionEstablished) {
-                    if (sCentimeterNew < 40 && sCentimeterNew > 30 && (sCentimeterOld >= 40 || sCentimeterOld <= 30)) {
+                    if (sUSDistanceCentimeter < 40 && sUSDistanceCentimeter > 30
+                            && (sCentimeterOld >= 40 || sCentimeterOld <= 30)) {
                         BlueDisplay1.playTone(22);
-                    } else if (sCentimeterNew <= 30 && sCentimeterNew > 20 && (sCentimeterOld >= 30 || sCentimeterOld <= 20)) {
+                    } else if (sUSDistanceCentimeter <= 30 && sUSDistanceCentimeter > 20
+                            && (sCentimeterOld >= 30 || sCentimeterOld <= 20)) {
                         BlueDisplay1.playTone(17);
-                    } else if (sCentimeterNew <= 20 && sCentimeterNew > 10 && (sCentimeterOld > 20 || sCentimeterOld <= 10)) {
+                    } else if (sUSDistanceCentimeter <= 20 && sUSDistanceCentimeter > 10
+                            && (sCentimeterOld > 20 || sCentimeterOld <= 10)) {
                         BlueDisplay1.playTone(18);
-                    } else if (sCentimeterNew <= 10 && sCentimeterNew > 3 && (sCentimeterOld > 10 || sCentimeterOld <= 3)) {
+                    } else if (sUSDistanceCentimeter <= 10 && sUSDistanceCentimeter > 3
+                            && (sCentimeterOld > 10 || sCentimeterOld <= 3)) {
                         BlueDisplay1.playTone(16);
-                    } else if (sCentimeterNew <= 3 && sCentimeterOld > 3) {
+                    } else if (sUSDistanceCentimeter <= 3 && sCentimeterOld > 3) {
                         BlueDisplay1.playTone(36);
                     }
                 }
@@ -239,6 +248,6 @@ void loop(void) {
         }
     }
     checkAndHandleEvents();
-    sCentimeterOld = sCentimeterNew;
+    sCentimeterOld = sUSDistanceCentimeter;
     delay(MEASUREMENT_INTERVAL_MS); // < 200
 }

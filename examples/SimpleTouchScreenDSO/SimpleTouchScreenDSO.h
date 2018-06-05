@@ -29,19 +29,15 @@ const unsigned int REMOTE_DISPLAY_WIDTH = 320;
 
 #define THOUSANDS_SEPARATOR '.'
 
-// Data buffer size (must be small enough to leave appr. 7 % (144 Byte) for stack
-#define DATABUFFER_SIZE (3*REMOTE_DISPLAY_WIDTH) //960
-// Acquisition start values
-#define TIMEBASE_INDEX_START_VALUE 7 // 2ms - shows 50 Hz
-
 /*
  * Pins on port B
  */
-#define OUTPUT_MASK_PORTB   0X0C
+#define OUTPUT_MASK_PORTB   0X2C
 #define ATTENUATOR_DETECT_PIN_0 8 // PortB0
 #define ATTENUATOR_DETECT_PIN_1 9 // PortB1
 #define TIMER_1_OUTPUT_PIN 10 // Frequency generation OC1B TIMER1
-#define VEE_PIN 11 // OC2A TIMER2 Square wave for VEE (-5V) generation
+#define VEE_PIN 11 // // PortB3 OC2A TIMER2 Square wave for VEE (-5V) generation
+#define DEBUG_PIN 13 // PortB5 PIN 13
 
 /*
  * Pins on port B
@@ -66,6 +62,7 @@ const unsigned int REMOTE_DISPLAY_WIDTH = 320;
 #define ATTENUATOR_1_PIN 5 // PD5
 #define AC_DC_RELAIS_PIN_1 6 // PD6
 #define AC_DC_RELAIS_PIN_2 7 // PD7
+
 
 /*
  * COLORS
@@ -103,7 +100,7 @@ const unsigned int REMOTE_DISPLAY_WIDTH = 320;
 
 // States of tTriggerStatus
 #define TRIGGER_STATUS_START 0 // No trigger condition met
-#define TRIGGER_STATUS_BEFORE_THRESHOLD 1 // slope condition met, wait to go beyond threshold hysteresis
+#define TRIGGER_STATUS_AFTER_HYSTERESIS 1 // slope and hysteresis condition met, wait to go beyond trigger level without hysteresis.
 #define TRIGGER_STATUS_FOUND 2 // Trigger condition met - Used for shorten ISR handling
 #define TRIGGER_STATUS_FOUND_AND_WAIT_FOR_DELAY 3 // Trigger condition met and waiting for ms delay
 #define TRIGGER_STATUS_FOUND_AND_NOW_GET_ONE_VALUE 4 // Trigger condition met (and delay gone), now get first value for min/max initialization
@@ -116,8 +113,6 @@ const unsigned int REMOTE_DISPLAY_WIDTH = 320;
 
 #define ATTENUATOR_TYPE_ACTIVE_ATTENUATOR 2 // to be developed
 #define NUMBER_OF_CHANNEL_WITH_ACTIVE_ATTENUATOR 2
-
-#define MAX_ADC_CHANNEL 5
 
 struct MeasurementControlStruct {
     // State
@@ -141,7 +136,7 @@ struct MeasurementControlStruct {
     bool TriggerSlopeRising;
     uint16_t RawTriggerLevel;
     uint16_t RawTriggerLevelHysteresis; // The RawTriggerLevel +/- hysteresis depending on slope (- for TriggerSlopeRising) - Used for computeMicrosPerPeriod()
-    uint16_t RawHysteresis;
+    uint16_t RawHysteresis;             // quarter of peak to peak value
     uint16_t ValueBeforeTrigger;
 
     uint32_t TriggerDelayMillisEnd; // value of millis() at end of milliseconds trigger delay

@@ -60,15 +60,15 @@ struct TouchEvent sUpPosition;
  * helper variables
  */
 //
-bool sNothingTouched = false;// = !(sSliderTouched || sAutorepeatButtonTouched)
-bool sSliderIsMoveTarget = false;// true if slider was touched by DOWN event
+bool sNothingTouched = false; // = !(sSliderTouched || sAutorepeatButtonTouched)
+bool sSliderIsMoveTarget = false; // true if slider was touched by DOWN event
 
 uint32_t sLongTouchDownTimeoutMillis;
 /*
  * timer related callbacks
  */
 //
-bool (*sPeriodicTouchCallback)(int, int) = NULL;// return parameter not yet used
+bool (*sPeriodicTouchCallback)(int, int) = NULL; // return parameter not yet used
 uint32_t sPeriodicCallbackPeriodMillis;
 
 struct BluetoothEvent localTouchEvent;
@@ -204,15 +204,15 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aTimeMillis) {
 #ifdef AVR
     unsigned long tStartMillis = millis();
     while (millis() - tStartMillis < aTimeMillis) {
-#else
-        unsigned long tStartMillis = getMillisSinceBoot();
-        while (getMillisSinceBoot() - tStartMillis < aTimeMillis) {
-#endif
 #ifndef USE_SIMPLE_SERIAL
         // check for Arduino serial - code from arduino main.cpp / main()
         if (serialEventRun) {
             serialEventRun();
         }
+#endif
+#else // AVR
+    unsigned long tStartMillis = getMillisSinceBoot();
+    while (getMillisSinceBoot() - tStartMillis < aTimeMillis) {
 #endif
         checkAndHandleEvents();
     }
@@ -403,13 +403,15 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
 //    if (tEventType == EVENT_BUTTON_CALLBACK) {
         sTouchIsStillDown = false; // to disable local touch up detection
 #ifdef LOCAL_DISPLAY_EXISTS
-                tButtonCallback = (void (*)(BDButton*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;
-                BDButton tTempButton = BDButton(tEvent.EventData.GuiCallbackInfo.ObjectIndex,
-                        TouchButton::getLocalButtonFromBDButtonHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex));
-                tButtonCallback(&tTempButton, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
+        tButtonCallback = (void (*)(BDButtonHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;; // 2 ;; for pretty print :-(
+        {
+            BDButton tTempButton = BDButton(tEvent.EventData.GuiCallbackInfo.ObjectIndex,
+                    TouchButton::getLocalButtonFromBDButtonHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex));
+            tButtonCallback(&tTempButton.mButtonHandle, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
+        }
 #else
         //BDButton * is the same as BDButtonHandle_t * since BDButton only has one BDButtonHandle_t element
-        tButtonCallback = (void (*)(BDButtonHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;; // 2 ;; for pretty print :-(
+        tButtonCallback = (void (*)(BDButtonHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;;// 2 ;; for pretty print :-(
         tButtonCallback((BDButtonHandle_t*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex,
                 tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
 #endif
@@ -419,13 +421,15 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
 //    } else if (tEventType == EVENT_SLIDER_CALLBACK) {
         sTouchIsStillDown = false;// to disable local touch up detection
 #ifdef LOCAL_DISPLAY_EXISTS
-        tSliderCallback = (void (*)(BDSlider *, int16_t))tEvent.EventData.GuiCallbackInfo.Handler;
-        TouchSlider * tLocalSlider = TouchSlider::getLocalSliderFromBDSliderHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
-        BDSlider tTempSlider = BDSlider(tEvent.EventData.GuiCallbackInfo.ObjectIndex, tLocalSlider);
-        tSliderCallback(&tTempSlider, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
-        // synchronize local slider - remote one is synchronized by local slider itself
-        if (aEvent != &localTouchEvent) {
-            tLocalSlider->setActualValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
+        tSliderCallback = (void (*)(BDSliderHandle_t *, int16_t))tEvent.EventData.GuiCallbackInfo.Handler; {
+            TouchSlider * tLocalSlider = TouchSlider::getLocalSliderFromBDSliderHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
+            BDSlider tTempSlider = BDSlider(tEvent.EventData.GuiCallbackInfo.ObjectIndex, tLocalSlider);
+            tSliderCallback(&tTempSlider.mSliderHandle, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
+
+            // synchronize local slider - remote one is synchronized by local slider itself
+            if (aEvent != &localTouchEvent) {
+                tLocalSlider->setActualValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
+            }
         }
 #else
         tSliderCallback = (void (*)(BDSliderHandle_t *, int16_t))tEvent.EventData.GuiCallbackInfo.Handler;; // 2 ;; for pretty print :-(

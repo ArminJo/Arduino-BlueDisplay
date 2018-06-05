@@ -40,7 +40,7 @@
  * 1. Sync Byte A5
  * 2. Byte Data_Size_Type token (byte, short etc.) - only byte used
  * 3. Short length of data in byte units
- * 4. Length items of data values
+ * 4. (Length) items of data values
  *
  *
  * RECEIVE PROTOCOL USED:

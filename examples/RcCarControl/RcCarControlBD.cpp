@@ -322,7 +322,7 @@ void BDloop() {
         // falling edge starts measurement
         digitalWrite(TRIGGER_PIN, LOW);
 
-        unsigned long tPulseLength = pulseIn(ECHO_PIN, HIGH, 5850); // timeout at 1m
+        unsigned long tPulseLength = pulseInLong(ECHO_PIN, HIGH, 5850); // timeout at 1m
         if (tPulseLength != 0) {
             /*
              * Filter value

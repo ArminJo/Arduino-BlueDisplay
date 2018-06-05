@@ -264,7 +264,7 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, int aNumberOfArgs, ...) {
  * Assembles parameter header and appends header for data field
  */
 void sendUSART5ArgsAndByteBuffer(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd,
-        uint16_t aColor, uint8_t * aBuffer, size_t aBufferLength) {
+        uint16_t aColor, uint8_t * aBufferPtr, size_t aBufferLength) {
 
     uint16_t tParamBuffer[MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS];
 
@@ -280,7 +280,7 @@ void sendUSART5ArgsAndByteBuffer(uint8_t aFunctionTag, uint16_t aXStart, uint16_
     // add data field header
     *tBufferPointer++ = DATAFIELD_TAG_BYTE << 8 | SYNC_TOKEN; // start new transmission block
     *tBufferPointer++ = aBufferLength; // length in byte
-    sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], 18, aBuffer, aBufferLength);
+    sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], 18, aBufferPtr, aBufferLength);
 }
 
 /**

@@ -68,7 +68,7 @@ void sendUSARTArgs(uint8_t aFunctionTag, int aNumberOfArgs, ...);
 void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, int aNumberOfArgs, ...);
 void sendUSART5Args(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, uint16_t aColor);
 void sendUSART5ArgsAndByteBuffer(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd,
-		uint16_t aColor, uint8_t * aBuffer, size_t aBufferLength);
+		uint16_t aColor, uint8_t * aBufferPtr, size_t aBufferLength);
 
 #define PAIRED_PIN 5
 
