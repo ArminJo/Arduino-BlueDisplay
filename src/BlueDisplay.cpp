@@ -383,7 +383,8 @@ void BlueDisplay::fillCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRad
 /**
  * @return start x for next character / x + (TEXT_SIZE_11_WIDTH * size)
  */
-uint16_t BlueDisplay::drawChar(uint16_t aPosX, uint16_t aPosY, char aChar, uint16_t aCharSize, color16_t aFGColor, color16_t aBGColor) {
+uint16_t BlueDisplay::drawChar(uint16_t aPosX, uint16_t aPosY, char aChar, uint16_t aCharSize, color16_t aFGColor,
+        color16_t aBGColor) {
     uint16_t tRetValue = 0;
 #ifdef LOCAL_DISPLAY_EXISTS
     tRetValue = LocalDisplay.drawChar(aPosX, aPosY - getTextAscend(aCharSize), aChar, getLocalTextSize(aCharSize), aFGColor,
@@ -440,8 +441,8 @@ uint16_t BlueDisplay::drawByte(uint16_t aPosX, uint16_t aPosY, int8_t aByte, uin
     return tRetValue;
 }
 
-uint16_t BlueDisplay::drawUnsignedByte(uint16_t aPosX, uint16_t aPosY, uint8_t aUnsignedByte, uint16_t aTextSize, color16_t aFGColor,
-        color16_t aBGColor) {
+uint16_t BlueDisplay::drawUnsignedByte(uint16_t aPosX, uint16_t aPosY, uint8_t aUnsignedByte, uint16_t aTextSize,
+        color16_t aFGColor, color16_t aBGColor) {
     uint16_t tRetValue = 0;
     char tStringBuffer[4];
 #ifdef AVR
@@ -944,7 +945,7 @@ void BlueDisplay::getInfo(uint8_t aInfoSubcommand, void (*aInfoHandler)(uint8_t,
  *  This results in a data event
  */
 void BlueDisplay::requestMaxCanvasSize(void) {
-        sendUSARTArgs(FUNCTION_REQUEST_MAX_CANVAS_SIZE, 0);
+    sendUSARTArgs(FUNCTION_REQUEST_MAX_CANVAS_SIZE, 0);
 }
 
 #ifdef AVR
@@ -1307,7 +1308,7 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
 /***************************************
  * ADC Section for VCC and temperature
  ***************************************/
-#define PRESCALE128  7
+#define ADC_PRESCALE128  7
 #define ADC_TEMPERATURE_CHANNEL 8
 #define ADC_1_1_VOLT_CHANNEL 0x0E
 /*
@@ -1325,7 +1326,7 @@ uint16_t getADCValue(uint8_t aChannel, uint8_t aReference) {
     uint16_t tValue = 0;
     uint16_t tSum = 0; // uint16_t is sufficient for 64 samples
     uint8_t tOldADCSRA = ADCSRA;
-    ADCSRA = (1 << ADEN) | (1 << ADSC) | (1 << ADATE) | (1 << ADIF) | (0 << ADIE) | PRESCALE128;
+    ADCSRA = (1 << ADEN) | (1 << ADSC) | (1 << ADATE) | (1 << ADIF) | (0 << ADIE) | ADC_PRESCALE128;
     for (int i = 0; i < 64; ++i) {
         // wait for free running conversion to finish
         while (bit_is_clear(ADCSRA, ADIF)) {
@@ -1344,25 +1345,51 @@ uint16_t getADCValue(uint8_t aChannel, uint8_t aReference) {
 
 // old name
 float getVCCValue(void) {
-    // use AVCC with external capacitor at AREF pin as reference
-    float tVCC = getADCValue(ADC_1_1_VOLT_CHANNEL, DEFAULT);
-    return ((1024 * 1.1) / tVCC);
+    return getVCCVoltage();
 }
+
+#ifdef INTERNAL1V1
+// workaround for MEGA 2560
+#define INTERNAL INTERNAL1V1
+#endif
 
 // new name
 float getVCCVoltage(void) {
     // use AVCC with external capacitor at AREF pin as reference
+    uint8_t tOldADMUX = ADMUX;
+    if (ADMUX & (INTERNAL << REFS0)) {
+        // switch AREF
+        ADMUX = ADC_1_1_VOLT_CHANNEL | (DEFAULT << REFS0);
+        // and wait for settling
+        delayMicroseconds(400); // experimental value is > 200 us
+    }
     float tVCC = getADCValue(ADC_1_1_VOLT_CHANNEL, DEFAULT);
+    ADMUX = tOldADMUX;
+    /*
+     * Do not wait for reference to settle here, since it may not be necessary
+     */
     return ((1024 * 1.1) / tVCC);
 }
 
 float getTemperature(void) {
     // use internal 1.1 Volt as reference
-#ifdef INTERNAL1V1
-    float tTemp = (getADCValue(ADC_TEMPERATURE_CHANNEL, INTERNAL1V1) - 317);
-#else
+    uint8_t tOldADMUX;
+
+    bool tReferenceMustBeChanged = (ADMUX & (DEFAULT << REFS0));
+    if (tReferenceMustBeChanged) {
+        tOldADMUX = ADMUX;
+        // set AREF  to 1.1V and wait for settling
+        ADMUX = ADC_TEMPERATURE_CHANNEL | (INTERNAL << REFS0);
+        delayMicroseconds(4000); // measured value is 3500 us
+    }
+
     float tTemp = (getADCValue(ADC_TEMPERATURE_CHANNEL, INTERNAL) - 317);
-#endif
+
+    if (tReferenceMustBeChanged) {
+        ADMUX = tOldADMUX;
+        // wait for settling back to VCC
+        delayMicroseconds(400); // experimental value is > 200 us
+    }
     return (tTemp / 1.22);
 }
 
@@ -1380,10 +1407,12 @@ void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aY
         char tVCCString[6];
         char tTempString[6];
 
-        float tVCCVoltage = getVCCVoltage();
-        dtostrf(tVCCVoltage, 4, 2, tVCCString);
         float tTemp = getTemperature();
         dtostrf(tTemp, 4, 1, tTempString);
+
+        float tVCCVoltage = getVCCVoltage();
+        dtostrf(tVCCVoltage, 4, 2, tVCCString);
+
         sprintf_P(tDataBuffer, PSTR("%s Volt %s\xB0" "C"), tVCCString, tTempString);
         drawText(aXPos, aYPos, tDataBuffer, aTextSize, COLOR_BLACK, COLOR_WHITE);
     }

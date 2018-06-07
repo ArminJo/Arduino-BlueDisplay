@@ -19,6 +19,8 @@
 // Utility section
 uint16_t getInputRawFromDisplayValue(uint8_t aDisplayValue);
 float getFloatFromDisplayValue(uint8_t aDisplayValue);
+void printSingleshotMarker();
+void clearSingleshotMarker();
 extern "C" void INT0_vect();
 
 /*
@@ -33,8 +35,8 @@ const unsigned int REMOTE_DISPLAY_WIDTH = 320;
  * Pins on port B
  */
 #define OUTPUT_MASK_PORTB   0X2C
-#define ATTENUATOR_DETECT_PIN_0 8 // PortB0
-#define ATTENUATOR_DETECT_PIN_1 9 // PortB1
+#define ATTENUATOR_DETECT_PIN_0 8 // PortB0 in INPUT_PULLUP mode
+#define ATTENUATOR_DETECT_PIN_1 9 // PortB1 in INPUT_PULLUP mode
 #define TIMER_1_OUTPUT_PIN 10 // Frequency generation OC1B TIMER1
 #define VEE_PIN 11 // // PortB3 OC2A TIMER2 Square wave for VEE (-5V) generation
 #define DEBUG_PIN 13 // PortB5 PIN 13
@@ -103,14 +105,12 @@ const unsigned int REMOTE_DISPLAY_WIDTH = 320;
 #define TRIGGER_STATUS_AFTER_HYSTERESIS 1 // slope and hysteresis condition met, wait to go beyond trigger level without hysteresis.
 #define TRIGGER_STATUS_FOUND 2 // Trigger condition met - Used for shorten ISR handling
 #define TRIGGER_STATUS_FOUND_AND_WAIT_FOR_DELAY 3 // Trigger condition met and waiting for ms delay
-#define TRIGGER_STATUS_FOUND_AND_NOW_GET_ONE_VALUE 4 // Trigger condition met (and delay gone), now get first value for min/max initialization
 
 /*
  * External attenuator values
  */
-#define ATTENUATOR_TYPE_NO_ATTENUATOR 0     // No attenuator at all. Start with aRef = VCC
+#define ATTENUATOR_TYPE_NO_ATTENUATOR 0     // No attenuator at all. Start with aRef = VCC -> see ATTENUATOR_DETECT_PIN_0
 #define ATTENUATOR_TYPE_FIXED_ATTENUATOR 1  // Fixed attenuator at Channel0,1,2 assume manual AC/DC switch
-
 #define ATTENUATOR_TYPE_ACTIVE_ATTENUATOR 2 // to be developed
 #define NUMBER_OF_CHANNEL_WITH_ACTIVE_ATTENUATOR 2
 
@@ -164,14 +164,9 @@ struct MeasurementControlStruct {
     uint32_t FrequencyHertz;
 
     // Timebase
-    bool TimebaseFastFreerunningMode;
+    bool AcquisitionFastMode;
     uint8_t TimebaseIndex;
     uint8_t TimebaseHWValue;
-    // volatile saves 2 registers push in ISR
-    // delay loop duration - 1/4 micros resolution
-    volatile uint16_t TimebaseDelay;
-    // remaining micros for long delays - 1/4 micros resolution
-    uint16_t TimebaseDelayRemaining;
 
     bool RangeAutomatic; // RANGE_MODE_AUTOMATIC, MANUAL
 

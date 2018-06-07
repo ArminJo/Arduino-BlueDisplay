@@ -1632,25 +1632,22 @@ void doChartHistory(BDButton * aTheTouchedButton, int16_t aValue) {
  */
 void doStartSingleshot(BDButton * aTheTouchedButton, int16_t aValue) {
     aTheTouchedButton->deactivate();
+    MeasurementControl.isSingleShotMode = true;
+
     DisplayControl.DisplayPage = DISPLAY_PAGE_CHART;
+
+    // prepare info output - which is shown 1 sec later
+    sMillisSinceLastInfoOutput = 0;
+    MeasurementControl.RawValueMax = 0;
+    MeasurementControl.RawValueMin = 0;
 
 #ifdef AVR
     BlueDisplay1.clearDisplay(COLOR_BACKGROUND_DSO);
     drawGridLinesWithHorizLabelsAndTriggerLine();
-// draw an S to indicate running single shot trigger
-    BlueDisplay1.drawChar(INFO_LEFT_MARGIN + SINGLESHOT_PPRINT_VALUE_X, INFO_UPPER_MARGIN + TEXT_SIZE_11_HEIGHT, 'S', TEXT_SIZE_11,
-    COLOR_BLACK, COLOR_INFO_BACKGROUND);
-#endif
-
-// prepare info output - which is shown at least 1 sec later
-    sMillisSinceLastInfoOutput = 0;
-    MeasurementControl.RawValueMax = 0;
-    MeasurementControl.RawValueMin = 0;
-    MeasurementControl.isSingleShotMode = true;
-
+    printSingleshotMarker();
 // Start a new single shot
-#ifdef AVR
     DataBufferControl.DataBufferDisplayStart = &DataBufferControl.DataBuffer[0];
+    MeasurementControl.StopRequested = true;
     startAcquisition();
     MeasurementControl.isRunning = true;
 #else
@@ -1853,6 +1850,7 @@ void doADS7846TestOnOff(BDButton * aTheTouchedButton, int16_t aValue) {
 
 uint32_t getMicrosFromHorizontalDisplayValue(uint16_t aDisplayValueHorizontal, uint8_t aNumberOfPeriods) {
 #ifdef AVR
+    // values in TimebaseExactDivValuesMicros are guaranteed to be multiple of 31 if index is greater than 4
     uint32_t tMicros = aDisplayValueHorizontal * pgm_read_float(&TimebaseExactDivValuesMicros[MeasurementControl.TimebaseIndex]);
 #else
     uint32_t tMicros = aDisplayValueHorizontal * getDataBufferTimebaseExactValueMicros(MeasurementControl.TimebaseEffectiveIndex);
