@@ -185,11 +185,16 @@ const float TimebaseExactDivValuesMicros[TIMEBASE_NUMBER_OF_ENTRIES] PROGMEM
 const uint8_t xScaleForTimebase[TIMEBASE_NUMBER_OF_XSCALE_CORRECTION] = { 10, 5, 2, 2 }; // multiply displayed values to simulate a faster timebase.
 // since prescale PRESCALE4 has bad quality use PRESCALE8 for 201 us range and display each value twice
 // All timebase >= TIMEBASE_NUMBER_OF_FAST_PRESCALE use PRESCALE128
-const uint8_t PrescaleValueforTimebase[TIMEBASE_NUMBER_OF_FAST_PRESCALE] = { ADC_PRESCALE4, ADC_PRESCALE4, ADC_PRESCALE4,
+const uint8_t ADCPrescaleValueforTimebase[TIMEBASE_NUMBER_OF_FAST_PRESCALE] = { ADC_PRESCALE4, ADC_PRESCALE4, ADC_PRESCALE4,
 ADC_PRESCALE8, ADC_PRESCALE8, ADC_PRESCALE16 /*496us*/, ADC_PRESCALE32, ADC_PRESCALE64 /*2ms*/};
 
 const uint8_t CTCValueforTimebase[TIMEBASE_NUMBER_OF_ENTRIES - TIMEBASE_NUMBER_OF_FAST_MODES] = { 32/*496us*/, 64, 128/*2ms*/, 40,
         80/*10ms*/, 162, 101, 201, 101, 252 };
+// only for information - actual code needs 2 bytes more than using this table, but this table takes 10 byte of RAM/Stack
+const uint8_t CTCPrescaleValueforTimebase[TIMEBASE_NUMBER_OF_ENTRIES - TIMEBASE_NUMBER_OF_FAST_MODES] = { TIMER0_PRESCALE8/*496us*/,
+TIMER0_PRESCALE8, TIMER0_PRESCALE8/*2ms*/, TIMER0_PRESCALE64,
+TIMER0_PRESCALE64/*10ms*/, TIMER0_PRESCALE64, TIMER0_PRESCALE256, TIMER0_PRESCALE256, TIMER0_PRESCALE1024,
+TIMER0_PRESCALE1024 };
 /*
  * Overview:
  *                            conversion
@@ -715,7 +720,7 @@ void startAcquisition(void) {
      * get hardware prescale value
      */
     if (tTimebaseIndex < TIMEBASE_NUMBER_OF_FAST_PRESCALE) {
-        MeasurementControl.TimebaseHWValue = PrescaleValueforTimebase[tTimebaseIndex];
+        MeasurementControl.TimebaseHWValue = ADCPrescaleValueforTimebase[tTimebaseIndex];
     } else {
         MeasurementControl.TimebaseHWValue = ADC_PRESCALE_MAX_VALUE;
     }
@@ -1042,8 +1047,8 @@ ISR(TIMER0_COMPA_vect) {
  */
 ISR(ADC_vect) {
 // 7++ for jump to ISR
-// 3 + 8 Pushes + in + eor = 24 cycles
-// 31++ cycles to get here
+    // 3 + 10 pushes (r18 - r31) + in + eor = 28 cycles
+// 35++ cycles to get here
     digitalWriteFast(DEBUG_PIN, HIGH);
 
     Myword tUValue;
@@ -1149,71 +1154,77 @@ ISR(ADC_vect) {
         /*
          * External Trigger or trigger found and delay passed
          */
-//  Problem is: S&H is unstable for at least 64us :-((
-//            ADCSRA = 0; // terminate ongoing conversion
-//            ADCSRB = _BV(ADTS0) | _BV(ADTS1); // Trigger source Timer/Counter0 Compare Match A
-//            // start with fastest clock. First conversion needs 25 cycles (50 CPU cycles)
-//            ADCSRA = _BV(ADEN) | _BV(ADSC) | _BV(ADATE) | _BV(ADIF);
-//            /*
-//             * 4 us ISR delay + code until here plus max 2 fast conversions (13 us)
-//             * or plus minimal 1 fast conversion (6 us) since real trigger event
-//             * => 10 to 17 us from real trigger
-//             */
-//            // set timer to initial state
-//            TCNT0 = 0;
-//            TIFR0 = _BV(OCF0A);
-//            /*
-//             * disable millis() interrupt
-//             * reset trigger mode and initialize max and min
-//             */
-//            TIMSK2 = 0; // disable timer2 (millis() interrupts to avoid jitter. Enable at main loop on buffer full
-//            MeasurementControl.TriggerStatus = TRIGGER_STATUS_FOUND;
-//            MeasurementControl.ValueMaxForISR = tUValue.Word;
-//            MeasurementControl.ValueMinForISR = tUValue.Word;
-//            // wait 2 micros for first conversion to finish and then reset its interrupt flag and switch prescaler
-//            uint16_t a4Microseconds = 8;  // computed to 8,25
-//            // the following loop takes 4 cycles (1/4 microseconds  at 16MHz) per iteration
-//            __asm__ __volatile__ (
-//                    "1: sbiw %0,1" "\n\t"    // 2 cycles
-//                    "brne .-4" : "=w" (a4Microseconds) : "0" (a4Microseconds)// 2 cycles
-//            );
-//            ADCSRA = _BV(ADEN) | _BV(ADATE) | _BV(ADIF) | MeasurementControl.TimebaseHWValue | _BV(ADIE);
-//            digitalWriteFast(DEBUG_PIN, LOW);
-//            // proceed and take trigger value as first data, since the interrupt request of first conversion above is cancelled
+
         /*
-         * disable millis() interrupt
-         * reset trigger mode and initialize max and min
+         * Problem is: next conversion has already started with old fast prescaler.
+         * Changing prescaler has only effect of the last 4 to 5 conversion cycles since 5 to 6 are already done :-(
+         * So just speed up ongoing conversion by setting prescaler to 2, disable interrupt and auto trigger and wait for end.
+         *
+         * 4 us ISR delay + code until here plus max 2 fast conversions (13 us)
+         * or plus minimal 1 fast conversion (6 us) since real trigger event
+         * => 10 to 17 us from real trigger condition to here.
+         * Ideally it would be one timer0 clock e.g. 16us for 496us range, 32us for 1ms range etc.
          */
+        ADCSRA = _BV(ADEN) | _BV(ADIF); // => 10 to 12 clocks until conversion finishes
+
+        /*
+         * disable millis() interrupt and initialize max and min
+         */
+        // 2 clock cycles
         TIMSK2 = 0; // disable timer2 (millis() interrupts to avoid jitter. Enable at main loop on buffer full
 
+        // 11 clock cycles
         MeasurementControl.TriggerStatus = TRIGGER_STATUS_FOUND;
         MeasurementControl.ValueMaxForISR = tUValue.Word;
         MeasurementControl.ValueMinForISR = tUValue.Word;
 
+        ADCSRB = _BV(ADTS0) | _BV(ADTS1); // Trigger source Timer/Counter0 Compare Match A. 3 cycles
         // set timer to initial state
-        TCNT0 = 0;
-        TIFR0 = _BV(OCF0A);
+        TCNT0 = 0; // 1 cycle
+        TIFR0 = _BV(OCF0A); // reset int flag. 1 cycle
+
+        // No need to wait for last self triggered conversion to end
+//        while (bit_is_clear(ADCSRA, ADIF)) {
+//            ;
+//        }
+
         /*
-         * Problem is: next conversion has already started with old fast prescaler.
-         * changing prescaler has only effect of the last 4 to 5 conversion cycles since 5 to 6 are already done :-(
-         *
-         * change ADC prescaler and change trigger source for free running mode to timer0.
+         * variable delay
+         */
+        if (MeasurementControl.TimebaseIndex < 6) {
+            // start new conversion
+            ADCSRA = _BV(ADEN) | _BV(ADATE) | _BV(ADSC) | _BV(ADIF) | MeasurementControl.TimebaseHWValue | _BV(ADIE);
+            // proceed and take trigger value as first data, since the interrupt request of conversion above is cancelled.
+        } else if (MeasurementControl.TimebaseIndex < 8) {
+            uint16_t a4Microseconds = 15 * 4;
+            /*
+             * wait 15 micros for TimebaseIndex == 6 and 47 for TimebaseIndex == 7
+             */
+            if (MeasurementControl.TimebaseIndex == 7) {
+                a4Microseconds = 47 * 4;
+            }
+            // the following loop takes 4 cycles (1/4 microseconds  at 16MHz) per iteration
+            __asm__ __volatile__ (
+                    "1: sbiw %0,1" "\n\t"    // 2 cycles
+                    "brne .-4" : "=w" (a4Microseconds) : "0" (a4Microseconds)// 2 cycles
+            );
+            TCNT0 = 0; // 1 cycle
+            TIFR0 = _BV(OCF0A); // reset int flag. 1 cycle
+            // start new conversion
+            ADCSRA = _BV(ADEN) | _BV(ADATE) | _BV(ADSC) | _BV(ADIF) | MeasurementControl.TimebaseHWValue | _BV(ADIE);
+        } else {
+            // delay of greater (160 - (10 to 17)) was needed so just ignore this ADC value and take next value as first one
+            ADCSRA = _BV(ADEN) | _BV(ADATE) | _BV(ADSC) | _BV(ADIF) | MeasurementControl.TimebaseHWValue | _BV(ADIE);
+            digitalWriteFast(DEBUG_PIN, LOW);
+            return;
+        }
+
+        /*
+         * Start new conversion of ADC with new timing. Change ADC prescaler and change trigger source for free running mode triggered by timer0.
          */
 
-        // wait 2 micros for 4 ADC conversion cycles before switching prescaler
-        uint16_t a4Microseconds = 8;
-        // the following loop takes 4 cycles (1/4 microseconds  at 16MHz) per iteration
-        __asm__ __volatile__ (
-                "1: sbiw %0,1" "\n\t"    // 2 cycles
-                "brne .-4" : "=w" (a4Microseconds) : "0" (a4Microseconds)// 2 cycles
-        );
-
-        ADCSRB = _BV(ADTS0) | _BV(ADTS1); // Trigger source Timer/Counter0 Compare Match A
-        ADCSRA = _BV(ADEN) | _BV(ADATE) | _BV(ADIF) | MeasurementControl.TimebaseHWValue | _BV(ADIE);
-
-        digitalWriteFast(DEBUG_PIN, LOW);
-        return;
-        // do not take trigger value as first data, since the ongoing conversion will deliver it.
+        ADCSRA = _BV(ADEN) | _BV(ADATE) | _BV(ADSC) | _BV(ADIF) | MeasurementControl.TimebaseHWValue | _BV(ADIE);
+        // proceed and take trigger value as first data, since the interrupt request of conversion above is cancelled.
     }
 
     /*
@@ -1231,7 +1242,7 @@ ISR(ADC_vect) {
      * c code (see line below) needs 5 register more (to push and pop)#
      * so do it with assembler and 1 additional register (for high byte :-()
      */
-    //  MeasurementControl.IntegrateValueForAverage += tUValue.Word;
+//  MeasurementControl.IntegrateValueForAverage += tUValue.Word;
     __asm__ (
             /* could use __tmp_reg__ as synonym for r24 */
             /* add low byte */
@@ -1273,7 +1284,7 @@ ISR(ADC_vect) {
     if (tDataBufferPointer > DataBufferControl.DataBufferEndPointer) {
         // stop acquisition
         ADCSRA &= ~_BV(ADIE); // disable ADC interrupt
-        // copy max and min values of measurement for display purposes
+// copy max and min values of measurement for display purposes
         MeasurementControl.RawValueMin = MeasurementControl.ValueMinForISR;
         MeasurementControl.RawValueMax = MeasurementControl.ValueMaxForISR;
 
