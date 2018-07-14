@@ -158,7 +158,7 @@ clearDisplayAndDisableButtonsAndSliders	KEYWORD2
 # from BDSlider.h
 resetAllSliders	KEYWORD2
 activateAllSliders	KEYWORD2
-deactivateAllSliders	KEYWORD2#
+deactivateAllSliders	KEYWORD2
 init	KEYWORD2
 drawSlider	KEYWORD2
 drawBorder	KEYWORD2
