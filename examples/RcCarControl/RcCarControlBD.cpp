@@ -23,7 +23,6 @@
  */
 
 #include <Arduino.h>
-#include "ArduinoUtils.h"
 #include "BlueDisplay.h"
 
 #include "Servo.h"
@@ -32,8 +31,6 @@
 
 #define HC_05_BAUD_RATE BAUD_115200
 
-// Pin 13 has an LED connected on most Arduino boards.
-const int LED_PIN = 13;
 // These pins are used by Timer 2
 const int BACKWARD_MOTOR_PWM_PIN = 11;
 const int FORWARD_MOTOR_PWM_PIN = 3;
@@ -64,9 +61,9 @@ void doFollowerOnOff(BDButton * aTheTouchedButton, int16_t aValue);
 /*
  * Buttons
  */
-BDButton TouchButtonStartStop;
-void doStartStop(BDButton * aTheTochedButton, int16_t aValue);
-void stopOutputs(void);
+BDButton TouchButtonToneStartStop;
+void doToneStartStop(BDButton * aTheTochedButton, int16_t aValue);
+void resetOutputs(void);
 bool sStarted = true;
 
 /*
@@ -158,7 +155,7 @@ void drawGui(void) {
     SliderRight.drawSlider();
     SliderLeft.drawSlider();
     TouchButtonSetZero.drawButton();
-    TouchButtonStartStop.drawButton();
+    TouchButtonToneStartStop.drawButton();
 
     TouchButtonFollowerOnOff.drawButton();
     SliderShowDistance.drawSlider();
@@ -248,10 +245,10 @@ void initDisplay(void) {
     /*
      * Buttons
      */
-    TouchButtonStartStop.initPGM(0, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN,
+    TouchButtonToneStartStop.initPGM(0, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN,
     COLOR_BLUE, PSTR("Start"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sStarted,
-            &doStartStop);
-    TouchButtonStartStop.setCaptionPGMForValueTrue(PSTR("Stop"));
+            &doToneStartStop);
+    TouchButtonToneStartStop.setCaptionPGMForValueTrue(PSTR("Stop"));
 
     TouchButtonFollowerOnOff.initPGM(BUTTON_WIDTH_4_DYN_POS_4, BUTTON_HEIGHT_4_DYN_LINE_2,
     BUTTON_WIDTH_4_DYN, BUTTON_HEIGHT_4_DYN, COLOR_RED, PSTR("Follow"), sTextSizeVCC,
@@ -271,7 +268,7 @@ void driveForward(uint8_t aDirection, int aMillis) {
 
 void BDsetup() {
 // initialize the digital pin as an output.
-    pinMode(LED_PIN, OUTPUT);
+    pinMode(LED_BUILTIN, OUTPUT);
     pinMode(FORWARD_MOTOR_PWM_PIN, OUTPUT);
     pinMode(BACKWARD_MOTOR_PWM_PIN, OUTPUT);
     pinMode(RIGHT_PIN, OUTPUT);
@@ -299,7 +296,7 @@ void BDloop() {
      * Stop output if connection lost
      */
     if ((tMillis - sMillisOfLastReveivedEvent) > SENSOR_RECEIVE_TIMEOUT_MILLIS) {
-        stopOutputs();
+        resetOutputs();
     }
 
     /*
@@ -415,20 +412,20 @@ void doLaserPosition(BDSlider * aTheTouchedSlider, uint16_t aValue) {
 /*
  * Handle Start/Stop
  */
-void doStartStop(BDButton * aTheTouchedButton, int16_t aValue) {
+void doToneStartStop(BDButton * aTheTouchedButton, int16_t aValue) {
     sStarted = aValue;
     if (sStarted) {
         registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, &doSensorChange);
     } else {
         registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, NULL);
-        stopOutputs();
+        resetOutputs();
     }
 }
 
 /*
  * Stop output signals
  */
-void stopOutputs(void) {
+void resetOutputs(void) {
     analogWrite(FORWARD_MOTOR_PWM_PIN, 0);
     analogWrite(BACKWARD_MOTOR_PWM_PIN, 0);
     digitalWrite(RIGHT_PIN, LOW);

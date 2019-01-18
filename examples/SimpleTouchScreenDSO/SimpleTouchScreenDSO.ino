@@ -170,6 +170,12 @@ bool sBackButtonPressed;
 #define INTERNAL 3
 #endif
 
+#if !defined(TIMSK2)
+// on ATmega32U4 we have no timer2 but one timer3
+#define TIMSK2 TIMSK3
+#define TOIE2  TOIE3
+#endif
+
 #define ADC_TEMPERATURE_CHANNEL 8
 #define ADC_1_1_VOLT_CHANNEL 0x0E
 
@@ -349,7 +355,10 @@ void initDisplay(void) {
     //    BlueDisplay1.setCharacterMapping(0xF8, 0x2103); // Degree Celsius in UTF16
     //BlueDisplay1.setButtonsTouchTone(TONE_PROP_BEEP_OK, 80);
     initDSOGUI();
+#if !defined(__AVR_ATmega32U4__)
+    // no frequency page in order to save space for leonardo
     initFrequencyGeneratorPage();
+#endif
 }
 
 void setup() {
@@ -378,7 +387,7 @@ void setup() {
 
     // Shutdown SPI and TWI, enable all timers, USART and ADC
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
-    PRR0 = _BV(PRTWI)| _BV(PRTWI);
+    PRR0 = _BV(PRTWI) | _BV(PRTWI);
 #else
     PRR = _BV(PRTWI) | _BV(PRTWI);
 #endif
@@ -409,10 +418,10 @@ void setup() {
     }
 
     /*
-     * disable Timer0 and start Timer2 as replacement
+     * disable Timer0 and start Timer2 as replacement to maintain millis()
      */
     TIMSK0 = _BV(OCIE0A); // enable timer0 Compare match A interrupt, in order to reset interrupt flag, since we need timer0 for timebase
-    initTimer2(); // start timer2 for generating VEE (negative Voltage for external hardware)
+    initTimer2(); // start timer2 to maintain millis() (and for generating VEE - negative Voltage for external hardware)
     if (tAttenuatorType >= ATTENUATOR_TYPE_ACTIVE_ATTENUATOR) {
         setTimer2FastPWMOutput(); // enable timer2 for output 1 kHz at Pin11 generating VEE (negative Voltage for external hardware)
     }
@@ -842,7 +851,7 @@ void acquireDataFast(void) {
         ADCSRA |= _BV(ADIF) | _BV(ADSC);
         if (!MeasurementControl.isSingleShotMode) {
             // allow millis() timer interrupts only for singleshot
-            cli();
+            noInterrupts();
         }
 
         /*
@@ -852,15 +861,13 @@ void acquireDataFast(void) {
         for (i = TRIGGER_WAIT_NUMBER_OF_SAMPLES; i != 0 || MeasurementControl.isSingleShotMode; --i) {
             digitalWriteFast(DEBUG_PIN, HIGH); // debug pulse is 1 us for (ultra fast) PRESSCALER4 and 4 us for (fast) PRESSCALER8
             // wait for free running conversion to finish
-            while (bit_is_clear(ADCSRA, ADIF)) {
-                ;
-            }
+            loop_until_bit_is_set(ADCSRA, ADIF);
+
             digitalWriteFast(DEBUG_PIN, LOW);
             // Get value
             tUValue.byte.LowByte = ADCL;
             tUValue.byte.HighByte = ADCH;
-            // without "| _BV(ADSC)" it does not work - undocumented feature???
-            ADCSRA |= _BV(ADIF) | _BV(ADSC); // clear bit to recognize next conversion has finished
+            ADCSRA |= _BV(ADIF); // clear bit to recognize next conversion has finished
 
             /*
              * detect trigger slope
@@ -893,21 +900,20 @@ void acquireDataFast(void) {
         }
     }
 
-    cli();
+    noInterrupts();
+    ;
     /*
-     * Only microseconds delay makes sense
+     * Only microseconds delay makes sense here
      */
     if (MeasurementControl.TriggerDelayMode == TRIGGER_DELAY_MICROS) {
         delayMicroseconds(MeasurementControl.TriggerDelayMillisOrMicros - TRIGGER_DELAY_MICROS_POLLING_ADJUST_COUNT);
-        ADCSRA |= _BV(ADIF) | _BV(ADSC);
-        while (bit_is_clear(ADCSRA, ADIF)) {
-            ;
-        }
+        ADCSRA |= _BV(ADIF);
+        loop_until_bit_is_set(ADCSRA, ADIF);
+
         // get first value after delay
         tUValue.byte.LowByte = ADCL;
         tUValue.byte.HighByte = ADCH;
-        // without "| _BV(ADSC)" it does not work - undocumented feature???
-        ADCSRA |= _BV(ADIF) | _BV(ADSC); // clear bit to recognize next conversion has finished
+        ADCSRA |= _BV(ADIF); // clear bit to recognize next conversion has finished
     }
 
     MeasurementControl.TriggerStatus = TRIGGER_STATUS_FOUND; // for single shot mode
@@ -941,17 +947,16 @@ void acquireDataFast(void) {
         for (i = tLoopCount; i > 1; --i) {
             uint8_t tLow, tHigh;
             digitalWriteFast(DEBUG_PIN, HIGH); // debug pulse is 1.6 us
-            while (bit_is_clear(ADCSRA, ADIF)) {
-                ;
-            }
+            loop_until_bit_is_set(ADCSRA, ADIF);
+
             digitalWriteFast(DEBUG_PIN, LOW);
             tLow = ADCL;
             tHigh = ADCH;
-            ADCSRA |= _BV(ADIF) | _BV(ADSC);
+            ADCSRA |= _BV(ADIF);
             *DataPointerFast++ = tLow;
             *DataPointerFast++ = tHigh;
         }
-        sei();
+        interrupts();
         DataPointerFast = &DataBufferControl.DataBuffer[0];
         tUValue.byte.LowByte = *DataPointerFast++;
         tUValue.byte.HighByte = *DataPointerFast++;
@@ -996,16 +1001,14 @@ void acquireDataFast(void) {
             // wait for free running conversion to finish
             // ADCSRA here is E5
             digitalWriteFast(DEBUG_PIN, HIGH); // debug pulse is 2.2 us
-            while (bit_is_clear(ADCSRA, ADIF)) {
-                ;
-            }
+            loop_until_bit_is_set(ADCSRA, ADIF);
+
             digitalWriteFast(DEBUG_PIN, LOW);
             // ADCSRA here is F5
             // duration: get Value included min 1,2 micros
             tUValue.byte.LowByte = ADCL;
             tUValue.byte.HighByte = ADCH;
-            // without "| _BV(ADSC)" it does not work - undocumented feature???
-            ADCSRA |= _BV(ADIF) | _BV(ADSC); // clear bit to recognize next conversion has finished
+            ADCSRA |= _BV(ADIF); // clear bit to recognize next conversion has finished
             //ADCSRA here is E5
         } else {
             // get values from ultra fast buffer
@@ -1015,7 +1018,7 @@ void acquireDataFast(void) {
     }
 
 // enable interrupt
-    sei();
+    interrupts();
     ADCSRA &= ~_BV(ADATE); // Disable auto-triggering
     MeasurementControl.RawValueMax = tValueMax;
     MeasurementControl.RawValueMin = tValueMin;
@@ -1618,7 +1621,7 @@ void doStartStopDSO(BDButton * aTheTouchedButton, int16_t aValue) {
         DataBufferControl.DataBufferEndPointer = &DataBufferControl.DataBuffer[DATABUFFER_SIZE - 1];
 
         // - use cli() to avoid race conditions
-        cli();
+        noInterrupts();
         if (MeasurementControl.TriggerStatus != TRIGGER_STATUS_FOUND) {
             if (MeasurementControl.TriggerMode == TRIGGER_MODE_EXTERN) {
                 // Call the external trigger event routine by software for TRIGGER_MODE_EXTERN to start reading data.
@@ -1628,7 +1631,7 @@ void doStartStopDSO(BDButton * aTheTouchedButton, int16_t aValue) {
                 MeasurementControl.TriggerStatus = TRIGGER_STATUS_FOUND;
             }
         }
-        sei();
+        interrupts();
 
         if (MeasurementControl.StopRequested) {
             /*
@@ -2329,29 +2332,46 @@ void setReference(uint8_t aReference) {
 }
 
 void setTimer2FastPWMOutput() {
+#if defined(TCCR2A)
     OCR2A = 125 - 1; // set compare match register for 50% duty cycle
-    TCCR2A = _BV(COM2A1) | _BV(WGM21) | _BV(WGM20); // Clear OC2A/PB3/D11 on compare match, set at 00 / Fast PWM mode with 0xFF as TOP
+    TCCR2A = _BV(COM2A1) | _BV(WGM21) | _BV(WGM20);// Clear OC2A/PB3/D11 on compare match, set at 00 / Fast PWM mode with 0xFF as TOP
+#else
+    OCR3A = 125 - 1; // set compare match register for 50% duty cycle
+    TCCR3A = 0; // set entire TCCR3A register to 0 - Normal mode
+    TCCR3A = _BV(WGM30); // Fast PWM, 8-bit
+    TCCR3B = 0;
+    TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30); // Clock/64 => 4 us. Fast PWM, 8-bit
+#endif
 }
 
 /*
  * Square wave for VEE (-5V) generation
  */
 void initTimer2(void) {
-
-// initialization with 0 is essential otherwise timer will not work correctly!!!
-    TCCR2A = 0; // set entire TCCR1A register to 0 - Normal mode
-    TCCR2B = 0; // same for TCCR1B
-
-//    TCNT2 = 0; // init counter
-
-    TCCR2B = _BV(CS22); // Clock/64 => 4 us
+#if defined(TCCR2A)
+    // initialization with 0 is essential otherwise timer will not work correctly!!!
+    TCCR2A = 0;// set entire TCCR2A register to 0 - Normal mode
+    TCCR2B = 0;// same for TCCR2B
+    TCCR2B = _BV(CS22);// Clock/64 => 4 us
+#else
+    // ???initialization with 0 is essential otherwise timer will not work correctly???
+    TCCR3A = 0; // set entire TCCR3A register to 0 - Normal mode
+    TCCR3A = _BV(WGM30); // Fast PWM, 8-bit
+    TCCR3B = 0;
+    TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30); // Clock/64 => 4 us. Fast PWM, 8-bit
+#endif
     TIMSK2 = _BV(TOIE2); // Enable overflow interrupts which replaces the Arduino millis() interrupt
 }
 
 /*
  * Redirect interrupts for TIMER2 Overflow to existent arduino TIMER0 Overflow ISR
  */
+#if defined(TCCR2A)
 ISR_ALIAS(TIMER2_OVF_vect, TIMER0_OVF_vect);
+#else
+ISR_ALIAS(TIMER3_OVF_vect, TIMER0_OVF_vect);
+
+#endif
 
 #ifdef DEBUG
 void printDebugData(void) {

@@ -57,7 +57,7 @@
 #define DISPLAY_DEFAULT_HEIGHT 240 // value to use if not connected
 #define DISPLAY_DEFAULT_WIDTH 320
 #define STRING_BUFFER_STACK_SIZE 22 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE]" for ...PGM() functions.
-
+#define STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE 34 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG]" for debug(const char* aMessage,...) functions.
 
 /*
  * Android Text sizes which are closest to the 8*12 font used locally
@@ -261,6 +261,8 @@ public:
     void initCommunication(void (*aConnectCallback)(void), void (*aReorientationCallback)(void), void (*aRedrawCallback)(void));
     // with combined callbacks
     void initCommunication(void (*aConnectAndReorientationCallback)(void), void (*aRedrawCallback)(void));
+    // The result of initCommunication
+    bool isConnectionEstablished();
     void sendSync(void);
     void setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHeight);
     void setCodePage(uint16_t aCodePageNumber);
@@ -281,7 +283,8 @@ public:
     void drawCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor, uint16_t aStrokeWidth);
     void fillCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor);
     void drawRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor, uint16_t aStrokeWidth);
-    void drawRectRel(uint16_t aXStart, uint16_t aYStart, uint16_t aWidth, uint16_t aHeight, color16_t aColor, uint16_t aStrokeWidth);
+    void drawRectRel(uint16_t aXStart, uint16_t aYStart, uint16_t aWidth, uint16_t aHeight, color16_t aColor,
+            uint16_t aStrokeWidth);
     void fillRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
     void fillRectRel(uint16_t aXStart, uint16_t aYStart, uint16_t aWidth, uint16_t aHeight, color16_t aColor);
     uint16_t drawChar(uint16_t aPosX, uint16_t aPosY, char aChar, uint16_t aCharSize, color16_t aFGColor, color16_t aBGColor);
@@ -313,8 +316,12 @@ public:
     void debug(const char* aMessage, uint16_t aShort);
     void debug(int aShort);
     void debug(const char* aMessage, int aShort);
-    void debug(uint32_t aShort);
+    void debug(uint32_t aLong);
+    void debug(const char* aMessage, uint32_t aLong);
+    void debug(int32_t aLong);
+    void debug(const char* aMessage, int32_t aLong);
     void debug(float aDouble);
+    void debug(const char* aMessage, float aDouble);
     void debug(double aDouble);
 
     void drawLine(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
@@ -322,17 +329,18 @@ public:
     void drawLineFastOneX(uint16_t x0, uint16_t y0, uint16_t y1, color16_t aColor);
     void drawVectorDegrees(uint16_t aXStart, uint16_t aYStart, uint16_t aLength, int aDegrees, color16_t aColor,
             int16_t aThickness = 1);
-    void drawVectorRadian(uint16_t aXStart, uint16_t aYStart, uint16_t aLength, float aRadian, color16_t aColor, int16_t aThickness =
-            1);
+    void drawVectorRadian(uint16_t aXStart, uint16_t aYStart, uint16_t aLength, float aRadian, color16_t aColor,
+            int16_t aThickness = 1);
     void drawLineWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, int16_t aThickness,
             color16_t aColor);
     void drawLineRelWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXDelta, uint16_t aYDelta, int16_t aThickness,
             color16_t aColor);
 
-    void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor, uint8_t *aByteBuffer,
-            size_t aByteBufferLength);
-    void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor, uint8_t aChartIndex,
-    bool aDoDrawDirect, uint8_t *aByteBuffer, size_t aByteBufferLength);
+    void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
+            uint8_t *aByteBuffer, size_t aByteBufferLength);
+    void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
+            uint8_t aChartIndex,
+            bool aDoDrawDirect, uint8_t *aByteBuffer, size_t aByteBufferLength);
 
     struct XYSize * getMaxDisplaySize(void);
     uint16_t getMaxDisplayWidth(void);

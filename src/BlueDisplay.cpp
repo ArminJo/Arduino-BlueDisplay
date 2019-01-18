@@ -39,7 +39,7 @@
 
 #include <string.h>  // for strlen
 #include <stdio.h> /* for sprintf */
-#include "math.h" // for PI
+#include <math.h> // for PI
 #include <stdlib.h> // for dtostrf()
 
 //-------------------- Constructor --------------------
@@ -73,7 +73,8 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aRedr
  * Sets callback handler and calls host for requestMaxCanvasSize().
  * This results in a EVENT_REQUESTED_DATA_CANVAS_SIZE callback event, which sends display size and local timestamp.
  * If connection established successfully, call all 3 handlers once.
- *  * Waits for 300ms for connection to be established -> bool BlueDisplay1.mConnectionEstablished
+ *
+ * Waits for 300ms for connection to be established -> bool BlueDisplay1.mConnectionEstablished
  *
  * Reconnect and reorientation events also call the redraw callback.
  *
@@ -85,11 +86,11 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aReor
     registerRedrawCallback(aRedrawCallback);
 
     mConnectionEstablished = false;
-// This results in a data event, which sends size and timestamp
-    requestMaxCanvasSize();
-
     // consume up old received data
     checkAndHandleEvents();
+
+// This results in a data event, which sends size and timestamp
+    requestMaxCanvasSize();
 
     for (uint8_t i = 0; i < 30; ++i) {
         // wait for size to be sent back by a reorientation event. Time measured is between 50 and 150 ms (or 80 and 120)
@@ -112,6 +113,9 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aReor
     }
 }
 
+bool BlueDisplay::isConnectionEstablished() {
+    return mConnectionEstablished;
+}
 // sends 4 byte function and 24 byte data message
 void BlueDisplay::sendSync(void) {
     if (USART_isBluetoothPaired()) {
@@ -585,12 +589,12 @@ void BlueDisplay::debug(uint8_t aByte) {
 }
 
 void BlueDisplay::debug(const char* aMessage, uint8_t aByte) {
-    char tStringBuffer[29];
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
     // hhu -> unsigned char instead of unsigned int with u
 #ifdef AVR
-    snprintf_P(tStringBuffer, 29, PSTR("%s%3hhu 0x%2.2hhX"), aMessage, aByte, aByte);
+    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%3hhu 0x%2.2hhX"), aMessage, aByte, aByte);
 #else
-    snprintf(tStringBuffer, 29, "%s%3hhu 0x%2.2hhX", aMessage, aByte, aByte);
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%3hhu 0x%2.2hhX", aMessage, aByte, aByte);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
@@ -598,12 +602,12 @@ void BlueDisplay::debug(const char* aMessage, uint8_t aByte) {
 }
 
 void BlueDisplay::debug(const char* aMessage, int8_t aByte) {
-    char tStringBuffer[30];
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
     // hhd -> signed char instead of signed int with d
 #ifdef AVR
-    snprintf_P(tStringBuffer, 30, PSTR("%s%3hhd 0x%2.2hhX"), aMessage, aByte, aByte);
+    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%3hhd 0x%2.2hhX"), aMessage, aByte, aByte);
 #else
-    snprintf(tStringBuffer, 30, "%s%3hhd 0x%2.2hhX", aMessage, aByte, aByte);
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%3hhd 0x%2.2hhX", aMessage, aByte, aByte);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
@@ -624,7 +628,7 @@ void BlueDisplay::debug(int8_t aByte) {
 }
 
 void BlueDisplay::debug(uint16_t aShort) {
-    char tStringBuffer[13];
+    char tStringBuffer[13]; //5 decimal + 3 " 0x" + 4 hex +1
     // hu -> unsigned short int instead of unsigned int with u
 #ifdef AVR
     sprintf_P(tStringBuffer, PSTR("%5u 0x%4.4X"), aShort, aShort);
@@ -637,7 +641,7 @@ void BlueDisplay::debug(uint16_t aShort) {
 }
 
 void BlueDisplay::debug(int aShort) {
-    char tStringBuffer[14];
+    char tStringBuffer[14]; //6 decimal + 3 " 0x" + 4 hex +1
     // hd -> short int instead of int with d
 #ifdef AVR
     sprintf_P(tStringBuffer, PSTR("%6d 0x%4.4X"), aShort, aShort);
@@ -650,12 +654,12 @@ void BlueDisplay::debug(int aShort) {
 }
 
 void BlueDisplay::debug(const char* aMessage, uint16_t aShort) {
-    char tStringBuffer[34];
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
     // hd -> short int instead of int with d
 #ifdef AVR
-    snprintf_P(tStringBuffer, 34, PSTR("%s%5u 0x%4.4X"), aMessage, aShort, aShort);
+    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%5u 0x%4.4X"), aMessage, aShort, aShort);
 #else
-    snprintf(tStringBuffer, 34, "%s%5hu 0x%4.4X", aMessage, aShort, aShort);
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%5hu 0x%4.4X", aMessage, aShort, aShort);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
@@ -663,12 +667,12 @@ void BlueDisplay::debug(const char* aMessage, uint16_t aShort) {
 }
 
 void BlueDisplay::debug(const char* aMessage, int aShort) {
-    char tStringBuffer[34];
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
     // hd -> short int instead of int with d
 #ifdef AVR
-    snprintf_P(tStringBuffer, 34, PSTR("%s%6d 0x%4.4X"), aMessage, aShort, aShort);
+    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%6d 0x%4.4X"), aMessage, aShort, aShort);
 #else
-    snprintf(tStringBuffer, 34, "%s%6hd 0x%4.4X", aMessage, aShort, aShort);
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%6hd 0x%4.4X", aMessage, aShort, aShort);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
@@ -676,11 +680,47 @@ void BlueDisplay::debug(const char* aMessage, int aShort) {
 }
 
 void BlueDisplay::debug(uint32_t aLong) {
-    char tStringBuffer[22];
+    char tStringBuffer[22]; //10 decimal + 3 " 0x" + 8 hex +1
 #ifdef AVR
     sprintf_P(tStringBuffer, PSTR("%10lu 0x%lX"), aLong, aLong);
 #else
     sprintf(tStringBuffer, "%10lu 0x%lX", aLong, aLong);
+#endif
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
+    }
+}
+
+void BlueDisplay::debug(int32_t aLong) {
+    char tStringBuffer[23]; //11 decimal + 3 " 0x" + 8 hex +1
+#ifdef AVR
+    sprintf_P(tStringBuffer, PSTR("%11l 0x%lX"), aLong, aLong);
+#else
+    sprintf(tStringBuffer, "%11l 0x%lX", aLong, aLong);
+#endif
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
+    }
+}
+
+void BlueDisplay::debug(const char* aMessage, uint32_t aLong) {
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+#ifdef AVR
+    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%11l 0x%lX"), aMessage, aLong, aLong);
+#else
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE,"%s%11l 0x%lX", aMessage,aLong, aLong);
+#endif
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
+    }
+}
+
+void BlueDisplay::debug(const char* aMessage, int32_t aLong) {
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+#ifdef AVR
+    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%10lu 0x%lX"), aMessage, aLong, aLong);
+#else
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE,"%s%10lu 0x%lX", aMessage,aLong, aLong);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
@@ -693,6 +733,19 @@ void BlueDisplay::debug(float aFloat) {
     dtostrf(aFloat, 16, 7, tStringBuffer);
 #else
     sprintf(tStringBuffer, "%f", aFloat);
+#endif
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
+    }
+}
+
+void BlueDisplay::debug(const char* aMessage, float aFloat) {
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+#ifdef AVR
+    strncpy(tStringBuffer, aMessage, (STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE - 22));
+    dtostrf(aFloat, 16, 7, &tStringBuffer[12]);
+#else
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE,"%f", aFloat);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
@@ -871,7 +924,9 @@ uint16_t BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char * a
  * INPUT
  *
  **************************************************************************************************************************************************/
-
+/*
+ * If the user enters avalid number and presses OK, it sends a message over bluetooth back to arduino which contains the float value
+ */
 void BlueDisplay::getNumber(void (*aNumberHandler)(float)) {
     if (USART_isBluetoothPaired()) {
 #ifndef AVR
@@ -1328,10 +1383,12 @@ uint16_t getADCValue(uint8_t aChannel, uint8_t aReference) {
     uint8_t tOldADCSRA = ADCSRA;
     ADCSRA = (1 << ADEN) | (1 << ADSC) | (1 << ADATE) | (1 << ADIF) | (0 << ADIE) | ADC_PRESCALE128;
     for (int i = 0; i < 64; ++i) {
-        // wait for free running conversion to finish
-        while (bit_is_clear(ADCSRA, ADIF)) {
-            ;
-        }
+        /*
+         * wait for free running conversion to finish.
+         * Do not wait for ADSC here, since ADSC is only low for 1 ADC Clock cycle on free running conversion.
+         */
+        loop_until_bit_is_set(ADCSRA, ADIF);
+
         tValue = ADCL;
         tValue |= ADCH << 8;
         tSum += tValue;
@@ -1357,8 +1414,8 @@ float getVCCValue(void) {
 float getVCCVoltage(void) {
     // use AVCC with external capacitor at AREF pin as reference
     uint8_t tOldADMUX = ADMUX;
-    if (ADMUX & (INTERNAL << REFS0)) {
-        // switch AREF
+    if ((ADMUX & (INTERNAL << REFS0)) || ((ADMUX & 0x0F) != ADC_1_1_VOLT_CHANNEL)) {
+        // switch AREF / Channel
         ADMUX = ADC_1_1_VOLT_CHANNEL | (DEFAULT << REFS0);
         // and wait for settling
         delayMicroseconds(400); // experimental value is > 200 us
@@ -1368,7 +1425,7 @@ float getVCCVoltage(void) {
     /*
      * Do not wait for reference to settle here, since it may not be necessary
      */
-    return ((1024 * 1.1) / tVCC);
+    return ((1023 * 1.1) / tVCC);
 }
 
 float getTemperature(void) {

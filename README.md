@@ -1,4 +1,9 @@
 # BlueDisplay Library for Arduino
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Build Status](https://travis-ci.org/ArminJo/Arduino-BlueDisplay.svg?branch=master)](https://travis-ci.org/ArminJo/Arduino-BlueDisplay)
+
+
 This library allows an Arduino board with Bluetooth module like HC-05 to connect to the BlueDisplay app on your smartphone.
 
 ## SUMMARY

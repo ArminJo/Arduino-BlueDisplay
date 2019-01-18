@@ -25,9 +25,6 @@
 
 #include "RcCarControlBD.h"
 
-// Pin 13 has an LED connected on most Arduino boards.
-const int LED_PIN = 13;
-
 /*******************************************************************************************
  * Program code starts here
  *******************************************************************************************/

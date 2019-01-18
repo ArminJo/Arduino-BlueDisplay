@@ -174,6 +174,7 @@ if (__builtin_constant_p(P) && __builtin_constant_p(V)) { \
 }
 #endif
 
+// INPUT_PULLUP extension by AJ 01.03.2018
 #if !defined(pinModeFast)
 #if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
 // we have only PORTB - Extension 01.03.2018
@@ -191,8 +192,9 @@ if (__builtin_constant_p(P) && __builtin_constant_p(V)) { \
 #else
 #define pinModeFast(P, V) \
 if (__builtin_constant_p(P) && __builtin_constant_p(V)) { \
-  if (digitalPinToTimer(P)) \
+/* does not compile neatly. if (digitalPinToTimer(P)) { \
     BIT_CLEAR(*__digitalPinToTimer(P), __digitalPinToTimerBit(P)); \
+  } */\
   if (V == INPUT_PULLUP) {\
     BIT_WRITE(*__digitalPinToDDRReg(P), __digitalPinToBit(P), (INPUT)); \
     BIT_WRITE(*__digitalPinToPortReg(P), __digitalPinToBit(P), (HIGH)); \
@@ -201,7 +203,7 @@ if (__builtin_constant_p(P) && __builtin_constant_p(V)) { \
   } \
 } else {  \
   pinMode((P), (V)); \
-} 
+}
 #endif
 #endif
 
@@ -213,7 +215,7 @@ if (__builtin_constant_p(P) && __builtin_constant_p(V)) { \
   : digitalRead((P))
 #endif
 
-// Extension 01.03.2018
+// Extension by AJ 01.03.2018
 #if !defined(digitalToggleFast)
 #define digitalToggleFast(P) BIT_SET(*__digitalPinToPINReg(P), __digitalPinToBit(P))
 #endif

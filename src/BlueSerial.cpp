@@ -72,12 +72,12 @@ void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin) {
     uint16_t baud_setting;
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
     // Use TX1 on MEGA and on Leonardo, which has no TX0
-    UCSR1A = 1 << U2X1; // Double Speed Mode
+    UCSR1A = 1 << U2X1;// Double Speed Mode
     // Exact value = 17,3611 (- 1) for 115200  2,1%
     // 8,68 (- 1) for 230400 8,5% for 8, 3.7% for 9
     // 4,34 (- 1) for 460800 8,5%
     // HC-05 Specified Max Total Error (%) for 8 bit= +3.90/-4.00
-    baud_setting = (((F_CPU / 4) / aBaudRate) - 1) / 2;    // /2 after -1 because of better rounding
+    baud_setting = (((F_CPU / 4) / aBaudRate) - 1) / 2;// /2 after -1 because of better rounding
 
     // assign the baud_setting, a.k.a. ubbr (USART Baud Rate Register)
     UBRR1H = baud_setting >> 8;
@@ -91,7 +91,7 @@ void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin) {
     // 8,68 (- 1) for 230400 8,5% for 8, 3.7% for 9
     // 4,34 (- 1) for 460800 8,5%
     // HC-05 Specified Max Total Error (%) for 8 bit= +3.90/-4.00
-    baud_setting = (((F_CPU / 4) / aBaudRate) - 1) / 2;// /2 after -1 because of better rounding
+    baud_setting = (((F_CPU / 4) / aBaudRate) - 1) / 2;    // /2 after -1 because of better rounding
 
     // assign the baud_setting, a.k.a. ubbr (USART Baud Rate Register)
     UBRR0H = baud_setting >> 8;
@@ -297,10 +297,10 @@ bool allowTouchInterrupts = false; // !!do not enable it, if event handling may 
 #if defined(USART1_RX_vect)
 // Use TX1 on MEGA and on Leonardo, which has no TX0
 ISR(USART1_RX_vect) {
-    uint8_t tByte = UDR1;
+uint8_t tByte = UDR1;
 #else
-    ISR(USART_RX_vect) {
-        uint8_t tByte = UDR0;
+ISR(USART_RX_vect) {
+    uint8_t tByte = UDR0;
 #endif
     if (sReceiveBufferOutOfSync) {
         // just wait for next sync token and reset buffer
@@ -362,10 +362,10 @@ ISR(USART1_RX_vect) {
         }
     }
 }
-#else
+#else // USE_SIMPLE_SERIAL line 294
 
 /*
- * Will be called after each loop() (by serial...) to process input data if available.
+ * Will be called after each loop() (by Arduino Serial...) to process input data if available.
  */
 void serialEvent(void) {
     if (sReceiveBufferOutOfSync) {
@@ -420,4 +420,4 @@ void serialEvent(void) {
         }
     }
 }
-#endif
+#endif // USE_SIMPLE_SERIAL line 294

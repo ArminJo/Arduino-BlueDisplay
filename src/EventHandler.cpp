@@ -407,13 +407,13 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
         {
             BDButton tTempButton = BDButton(tEvent.EventData.GuiCallbackInfo.ObjectIndex,
                     TouchButton::getLocalButtonFromBDButtonHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex));
-            tButtonCallback(&tTempButton.mButtonHandle, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
+            tButtonCallback(&tTempButton.mButtonHandle, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
         }
 #else
         //BDButton * is the same as BDButtonHandle_t * since BDButton only has one BDButtonHandle_t element
         tButtonCallback = (void (*)(BDButtonHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;;// 2 ;; for pretty print :-(
         tButtonCallback((BDButtonHandle_t*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex,
-                tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
+                tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
 #endif
         break;
 
@@ -424,22 +424,22 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
         tSliderCallback = (void (*)(BDSliderHandle_t *, int16_t))tEvent.EventData.GuiCallbackInfo.Handler; {
             TouchSlider * tLocalSlider = TouchSlider::getLocalSliderFromBDSliderHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
             BDSlider tTempSlider = BDSlider(tEvent.EventData.GuiCallbackInfo.ObjectIndex, tLocalSlider);
-            tSliderCallback(&tTempSlider.mSliderHandle, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
+            tSliderCallback(&tTempSlider.mSliderHandle, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
 
             // synchronize local slider - remote one is synchronized by local slider itself
             if (aEvent != &localTouchEvent) {
-                tLocalSlider->setActualValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
+                tLocalSlider->setActualValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
             }
         }
 #else
         tSliderCallback = (void (*)(BDSliderHandle_t *, int16_t))tEvent.EventData.GuiCallbackInfo.Handler;; // 2 ;; for pretty print :-(
-        tSliderCallback ((BDSliderHandle_t*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.Int16Values[0]);
+        tSliderCallback ((BDSliderHandle_t*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
 #endif
         break;
 
         case EVENT_NUMBER_CALLBACK:
 //    } else if (tEventType == EVENT_NUMBER_CALLBACK) {
-        tNumberCallback = (void (*)(float))tEvent.EventData.GuiCallbackInfo.Handler;tNumberCallback(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.FloatValue);
+        tNumberCallback = (void (*)(float))tEvent.EventData.GuiCallbackInfo.Handler;tNumberCallback(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.floatValue);
         break;
 
         case EVENT_SWIPE_CALLBACK:

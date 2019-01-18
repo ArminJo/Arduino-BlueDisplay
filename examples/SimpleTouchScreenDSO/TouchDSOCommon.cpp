@@ -1514,12 +1514,12 @@ void doTriggerMode(BDButton * aTheTouchedButton, int16_t aValue) {
         tNewMode = TRIGGER_MODE_AUTOMATIC;
         MeasurementControl.TriggerMode = tNewMode;
 #ifdef AVR
-        cli();
+        noInterrupts();
         if (EIMSK != 0) {
             // Release waiting for external trigger
             INT0_vect();
         }
-        sei();
+        interrupts();
 #endif
     }
     MeasurementControl.TriggerMode = tNewMode;

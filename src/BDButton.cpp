@@ -83,7 +83,8 @@ bool BDButton::operator!=(const BDButton &aButton) {
 /*
  * initialize a button stub
  * If local display is attached, allocate a button from the local pool, so do not forget to call deinit()
- * Caption is value for false (0) for FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN buttons
+ * Caption is value for false (0) if FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN is set
+ * Multi-line caption has \n as line separator.
  */
 void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
         const char * aCaption, uint16_t aCaptionSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t)) {
@@ -358,6 +359,9 @@ void BDButton::initPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidth
     mButtonHandle = tButtonNumber;
 }
 
+/*
+ * sets only caption
+ */
 void BDButton::setCaptionPGM(const char * aPGMCaption) {
     if (USART_isBluetoothPaired()) {
         uint8_t tCaptionLength = strlen_P(aPGMCaption);

@@ -40,18 +40,15 @@
 #define DISPLAY_WIDTH 320
 #define DISPLAY_HEIGHT 256
 
-// Pin 13 has an LED connected on most Arduino boards.
-const int LED_PIN = 13;
-
 bool doBlink = true;
 
 /*
  * The Start Stop button
  */
-BDButton TouchButtonStartStop;
+BDButton TouchButtonBlinkStartStop;
 
 // Touch handler for buttons
-void doStartStop(BDButton * aTheTochedButton, int16_t aValue);
+void doBlinkStartStop(BDButton * aTheTochedButton, int16_t aValue);
 
 // Callback handler for (re)connect and resize
 void initDisplay(void);
@@ -59,7 +56,7 @@ void drawGui(void);
 uint16_t t = 12345;
 void setup() {
     // Initialize the LED pin as output.
-    pinMode(LED_PIN, OUTPUT);
+    pinMode(LED_BUILTIN, OUTPUT);
 
     initSimpleSerial(HC_05_BAUD_RATE, false);
 
@@ -75,14 +72,14 @@ void loop() {
 //    BlueDisplay1.debug("\r\nDoBlink=", (uint8_t) doBlink);
     if (doBlink) {
         // LED on
-        digitalWrite(LED_PIN, HIGH);
+        digitalWrite(LED_BUILTIN, HIGH);
         BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_RED);
         delayMillisWithCheckAndHandleEvents(300);
     }
 
     if (doBlink) {
         // LED off
-        digitalWrite(LED_PIN, LOW);
+        digitalWrite(LED_BUILTIN, LOW);
         BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_BLUE);
         delayMillisWithCheckAndHandleEvents(300);
     }
@@ -99,9 +96,9 @@ void initDisplay(void) {
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, DISPLAY_WIDTH,
     DISPLAY_HEIGHT);
     // Initialize button position, size, colors etc.
-    TouchButtonStartStop.init((DISPLAY_WIDTH - BUTTON_WIDTH_2) / 2, BUTTON_HEIGHT_4_256_LINE_4, BUTTON_WIDTH_2, BUTTON_HEIGHT_4_256,
-    COLOR_BLUE, "Start", 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doStartStop);
-    TouchButtonStartStop.setCaptionForValueTrue("Stop");
+    TouchButtonBlinkStartStop.init((DISPLAY_WIDTH - BUTTON_WIDTH_2) / 2, BUTTON_HEIGHT_4_256_LINE_4, BUTTON_WIDTH_2, BUTTON_HEIGHT_4_256,
+    COLOR_BLUE, "Start", 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doBlinkStartStop);
+    TouchButtonBlinkStartStop.setCaptionForValueTrue("Stop");
 }
 
 /*
@@ -109,13 +106,13 @@ void initDisplay(void) {
  */
 void drawGui(void) {
     BlueDisplay1.clearDisplay(COLOR_BLUE);
-    TouchButtonStartStop.drawButton();
+    TouchButtonBlinkStartStop.drawButton();
 }
 
 /*
  * Change doBlink flag as well as color and caption of the button.
  */
-void doStartStop(BDButton * aTheTouchedButton, int16_t aValue) {
+void doBlinkStartStop(BDButton * aTheTouchedButton, int16_t aValue) {
     doBlink = aValue;
     /*
      * This debug output can also be recognized at the Arduino Serial Monitor
