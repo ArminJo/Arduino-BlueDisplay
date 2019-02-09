@@ -166,6 +166,8 @@ void setup(void) {
         delay(100);
     } else {
 #ifdef USE_STANDARD_SERIAL
+        while (!Serial); //delay for Leonardo
+        // Just to know which program is running on my Arduino
         Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from  " __DATE__));
 #endif
     }
