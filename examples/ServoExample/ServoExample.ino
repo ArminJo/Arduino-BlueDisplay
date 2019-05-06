@@ -263,7 +263,8 @@ void setup() {
 
     if (!BlueDisplay1.mConnectionEstablished) {
 #ifdef USE_STANDARD_SERIAL
-        while (!Serial); //delay for Leonardo
+        while (!Serial)
+            ; //delay for Leonardo
         // Just to know which program is running on my Arduino
         Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from  " __DATE__));
 #endif
@@ -279,9 +280,8 @@ void setup() {
      */
     ServoHorizontal.attach(HORIZONTAL_SERVO_PIN);
     ServoVertical.attach(VERTICAL_SERVO_PIN);
-    ServoHorizontal.setSynchronizedServo(&ServoVertical);
-    ServoHorizontal.setEasingType(EASE_QUADRATIC);
-    ServoVertical.setEasingType(EASE_QUADRATIC);
+    ServoHorizontal.setEasingType(EASE_QUADRATIC_IN_OUT);
+    ServoVertical.setEasingType(EASE_QUADRATIC_IN_OUT);
 
     ServoHorizontalControl.minDegree = 45;
     ServoHorizontalControl.maxDegree = 135;
@@ -300,7 +300,12 @@ void setup() {
 #ifdef USE_STANDARD_SERIAL
         Serial.println(F("Not connected to BlueDisplay -> mark border of area and then do auto move."));
 #endif
-        ServoHorizontal.writeSynchronized(ServoHorizontalControl.minDegree, ServoVerticalControl.minDegree);
+        /*
+         * show border of area which can be reached by laser
+         */
+        Serial.println(F("Mark border of area and then do auto move."));
+        ServoHorizontal.write(ServoHorizontalControl.minDegree);
+        ServoVertical.write(ServoVerticalControl.minDegree);
         delay(500);
         analogWrite(LASER_POWER_PIN, 255);
         ServoHorizontal.easeTo(ServoHorizontalControl.maxDegree, 50);
@@ -317,7 +322,7 @@ uint8_t getRandomValue(ServoControlStruct * aServoControlStruct, ServoEasing * a
     uint8_t tNewTargetAngle;
     do {
         tNewTargetAngle = random(aServoControlStruct->minDegree, aServoControlStruct->maxDegree);
-    } while (tNewTargetAngle == aServoEasing->MicrosecondsToDegree(aServoEasing->currentMicroseconds)); // do not accept current angle as new value
+    } while (tNewTargetAngle == aServoEasing->MicrosecondsOrUnitsToDegree(aServoEasing->mCurrentMicrosecondsOrUnits)); // do not accept current angle as new value
     return tNewTargetAngle;
 }
 
@@ -345,7 +350,9 @@ void loop() {
                 Serial.println(tSpeed);
 #endif
             }
-            ServoHorizontal.startEaseToSynchronized(tNewHorizontal, tNewVertical, tSpeed, true);
+            ServoHorizontal.setEaseTo(tNewHorizontal, tSpeed);
+            ServoVertical.setEaseTo(tNewVertical, tSpeed);
+            synchronizeAllServosAndStartInterrupt();
         }
     } else {
         /*
@@ -421,7 +428,8 @@ void doServosStartStop(BDButton * aTheTouchedButton, int16_t aValue) {
  * Stop output signals
  */
 void resetOutputs(void) {
-    ServoHorizontal.writeSynchronized(90, 90);
+    ServoHorizontal.write(90);
+    ServoVertical.write(90);
     analogWrite(LASER_POWER_PIN, 0);
     if (BlueDisplay1.mConnectionEstablished) {
         SliderLaserPower.setActualValueAndDrawBar(0);
@@ -445,7 +453,8 @@ void doEnableAutoMove(BDButton * aTheTouchedButton, int16_t aValue) {
             doServosStartStop(NULL, false);
             TouchButtonServosStartStop.setValueAndDraw(false);
         }
-        ServoHorizontal.easeToSynchronized(90, 90, 10);
+        ServoHorizontal.setEaseTo(90, 10);
+        ServoVertical.startEaseTo(90, 10);
     }
 }
 

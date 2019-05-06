@@ -49,7 +49,7 @@ const unsigned int REMOTE_DISPLAY_WIDTH = 320;
 
 /*
  * Pins on port D
- * AC/DC, attenuator control, AC/DC sense and external trigger input
+ * AC/DC, attenuator control and external trigger input
  * !!! Pin layout only for Atmega328 !!!
  */
 #define CONTROL_PORT PORTD
@@ -62,9 +62,7 @@ const unsigned int REMOTE_DISPLAY_WIDTH = 320;
 #define OUTPUT_MASK_PORTD    0xF0 // Bit 4-7
 #define ATTENUATOR_0_PIN 4 // PD4
 #define ATTENUATOR_1_PIN 5 // PD5
-#define AC_DC_RELAIS_PIN_1 6 // PD6
-#define AC_DC_RELAIS_PIN_2 7 // PD7
-
+#define AC_DC_RELAY_PIN 6 // PD6
 
 /*
  * COLORS

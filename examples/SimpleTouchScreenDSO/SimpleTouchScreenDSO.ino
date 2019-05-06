@@ -120,24 +120,23 @@
 /*
  * PIN
  * 2    External trigger input
- * 3
- * 4    Attenuator range control (for active attenuator)
- * 5    Attenuator range control (for active attenuator)
- * 6    AC / DC relais (for active attenuator)
- * 7    AC / DC relais (for active attenuator)
- * 8    Attenuator detect input with internal pullup - bit 0
- * 9    Attenuator detect input with internal pullup - bit 1  11-> no attenuator attached, 10-> simple (channel 0-2) attenuator attached, 0x-> active (channel 0-1) attenuator attached
- * 10   Timer0  8 bit - Generates sample frequency
- * 10   Timer1 16 bit - Frequency / waveform generator output
- * 11   Timer2  8 bit - triggers ISR for Arduino millis() since timer0 is not available for this. Also square wave for VEE (-5V) generation
- * 12   Not yet used
+ * 3   Not yet used
+ * 4   - If active attenuator, attenuator range control, else not yet used
+ * 5   - If active attenuator, attenuator range control, else not yet used
+ * 6   - If active attenuator, AC (high) / DC (low) relay, else debug output of half the timebase of Timer 0 for range 496us and higher -> frequency <= 31,25kHz (see changeTimeBaseValue())
+ * 7   Not yet used
+ * 8    Attenuator configuration input with internal pullup - bit 0
+ * 9    Attenuator configuration input with internal pullup - bit 1  11-> no attenuator attached, 10-> simple (channel 0-2) attenuator attached, 0x-> active (channel 0-1) attenuator attached
+ * 10   Frequency / waveform generator output of Timer1 (16 bit)
+ * 11  - If active attenuator, square wave for VEE (-5V) generation by timer2 output, else not yet used
+ * 12  Not yet used
  * 13   Internal LED / timing debug output
  *
- * A5   AC bias - AC -> High impedance (input) / DC -> set as output LOW
+ * A5   AC bias - if mode is AC, high impedance (input), if mode is DC, set as output LOW
  *
- * Timer0  8 bit - Arduino delay() and millis() functions
- * Timer1 16 bit - internal waveform generator
- * Timer2  8 bit - Square wave for VEE (-5V) generation
+ * Timer0  8 bit - Generates sample frequency
+ * Timer1 16 bit - Internal waveform generator
+ * Timer2  8 bit - Triggers ISR for Arduino millis() since timer0 is not available for this (switched from timer 0 at setup())
  */
 
 /*
@@ -179,6 +178,30 @@ bool sBackButtonPressed;
 #define ADC_TEMPERATURE_CHANNEL 8
 #define ADC_1_1_VOLT_CHANNEL 0x0E
 
+/*
+ * Timebase values overview:
+ *                            conversion
+ * idx range   ADCpresc. clk     us    us/div  us/320  x-scale  TIMER0 CTC
+ * 0   10us    PRESCALE4 0.25     3.25  101.75  1040    10  prescaler
+ * 1   20us    PRESCALE4 0.25     3.25  101.75  1040     5      micros
+ * 2   50us    PRESCALE4 0.25     3.25  101.75  1040     2           value
+ * 3  101us    PRESCALE8  0.5     6.5   201.5   2080     2
+ * 4  201us    PRESCALE8  0.5     6.5   201.5   2080     1
+ * 5  496us    PRESCALE16   1    16     496     5120     1     8  0.5   32
+ * 6    1ms    PRESCALE32   2    32     992    10240     1     8  0.5   64
+ * 7    2ms    PRESCALE64   4    64    1984    20480     1     8  0.5  128
+ * 8    5ms    PRESCALE128  8   160    4960    51200     1    64    4   40
+ * 9   10ms    PRESCALE128  8   320    9920   102400     1    64    4   80
+ * 10  20ms    PRESCALE128  8   648   20088   207360     1    64    4  162
+ * 11  50ms    PRESCALE128  8  1616   50096   517120     1   256   16  101
+ * 12 100ms    PRESCALE128  8  3224   99944   517120     1   256   16  201.5
+ * 12 100ms    PRESCALE128  8  3216   99696   517120     1   256   16  201
+ * 12 100ms    PRESCALE128  8  3232  100192   517120     1   256   16  202
+ * 13 200ms    PRESCALE128  8  6448  199888   517120     1  1024   64  100.75
+ * 14 200ms    PRESCALE128  8  6464  200384   517120     1  1024   64  101
+ * 15 500ms    PRESCALE128  8 16128  499968  5160960     1  1024   64  252
+ */
+
 // for 31 grid
 const uint16_t TimebaseDivPrintValues[TIMEBASE_NUMBER_OF_ENTRIES] PROGMEM = { 10, 20, 50, 101, 201, 496, 1, 2, 5, 10, 20, 50, 100,
         200, 500 };
@@ -196,34 +219,12 @@ ADC_PRESCALE8, ADC_PRESCALE8, ADC_PRESCALE16 /*496us*/, ADC_PRESCALE32, ADC_PRES
 
 const uint8_t CTCValueforTimebase[TIMEBASE_NUMBER_OF_ENTRIES - TIMEBASE_NUMBER_OF_FAST_MODES] = { 32/*496us*/, 64, 128/*2ms*/, 40,
         80/*10ms*/, 162, 101, 201, 101, 252 };
-// only for information - actual code needs 2 bytes more than using this table, but this table takes 10 byte of RAM/Stack
+// only for information - actual code needs 2 bytes more than code using this table, but this table takes 10 byte of RAM/Stack
 const uint8_t CTCPrescaleValueforTimebase[TIMEBASE_NUMBER_OF_ENTRIES - TIMEBASE_NUMBER_OF_FAST_MODES] = { TIMER0_PRESCALE8/*496us*/,
 TIMER0_PRESCALE8, TIMER0_PRESCALE8/*2ms*/, TIMER0_PRESCALE64,
 TIMER0_PRESCALE64/*10ms*/, TIMER0_PRESCALE64, TIMER0_PRESCALE256, TIMER0_PRESCALE256, TIMER0_PRESCALE1024,
 TIMER0_PRESCALE1024 };
-/*
- * Overview:
- *                            conversion
- * idx range             clk     us    us/div  us/320  x-scale
- * 0   10us    PRESCALE4 0.25     3.25  101.75  1040    10
- * 1   20us    PRESCALE4 0.25     3.25  101.75  1040     5  TIMER0 CTC
- * 2   50us    PRESCALE4 0.25     3.25  101.75  1040     2  prescaler
- * 3  101us    PRESCALE8  0.5     6.5   201.5   2080     2      micros
- * 4  201us    PRESCALE8  0.5     6.5   201.5   2080     1           value
- * 5  496us    PRESCALE16   1    16     496     5120     1     8  0.5   32
- * 6    1ms    PRESCALE32   2    32     992    10240     1     8  0.5   64
- * 7    2ms    PRESCALE64   4    64    1984    20480     1     8  0.5  128
- * 8    5ms    PRESCALE128  8   160    4960    51200     1    64    4   40
- * 9   10ms    PRESCALE128  8   320    9920   102400     1    64    4   80
- * 10  20ms    PRESCALE128  8   648   20088   207360     1    64    4  162
- * 11  50ms    PRESCALE128  8  1616   50096   517120     1   256   16  101
- * 12 100ms    PRESCALE128  8  3224   99944   517120     1   256   16  201.5
- * 12 100ms    PRESCALE128  8  3216   99696   517120     1   256   16  201
- * 12 100ms    PRESCALE128  8  3232  100192   517120     1   256   16  202
- * 13 200ms    PRESCALE128  8  6448  199888   517120     1  1024   64  100.75
- * 14 200ms    PRESCALE128  8  6464  200384   517120     1  1024   64  101
- * 15 500ms    PRESCALE128  8 16128  499968  5160960     1  1024   64  252
- */
+
 /*
  * storage for millis value to enable compensation for interrupt disable at signal acquisition etc.
  */
@@ -391,7 +392,7 @@ void setup() {
 #else
     PRR = _BV(PRTWI) | _BV(PRTWI);
 #endif
-    // Disable  digital input on all ADC channel pins to reduce power consumption
+    // Disable  digital input on all ADC channel pins to reduce power consumption for levels near half VCC
     DIDR0 = ADC0D | ADC1D | ADC2D | ADC3D | ADC4D | ADC5D;
 
     initSimpleSerial(HC_05_BAUD_RATE, false);
@@ -420,7 +421,7 @@ void setup() {
     /*
      * disable Timer0 and start Timer2 as replacement to maintain millis()
      */
-    TIMSK0 = _BV(OCIE0A); // enable timer0 Compare match A interrupt, in order to reset interrupt flag, since we need timer0 for timebase
+    TIMSK0 = _BV(OCIE0A); // enable timer0 Compare match A interrupt, since we need timer0 for timebase
     initTimer2(); // start timer2 to maintain millis() (and for generating VEE - negative Voltage for external hardware)
     if (tAttenuatorType >= ATTENUATOR_TYPE_ACTIVE_ATTENUATOR) {
         setTimer2FastPWMOutput(); // enable timer2 for output 1 kHz at Pin11 generating VEE (negative Voltage for external hardware)
@@ -1538,7 +1539,7 @@ void resetOffset(void) {
 
 void setAttenuator(uint8_t aNewValue) {
     MeasurementControl.AttenuatorValue = aNewValue;
-    uint8_t tPortValue = CONTROL_PORT;
+    uint8_t tPortValue = CONTROL_PORT;  //
     tPortValue &= ~ATTENUATOR_MASK;
     tPortValue |= ((aNewValue << ATTENUATOR_SHIFT) & ATTENUATOR_MASK);
     CONTROL_PORT = tPortValue;
@@ -2289,7 +2290,7 @@ void setChannel(uint8_t aChannel) {
             tReference = INTERNAL;
         } else {
             MeasurementControl.ChannelHasActiveAttenuator = false;
-            // protect input. Since ChannelHasActiveAttenuator = false it will not be changed by setInputRange()
+            // Set to high attenuation to protect input. Since ChannelHasActiveAttenuator = false it will not be changed by setInputRange()
             setAttenuator(3);
         }
     } else if (MeasurementControl.AttenuatorType == ATTENUATOR_TYPE_FIXED_ATTENUATOR) {
@@ -2345,7 +2346,7 @@ void setTimer2FastPWMOutput() {
 }
 
 /*
- * Square wave for VEE (-5V) generation
+ * Square wave for VEE (-5V) generation and interrupts for Arduino millis()
  */
 void initTimer2(void) {
 #if defined(TCCR2A)
