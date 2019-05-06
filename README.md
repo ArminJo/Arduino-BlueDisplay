@@ -41,7 +41,7 @@ More information under [Arduino-Simple-DSO](https://github.com/ArminJo/Arduino-S
 - US_Distance - Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a parking assistance.
 
 ## Extras
-The extras folder (in the Arduino IDE under "Sketch/Show Sketch Folder" (or Ctrl+K) and then in the BlueDisplay/extras directory) 
+The extras folder (in the Arduino IDE use "Sketch/Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory) 
 contains more schematics, breadboard layouts and pictures which may help you building the example projects.
 
 ## Hints

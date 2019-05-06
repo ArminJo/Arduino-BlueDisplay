@@ -31,7 +31,7 @@
 #define EVENTHANDLER_H_
 
 #ifndef DO_NOT_NEED_BASIC_TOUCH_EVENTS
-//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // outcommenting or better defining for the compiler with -DDO_NOT_NEED_BASIC_TOUCH_EVENTS saves 620 bytes FLASH and 36 bytes RAM
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // commenting out or better defining for the compiler with -DDO_NOT_NEED_BASIC_TOUCH_EVENTS saves 620 bytes FLASH and 36 bytes RAM
 #endif
 
 #ifdef LOCAL_DISPLAY_EXISTS
