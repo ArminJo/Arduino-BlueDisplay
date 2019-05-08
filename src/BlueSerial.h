@@ -76,14 +76,15 @@ void sendUSART5ArgsAndByteBuffer(uint8_t aFunctionTag, uint16_t aXStart, uint16_
 bool USART_isBluetoothPaired(void);
 #else
 #if defined(LOCAL_DISPLAY_EXISTS)
+void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
 #define USART_isBluetoothPaired() (false)
 #else
+void initSimpleSerial(uint32_t aBaudRate);
 #define USART_isBluetoothPaired() (true)
 #endif
 #endif
 
 extern bool allowTouchInterrupts;
-void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
 void USART_send(char aChar);
 
 void serialEvent();

@@ -92,7 +92,7 @@ void setup() {
     pinMode(TONE_PIN, OUTPUT);
     pinMode(ANALOG_INPUT_PIN, INPUT);
 #ifdef USE_SIMPLE_SERIAL  // see line 38 in BlueSerial.h - use global #define USE_STANDARD_SERIAL to disable it
-    initSimpleSerial(HC_05_BAUD_RATE, false);
+    initSimpleSerial(HC_05_BAUD_RATE);
 #else
     Serial.begin(HC_05_BAUD_RATE);
 #endif
@@ -222,6 +222,7 @@ void drawGui(void) {
     TouchSliderDelay.drawSlider();
 }
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 /*
  * Change doBlink flag
  */

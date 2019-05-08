@@ -253,7 +253,7 @@ void setup() {
      * e.g. with -DUSE_STANDARD_SERIAL as compiler parameter for c++ in order to force the BlueDisplay library to use the Arduino Serial object
      * and release its own interrupt handler '__vector_18'
      */
-    initSimpleSerial(HC_05_BAUD_RATE, false);
+    initSimpleSerial(HC_05_BAUD_RATE);
 #else
     Serial.begin(HC_05_BAUD_RATE);
 #endif
@@ -303,7 +303,6 @@ void setup() {
         /*
          * show border of area which can be reached by laser
          */
-        Serial.println(F("Mark border of area and then do auto move."));
         ServoHorizontal.write(ServoHorizontalControl.minDegree);
         ServoVertical.write(ServoVerticalControl.minDegree);
         delay(500);
@@ -377,6 +376,8 @@ void loop() {
      */
     checkAndHandleEvents();
 }
+
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 /*
  * Use logarithmic scale: 0 -> 0, (sActualDisplayHeight / 2) -> 255

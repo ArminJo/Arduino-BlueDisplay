@@ -1328,6 +1328,8 @@ void startDSOSettingsPage(void) {
  * Event handler section
  ************************************************************************/
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 /*
  * Handler for "empty" touch
  * Use touch up in order not to interfere with long touch

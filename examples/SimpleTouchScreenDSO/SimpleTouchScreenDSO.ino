@@ -367,8 +367,7 @@ void setup() {
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
     pinMode(ATTENUATOR_0_PIN, OUTPUT);
     pinMode(ATTENUATOR_1_PIN, OUTPUT);
-    pinMode(AC_DC_RELAIS_PIN_1, OUTPUT);
-    pinMode(AC_DC_RELAIS_PIN_2, OUTPUT);
+    pinMode(AC_DC_RELAY_PIN, OUTPUT);
 #else
     DDRD = (DDRD & ~OUTPUT_MASK_PORTD) | OUTPUT_MASK_PORTD;
 #endif
@@ -395,7 +394,7 @@ void setup() {
     // Disable  digital input on all ADC channel pins to reduce power consumption for levels near half VCC
     DIDR0 = ADC0D | ADC1D | ADC2D | ADC3D | ADC4D | ADC5D;
 
-    initSimpleSerial(HC_05_BAUD_RATE, false);
+    initSimpleSerial(HC_05_BAUD_RATE);
 
     // initialize values
     MeasurementControl.isRunning = false;
@@ -1561,7 +1560,7 @@ uint16_t getAttenuatorFactor(void) {
 /*
  * toggle between DC and AC mode
  */
-void doAcDcMode(BDButton * aTheTouchedButton, int16_t aValue) {
+void doAcDcMode(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
     setACMode(!MeasurementControl.ChannelIsACMode);
 }
 
@@ -1595,7 +1594,7 @@ void doSetTriggerDelay(float aValue) {
 /*
  * toggle between 5 and 1.1 Volt reference
  */
-void doADCReference(BDButton * aTheTouchedButton, int16_t aValue) {
+void doADCReference(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
     uint8_t tNewReference = MeasurementControl.ADCReference;
     if (MeasurementControl.ADCReference == DEFAULT) {
         tNewReference = INTERNAL;
@@ -1610,7 +1609,7 @@ void doADCReference(BDButton * aTheTouchedButton, int16_t aValue) {
     }
 }
 
-void doStartStopDSO(BDButton * aTheTouchedButton, int16_t aValue) {
+void doStartStopDSO(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
     if (MeasurementControl.isRunning) {
         /*
          * Stop here
@@ -2335,13 +2334,13 @@ void setReference(uint8_t aReference) {
 void setTimer2FastPWMOutput() {
 #if defined(TCCR2A)
     OCR2A = 125 - 1; // set compare match register for 50% duty cycle
-    TCCR2A = _BV(COM2A1) | _BV(WGM21) | _BV(WGM20);// Clear OC2A/PB3/D11 on compare match, set at 00 / Fast PWM mode with 0xFF as TOP
+    TCCR2A = _BV(COM2A1) | _BV(WGM21) | _BV(WGM20); // Clear OC2A/PB3/D11 on compare match, set at 00 / Fast PWM mode with 0xFF as TOP
 #else
-    OCR3A = 125 - 1; // set compare match register for 50% duty cycle
-    TCCR3A = 0; // set entire TCCR3A register to 0 - Normal mode
-    TCCR3A = _BV(WGM30); // Fast PWM, 8-bit
-    TCCR3B = 0;
-    TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30); // Clock/64 => 4 us. Fast PWM, 8-bit
+            OCR3A = 125 - 1; // set compare match register for 50% duty cycle
+            TCCR3A = 0;// set entire TCCR3A register to 0 - Normal mode
+            TCCR3A = _BV(WGM30);// Fast PWM, 8-bit
+            TCCR3B = 0;
+            TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30);// Clock/64 => 4 us. Fast PWM, 8-bit
 #endif
 }
 
@@ -2351,15 +2350,15 @@ void setTimer2FastPWMOutput() {
 void initTimer2(void) {
 #if defined(TCCR2A)
     // initialization with 0 is essential otherwise timer will not work correctly!!!
-    TCCR2A = 0;// set entire TCCR2A register to 0 - Normal mode
-    TCCR2B = 0;// same for TCCR2B
-    TCCR2B = _BV(CS22);// Clock/64 => 4 us
+    TCCR2A = 0; // set entire TCCR2A register to 0 - Normal mode
+    TCCR2B = 0; // same for TCCR2B
+    TCCR2B = _BV(CS22); // Clock/64 => 4 us
 #else
-    // ???initialization with 0 is essential otherwise timer will not work correctly???
-    TCCR3A = 0; // set entire TCCR3A register to 0 - Normal mode
-    TCCR3A = _BV(WGM30); // Fast PWM, 8-bit
-    TCCR3B = 0;
-    TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30); // Clock/64 => 4 us. Fast PWM, 8-bit
+            // ???initialization with 0 is essential otherwise timer will not work correctly???
+            TCCR3A = 0;// set entire TCCR3A register to 0 - Normal mode
+            TCCR3A = _BV(WGM30);// Fast PWM, 8-bit
+            TCCR3B = 0;
+            TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30);// Clock/64 => 4 us. Fast PWM, 8-bit
 #endif
     TIMSK2 = _BV(TOIE2); // Enable overflow interrupts which replaces the Arduino millis() interrupt
 }

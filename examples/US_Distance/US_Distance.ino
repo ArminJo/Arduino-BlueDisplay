@@ -63,7 +63,7 @@ char sStringBuffer[100];
 /*
  * Change doTone flag as well as color and caption of the button.
  */
-void doStartStop(BDButton * aTheTouchedButton, int16_t aValue) {
+void doStartStop(__attribute__((unused))  BDButton * aTheTouchedButton, int16_t aValue) {
     doTone = aValue;
     if (!aValue) {
         // Stop tone
@@ -86,7 +86,7 @@ void doSetOffset(float aValue) {
 /*
  * Request delay value as number
  */
-void doGetOffset(BDButton * aTheTouchedButton, int16_t aValue) {
+void doGetOffset(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
     BlueDisplay1.getNumberWithShortPrompt(&doSetOffset, "Offset distance [cm]");
 }
 
@@ -150,7 +150,7 @@ void setup(void) {
      * e.g. with -DUSE_STANDARD_SERIAL as compiler parameter for c++ in order to force the BlueDisplay library to use the Arduino Serial object
      * and release its own interrupt handler '__vector_18'
      */
-    initSimpleSerial(HC_05_BAUD_RATE, false);
+    initSimpleSerial(HC_05_BAUD_RATE);
 #else
     Serial.begin(HC_05_BAUD_RATE);
 #endif
@@ -166,7 +166,8 @@ void setup(void) {
         delay(100);
     } else {
 #ifdef USE_STANDARD_SERIAL
-        while (!Serial); //delay for Leonardo
+        while (!Serial)
+            ; //delay for Leonardo
         // Just to know which program is running on my Arduino
         Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from  " __DATE__));
 #endif

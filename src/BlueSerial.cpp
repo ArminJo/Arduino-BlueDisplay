@@ -63,11 +63,13 @@ bool USART_isBluetoothPaired(void) {
 #endif
 
 #ifdef USE_SIMPLE_SERIAL
-void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin) {
 #ifdef LOCAL_DISPLAY_EXISTS
+void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin) {
     if (aUsePairedPin) {
         pinMode(PAIRED_PIN, INPUT);
     }
+#else
+    void initSimpleSerial(uint32_t aBaudRate) {
 #endif
     uint16_t baud_setting;
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)

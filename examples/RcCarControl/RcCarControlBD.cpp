@@ -262,10 +262,6 @@ void initDisplay(void) {
     BUTTON_HEIGHT_4_DYN, COLOR_RED, PSTR("Zero"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doSetZero);
 }
 
-void driveForward(uint8_t aDirection, int aMillis) {
-
-}
-
 void BDsetup() {
 // initialize the digital pin as an output.
     pinMode(LED_BUILTIN, OUTPUT);
@@ -280,7 +276,7 @@ void BDsetup() {
     digitalWrite(LASER_POWER_PIN, LaserOn);
     ServoLaser.write(90);
 
-    initSimpleSerial(HC_05_BAUD_RATE, false);
+    initSimpleSerial(HC_05_BAUD_RATE);
     ServoLaser.attach(LASER_SERVO_PIN);
 
     // Register callback handler and check for connection
@@ -382,6 +378,8 @@ void BDloop() {
         sCentimeterOld = 0;
     }
 }
+
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 /*
  * Handle follower mode

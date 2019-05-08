@@ -373,6 +373,8 @@ void setFrequencyNormalizedForGUI(float aGUIFrequencyValue) {
     sFrequencyInfo.FrequencyNormalized = aGUIFrequencyValue;
 }
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 /*
  * Slider handlers
  */

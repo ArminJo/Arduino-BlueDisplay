@@ -58,7 +58,7 @@ void setup() {
     // Initialize the LED pin as output.
     pinMode(LED_BUILTIN, OUTPUT);
 
-    initSimpleSerial(HC_05_BAUD_RATE, false);
+    initSimpleSerial(HC_05_BAUD_RATE);
 
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
