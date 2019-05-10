@@ -137,7 +137,6 @@ void initFrequencyGeneratorPageGui(void);
 void doFrequencySlider(BDSlider * aTheTouchedSlider, uint16_t aValue);
 
 void doWaveformMode(BDButton * aTheTouchedButton, int16_t aValue);
-void setWaveformButtonCaption(void);
 void doSetFixedFrequency(BDButton * aTheTouchedButton, int16_t aValue);
 void doSetFrequencyRange(BDButton * aTheTouchedButton, int16_t aValue);
 void doFrequencyGeneratorStartStop(BDButton * aTheTouchedButton, int16_t aValue);
@@ -147,6 +146,7 @@ bool setWaveformFrequencyAndPrintValues();
 
 void printFrequencyAndPeriod();
 #ifdef AVR
+void setWaveformButtonCaption(void);
 void initTimer1ForCTC(void);
 #else
 #endif

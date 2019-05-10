@@ -696,7 +696,7 @@ void BlueDisplay::debug(int32_t aLong) {
 #ifdef AVR
     sprintf_P(tStringBuffer, PSTR("%11l 0x%lX"), aLong, aLong);
 #else
-    sprintf(tStringBuffer, "%11l 0x%lX", aLong, aLong);
+    sprintf(tStringBuffer, "%11lu 0x%lX", aLong, aLong);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
@@ -708,7 +708,7 @@ void BlueDisplay::debug(const char* aMessage, uint32_t aLong) {
 #ifdef AVR
     snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%11l 0x%lX"), aMessage, aLong, aLong);
 #else
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE,"%s%11l 0x%lX", aMessage,aLong, aLong);
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE,"%s%11lu 0x%lX", aMessage, aLong, aLong);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
