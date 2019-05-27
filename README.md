@@ -3,11 +3,10 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Build Status](https://travis-ci.org/ArminJo/Arduino-BlueDisplay.svg?branch=master)](https://travis-ci.org/ArminJo/Arduino-BlueDisplay)
 
-
-This library allows an Arduino board with Bluetooth module like HC-05 to connect to the BlueDisplay app on your smartphone.
+This library enables an Android smartphone or tablet to act as a graphical display for your Arduino.
 
 ## SUMMARY
-Let the Arduino sketch create a GUI with Graphics, Buttons and Sliders on your smartphone by simply connecting a HC-05 to the rx/tx pins of your Arduino.
+Let your Arduino program create a GUI with Graphics, Text, Buttons and Sliders on your smartphone or tablet by simply connecting a HC-05 to the rx/tx pins of your Arduino.
 The App receives draw requests from Arduino over Bluetooth and renders it.
 GUI callback, touch and sensor events are sent back to Arduino.
 No Android programming needed!
