@@ -1,5 +1,5 @@
 /*
- * PageFrequencyGenerator.cpp
+ * FrequencyGeneratorPage.cpp
  *
  * Frequency output from 119 mHz (8.388 second) to 8MHz square wave on Arduino using timer1.
  * Sine waveform output from 7,421 mHz to 7812.5 Hz
@@ -37,7 +37,7 @@
  */
 
 #ifdef AVR
-#include "PageFrequencyGenerator.h"
+#include "FrequencyGeneratorPage.h"
 #include "BlueDisplay.h"
 
 #include "SimpleTouchScreenDSO.h"
@@ -275,21 +275,21 @@ void initFrequencyGeneratorPageGui() {
         if (i == BUTTON_INDEX_SELECTED_INITIAL) {
             tButtonColor = BUTTON_AUTO_RED_GREEN_TRUE_COLOR;
         }
-        TouchButtonFrequencyRanges[i].initPGM(tXPos, tYPos, BUTTON_WIDTH_5 + BUTTON_DEFAULT_SPACING_HALF,
-        BUTTON_HEIGHT_5, tButtonColor, RangeButtonStrings[i], TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, i, &doSetFrequencyRange);
+        TouchButtonFrequencyRanges[i].init(tXPos, tYPos, BUTTON_WIDTH_5 + BUTTON_DEFAULT_SPACING_HALF,
+        BUTTON_HEIGHT_5, tButtonColor, reinterpret_cast<const __FlashStringHelper *>(RangeButtonStrings[i]), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, i, &doSetFrequencyRange);
 
         tXPos += BUTTON_WIDTH_5 + BUTTON_DEFAULT_SPACING - 2;
     }
 
     ActiveTouchButtonFrequencyRange = TouchButtonFrequencyRanges[BUTTON_INDEX_SELECTED_INITIAL];
 
-    TouchButtonFrequencyStartStop.initPGM(0, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, 0,
-            PSTR("Start"), TEXT_SIZE_26, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN,
+    TouchButtonFrequencyStartStop.init(0, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, 0,
+            F("Start"), TEXT_SIZE_26, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN,
             sFrequencyInfo.isOutputEnabled, &doFrequencyGeneratorStartStop);
-    TouchButtonFrequencyStartStop.setCaptionPGMForValueTrue(PSTR("Stop"));
+    TouchButtonFrequencyStartStop.setCaptionForValueTrue(F("Stop"));
 
-    TouchButtonGetFrequency.initPGM(BUTTON_WIDTH_3_POS_2, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
-    BUTTON_HEIGHT_4, COLOR_BLUE, PSTR("Hz..."), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetFrequency);
+    TouchButtonGetFrequency.init(BUTTON_WIDTH_3_POS_2, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
+    BUTTON_HEIGHT_4, COLOR_BLUE, F("Hz..."), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetFrequency);
 
 #ifdef AVR
     TouchButtonWaveform.init(BUTTON_WIDTH_3_POS_3, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
@@ -305,19 +305,18 @@ void drawFrequencyGeneratorPage(void) {
 #ifdef LOCAL_DISPLAY_EXISTS
     TouchButtonMainHome.drawButton();
 #else
-    TouchButtonBack.drawButton();
+    TouchButtonBackSmall.drawButton();
 #endif
     TouchSliderFrequency.drawSlider();
 
-#ifdef AVR
-    BlueDisplay1.drawTextPGM(TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, PSTR("1"),
+
+    BlueDisplay1.drawText(TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1"),
             TEXT_SIZE_11, COLOR_BLUE, COLOR_BACKGROUND_FREQ);
-    BlueDisplay1.drawTextPGM(REMOTE_DISPLAY_WIDTH - 5 * TEXT_SIZE_11_WIDTH,
-            FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, PSTR("1000"), TEXT_SIZE_11, COLOR_BLUE,
+#ifdef AVR
+    BlueDisplay1.drawText(REMOTE_DISPLAY_WIDTH - 5 * TEXT_SIZE_11_WIDTH,
+            FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1000"), TEXT_SIZE_11, COLOR_BLUE,
             COLOR_BACKGROUND_FREQ);
 #else
-    BlueDisplay1.drawText(TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, ("1"),
-    TEXT_SIZE_11, COLOR_BLUE, COLOR_BACKGROUND_FREQ);
     BlueDisplay1.drawText(BlueDisplay1.getDisplayWidth() - 5 * TEXT_SIZE_11_WIDTH,
     FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, ("1000"), TEXT_SIZE_11, COLOR_BLUE,
     COLOR_BACKGROUND_FREQ);
@@ -476,7 +475,7 @@ void doSetFrequency(float aValue) {
  * Request frequency numerical
  */
 void doGetFrequency(BDButton * aTheTouchedButton, int16_t aValue) {
-    BlueDisplay1.getNumberWithShortPromptPGM(&doSetFrequency, PSTR("frequency [Hz]"));
+    BlueDisplay1.getNumberWithShortPrompt(&doSetFrequency, F("frequency [Hz]"));
 }
 #endif
 

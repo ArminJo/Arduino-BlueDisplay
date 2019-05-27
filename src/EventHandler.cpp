@@ -292,6 +292,10 @@ void checkAndHandleEvents(void) {
 #endif
 
 #ifdef AVR
+#ifndef USE_SIMPLE_SERIAL
+    // get Arduino Serial data first
+    serialEvent();
+#endif
     if (remoteTouchDownEvent.EventType != EVENT_NO_EVENT) {
         handleEvent(&remoteTouchDownEvent);
     }

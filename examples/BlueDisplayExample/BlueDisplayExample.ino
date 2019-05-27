@@ -2,7 +2,9 @@
  *  BlueDisplayExample.cpp
  *  Demo of using the BlueDisplay library for HC-05 on Arduino
  *
- *  For handling time, two files from Paul Stoffregens TimeLib https://github.com/PaulStoffregen/Time are included
+ *  For handling time, the Arduino "time" library is used. You can install it also with "Tools -> Manage Libraries..." or "Ctrl+Shift+I" -> use "timekeeping" as filter string.
+ *  The sources can also be found here: https://github.com/PaulStoffregen/Time
+ *
 
  *  Copyright (C) 2014  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
@@ -195,8 +197,8 @@ void initDisplay(void) {
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doBDExampleBlinkStartStop);
     TouchButtonBDExampleBlinkStartStop.setCaptionForValueTrue("Stop");
 
-    // PSTR("...") and initPGM saves RAM since string "..." is stored in flash
-    TouchButtonValueDirect.initPGM(210, 150, 90, 55, COLOR_YELLOW, PSTR("..."), 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetDelay);
+    // F("...") and init saves RAM since string "..." is stored in flash
+    TouchButtonValueDirect.init(210, 150, 90, 55, COLOR_YELLOW, F("..."), 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetDelay);
 
     TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE / 10, COLOR_YELLOW, COLOR_GREEN,
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_HORIZONTAL, &doDelay);

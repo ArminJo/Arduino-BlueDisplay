@@ -5,7 +5,7 @@
  *  in a frame which holds a laser.
  *  This is an example for using a fullscreen GUI.
  *
- *  If no BD connection available the servo first shows the border and then moves randomly
+ *  If no BD connection available, the servo first marks the border and then moves randomly in this area (Cat Mover).
  *
  *  Zero -> the actual sensor position is taken as the servos 90/90 degree position.
  *  Bias (reverse of Zero) -> take actual servos position as position for horizontal sensors position.
@@ -147,7 +147,7 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallback
  *******************************************************************************************/
 
 void drawGui(void) {
-    BlueDisplay1.clearDisplay(COLOR_WHITE);
+    BlueDisplay1.clearDisplay();
     SliderUp.drawSlider();
     SliderDown.drawSlider();
     SliderRight.drawSlider();
@@ -184,6 +184,7 @@ void initDisplay(void) {
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sActualDisplayWidth, sActualDisplayHeight);
 
     tSensorChangeCallCount = 0;
+    // Since landscape has 2 orientations, let the user choose the right one.
     BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_ACTUAL);
 
     uint16_t tSliderSize = sActualDisplayHeight / 2;
@@ -469,7 +470,7 @@ void doSetBias(BDButton * aTheTouchedButton, int16_t aValue) {
     sXBiasValue = sLastSensorXValue;
     sYBiasValue = sLastSensorYValue;
     // show message in order to see the effect
-    BlueDisplay1.clearDisplay(COLOR_WHITE);
+    BlueDisplay1.clearDisplay();
     BlueDisplay1.drawText(0, sTextSize + getTextAscend(sTextSize * 3), "old position is taken \rfor horizontal input\r",
             sTextSize * 2,
             COLOR_BLACK, COLOR_GREEN);

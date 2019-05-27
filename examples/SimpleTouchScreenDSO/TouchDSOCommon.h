@@ -20,7 +20,7 @@
 #include "BDButton.h"
 #include "BDSlider.h"
 #ifdef AVR
-#include "PageFrequencyGenerator.h"
+#include "FrequencyGeneratorPage.h"
 #endif
 
 #define VERSION_DSO "3.0"
@@ -31,9 +31,8 @@
 #define PROGMEM
 #define initPGM init
 #define setCaptionPGM setCaption
-#define setCaptionPGMForValueTrue setCaptionForValueTrue
 #define drawTextPGM drawText
-#define getNumberWithShortPromptPGM getNumberWithShortPrompt
+#define F(a) a
 #define PSTR(a) a
 #endif
 

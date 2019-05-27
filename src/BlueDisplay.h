@@ -56,11 +56,11 @@
 
 #define DISPLAY_DEFAULT_HEIGHT 240 // value to use if not connected
 #define DISPLAY_DEFAULT_WIDTH 320
-#define STRING_BUFFER_STACK_SIZE 22 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE]" for ...PGM() functions.
+#define STRING_BUFFER_STACK_SIZE 32 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE]" for ...PGM() functions.
 #define STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE 34 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG]" for debug(const char* aMessage,...) functions.
 
 /*
- * Android Text sizes which are closest to the 8*12 font used locally
+ * Some useful text sizes constants
  */
 #define TEXT_SIZE_11 11
 #define TEXT_SIZE_13 13
@@ -68,6 +68,7 @@
 #define TEXT_SIZE_16 16
 #define TEXT_SIZE_18 18
 #define TEXT_SIZE_11 11
+#define TEXT_SIZE_12 12
 // for factor 2 of 8*12 font
 #define TEXT_SIZE_22 22
 #define TEXT_SIZE_26 26
@@ -82,32 +83,46 @@
 #define TEXT_SIZE_22_WIDTH 16
 #else
 #define TEXT_SIZE_11_WIDTH 7
+#define TEXT_SIZE_12_WIDTH 7
 #define TEXT_SIZE_13_WIDTH 8
 #define TEXT_SIZE_14_WIDTH 8
 #define TEXT_SIZE_16_WIDTH 10
 #define TEXT_SIZE_18_WIDTH 11
 #define TEXT_SIZE_22_WIDTH 13
+#define TEXT_SIZE_33_WIDTH 20
+#define TEXT_SIZE_44_WIDTH 26
 #endif
 
-// TextSize * 0.93
+// TextSize * 1,125 ( 1 + 1/8)
 // 12 instead of 11 to be compatible with 8*12 font and have a margin
 #define TEXT_SIZE_11_HEIGHT 12
+#define TEXT_SIZE_12_HEIGHT 13
 #define TEXT_SIZE_22_HEIGHT 24
+#define TEXT_SIZE_33_HEIGHT 36
+#define TEXT_SIZE_44_HEIGHT 48
 
-// TextSize * 0.93
+// TextSize * 0.76
+// TextSize * 0.855 to have ASCEND + DECEND = HEIGHT
 // 9 instead of 8 to have ASCEND + DECEND = HEIGHT
 #define TEXT_SIZE_11_ASCEND 9
+#define TEXT_SIZE_12_ASCEND 9
 #define TEXT_SIZE_13_ASCEND 10
 #define TEXT_SIZE_14_ASCEND 11
 #define TEXT_SIZE_16_ASCEND 12
 #define TEXT_SIZE_18_ASCEND 14
 // 18 instead of 17 to have ASCEND + DECEND = HEIGHT
 #define TEXT_SIZE_22_ASCEND 18
+#define TEXT_SIZE_33_ASCEND 28
+#define TEXT_SIZE_44_ASCEND 37
 
 // TextSize * 0.24
+// TextSize * 0.27 to have ASCEND + DECEND = HEIGHT
+#define TEXT_SIZE_11_DECEND 3
 #define TEXT_SIZE_11_DECEND 3
 // 6 instead of 5 to have ASCEND + DECEND = HEIGHT
 #define TEXT_SIZE_22_DECEND 6
+#define TEXT_SIZE_33_DECEND 8
+#define TEXT_SIZE_44_DECEND 11
 
 uint16_t getTextHeight(uint16_t aTextSize);
 uint16_t getTextWidth(uint16_t aTextSize);
@@ -134,42 +149,38 @@ static const float NUMBER_INITIAL_VALUE_DO_NOT_SHOW = 1e-40f;
 // Sub functions for SET_FLAGS_AND_SIZE
 // Reset buttons, sliders, sensors, orientation locking, flags (see next lines) and character mappings
 static const int BD_FLAG_FIRST_RESET_ALL = 0x01;
-// disables also touch moves
-static const int BD_FLAG_TOUCH_BASIC_DISABLE = 0x02;
-static const int BD_FLAG_ONLY_TOUCH_MOVE_DISABLE = 0x04;
-static const int BD_FLAG_LONG_TOUCH_ENABLE = 0x08;
-static const int BD_FLAG_USE_MAX_SIZE = 0x10;
+//
+static const int BD_FLAG_TOUCH_BASIC_DISABLE = 0x02; // Do not send plain touch events (UP, DOWN, MOVE) if no button or slider was touched, send only button and slider events. -> Disables also touch moves.
+static const int BD_FLAG_ONLY_TOUCH_MOVE_DISABLE = 0x04; // Do not send MOVE, only UP and DOWN.
+static const int BD_FLAG_LONG_TOUCH_ENABLE = 0x08; // If long touch detection is needed. This delays the sending of plain DOWN Events.
+static const int BD_FLAG_USE_MAX_SIZE = 0x10;      // Use maximum display size for given geometry. -> Scale automatically to screen.
+
+/****************************************
+ * Flags for setScreenOrientationLock()
+ ***************************************/
+static const int FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x00;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT = 0x01;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_ACTUAL = 0x02;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x03;
 
 /**********************
  * Button
  *********************/
 // Flags for BUTTON_GLOBAL_SETTINGS
-// old
-#define USE_UP_EVENTS_FOR_BUTTONS FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS
-#define BUTTONS_SET_BEEP_TONE FLAG_BUTTON_GLOBAL_SET_BEEP_TONE
-// new
-static const int FLAG_BUTTON_GLOBAL_USE_DOWN_EVENTS_FOR_BUTTONS = 0x00;
-static const int FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS = 0x01;
-static const int FLAG_BUTTON_GLOBAL_SET_BEEP_TONE = 0x02;
+static const int FLAG_BUTTON_GLOBAL_USE_DOWN_EVENTS_FOR_BUTTONS = 0x00; // Default
+static const int FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS = 0x01;   // If swipe can start on a button, you need this.
+static const int FLAG_BUTTON_GLOBAL_SET_BEEP_TONE = 0x02;   // Beep on button touch
 
 // Flags for init
-//old
-#define BUTTON_FLAG_NO_BEEP_ON_TOUCH FLAG_BUTTON_NO_BEEP_ON_TOUCH
-#define BUTTON_FLAG_DO_BEEP_ON_TOUCH FLAG_BUTTON_DO_BEEP_ON_TOUCH
-#define BUTTON_FLAG_TYPE_AUTO_RED_GREEN FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN
-#define BUTTON_FLAG_TYPE_TOGGLE_RED_GREEN FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN
-#define BUTTON_FLAG_TYPE_AUTOREPEAT FLAG_BUTTON_TYPE_AUTOREPEAT
-
-//new
 static const int FLAG_BUTTON_NO_BEEP_ON_TOUCH = 0x00;
-static const int FLAG_BUTTON_DO_BEEP_ON_TOUCH = 0x01;
-static const int FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN = 0x02;
+static const int FLAG_BUTTON_DO_BEEP_ON_TOUCH = 0x01;  // Beep on this button touch
+static const int FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN = 0x02; // Value true -> green, false -> red
 static const int FLAG_BUTTON_TYPE_AUTOREPEAT = 0x04;
-static const int FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH = 0x0A; // must be manually drawn after event to show new caption/color
+static const int FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH = 0x0A; // Button must be manually drawn after event to show new caption/color
 
 #ifdef USE_BUTTON_POOL
 #define INTERNAL_FLAG_MASK 0x80
-#define FLAG_IS_ALLOCATED 0x80 // for use with get and releaseButton
+#define FLAG_IS_ALLOCATED 0x80 // For use with get and releaseButton
 #endif
 
 /**********************
@@ -179,11 +190,11 @@ static const int FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH = 0x0A; // mus
 static const int FLAG_SLIDER_VERTICAL = 0x00;
 static const int FLAG_SLIDER_VERTICAL_SHOW_NOTHING = 0x00;
 static const int FLAG_SLIDER_SHOW_BORDER = 0x01;
-// if set, ASCII value is printed along with change of bar value
+// If set, ASCII value is printed along with change of bar value
 static const int FLAG_SLIDER_SHOW_VALUE = 0x02;
 static const int FLAG_SLIDER_IS_HORIZONTAL = 0x04;
 static const int FLAG_SLIDER_IS_INVERSE = 0x08;
-// if set,  bar (+ ASCII) value will be set by callback handler, not by touch
+// If set,  bar (+ ASCII) value will be set by callback handler, not by touch
 static const int FLAG_SLIDER_VALUE_BY_CALLBACK = 0x10;
 static const int FLAG_SLIDER_IS_ONLY_OUTPUT = 0x20;
 
@@ -199,13 +210,13 @@ static const int FLAG_SLIDER_CAPTION_ABOVE = 0x04;
  * Tone
  *********************/
 // Android system tones
-// codes start with 0 - 15 for DTMF tones and ends with code TONE_CDMA_SIGNAL_OFF=98 for silent tone (which does not work on lollipop)
+// Codes start with 0 - 15 for DTMF tones and ends with code TONE_CDMA_SIGNAL_OFF=98 for silent tone (which does not work on lollipop)
 #define TONE_CDMA_KEYPAD_VOLUME_KEY_LITE 89
 #define TONE_PROP_BEEP_OK TONE_CDMA_KEYPAD_VOLUME_KEY_LITE // 120 ms 941 + 1477Hz - normal tone for OK Feedback
 #define TONE_PROP_BEEP_ERROR 28 // 2* 35/200 ms 400 + 1200Hz - normal tone for ERROR Feedback
 #define TONE_PROP_BEEP_ERROR_HIGH 25 // 2* 100/100 ms 1200Hz - high tone for ERROR Feedback
 #define TONE_PROP_BEEP_ERROR_LONG 26 // 2* 35/200 ms 400 + 1200Hz - normal tone for ERROR Feedback
-#define TONE_SILENCE 50 // since 98 does not work on lollipop
+#define TONE_SILENCE 50 // Since 98 does not work on Android Lollipop
 #define TONE_CDMA_ONE_MIN_BEEP 88
 #define TONE_DEFAULT TONE_CDMA_KEYPAD_VOLUME_KEY_LITE
 #define TONE_LAST_VALID_TONE_INDEX 98
@@ -219,11 +230,11 @@ static const int FLAG_SLIDER_CAPTION_ABOVE = 0x04;
 /**********************
  * Sensors
  *********************/
-// see android.hardware.Sensor
+// See android.hardware.Sensor
 static const int FLAG_SENSOR_TYPE_ACCELEROMETER = 1;
 static const int FLAG_SENSOR_TYPE_GYROSCOPE = 4;
 
-// rate of sensor callbacks - see android.hardware.SensorManager
+// Rate of sensor callbacks - see android.hardware.SensorManager
 static const int FLAG_SENSOR_DELAY_NORMAL = 3; // 200 ms
 static const int FLAG_SENSOR_DELAY_UI = 2; // 60 ms
 static const int FLAG_SENSOR_DELAY_GAME = 1; // 20 ms
@@ -231,13 +242,7 @@ static const int FLAG_SENSOR_DELAY_FASTEST = 0;
 static const int FLAG_SENSOR_NO_FILTER = 0;
 static const int FLAG_SENSOR_SIMPLE_FILTER = 1;
 
-// Flags for SET_SCREEN_ORIENTATION_LOCK
-static const int FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x00;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT = 0x01;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_ACTUAL = 0x02;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x03;
-
-// no valid button number
+// No valid button number
 #define NO_BUTTON 0xFF
 #define NO_SLIDER 0xFF
 
@@ -259,7 +264,7 @@ public:
     BlueDisplay();
     void resetLocal(void);
     void initCommunication(void (*aConnectCallback)(void), void (*aReorientationCallback)(void), void (*aRedrawCallback)(void));
-    // with combined callbacks
+    // With combined callbacks
     void initCommunication(void (*aConnectAndReorientationCallback)(void), void (*aRedrawCallback)(void));
     // The result of initCommunication
     bool isConnectionEstablished();
@@ -275,7 +280,7 @@ public:
     void playFeedbackTone(uint8_t isError);
     void setLongTouchDownTimeout(uint16_t aLongTouchDownTimeoutMillis);
 
-    void clearDisplay(color16_t aColor);
+    void clearDisplay(color16_t aColor = COLOR_WHITE);
     void drawDisplayDirect(void);
     void setScreenOrientationLock(uint8_t aLockMode);
 
@@ -301,7 +306,7 @@ public:
     COLOR_BLACK, color16_t aBGColor = COLOR_WHITE);
 
     void setPrintfSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
-    bool aClearOnNewScreen);
+            bool aClearOnNewScreen);
     void setPrintfPosition(uint16_t aPosX, uint16_t aPosY);
     void setPrintfPositionColumnLine(uint16_t aColumnNumber, uint16_t aLineNumber);
     void writeString(const char *aStringPtr, uint8_t aStringLength);
@@ -339,8 +344,7 @@ public:
     void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
             uint8_t *aByteBuffer, size_t aByteBufferLength);
     void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
-            uint8_t aChartIndex,
-            bool aDoDrawDirect, uint8_t *aByteBuffer, size_t aByteBufferLength);
+            uint8_t aChartIndex, bool aDoDrawDirect, uint8_t *aByteBuffer, size_t aByteBufferLength);
 
     struct XYSize * getMaxDisplaySize(void);
     uint16_t getMaxDisplayWidth(void);
@@ -352,7 +356,7 @@ public:
     struct XYSize * getReferenceDisplaySize(void);
     uint16_t getDisplayWidth(void);
     uint16_t getDisplayHeight(void);
-    // implemented by event handler
+    // Implemented by event handler
     bool isDisplayOrientationLandscape(void);
 
     void refreshVector(struct ThickLine * aLine, int16_t aNewRelEndX, int16_t aNewRelEndY);
@@ -363,9 +367,9 @@ public:
     // Not yet implemented
     //    void getText(void (*aTextHandler)(const char *));
     //    void getTextWithShortPrompt(void (*aTextHandler)(const char *), const char *aShortPromptString);
-    // results in a info callback
+    // This call results in a info callback
     void getInfo(uint8_t aInfoSubcommand, void (*aInfoHandler)(uint8_t, uint8_t, uint16_t, ByteShortLongFloatUnion));
-    // results in a reorientation callback
+    // This call results in a reorientation callback
     void requestMaxCanvasSize(void);
 
     void setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSensorRate, uint8_t aFilterFlag);
@@ -379,7 +383,14 @@ public:
             color16_t aBGColor);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString, float aInitialValue);
-    // Not yet implemented    void getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const char *aPGMShortPromptString);
+
+    uint16_t drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper * aPGMString, uint8_t aFontSize,
+            color16_t aFGColor, color16_t aBGColor);
+    void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString);
+    void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
+            float aInitialValue);
+
+    // Not yet implemented    void getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const __FlashStringHelper *aPGMShortPromptString);
 
     void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint8_t aTextSize, uint16_t aPeriodMillis);
 #endif
@@ -444,7 +455,7 @@ public:
     volatile bool mConnectionEstablished;
     volatile bool mOrientationIsLandscape;
 
-    /* for tests */
+    /* For tests */
     void drawGreyscale(uint16_t aXPos, uint16_t tYPos, uint16_t aHeight);
     void drawStar(int aXPos, int aYPos, int tOffsetCenter, int tLength, int tOffsetDiagonal, int tLengthDiagonal, color16_t aColor);
     void testDisplay(void);
@@ -473,7 +484,7 @@ extern MI0283QT2 LocalDisplay;
 extern const unsigned int LOCAL_DISPLAY_HEIGHT;
 extern const unsigned int LOCAL_DISPLAY_WIDTH;
 #endif
-// to be provided by another source (main.cpp)
+// To be provided by another source (main.cpp)
 extern const unsigned int REMOTE_DISPLAY_HEIGHT;
 extern const unsigned int REMOTE_DISPLAY_WIDTH;
 
@@ -484,7 +495,7 @@ extern bool isLocalDisplayAvailable;
 #ifdef __cplusplus
 extern "C" {
 #endif
-// for use in syscalls.c
+// For use in syscalls.c
 uint16_t drawTextC(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr, uint16_t aFontSize, color16_t aFGColor,
         color16_t aBGColor);
 void writeStringC(const char *aStringPtr, uint8_t aStringLength);
@@ -496,13 +507,13 @@ void writeStringC(const char *aStringPtr, uint8_t aStringLength);
  * Utilities used also internal
  */
 #ifdef AVR
-uint16_t getADCValue(uint8_t aChannel, uint8_t aReference);
+uint16_t readADCChannelWithReferenceOversample(uint8_t aChannelNumber, uint8_t aReference, uint8_t aOversampleExponent);
 float getVCCValue(void);
 float getVCCVoltage(void);
 float getTemperature(void);
 #endif
 
-// for convenience also included here
+// For convenience also included here
 #include "BlueSerial.h"
 #include "EventHandler.h"
 

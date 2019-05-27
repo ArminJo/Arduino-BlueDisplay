@@ -16,7 +16,8 @@ No Android programming needed!
 The actual version can be downloaded directly from GitHub [here](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/BlueDisplay.zip?raw=true)
 
 # Installation
-Then download BlueDisplay.zip file or use the GitHub *clone or download -> Download ZIP* button, and add the .zip file with *Sketch -> Include Library -> add .ZIP Library...*.  
+Install this "BlueDisplay" library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. Use "BlueDisplay" as filter string.
+Or download BlueDisplay.zip file or use the GitHub *clone or download -> Download ZIP* button, and add the .zip file with *Sketch -> Include Library -> add .ZIP Library...*.  
 
 ## Features
 - Graphic + text output as well as printf implementation.

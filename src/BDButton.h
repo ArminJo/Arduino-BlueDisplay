@@ -34,6 +34,7 @@
 
 #ifdef AVR
 #include <avr/pgmspace.h>
+#include "WString.h"    // for __FlashStringHelper
 #endif
 
 #define BUTTON_AUTO_RED_GREEN_FALSE_COLOR COLOR_RED
@@ -73,6 +74,7 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 #define BUTTON_WIDTH_3_DYN_POS_2 (sActualDisplayWidth/3)
 #define BUTTON_WIDTH_3_DYN_POS_3 (sActualDisplayWidth - BUTTON_WIDTH_3_DYN)
 
+// width 3.5
 #define BUTTON_WIDTH_3_5 82
 //
 // for 4 buttons horizontal - 8 characters
@@ -194,6 +196,8 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 #define BUTTON_HEIGHT_8_LINE_7 (6*(BUTTON_HEIGHT_8 + BUTTON_DEFAULT_SPACING_HALF))
 #define BUTTON_HEIGHT_8_LINE_8 (LAYOUT_HEIGHT - BUTTON_HEIGHT_8)
 
+#define BUTTON_HEIGHT_10 20
+
 #ifdef LOCAL_DISPLAY_EXISTS
 #include "TouchButton.h"
 // since we have only a restricted pool of local buttons
@@ -260,9 +264,17 @@ public:
     void initPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
             const char * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(BDButton*, int16_t));
+
     void setCaptionPGM(const char * aPGMCaption);
     void setCaptionPGMForValueTrue(const char * aCaption);
     void setCaptionPGM(const char * aPGMCaption, bool doDrawButton);
+
+    void init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
+            const __FlashStringHelper * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
+            void (*aOnTouchHandler)(BDButton*, int16_t));
+    void setCaption(const __FlashStringHelper * aPGMCaption);
+    void setCaptionForValueTrue(const __FlashStringHelper * aCaption);
+    void setCaption(const __FlashStringHelper * aPGMCaption, bool doDrawButton);
 #endif
 
     BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions

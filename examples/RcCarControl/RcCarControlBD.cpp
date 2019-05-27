@@ -149,7 +149,7 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallback
  *******************************************************************************************/
 
 void drawGui(void) {
-    BlueDisplay1.clearDisplay(COLOR_WHITE);
+    BlueDisplay1.clearDisplay();
     SliderVelocityForward.drawSlider();
     SliderVelocityBackward.drawSlider();
     SliderRight.drawSlider();
@@ -202,6 +202,7 @@ void initDisplay(void) {
     sYZeroValueAdded = 0;
     tSensorChangeCallCount = 0;
     registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, &doSensorChange);
+    // Since landscape has 2 orientations, let the user choose the right one.
     BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_ACTUAL);
 
     SliderSpeed.init(0, sActualDisplayHeight / 32, sSliderSize * 3, sSliderHeightLaser, sSliderHeightLaser, sSliderHeightLaser / 2,
@@ -245,21 +246,21 @@ void initDisplay(void) {
     /*
      * Buttons
      */
-    TouchButtonToneStartStop.initPGM(0, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN,
-    COLOR_BLUE, PSTR("Start"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sStarted,
+    TouchButtonToneStartStop.init(0, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN,
+    COLOR_BLUE, F("Start"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sStarted,
             &doToneStartStop);
-    TouchButtonToneStartStop.setCaptionPGMForValueTrue(PSTR("Stop"));
+    TouchButtonToneStartStop.setCaptionForValueTrue(F("Stop"));
 
-    TouchButtonFollowerOnOff.initPGM(BUTTON_WIDTH_4_DYN_POS_4, BUTTON_HEIGHT_4_DYN_LINE_2,
-    BUTTON_WIDTH_4_DYN, BUTTON_HEIGHT_4_DYN, COLOR_RED, PSTR("Follow"), sTextSizeVCC,
+    TouchButtonFollowerOnOff.init(BUTTON_WIDTH_4_DYN_POS_4, BUTTON_HEIGHT_4_DYN_LINE_2,
+    BUTTON_WIDTH_4_DYN, BUTTON_HEIGHT_4_DYN, COLOR_RED, F("Follow"), sTextSizeVCC,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sFollowerMode, &doFollowerOnOff);
 
-    TouchButtonLaserOnOff.initPGM(BUTTON_WIDTH_4_DYN_POS_4, BUTTON_HEIGHT_4_DYN_LINE_3, BUTTON_WIDTH_4_DYN,
-    BUTTON_HEIGHT_4_DYN, COLOR_RED, PSTR("Laser"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN,
+    TouchButtonLaserOnOff.init(BUTTON_WIDTH_4_DYN_POS_4, BUTTON_HEIGHT_4_DYN_LINE_3, BUTTON_WIDTH_4_DYN,
+    BUTTON_HEIGHT_4_DYN, COLOR_RED, F("Laser"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN,
             LaserOn, &doLaserOnOff);
 
-    TouchButtonSetZero.initPGM(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN,
-    BUTTON_HEIGHT_4_DYN, COLOR_RED, PSTR("Zero"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doSetZero);
+    TouchButtonSetZero.init(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN,
+    BUTTON_HEIGHT_4_DYN, COLOR_RED, F("Zero"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doSetZero);
 }
 
 void BDsetup() {

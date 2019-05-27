@@ -558,7 +558,7 @@ BDSlider TouchSliderTriggerLevel;
 BDSlider TouchSliderVoltagePicker;
 
 void initDSOGUI(void) {
-    BlueDisplay1.setButtonsGlobalFlags(USE_UP_EVENTS_FOR_BUTTONS); // since swipe recognition needs it
+    BlueDisplay1.setButtonsGlobalFlags(FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS); // since swipe can start on a button
 
     int tPosY = 0;
     /***************************
@@ -566,8 +566,8 @@ void initDSOGUI(void) {
      ***************************/
 // 1. row
 // Button for Singleshot
-    TouchButtonSingleshot.initPGM(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, START_PAGE_BUTTON_HEIGHT,
-    COLOR_GUI_CONTROL, PSTR("Singleshot"), TEXT_SIZE_14, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doStartSingleshot);
+    TouchButtonSingleshot.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, START_PAGE_BUTTON_HEIGHT,
+    COLOR_GUI_CONTROL, F("Singleshot"), TEXT_SIZE_14, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doStartSingleshot);
 
 // 2. row
     tPosY += START_PAGE_ROW_INCREMENT;
@@ -581,8 +581,8 @@ void initDSOGUI(void) {
 #endif
 
 // big start stop button
-    TouchButtonStartStopDSOMeasurement.initPGM(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3,
-            (2 * START_PAGE_BUTTON_HEIGHT) + BUTTON_DEFAULT_SPACING, COLOR_GUI_CONTROL, PSTR("Start\nStop"), TEXT_SIZE_26,
+    TouchButtonStartStopDSOMeasurement.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3,
+            (2 * START_PAGE_BUTTON_HEIGHT) + BUTTON_DEFAULT_SPACING, COLOR_GUI_CONTROL, F("Start\nStop"), TEXT_SIZE_26,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doStartStopDSO);
 
 // 4. row
@@ -595,8 +595,8 @@ void initDSOGUI(void) {
 #endif
 
 // Button for settings page
-    TouchButtonSettingsPage.initPGM(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, START_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
-            PSTR("Settings"), TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doShowSettingsPage);
+    TouchButtonSettingsPage.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, START_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
+            F("Settings"), TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doShowSettingsPage);
 
     /***************************
      * Settings page
@@ -612,7 +612,7 @@ void initDSOGUI(void) {
             SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_DISPLAY_CONTROL, "History", TEXT_SIZE_11,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH, 0, &doChartHistory);
 #else
-    TouchButtonChartHistoryOnOff.initPGM(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_RED, PSTR("History"),
+    TouchButtonChartHistoryOnOff.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_RED, F("History"),
     TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH, 0, &doChartHistory);
 #endif
 
@@ -622,8 +622,8 @@ void initDSOGUI(void) {
     setSlopeButtonCaption();
 
 // Back button for sub pages
-    TouchButtonBack.initPGM(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
-            PSTR("Back"),
+    TouchButtonBackSmall.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
+            F("Back"),
             TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doDefaultBackButton);
 
 // 2. row
@@ -677,8 +677,8 @@ void initDSOGUI(void) {
     setChannelButtonsCaption();
 
 // Button for channel select
-    TouchButtonChannelSelect.initPGM(REMOTE_DISPLAY_WIDTH - BUTTON_WIDTH_6, tPosY, BUTTON_WIDTH_6, SETTINGS_PAGE_BUTTON_HEIGHT,
-    BUTTON_AUTO_RED_GREEN_FALSE_COLOR, StringChannel3, TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 42, &doChannelSelect);
+    TouchButtonChannelSelect.init(REMOTE_DISPLAY_WIDTH - BUTTON_WIDTH_6, tPosY, BUTTON_WIDTH_6, SETTINGS_PAGE_BUTTON_HEIGHT,
+    BUTTON_AUTO_RED_GREEN_FALSE_COLOR, reinterpret_cast<const __FlashStringHelper *>(StringChannel3), TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 42, &doChannelSelect);
 
 // 4. row
     tPosY += SETTINGS_PAGE_ROW_INCREMENT;
@@ -715,7 +715,7 @@ void initDSOGUI(void) {
     tPosY = REMOTE_DISPLAY_HEIGHT - SETTINGS_PAGE_BUTTON_HEIGHT;
 
 // Button for selecting Frequency page.
-    TouchButtonFrequencyPage.initPGM(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_RED, PSTR("Frequency\nGenerator"),
+    TouchButtonFrequencyPage.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_RED, F("Frequency\nGenerator"),
     TEXT_SIZE_14, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doShowFrequencyPage);
 
 // Button for AC / DC
@@ -869,13 +869,13 @@ void drawStartPage(void) {
 #endif
     TouchButtonSettingsPage.drawButton();
 //Welcome text
-    BlueDisplay1.drawTextPGM(10, BUTTON_HEIGHT_4_LINE_2 + 32, PSTR("Welcome to\nArduino DSO"), 32, COLOR_BLUE,
+    BlueDisplay1.drawText(10, BUTTON_HEIGHT_4_LINE_2 + 32, F("Welcome to\nArduino DSO"), 32, COLOR_BLUE,
     COLOR_BACKGROUND_DSO);
-    BlueDisplay1.drawTextPGM(10, BUTTON_HEIGHT_4_LINE_2 + (3 * 32), PSTR("300 kSamples/s"), 22, COLOR_BLUE,
+    BlueDisplay1.drawText(10, BUTTON_HEIGHT_4_LINE_2 + (3 * 32), F("300 kSamples/s"), 22, COLOR_BLUE,
     COLOR_BACKGROUND_DSO);
-    uint8_t tPos = BlueDisplay1.drawTextPGM(10, BUTTON_HEIGHT_4_LINE_2 + (3 * 32) + 22,
-            PSTR("V" VERSION_DSO "/" VERSION_BLUE_DISPLAY), 11, COLOR_BLUE, COLOR_BACKGROUND_DSO);
-    BlueDisplay1.drawTextPGM(tPos, BUTTON_HEIGHT_4_LINE_2 + (3 * 32) + 22, PSTR(" from " __DATE__), 11, COLOR_BLUE,
+    uint8_t tPos = BlueDisplay1.drawText(10, BUTTON_HEIGHT_4_LINE_2 + (3 * 32) + 22,
+            F("V" VERSION_DSO "/" VERSION_BLUE_DISPLAY), 11, COLOR_BLUE, COLOR_BACKGROUND_DSO);
+    BlueDisplay1.drawText(tPos, BUTTON_HEIGHT_4_LINE_2 + (3 * 32) + 22, F(" from " __DATE__), 11, COLOR_BLUE,
     COLOR_BACKGROUND_DSO);
 
 // Hints
@@ -883,8 +883,8 @@ void drawStartPage(void) {
     BlueDisplay1.drawText(BUTTON_WIDTH_3_POS_2, TEXT_SIZE_22_ASCEND, "\xABScale\xBB",
             TEXT_SIZE_22, COLOR_YELLOW, COLOR_BACKGROUND_DSO);
 #endif
-    BlueDisplay1.drawTextPGM(BUTTON_WIDTH_3_POS_2, BUTTON_HEIGHT_4_LINE_4 + BUTTON_DEFAULT_SPACING + TEXT_SIZE_22_ASCEND,
-            PSTR("\xABScroll\xBB"), TEXT_SIZE_22, COLOR_GREEN, COLOR_BACKGROUND_DSO);
+    BlueDisplay1.drawText(BUTTON_WIDTH_3_POS_2, BUTTON_HEIGHT_4_LINE_4 + BUTTON_DEFAULT_SPACING + TEXT_SIZE_22_ASCEND,
+            F("\xABScroll\xBB"), TEXT_SIZE_22, COLOR_GREEN, COLOR_BACKGROUND_DSO);
 
 #ifdef LOCAL_DISPLAY_EXISTS
     TouchButtonMainHome.drawButton();
@@ -898,7 +898,7 @@ void drawDSOSettingsPage(void) {
 //1. Row
     TouchButtonChartHistoryOnOff.drawButton();
     TouchButtonSlope.drawButton();
-    TouchButtonBack.drawButton();
+    TouchButtonBackSmall.drawButton();
 
 //2. Row
 #ifdef AVR
@@ -974,7 +974,7 @@ void drawDSOMoreSettingsPage(void) {
     BDSlider::deactivateAllSliders();
 //1. Row
     TouchButtonCalibrateVoltage.drawButton();
-    TouchButtonBack.drawButton();
+    TouchButtonBackSmall.drawButton();
 
 #ifdef LOCAL_DISPLAY_EXISTS
 //2. Row
@@ -1005,7 +1005,7 @@ void drawRunningOnlyPartOfGui(void) {
                 TEXT_SIZE_22, COLOR_GUI_TRIGGER, COLOR_NO_BACKGROUND);
 #else
         //START_PAGE_BUTTON_HEIGHT + TEXT_SIZE_22_ASCEND is to much for 240 display
-        BlueDisplay1.drawTextPGM(TEXT_SIZE_11_WIDTH, START_PAGE_BUTTON_HEIGHT, PSTR("\xD4\nR\na\nn\ng\ne\n\xD5"), TEXT_SIZE_22,
+        BlueDisplay1.drawText(TEXT_SIZE_11_WIDTH, START_PAGE_BUTTON_HEIGHT, F("\xD4\nR\na\nn\ng\ne\n\xD5"), TEXT_SIZE_22,
         COLOR_GUI_TRIGGER, COLOR_NO_BACKGROUND);
 #endif
     }
@@ -1015,12 +1015,12 @@ void drawRunningOnlyPartOfGui(void) {
         BlueDisplay1.drawMLText(BUTTON_WIDTH_3_POS_3 - TEXT_SIZE_22_WIDTH, TEXT_SIZE_11_HEIGHT + TEXT_SIZE_22_ASCEND,
                 "\xD4\nO\nf\nf\ns\ne\nt\n\xD5", TEXT_SIZE_22, COLOR_GUI_TRIGGER, COLOR_NO_BACKGROUND);
 #else
-        BlueDisplay1.drawTextPGM(BUTTON_WIDTH_3_POS_3 - TEXT_SIZE_22_WIDTH, TEXT_SIZE_11_HEIGHT + TEXT_SIZE_22_ASCEND,
-                PSTR("\xD4\nO\nf\nf\ns\ne\nt\n\xD5"), TEXT_SIZE_22, COLOR_GUI_TRIGGER, COLOR_NO_BACKGROUND);
+        BlueDisplay1.drawText(BUTTON_WIDTH_3_POS_3 - TEXT_SIZE_22_WIDTH, TEXT_SIZE_11_HEIGHT + TEXT_SIZE_22_ASCEND,
+                F("\xD4\nO\nf\nf\ns\ne\nt\n\xD5"), TEXT_SIZE_22, COLOR_GUI_TRIGGER, COLOR_NO_BACKGROUND);
 #endif
     }
 
-    BlueDisplay1.drawTextPGM(BUTTON_WIDTH_8, BUTTON_HEIGHT_4_LINE_4 - TEXT_SIZE_22_DECEND, PSTR("\xABTimeBase\xBB"),
+    BlueDisplay1.drawText(BUTTON_WIDTH_8, BUTTON_HEIGHT_4_LINE_4 - TEXT_SIZE_22_DECEND, F("\xABTimeBase\xBB"),
     TEXT_SIZE_22, COLOR_GUI_SOURCE_TIMEBASE, COLOR_BACKGROUND_DSO);
 
 //1. Row
@@ -1744,7 +1744,7 @@ void doVoltagePicker(BDSlider * aTheTouchedSlider, uint16_t aValue) {
  * Request delay value as number
  */
 void doPromptForTriggerDelay(BDButton * aTheTouchedButton, int16_t aValue) {
-    BlueDisplay1.getNumberWithShortPromptPGM(&doSetTriggerDelay, PSTR("Trigger delay [\xB5s]"), NUMBER_INITIAL_VALUE_DO_NOT_SHOW);
+    BlueDisplay1.getNumberWithShortPrompt(&doSetTriggerDelay, F("Trigger delay [\xB5s]"));
 }
 #else
 void doShowPretriggerValuesOnOff(BDButton * aTheTouchedButton, int16_t aValue) {

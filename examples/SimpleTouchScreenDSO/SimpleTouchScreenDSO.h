@@ -236,7 +236,7 @@ extern DataBufferStruct DataBufferControl;
 #endif
 extern char sStringBuffer[SIZEOF_STRINGBUFFER];
 
-extern BDButton TouchButtonBack;
+extern BDButton TouchButtonBackSmall;
 // global flag for page control. Is evaluated by calling loop or page and set by buttonBack handler
 extern bool sBackButtonPressed;
 

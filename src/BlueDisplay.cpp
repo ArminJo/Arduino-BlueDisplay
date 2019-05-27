@@ -510,7 +510,7 @@ uint16_t BlueDisplay::drawLong(uint16_t aPosX, uint16_t aPosY, int32_t aLong, ui
  * for printf implementation
  */
 void BlueDisplay::setPrintfSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
-bool aClearOnNewScreen) {
+        bool aClearOnNewScreen) {
 #ifdef LOCAL_DISPLAY_EXISTS
     printSetOptions(getLocalTextSize(aPrintSize), aPrintColor, aPrintBackgroundColor, aClearOnNewScreen);
 #endif
@@ -917,6 +917,28 @@ uint16_t BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char * a
     }
     return tRetValue;
 }
+uint16_t BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStringHelper * aPGMString, uint8_t aTextSize,
+        color16_t aFGColor, color16_t aBGColor) {
+    uint16_t tRetValue = 0;
+    PGM_P tPGMString = reinterpret_cast<PGM_P>(aPGMString);
+
+    uint8_t tTextLength = strlen_P(tPGMString);
+    if (tTextLength > STRING_BUFFER_STACK_SIZE) {
+        tTextLength = STRING_BUFFER_STACK_SIZE;
+    }
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+    strncpy_P(tStringBuffer, tPGMString, tTextLength);
+#ifdef LOCAL_DISPLAY_EXISTS
+    tRetValue = LocalDisplay.drawTextPGM(aPosX, aPosY - getTextAscend(aTextSize), aPGMString, getLocalTextSize(aTextSize), aFGColor,
+            aBGColor);
+#endif
+    if (USART_isBluetoothPaired()) {
+        tRetValue = aPosX + tTextLength * getTextWidth(aTextSize);
+        sendUSART5ArgsAndByteBuffer(FUNCTION_DRAW_STRING, aPosX, aPosY, aTextSize, aFGColor, aBGColor, (uint8_t*) tStringBuffer,
+                tTextLength);
+    }
+    return tRetValue;
+}
 #endif
 
 /***************************************************************************************************************************************************
@@ -1017,6 +1039,21 @@ void BlueDisplay::getNumberWithShortPromptPGM(void (*aNumberHandler)(float), con
     }
 }
 
+void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString) {
+    if (USART_isBluetoothPaired()) {
+        PGM_P tPGMShortPromptString = reinterpret_cast<PGM_P>(aPGMShortPromptString);
+
+        uint8_t tShortPromptLength = strlen_P(tPGMShortPromptString);
+        if (tShortPromptLength > STRING_BUFFER_STACK_SIZE) {
+            tShortPromptLength = STRING_BUFFER_STACK_SIZE;
+        }
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+        strncpy_P(tStringBuffer, tPGMShortPromptString, tShortPromptLength);
+        sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 1, aNumberHandler, tShortPromptLength,
+                (uint8_t*) tStringBuffer);
+    }
+}
+
 void BlueDisplay::getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString,
         float aInitialValue) {
     if (USART_isBluetoothPaired()) {
@@ -1030,6 +1067,27 @@ void BlueDisplay::getNumberWithShortPromptPGM(void (*aNumberHandler)(float), con
             float floatValue;
             uint16_t shortArray[2];
         } floatToShortArray;
+        floatToShortArray.floatValue = aInitialValue;
+        sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 3, aNumberHandler, floatToShortArray.shortArray[0],
+                floatToShortArray.shortArray[1], tShortPromptLength, (uint8_t*) tStringBuffer);
+    }
+}
+
+void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
+        float aInitialValue) {
+    if (USART_isBluetoothPaired()) {
+        PGM_P tPGMShortPromptString = reinterpret_cast<PGM_P>(aPGMShortPromptString);
+
+        uint8_t tShortPromptLength = strlen_P(tPGMShortPromptString);
+        if (tShortPromptLength > STRING_BUFFER_STACK_SIZE) {
+            tShortPromptLength = STRING_BUFFER_STACK_SIZE;
+        }
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+        strncpy_P(tStringBuffer, tPGMShortPromptString, tShortPromptLength);
+        union {
+            float floatValue;
+            uint16_t shortArray[2];
+        }floatToShortArray;
         floatToShortArray.floatValue = aInitialValue;
         sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 3, aNumberHandler, floatToShortArray.shortArray[0],
                 floatToShortArray.shortArray[1], tShortPromptLength, (uint8_t*) tStringBuffer);
@@ -1186,7 +1244,7 @@ void BlueDisplay::setButtonsGlobalFlags(uint16_t aFlags) {
  */
 void BlueDisplay::setButtonsTouchTone(uint8_t aToneIndex, uint8_t aToneVolume) {
     if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_GLOBAL_SETTINGS, 3, BUTTONS_SET_BEEP_TONE, aToneIndex, aToneVolume);
+        sendUSARTArgs(FUNCTION_BUTTON_GLOBAL_SETTINGS, 3, FLAG_BUTTON_GLOBAL_SET_BEEP_TONE, aToneIndex, aToneVolume);
     }
 }
 
@@ -1363,41 +1421,48 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
 /***************************************
  * ADC Section for VCC and temperature
  ***************************************/
-#define ADC_PRESCALE128  7
-#define ADC_TEMPERATURE_CHANNEL 8
-#define ADC_1_1_VOLT_CHANNEL 0x0E
-/*
- * take 64 samples with prescaler 128 from specified channel
- * This takes 13 ms (+ 10 ms optional delay)
- * for UNO aReference can be one of INTERNAL (Internal 1.1V Voltage Reference with external capacitor at AREF pin) = 3,
- *   DEFAULT (AVCC with external capacitor at AREF pin) = 1 or EXTERNAL (AREF, Internal Vref turned off) = 0
- */
+#define ADC_PRESCALE8    3 // 104 microseconds per ADC conversion at 1 MHz
+#define ADC_PRESCALE16   4 // 208 microseconds per ADC conversion at 1 MHz
+#define ADC_PRESCALE32   5 // 416 microseconds per ADC conversion at 1 MHz
+#define ADC_PRESCALE64   6 // 52 microseconds per ADC conversion at 16 MHz
+#define ADC_PRESCALE128  7 // 104 microseconds per ADC conversion at 16 MHz
+// definitions for 0.1 ms conversion time
+#if (F_CPU == 1000000)
+#define ADC_PRESCALE ADC_PRESCALE8
+#elif (F_CPU == 8000000)
+#define ADC_PRESCALE ADC_PRESCALE64
+#elif (F_CPU == 16000000)
+#define ADC_PRESCALE ADC_PRESCALE128
+#endif
 
-uint16_t getADCValue(uint8_t aChannel, uint8_t aReference) {
-    uint8_t tOldADMUX = ADMUX;
-    ADMUX = aChannel | (aReference << REFS0);
-// Temperature channel also seem to need an initial delay
-    delay(10);
-    uint16_t tValue = 0;
-    uint16_t tSum = 0; // uint16_t is sufficient for 64 samples
-    uint8_t tOldADCSRA = ADCSRA;
-    ADCSRA = (1 << ADEN) | (1 << ADSC) | (1 << ADATE) | (1 << ADIF) | (0 << ADIE) | ADC_PRESCALE128;
-    for (int i = 0; i < 64; ++i) {
+#define ADC_TEMPERATURE_CHANNEL_MUX 8
+#define ADC_1_1_VOLT_CHANNEL_MUX 14
+
+#define SHIFT_VALUE_FOR_REFERENCE REFS0
+
+uint16_t __attribute__((weak)) readADCChannelWithReferenceOversample(uint8_t aChannelNumber, uint8_t aReference,
+        uint8_t aOversampleExponent) {
+    uint16_t tSumValue = 0;
+    ADMUX = aChannelNumber | (aReference << SHIFT_VALUE_FOR_REFERENCE);
+
+// ADCSRB = 0; // free running mode if ADATE is 1 - is default
+// ADSC-StartConversion ADATE-AutoTriggerEnable ADIF-Reset Interrupt Flag
+    ADCSRA = (_BV(ADEN) | _BV(ADSC) | _BV(ADATE) | _BV(ADIF) | ADC_PRESCALE);
+
+    for (uint8_t i = 0; i < _BV(aOversampleExponent); i++) {
         /*
          * wait for free running conversion to finish.
          * Do not wait for ADSC here, since ADSC is only low for 1 ADC Clock cycle on free running conversion.
          */
         loop_until_bit_is_set(ADCSRA, ADIF);
 
-        tValue = ADCL;
-        tValue |= ADCH << 8;
-        tSum += tValue;
+        ADCSRA |= _BV(ADIF); // clear bit to recognize next conversion has finished
+        // Add value
+        tSumValue += ADCL | (ADCH << 8); // using myWord does not save space here
+        // tSumValue += (ADCH << 8) | ADCL; // this does NOT work!
     }
-    ADCSRA = tOldADCSRA;
-    ADMUX = tOldADMUX;
-
-    tSum = (tSum + 32) >> 6;
-    return tSum;
+    ADCSRA &= ~_BV(ADATE); // Disable auto-triggering (free running mode)
+    return (tSumValue >> aOversampleExponent);
 }
 
 // old name
@@ -1411,16 +1476,20 @@ float getVCCValue(void) {
 #endif
 
 // new name
-float getVCCVoltage(void) {
-    // use AVCC with external capacitor at AREF pin as reference
+float __attribute__((weak)) getVCCVoltage(void) {
+// use AVCC with external capacitor at AREF pin as reference
     uint8_t tOldADMUX = ADMUX;
-    if ((ADMUX & (INTERNAL << REFS0)) || ((ADMUX & 0x0F) != ADC_1_1_VOLT_CHANNEL)) {
-        // switch AREF / Channel
-        ADMUX = ADC_1_1_VOLT_CHANNEL | (DEFAULT << REFS0);
+    /*
+     * Must wait >= 200 us if reference has to be switched to VSS
+     * Must wait >= 400 us if channel has to be switched to 1.1 Volt internal channel from channel with 5 Volt input
+     */
+    if ((ADMUX & (INTERNAL << SHIFT_VALUE_FOR_REFERENCE)) || ((ADMUX & 0x0F) != ADC_1_1_VOLT_CHANNEL_MUX)) {
+        // Switch to 1.1 Volt channel and AREF to VCC
+        ADMUX = ADC_1_1_VOLT_CHANNEL_MUX | (DEFAULT << SHIFT_VALUE_FOR_REFERENCE);
         // and wait for settling
-        delayMicroseconds(400); // experimental value is > 200 us
+        delayMicroseconds(400); // experimental value is >= 400 us
     }
-    float tVCC = getADCValue(ADC_1_1_VOLT_CHANNEL, DEFAULT);
+    uint16_t tVCC = readADCChannelWithReferenceOversample(ADC_1_1_VOLT_CHANNEL_MUX, DEFAULT, 2);
     ADMUX = tOldADMUX;
     /*
      * Do not wait for reference to settle here, since it may not be necessary
@@ -1428,19 +1497,25 @@ float getVCCVoltage(void) {
     return ((1023 * 1.1) / tVCC);
 }
 
-float getTemperature(void) {
-    // use internal 1.1 Volt as reference
+/*
+ * Version which restore the ADC Channel and handle reference switching.
+ */
+float __attribute__((weak)) getTemperature(void) {
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    return 0.0;
+#else
+// use internal 1.1 Volt as reference
     uint8_t tOldADMUX;
 
-    bool tReferenceMustBeChanged = (ADMUX & (DEFAULT << REFS0));
+    bool tReferenceMustBeChanged = (ADMUX & (DEFAULT << SHIFT_VALUE_FOR_REFERENCE));
     if (tReferenceMustBeChanged) {
         tOldADMUX = ADMUX;
         // set AREF  to 1.1V and wait for settling
-        ADMUX = ADC_TEMPERATURE_CHANNEL | (INTERNAL << REFS0);
+        ADMUX = ADC_TEMPERATURE_CHANNEL_MUX | (INTERNAL << SHIFT_VALUE_FOR_REFERENCE);
         delayMicroseconds(4000); // measured value is 3500 us
     }
 
-    float tTemp = (getADCValue(ADC_TEMPERATURE_CHANNEL, INTERNAL) - 317);
+    float tTemp = (readADCChannelWithReferenceOversample(ADC_TEMPERATURE_CHANNEL_MUX, INTERNAL, 2) - 317);
 
     if (tReferenceMustBeChanged) {
         ADMUX = tOldADMUX;
@@ -1448,6 +1523,7 @@ float getTemperature(void) {
         delayMicroseconds(400); // experimental value is > 200 us
     }
     return (tTemp / 1.22);
+#endif
 }
 
 /*
@@ -1481,7 +1557,9 @@ void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aY
  * Text sizes
  *
  **************************************************************************************************************************************************/
-
+/*
+ * TextSize * 1,125 (* (1 + 1/8))
+ */
 uint16_t getTextHeight(uint16_t aTextSize) {
     if (aTextSize == 11) {
         return TEXT_SIZE_11_HEIGHT;
@@ -1489,13 +1567,13 @@ uint16_t getTextHeight(uint16_t aTextSize) {
     if (aTextSize == 22) {
         return TEXT_SIZE_22_HEIGHT;
     }
-    return aTextSize + aTextSize / 8; //
+    return aTextSize + aTextSize / 8; // TextSize * 1,125
 }
 
 /*
  * Formula for Monospace Font on Android
  * TextSize * 0.6
- * Integer Formula: (TextSize *6)+4 / 10
+ * Integer Formula (rounded): (TextSize *6)+4 / 10
  */
 uint16_t getTextWidth(uint16_t aTextSize) {
     if (aTextSize == 11) {
@@ -1662,7 +1740,7 @@ void BlueDisplay::drawGreyscale(uint16_t aXPos, uint16_t tYPos, uint16_t aHeight
  * Draws test page and a greyscale bar
  */
 void BlueDisplay::testDisplay(void) {
-    clearDisplay(COLOR_WHITE);
+    clearDisplay();
 
     fillRectRel(0, 0, 2, 2, COLOR_RED);
     fillRectRel(mReferenceDisplaySize.XWidth - 3, 0, 3, 3, COLOR_GREEN);
@@ -1743,7 +1821,7 @@ const uint16_t colorIncrement[COLOR_SPECTRUM_SEGMENTS] = { 1 << 6, 0x1FU << 11, 
  * customized for a 320 x 240 display
  */
 void BlueDisplay::generateColorSpectrum(void) {
-    clearDisplay(COLOR_WHITE);
+    clearDisplay();
     uint16_t tColor;
     uint16_t tXPos;
     uint16_t tDelta;

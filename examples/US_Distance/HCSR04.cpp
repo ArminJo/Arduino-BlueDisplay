@@ -62,6 +62,7 @@ unsigned int getUSDistance(unsigned int aTimeoutMicros) {
 }
 
 unsigned int getCentimeterFromUSMicroSeconds(unsigned int aDistanceMicros) {
+    // The reciprocal of formula in getUSDistanceAsCentiMeterWithCentimeterTimeout()
     return (aDistanceMicros * 10L) / 585;
 }
 
@@ -81,8 +82,8 @@ unsigned int getUSDistanceAsCentiMeter(unsigned int aTimeoutMicros) {
 
 // 58,48 us per centimeter (forth and back)
 unsigned int getUSDistanceAsCentiMeterWithCentimeterTimeout(unsigned int aTimeoutCentimeter) {
-// The reciprocal of formula below
-    unsigned int tTimeoutMicros = (aTimeoutCentimeter * 117) / 2; // = * 58.5
+// The reciprocal of formula in getCentimeterFromUSMicroSeconds()
+    unsigned int tTimeoutMicros = ((aTimeoutCentimeter * 117) + 1) / 2; // = * 58.5 (rounded by using +1)
     return getUSDistanceAsCentiMeter(tTimeoutMicros);
 }
 

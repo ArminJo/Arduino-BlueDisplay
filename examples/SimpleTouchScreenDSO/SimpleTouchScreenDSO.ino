@@ -148,7 +148,7 @@
 #include <Arduino.h>
 
 #include "SimpleTouchScreenDSO.h"
-#include "PageFrequencyGenerator.h"
+#include "FrequencyGeneratorPage.h"
 
 #include "BlueDisplay.h"
 #include "digitalWriteFast.h"
@@ -157,7 +157,7 @@
  * Buttons
  *********************/
 
-BDButton TouchButtonBack;
+BDButton TouchButtonBackSmall;
 // global flag for page control. Is evaluated by calling loop or page and set by buttonBack handler
 bool sBackButtonPressed;
 

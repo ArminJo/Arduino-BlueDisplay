@@ -3,7 +3,7 @@
  *
  * Simple helper program to reconfigure your HC-05 module.
  *
- * 0. Modify the lines 55 and 56.
+ * 0. Modify the lines 71 and 72.
  * 1. Load this sketch to your Arduino.
  * 2. Disconnect Arduino from power.
  * 3. Connect Arduino rx/tx with HC-05 module tx/rx (crossover!) and do not forget to attach 5V to the module.
