@@ -48,7 +48,25 @@
 #include "BDSlider.h" // for BDSliderHandle_t
 #endif
 
+// This version corresponds to the version of the BlueDisplay app
 #define VERSION_BLUE_DISPLAY "3.7"
+/*
+ * Version 3.7
+ * - Handling of no input for getNumber.
+ * - Slider setScaleFactor() does not scale the actual value, mostly delivered as initial value at init().
+ * Version 3.6 connect, reconnect and autoconnect improved/added. Improved debug() command. Simplified Red/Green button handling.
+ * Version 3.5 Slider scaling changed and unit value added.
+ * Version 3.4
+ *  - Timeout for data messages. Get number initial value fixed.
+ *  - Bug autorepeat button in conjunction with UseUpEventForButtons fixed.
+ * Version 3.3
+ *  - Fixed silent tone bug for Android Lollipop and other bugs. Multiline text /r /n handling.
+ *  - Android time accessible on Arduino. Debug messages as toasts. Changed create button.
+ *  - Slider values scalable. GUI multi touch.Hex and ASCII output of received Bluetooth data at log level verbose.
+ * Version 3.2 Improved tone and fullscreen handling. Internal refactoring. Bugfixes and minor improvements.
+ * Version 3.1 Local display of received and sent commands for debug purposes.
+ * Version 3.0 Android sensor accessible by Arduino.
+ */
 
 /***************************
  * Origin 0.0 is upper left

@@ -11,18 +11,13 @@
 #ifndef TOUCHDSOCOMMON_H_
 #define TOUCHDSOCOMMON_H_
 
-#ifdef AVR
-#else
-#endif
-#ifndef AVR
-#endif
-
 #include "BDButton.h"
 #include "BDSlider.h"
 #ifdef AVR
 #include "FrequencyGeneratorPage.h"
 #endif
 
+// Internal version
 #define VERSION_DSO "3.0"
 
 #ifdef AVR
