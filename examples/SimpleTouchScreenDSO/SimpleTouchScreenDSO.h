@@ -16,12 +16,7 @@
  ***************************************************************************/
 #define HC_05_BAUD_RATE BAUD_115200
 
-// Utility section
-uint16_t getInputRawFromDisplayValue(uint8_t aDisplayValue);
-float getFloatFromDisplayValue(uint8_t aDisplayValue);
-void printSingleshotMarker();
-void clearSingleshotMarker();
-extern "C" void INT0_vect();
+#define MILLIS_BETWEEN_INFO_OUTPUT 1000
 
 /*
  *  Display size
@@ -227,6 +222,13 @@ struct DataBufferStruct {
     uint8_t DataBuffer[DATABUFFER_SIZE]; // contains also display values i.e. (DISPLAY_VALUE_FOR_ZERO - 8BitValue)
 };
 extern DataBufferStruct DataBufferControl;
+
+// Utility section
+uint16_t getInputRawFromDisplayValue(uint8_t aDisplayValue);
+float getFloatFromDisplayValue(uint8_t aDisplayValue);
+void printSingleshotMarker();
+void clearSingleshotMarker();
+extern "C" void INT0_vect();
 
 // for printf etc.
 #ifdef AVR

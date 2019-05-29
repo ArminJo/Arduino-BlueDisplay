@@ -675,7 +675,8 @@ void initDSOGUI(void) {
 
 // Button for channel select
     TouchButtonChannelSelect.init(REMOTE_DISPLAY_WIDTH - BUTTON_WIDTH_6, tPosY, BUTTON_WIDTH_6, SETTINGS_PAGE_BUTTON_HEIGHT,
-    BUTTON_AUTO_RED_GREEN_FALSE_COLOR, reinterpret_cast<const __FlashStringHelper *>(StringChannel3), TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 42, &doChannelSelect);
+    BUTTON_AUTO_RED_GREEN_FALSE_COLOR, reinterpret_cast<const __FlashStringHelper *>(StringChannel3), TEXT_SIZE_11,
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH, 42, &doChannelSelect);
 
 // 4. row
     tPosY += SETTINGS_PAGE_ROW_INCREMENT;
@@ -870,8 +871,8 @@ void drawStartPage(void) {
     COLOR_BACKGROUND_DSO);
     BlueDisplay1.drawText(10, BUTTON_HEIGHT_4_LINE_2 + (3 * 32), F("300 kSamples/s"), 22, COLOR_BLUE,
     COLOR_BACKGROUND_DSO);
-    uint8_t tPos = BlueDisplay1.drawText(10, BUTTON_HEIGHT_4_LINE_2 + (3 * 32) + 22,
-            F("V" VERSION_DSO "/" VERSION_BLUE_DISPLAY), 11, COLOR_BLUE, COLOR_BACKGROUND_DSO);
+    uint8_t tPos = BlueDisplay1.drawText(10, BUTTON_HEIGHT_4_LINE_2 + (3 * 32) + 22, F("V" VERSION_DSO "/" VERSION_BLUE_DISPLAY),
+            11, COLOR_BLUE, COLOR_BACKGROUND_DSO);
     BlueDisplay1.drawText(tPos, BUTTON_HEIGHT_4_LINE_2 + (3 * 32) + 22, F(" from " __DATE__), 11, COLOR_BLUE,
     COLOR_BACKGROUND_DSO);
 
@@ -955,10 +956,6 @@ void drawDSOSettingsPage(void) {
 
 #ifdef AVR
     TouchButtonADCReference.drawButton();
-
-// print minimum stacksize and enable new stack measurement
-    printFreeStack();
-    initStackFreeMeasurement();
 #else
     TouchButtonDSOMoreSettings.drawButton();
 #endif
@@ -1632,8 +1629,6 @@ void doStartSingleshot(BDButton * aTheTouchedButton, int16_t aValue) {
 
     DisplayControl.DisplayPage = DISPLAY_PAGE_CHART;
 
-    // prepare info output - which is shown 1 sec later
-    sMillisSinceLastInfoOutput = 0;
     MeasurementControl.RawValueMax = 0;
     MeasurementControl.RawValueMin = 0;
 

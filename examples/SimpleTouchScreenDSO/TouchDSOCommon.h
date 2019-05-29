@@ -18,7 +18,13 @@
 #endif
 
 // Internal version
-#define VERSION_DSO "3.0"
+#define VERSION_DSO "3.1"
+/*
+ * Version 3.1
+ * - stop response improved for fast mode.
+ * - value computation for ultra fast modes fixed.
+ * - millis() timer compensation formula fixed.
+ */
 
 #ifdef AVR
 #else
@@ -359,7 +365,6 @@ void startSystemInfoPage(void);
 #endif
 
 // Text output section
-extern unsigned int sMillisSinceLastInfoOutput;
 void printfTriggerDelay(char * aDataBufferPtr, uint16_t aTriggerDelayMillisOrMicros);
 void printVCCAndTemperature(void);
 void clearInfo(uint8_t aOldMode);
