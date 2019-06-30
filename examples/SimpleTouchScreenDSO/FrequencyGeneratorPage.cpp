@@ -305,7 +305,7 @@ void drawFrequencyGeneratorPage(void) {
 #ifdef LOCAL_DISPLAY_EXISTS
     TouchButtonMainHome.drawButton();
 #else
-    TouchButtonBackSmall.drawButton();
+    TouchButtonBack.drawButton();
 #endif
     TouchSliderFrequency.drawSlider();
 

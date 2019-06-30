@@ -57,7 +57,7 @@
  *      Horizontal swipe on chart page changes timebase while running, else scrolls the data chart.
  *      Vertical swipe on chart page changes the range if manual range is enabled.
  *
- *      Settings:
+ *      Buttons at the settings page:
  *      "Trigger man timeout" means manual trigger value, but with timeout, i.e. if trigger condition not met, new data is shown after timeout.
  *          - This is not really a manual trigger level mode, but it helps to find the right trigger value.
  *      "Trigger man" means manual trigger, but without timeout, i.e. if trigger condition not met, no new data is shown.
@@ -157,7 +157,7 @@
  * Buttons
  *********************/
 
-BDButton TouchButtonBackSmall;
+BDButton TouchButtonBack;
 // global flag for page control. Is evaluated by calling loop or page and set by buttonBack handler
 bool sBackButtonPressed;
 
@@ -328,7 +328,7 @@ void drawRemainingDataBufferValues(void);
 float getTemperature(void);
 void setVCCValue(void);
 inline void setPrescaleFactor(uint8_t aFactor);
-void setReference(uint8_t aReference);
+void setADCReference(uint8_t aReference);
 void setTimer2FastPWMOutput();
 void initTimer2(void);
 
@@ -484,7 +484,7 @@ void setup() {
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&initDisplay, &redrawDisplay);
     registerSwipeEndCallback(&doSwipeEndDSO);
-    registerTouchUpCallback(&doTouchUp);
+    registerTouchUpCallback(&doSwitchInfoModeOnTouchUp);
     registerLongTouchDownCallback(&doLongTouchDownDSO, 900);
 
     BlueDisplay1.playFeedbackTone(FEEDBACK_TONE_OK);
@@ -1583,7 +1583,7 @@ void setAttenuator(uint8_t aNewValue) {
 
 uint16_t getAttenuatorFactor(void) {
     uint16_t tRetValue = 1;
-//    if (MeasurementControl.ChannelHasACDCSwitch) {
+//    if (MeasurementControl.ChannelHasAC_DCSwitch) {
     for (int i = 0; i < MeasurementControl.AttenuatorValue; ++i) {
         tRetValue *= ATTENUATOR_FACTOR;
     }
@@ -1597,7 +1597,7 @@ uint16_t getAttenuatorFactor(void) {
 /*
  * toggle between DC and AC mode
  */
-void doAcDcMode(__attribute__((unused))                      BDButton * aTheTouchedButton, __attribute__((unused))                      int16_t aValue) {
+void doAcDcMode(__attribute__((unused)) BDButton * aTheTouchedButton, __attribute__((unused)) int16_t aValue) {
     setACMode(!MeasurementControl.ChannelIsACMode);
 }
 
@@ -1631,14 +1631,14 @@ void doSetTriggerDelay(float aValue) {
 /*
  * toggle between 5 and 1.1 Volt reference
  */
-void doADCReference(__attribute__((unused))                      BDButton * aTheTouchedButton, __attribute__((unused))                      int16_t aValue) {
+void doADCReference(__attribute__((unused)) BDButton * aTheTouchedButton, __attribute__((unused)) int16_t aValue) {
     uint8_t tNewReference = MeasurementControl.ADCReference;
     if (MeasurementControl.ADCReference == DEFAULT) {
         tNewReference = INTERNAL;
     } else {
         tNewReference = DEFAULT;
     }
-    setReference(tNewReference);
+    setADCReference(tNewReference); // switch hardware
     setReferenceButtonCaption();
     if (!MeasurementControl.RangeAutomatic) {
         // set new grid values
@@ -1646,7 +1646,7 @@ void doADCReference(__attribute__((unused))                      BDButton * aThe
     }
 }
 
-void doStartStopDSO(__attribute__((unused))                      BDButton * aTheTouchedButton, __attribute__((unused))                      int16_t aValue) {
+void doStartStopDSO(__attribute__((unused)) BDButton * aTheTouchedButton, __attribute__((unused)) int16_t aValue) {
     if (MeasurementControl.isRunning) {
         /*
          * Stop here
@@ -2310,21 +2310,24 @@ void setVCCValue(void) {
  *  */
 void setChannel(uint8_t aChannel) {
     MeasurementControl.ADCInputMUXChannelIndex = aChannel;
+    /*
+     * Set default values for plain inputs without attenuator but potential AC/DC capabilities
+     */
     MeasurementControl.ShiftValue = 2;
     bool tIsACMode = false;
     MeasurementControl.AttenuatorValue = 0; // no attenuator attached at channel
-//    uint8_t tHasACDC = false;
+    uint8_t tHasAC_DC = true;
     uint8_t tReference = DEFAULT; // DEFAULT/1 -> VCC   INTERNAL/3 -> 1.1V
 
     if (MeasurementControl.AttenuatorType >= ATTENUATOR_TYPE_ACTIVE_ATTENUATOR) {
         if (aChannel < NUMBER_OF_CHANNEL_WITH_ACTIVE_ATTENUATOR) {
             MeasurementControl.ChannelHasActiveAttenuator = true;
-//            tHasACDC = true;
             // restore AC mode for this channels
             tIsACMode = MeasurementControl.isACMode;
             // use internal reference if attenuator is available
             tReference = INTERNAL;
         } else {
+            tHasAC_DC = false;
             MeasurementControl.ChannelHasActiveAttenuator = false;
             // Set to high attenuation to protect input. Since ChannelHasActiveAttenuator = false it will not be changed by setInputRange()
             setAttenuator(3);
@@ -2332,27 +2335,28 @@ void setChannel(uint8_t aChannel) {
     } else if (MeasurementControl.AttenuatorType == ATTENUATOR_TYPE_FIXED_ATTENUATOR) {
         if (aChannel < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR) {
             MeasurementControl.AttenuatorValue = aChannel; // channel 0 has 10^0 attenuation factor etc.
-            //           tHasACDC = true;
             // restore AC mode for this channels
             tIsACMode = MeasurementControl.isACMode;
             tReference = INTERNAL;
         }
     }
-    MeasurementControl.ChannelIsACMode = tIsACMode;
-//    MeasurementControl.ChannelHasACDCSwitch = tHasACDC;
-    MeasurementControl.ADCReference = tReference;
-    setReferenceButtonCaption();
 
     /*
      * Map channel index to special channel numbers
      */
     if (aChannel == MAX_ADC_EXTERNAL_CHANNEL + 1) {
         aChannel = ADC_TEMPERATURE_CHANNEL; // Temperature
+        tHasAC_DC = false;
     }
     if (aChannel == MAX_ADC_EXTERNAL_CHANNEL + 2) {
         aChannel = ADC_1_1_VOLT_CHANNEL; // 1.1 Reference
+        tHasAC_DC = false;
     }
     ADMUX = aChannel | (tReference << REFS0);
+
+    MeasurementControl.ChannelIsACMode = tIsACMode;
+    MeasurementControl.ChannelHasAC_DCSwitch = tHasAC_DC;
+    MeasurementControl.ADCReference = tReference;
 
 //the second parameter for active attenuator is only needed if ChannelHasActiveAttenuator == true
     setInputRange(2, 2);
@@ -2363,7 +2367,7 @@ inline void setPrescaleFactor(uint8_t aFactor) {
 }
 
 // DEFAULT/1 -> VCC   INTERNAL/3 -> 1.1V
-void setReference(uint8_t aReference) {
+void setADCReference(uint8_t aReference) {
     MeasurementControl.ADCReference = aReference;
     ADMUX = (ADMUX & ~0xC0) | (aReference << REFS0);
 }

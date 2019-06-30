@@ -121,8 +121,11 @@ struct MeasurementControlStruct {
     uint8_t ADCInputMUXChannelIndex;
     uint8_t AttenuatorType; //ATTENUATOR_TYPE_NO_ATTENUATOR, ATTENUATOR_TYPE_SIMPLE_ATTENUATOR, ATTENUATOR_TYPE_ACTIVE_ATTENUATOR
     bool ChannelHasActiveAttenuator;
-    bool ChannelIsACMode; // AC Mode for actual channel
-    bool isACMode; // user AC mode setting
+
+    // AC / DC Switch
+    bool ChannelHasAC_DCSwitch; // has AC / DC switch - only for channels with active or passive attenuators. Is at least false for TEMP and REF channels
+    bool ChannelIsACMode;   // AC Mode for actual channel
+    bool isACMode;          // storage for user AC mode setting used to restore AC mode when switching back from channel without AC capabilities.
     uint16_t RawDSOReadingACZero;
 
     // Trigger
@@ -238,7 +241,7 @@ extern "C" void INT0_vect();
 #endif
 extern char sStringBuffer[SIZEOF_STRINGBUFFER];
 
-extern BDButton TouchButtonBackSmall;
+extern BDButton TouchButtonBack;
 // global flag for page control. Is evaluated by calling loop or page and set by buttonBack handler
 extern bool sBackButtonPressed;
 

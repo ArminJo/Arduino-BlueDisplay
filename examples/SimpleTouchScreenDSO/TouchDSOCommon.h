@@ -24,13 +24,14 @@
  * - stop response improved for fast mode.
  * - value computation for ultra fast modes fixed.
  * - millis() timer compensation formula fixed.
+ * - AC/DC button and info line handling improved.
  */
 
 #ifdef AVR
 #else
 // No PROGMEM on ARM
 #define PROGMEM
-#define initPGM init
+#define __FlashStringHelper char
 #define setCaptionPGM setCaption
 #define drawTextPGM drawText
 #define F(a) a
@@ -347,6 +348,7 @@ void drawDSOSettingsPage(void);
 void drawDSOMoreSettingsPage(void);
 
 void drawGridLinesWithHorizLabelsAndTriggerLine();
+void clearHorizontalLineAndRestoreGrid(int aYposition);
 void drawTriggerLine(void);
 void drawMinMaxLines(void);
 void clearTriggerLine(uint8_t aTriggerLevelDisplayValue);
@@ -372,7 +374,7 @@ void printInfo(bool aRecomputeValues = true);
 void printTriggerInfo(void);
 
 // GUI event handler section
-void doTouchUp(struct TouchEvent * const aTochPosition);
+void doSwitchInfoModeOnTouchUp(struct TouchEvent * const aTochPosition);
 void doLongTouchDownDSO(struct TouchEvent * const aTochPosition);
 void doSwipeEndDSO(struct Swipe * const aSwipeInfo);
 void doSetTriggerDelay(float aValue);

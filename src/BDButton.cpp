@@ -102,7 +102,7 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
     }
     mButtonHandle = tButtonNumber;
 #ifdef LOCAL_DISPLAY_EXISTS
-    if (aFlags & BUTTON_FLAG_TYPE_AUTOREPEAT) {
+    if (aFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
         mLocalButtonPtr = new TouchButtonAutorepeat();
     } else {
         mLocalButtonPtr = new TouchButton();
@@ -342,25 +342,6 @@ void BDButton::deactivateAllButtons(void) {
 }
 
 #ifdef AVR
-void BDButton::initPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
-        const char * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-        void (*aOnTouchHandler)(BDButton*, int16_t)) {
-
-    BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
-    if (USART_isBluetoothPaired()) {
-        uint8_t tCaptionLength = strlen_P(aPGMCaption);
-        if (tCaptionLength > STRING_BUFFER_STACK_SIZE) {
-            tCaptionLength = STRING_BUFFER_STACK_SIZE;
-        }
-        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        strncpy_P(tStringBuffer, aPGMCaption, tCaptionLength);
-        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 10, tButtonNumber, aPositionX, aPositionY, aWidthX, aHeightY,
-                aButtonColor, aCaptionSize, aFlags, aValue, aOnTouchHandler, tCaptionLength, tStringBuffer);
-
-    }
-    mButtonHandle = tButtonNumber;
-}
-
 void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
         const __FlashStringHelper * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
         void (*aOnTouchHandler)(BDButton*, int16_t)) {

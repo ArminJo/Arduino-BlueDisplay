@@ -60,85 +60,9 @@ int sOffset = 0;
 BDSlider SliderShowDistance;
 
 char sStringBuffer[100];
-/*
- * Change doTone flag as well as color and caption of the button.
- */
-void doStartStop(__attribute__((unused))  BDButton * aTheTouchedButton, int16_t aValue) {
-    doTone = aValue;
-    if (!aValue) {
-        // Stop tone
-        BlueDisplay1.playTone(TONE_SILENCE);
-    }
-}
 
-/*
- * Handler for number receive event - set delay to value
- */
-void doSetOffset(float aValue) {
-// clip value
-    if (aValue > 20) {
-        aValue = 20;
-    } else if (aValue < -20) {
-        aValue = -20;
-    }
-    sOffset = aValue;
-}
-/*
- * Request delay value as number
- */
-void doGetOffset(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
-    BlueDisplay1.getNumberWithShortPrompt(&doSetOffset, "Offset distance [cm]");
-}
-
-/*
- * Handle change from landscape to portrait
- */
-void handleConnectAndReorientation(void) {
-//    tone(TONE_PIN, 1000, 50);
-    // manage positions according to actual display size
-    sActualDisplayWidth = BlueDisplay1.getMaxDisplayWidth();
-    sActualDisplayHeight = BlueDisplay1.getMaxDisplayHeight();
-    if (sActualDisplayWidth < sActualDisplayHeight) {
-        // Portrait -> change to landscape 3/2 format
-        sActualDisplayHeight = (sActualDisplayWidth / 3) * 2;
-    }
-    sCaptionTextSize = sActualDisplayHeight / 4;
-    // Position Caption at middle of screen
-    sCaptionStartX = (sActualDisplayWidth - (getTextWidth(sCaptionTextSize) * strlen("Distance"))) / 2;
-
-    sprintf(sStringBuffer, "sActualDisplayWidth=%d", sActualDisplayWidth);
-    BlueDisplay1.debugMessage(sStringBuffer);
-
-    if (sCaptionStartX < 0) {
-        sCaptionStartX = 0;
-    }
-
-    sValueStartY = getTextAscend(sCaptionTextSize * 2) + sCaptionTextSize + sCaptionTextSize / 4;
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sActualDisplayWidth, sActualDisplayHeight);
-
-    SliderShowDistance.init(0, sCaptionTextSize * 3, sCaptionTextSize / 4, sActualDisplayWidth, 199, 0, COLOR_BLUE,
-    COLOR_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    SliderShowDistance.setScaleFactor(200.0 / sActualDisplayWidth);
-
-    // Initialize button position, size, colors etc.
-    TouchButtonStartStop.init(0, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR_BLUE, "Start Tone",
-            sCaptionTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doTone, &doStartStop);
-    TouchButtonStartStop.setCaptionForValueTrue("Stop Tone");
-
-    TouchButtonOffset.init(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR_RED,
-            "Offset", sCaptionTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetOffset);
-}
-
-/*
- * Function used as callback handler for redraw event
- */
-void drawGui(void) {
-    BlueDisplay1.clearDisplay(COLOR_BLUE);
-    BlueDisplay1.drawText(sCaptionStartX, sCaptionTextSize, "Distance", sCaptionTextSize, COLOR_WHITE, COLOR_BLUE);
-    SliderShowDistance.drawSlider();
-    TouchButtonStartStop.drawButton();
-    TouchButtonOffset.drawButton();
-}
+void handleConnectAndReorientation(void);
+void drawGui(void);
 
 void setup(void) {
     pinMode(TRIGGER_OUT_PIN, OUTPUT);
@@ -263,3 +187,85 @@ void loop(void) {
     sCentimeterOld = tUSDistanceCentimeter;
     delay(MEASUREMENT_INTERVAL_MS); // < 200
 }
+
+/*
+ * Change doTone flag as well as color and caption of the button.
+ */
+void doStartStop(__attribute__((unused))  BDButton * aTheTouchedButton, int16_t aValue) {
+    doTone = aValue;
+    if (!aValue) {
+        // Stop tone
+        BlueDisplay1.playTone(TONE_SILENCE);
+    }
+}
+
+/*
+ * Handler for number receive event - set delay to value
+ */
+void doSetOffset(float aValue) {
+// clip value
+    if (aValue > 20) {
+        aValue = 20;
+    } else if (aValue < -20) {
+        aValue = -20;
+    }
+    sOffset = aValue;
+}
+/*
+ * Request delay value as number
+ */
+void doGetOffset(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
+    BlueDisplay1.getNumberWithShortPrompt(&doSetOffset, "Offset distance [cm]");
+}
+
+/*
+ * Handle change from landscape to portrait
+ */
+void handleConnectAndReorientation(void) {
+//    tone(TONE_PIN, 1000, 50);
+    // manage positions according to actual display size
+    sActualDisplayWidth = BlueDisplay1.getMaxDisplayWidth();
+    sActualDisplayHeight = BlueDisplay1.getMaxDisplayHeight();
+    if (sActualDisplayWidth < sActualDisplayHeight) {
+        // Portrait -> change to landscape 3/2 format
+        sActualDisplayHeight = (sActualDisplayWidth / 3) * 2;
+    }
+    sCaptionTextSize = sActualDisplayHeight / 4;
+    // Position Caption at middle of screen
+    sCaptionStartX = (sActualDisplayWidth - (getTextWidth(sCaptionTextSize) * strlen("Distance"))) / 2;
+
+    sprintf(sStringBuffer, "sActualDisplayWidth=%d", sActualDisplayWidth);
+    BlueDisplay1.debugMessage(sStringBuffer);
+
+    if (sCaptionStartX < 0) {
+        sCaptionStartX = 0;
+    }
+
+    sValueStartY = getTextAscend(sCaptionTextSize * 2) + sCaptionTextSize + sCaptionTextSize / 4;
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sActualDisplayWidth, sActualDisplayHeight);
+
+    SliderShowDistance.init(0, sCaptionTextSize * 3, sCaptionTextSize / 4, sActualDisplayWidth, 199, 0, COLOR_BLUE,
+    COLOR_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    SliderShowDistance.setScaleFactor(200.0 / sActualDisplayWidth);
+
+    // Initialize button position, size, colors etc.
+    TouchButtonStartStop.init(0, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR_BLUE, "Start Tone",
+            sCaptionTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doTone, &doStartStop);
+    TouchButtonStartStop.setCaptionForValueTrue("Stop Tone");
+
+    TouchButtonOffset.init(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR_RED,
+            "Offset", sCaptionTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetOffset);
+}
+
+/*
+ * Function used as callback handler for redraw event
+ */
+void drawGui(void) {
+    BlueDisplay1.clearDisplay(COLOR_BLUE);
+    BlueDisplay1.drawText(sCaptionStartX, sCaptionTextSize, "Distance", sCaptionTextSize, COLOR_WHITE, COLOR_BLUE);
+    SliderShowDistance.drawSlider();
+    TouchButtonStartStop.drawButton();
+    TouchButtonOffset.drawButton();
+}
+
+

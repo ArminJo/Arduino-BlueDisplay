@@ -395,7 +395,7 @@ void setACMode(bool aNewACMode) {
     MeasurementControl.ChannelIsACMode = aNewACMode;
 
 #else
-    if (MeasurementControl.ChannelHasACDCSwitch) {
+    if (MeasurementControl.ChannelHasAC_DCSwitch) {
         MeasurementControl.ChannelIsACMode = aNewACMode;
     } else {
         MeasurementControl.ChannelIsACMode = false;
@@ -619,7 +619,7 @@ void initDSOGUI(void) {
     setSlopeButtonCaption();
 
 // Back button for sub pages
-    TouchButtonBackSmall.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
+    TouchButtonBack.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
             F("Back"),
             TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doDefaultBackButton);
 
@@ -725,7 +725,6 @@ void initDSOGUI(void) {
 // Button for reference voltage switching
     TouchButtonADCReference.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT,
     COLOR_GUI_SOURCE_TIMEBASE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doADCReference);
-    setReferenceButtonCaption();
 #else
 // Button for more-settings pages
     TouchButtonDSOMoreSettings.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_5,
@@ -896,7 +895,7 @@ void drawDSOSettingsPage(void) {
 //1. Row
     TouchButtonChartHistoryOnOff.drawButton();
     TouchButtonSlope.drawButton();
-    TouchButtonBackSmall.drawButton();
+    TouchButtonBack.drawButton();
 
 //2. Row
 #ifdef AVR
@@ -950,12 +949,12 @@ void drawDSOSettingsPage(void) {
 
 //5. Row
     TouchButtonFrequencyPage.drawButton();
-//    if (MeasurementControl.ChannelHasACDCSwitch) {
-    TouchButtonAcDc.drawButton();
-//    }
+    if (MeasurementControl.ChannelHasAC_DCSwitch) {
+        TouchButtonAcDc.drawButton();
+    }
 
 #ifdef AVR
-    TouchButtonADCReference.drawButton();
+    setReferenceButtonCaption(); // also draws the button for this page
 #else
     TouchButtonDSOMoreSettings.drawButton();
 #endif
@@ -968,7 +967,7 @@ void drawDSOMoreSettingsPage(void) {
     BDSlider::deactivateAllSliders();
 //1. Row
     TouchButtonCalibrateVoltage.drawButton();
-    TouchButtonBackSmall.drawButton();
+    TouchButtonBack.drawButton();
 
 #ifdef LOCAL_DISPLAY_EXISTS
 //2. Row
@@ -1032,14 +1031,8 @@ void drawRunningOnlyPartOfGui(void) {
 
 void clearTriggerLine(uint8_t aTriggerLevelDisplayValue) {
 // clear old line
-    BlueDisplay1.drawLineRel(0, aTriggerLevelDisplayValue, REMOTE_DISPLAY_WIDTH, 0, COLOR_BACKGROUND_DSO);
+    clearHorizontalLineAndRestoreGrid(aTriggerLevelDisplayValue);
 
-    if (DisplayControl.showInfoMode != INFO_MODE_NO_INFO) {
-        // restore grid at old y position
-        for (uint16_t tXPos = TIMING_GRID_WIDTH - 1; tXPos < REMOTE_DISPLAY_WIDTH - 1; tXPos += TIMING_GRID_WIDTH) {
-            BlueDisplay1.drawPixel(tXPos, aTriggerLevelDisplayValue, COLOR_GRID_LINES);
-        }
-    }
 #ifndef AVR
     if (!MeasurementControl.isRunning) {
         // in analysis mode restore graph at old y position
@@ -1083,6 +1076,14 @@ void drawMinMaxLines(void) {
     tValueDisplay = getDisplayFromRawInputValue(MeasurementControl.RawValueMin);
     if (tValueDisplay != DISPLAY_VALUE_FOR_ZERO) {
         BlueDisplay1.drawLineRel(0, tValueDisplay, REMOTE_DISPLAY_WIDTH, 0, COLOR_MAX_MIN_LINE);
+    }
+}
+
+void clearHorizontalLineAndRestoreGrid(int aYposition) {
+    // clear line
+    BlueDisplay1.drawLineRel(0, aYposition, REMOTE_DISPLAY_WIDTH, 0, COLOR_BACKGROUND_DSO);
+    for (uint16_t tXPos = TIMING_GRID_WIDTH - 1; tXPos < REMOTE_DISPLAY_WIDTH - 1; tXPos += TIMING_GRID_WIDTH) {
+        BlueDisplay1.drawPixel(tXPos, aYposition, COLOR_GRID_LINES);
     }
 }
 
@@ -1329,32 +1330,33 @@ void startDSOSettingsPage(void) {
  * Use touch up in order not to interfere with long touch
  * Switch between upper info line short/long/off
  */
-void doTouchUp(struct TouchEvent * const aTouchPosition) {
+void doSwitchInfoModeOnTouchUp(struct TouchEvent * const aTouchPosition) {
 #ifdef LOCAL_DISPLAY_EXISTS
 // first check for buttons
     if (!TouchButton::checkAllButtons(aTouchPosition->TouchPosition.PosX, aTouchPosition->TouchPosition.PosY)) {
 #endif
     if (DisplayControl.DisplayPage == DISPLAY_PAGE_CHART) {
         // Wrap display mode
-        uint8_t tOldMode = DisplayControl.showInfoMode;
-        uint8_t tNewMode = tOldMode + 1;
+//        uint8_t tOldMode = DisplayControl.showInfoMode;
+        uint8_t tNewMode = DisplayControl.showInfoMode + 1;
         if (tNewMode > INFO_MODE_LONG_INFO) {
             tNewMode = INFO_MODE_NO_INFO;
         }
         DisplayControl.showInfoMode = tNewMode;
+        redrawDisplay();
 
-        if (tNewMode == INFO_MODE_NO_INFO) {
-            if (MeasurementControl.isRunning) {
-                // erase former info line
-                clearInfo(tOldMode);
-            } else {
-                redrawDisplay();
-            }
-        } else {
-            // erase former info line
-            clearInfo(tOldMode);
-            printInfo();
-        }
+//        if (tNewMode == INFO_MODE_NO_INFO) {
+//            if (MeasurementControl.isRunning) {
+//                // erase former info line
+//                clearInfo(tOldMode);
+//            } else {
+//                redrawDisplay();
+//            }
+//        } else {
+//            // erase former info line
+//            clearInfo(tOldMode);
+//            printInfo();
+//        }
     }
 #ifdef LOCAL_DISPLAY_EXISTS
 }
@@ -1570,7 +1572,7 @@ void doChannelSelect(BDButton * aTheTouchedButton, int16_t aValue) {
         uint8_t tNewChannelValue = aValue;
         if (tNewChannelValue > 20) {
             /*
-             * aValue > 20 means TouchButtonChannelSelect was pressed, so increment button caption here ( "Ch. 3", "Ch. 4", "Temp." etc.)
+             * aValue > 20 means TouchButtonChannelSelect was pressed, so increment button caption here ( "Ch. 3", "Ch. 4", "Temp." , "VRef")
              */
             uint8_t tOldValue = MeasurementControl.ADCInputMUXChannelIndex;
             // if channel 3 is not selected, increment channel, otherwise select channel 3
@@ -1681,11 +1683,8 @@ void doVoltagePicker(BDSlider * aTheTouchedSlider, uint16_t aValue) {
     }
 // clear old line
     int tYpos = DISPLAY_VALUE_FOR_ZERO - sLastPickerValue;
-    BlueDisplay1.drawLine(0, tYpos, REMOTE_DISPLAY_WIDTH, tYpos, COLOR_BACKGROUND_DSO);
-// restore grid at old y position
-    for (unsigned int tXPos = TIMING_GRID_WIDTH - 1; tXPos < REMOTE_DISPLAY_WIDTH - 1; tXPos += TIMING_GRID_WIDTH) {
-        BlueDisplay1.drawPixel(tXPos, tYpos, COLOR_GRID_LINES);
-    }
+    clearHorizontalLineAndRestoreGrid(tYpos);
+
 #ifndef AVR
     if (!MeasurementControl.isRunning) {
         // restore graph
@@ -1738,6 +1737,7 @@ void doVoltagePicker(BDSlider * aTheTouchedSlider, uint16_t aValue) {
 void doPromptForTriggerDelay(BDButton * aTheTouchedButton, int16_t aValue) {
     BlueDisplay1.getNumberWithShortPrompt(&doSetTriggerDelay, F("Trigger delay [\xB5s]"));
 }
+
 #else
 void doShowPretriggerValuesOnOff(BDButton * aTheTouchedButton, int16_t aValue) {
     DisplayControl.DatabufferPreTriggerDisplaySize = 0;

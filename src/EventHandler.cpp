@@ -149,6 +149,7 @@ void setTouchUpCallbackEnabled(bool aTouchUpCallbackEnabled) {
 
 /**
  * Register a callback routine which is only called after a timeout if screen is still touched
+ * Send only timeout value to BD Host
  */
 void registerLongTouchDownCallback(void (*aLongTouchDownCallback)(struct TouchEvent *), uint16_t aLongTouchDownTimeoutMillis) {
     sLongTouchDownCallback = aLongTouchDownCallback;
