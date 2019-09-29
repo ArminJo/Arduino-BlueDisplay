@@ -85,7 +85,9 @@ void initSimpleSerial(uint32_t aBaudRate);
 #endif
 
 extern bool allowTouchInterrupts;
-void USART_send(char aChar);
+void sendUSART(char aChar);
+void sendUSART(const char * aChar);
+//void USART_send(char aChar);
 
 void serialEvent();
 

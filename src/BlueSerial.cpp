@@ -69,7 +69,7 @@ void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin) {
         pinMode(PAIRED_PIN, INPUT);
     }
 #else
-    void initSimpleSerial(uint32_t aBaudRate) {
+void initSimpleSerial(uint32_t aBaudRate) {
 #endif
     uint16_t baud_setting;
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
@@ -109,22 +109,34 @@ void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin) {
 /**
  * ultra simple blocking USART send routine - works 100%!
  */
-void USART_send(char aChar) {
-// wait for buffer to become empty
+void sendUSART(char aChar) {
+    // wait for buffer to become empty
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
-// Use TX1 on MEGA and on Leonardo, which has no TX0
-    while (!((UCSR1A) & (1 << UDRE1))) {
-        ;
-    }
-    UDR1 = aChar;
+    // Use TX1 on MEGA and on Leonardo, which has no TX0
+        while (!((UCSR1A) & (1 << UDRE1))) {
+            ;
+        }
+        UDR1 = aChar;
 #else
     while (!((UCSR0A) & (1 << UDRE0))) {
         ;
     }
     UDR0 = aChar;
-#endif
+#endif // Atmega...
 }
-#endif
+
+//void USART_send(char aChar) {
+//    sendUSART(aChar);
+//}
+
+void sendUSART(const char * aString) {
+    while(*aString != '0') {
+        sendUSART(*aString);
+        aString++;
+    }
+
+}
+#endif // USE_SIMPLE_SERIAL
 
 /**
  * On Atmega328
@@ -299,71 +311,71 @@ bool allowTouchInterrupts = false; // !!do not enable it, if event handling may 
 #if defined(USART1_RX_vect)
 // Use TX1 on MEGA and on Leonardo, which has no TX0
 ISR(USART1_RX_vect) {
-uint8_t tByte = UDR1;
+    uint8_t tByte = UDR1;
 #else
-ISR(USART_RX_vect) {
-    uint8_t tByte = UDR0;
+    ISR(USART_RX_vect) {
+        uint8_t tByte = UDR0;
 #endif
-    if (sReceiveBufferOutOfSync) {
-        // just wait for next sync token and reset buffer
-        if (tByte == SYNC_TOKEN) {
-            sReceiveBufferOutOfSync = false;
-            sReceivedEventType = EVENT_NO_EVENT;
-            sReceiveBufferIndex = 0;
-        }
-    } else {
-        if (sReceivedEventType == EVENT_NO_EVENT) {
-            if (sReceiveBufferIndex == 0) {
-                // First byte is raw length so subtract 3 for sync+eventType+length bytes
-                tByte -= 3;
-                if (tByte > RECEIVE_MAX_DATA_SIZE) {
-                    sReceiveBufferOutOfSync = true;
-                } else {
-                    sReceiveBufferIndex++;
-                    sReceivedDataSize = tByte;
-                }
-            } else {
-                // Second byte is eventType
-                // setup for receiving plain message bytes
-                sReceivedEventType = tByte;
+        if (sReceiveBufferOutOfSync) {
+            // just wait for next sync token and reset buffer
+            if (tByte == SYNC_TOKEN) {
+                sReceiveBufferOutOfSync = false;
+                sReceivedEventType = EVENT_NO_EVENT;
                 sReceiveBufferIndex = 0;
             }
         } else {
-            if (sReceiveBufferIndex == sReceivedDataSize) {
-                // now we expect a sync token
-                if (tByte == SYNC_TOKEN) {
-                    // event completely received
-                    // we have one dedicated touch down event in order not to overwrite it with other events before processing it
-                    // Yes it makes no sense if interrupts are allowed!
-                    struct BluetoothEvent * tRemoteTouchEventPtr = &remoteEvent;
-#ifndef DO_NOT_NEED_BASIC_TOUCH
-                    if (sReceivedEventType == EVENT_TOUCH_ACTION_DOWN
-                            || (remoteTouchDownEvent.EventType == EVENT_NO_EVENT && remoteEvent.EventType == EVENT_NO_EVENT)) {
-                        tRemoteTouchEventPtr = &remoteTouchDownEvent;
-                    }
-#endif
-                    tRemoteTouchEventPtr->EventType = sReceivedEventType;
-                    // copy buffer to structure
-                    memcpy(tRemoteTouchEventPtr->EventData.ByteArray, sReceiveBuffer, sReceivedDataSize);
-                    sReceiveBufferIndex = 0;
-                    sReceivedEventType = EVENT_NO_EVENT;
-
-                    if (allowTouchInterrupts) {
-                        // Dangerous, it blocks receive event as long as event handling goes on!!!
-                        handleEvent(tRemoteTouchEventPtr);
+            if (sReceivedEventType == EVENT_NO_EVENT) {
+                if (sReceiveBufferIndex == 0) {
+                    // First byte is raw length so subtract 3 for sync+eventType+length bytes
+                    tByte -= 3;
+                    if (tByte > RECEIVE_MAX_DATA_SIZE) {
+                        sReceiveBufferOutOfSync = true;
+                    } else {
+                        sReceiveBufferIndex++;
+                        sReceivedDataSize = tByte;
                     }
                 } else {
-                    // reset buffer since we had an overflow or glitch
-                    sReceiveBufferOutOfSync = true;
+                    // Second byte is eventType
+                    // setup for receiving plain message bytes
+                    sReceivedEventType = tByte;
                     sReceiveBufferIndex = 0;
                 }
             } else {
-                // plain message byte
-                sReceiveBuffer[sReceiveBufferIndex++] = tByte;
+                if (sReceiveBufferIndex == sReceivedDataSize) {
+                    // now we expect a sync token
+                    if (tByte == SYNC_TOKEN) {
+                        // event completely received
+                        // we have one dedicated touch down event in order not to overwrite it with other events before processing it
+                        // Yes it makes no sense if interrupts are allowed!
+                        struct BluetoothEvent * tRemoteTouchEventPtr = &remoteEvent;
+#ifndef DO_NOT_NEED_BASIC_TOUCH
+                        if (sReceivedEventType == EVENT_TOUCH_ACTION_DOWN
+                                || (remoteTouchDownEvent.EventType == EVENT_NO_EVENT && remoteEvent.EventType == EVENT_NO_EVENT)) {
+                            tRemoteTouchEventPtr = &remoteTouchDownEvent;
+                        }
+#endif
+                        tRemoteTouchEventPtr->EventType = sReceivedEventType;
+                        // copy buffer to structure
+                        memcpy(tRemoteTouchEventPtr->EventData.ByteArray, sReceiveBuffer, sReceivedDataSize);
+                        sReceiveBufferIndex = 0;
+                        sReceivedEventType = EVENT_NO_EVENT;
+
+                        if (allowTouchInterrupts) {
+                            // Dangerous, it blocks receive event as long as event handling goes on!!!
+                            handleEvent(tRemoteTouchEventPtr);
+                        }
+                    } else {
+                        // reset buffer since we had an overflow or glitch
+                        sReceiveBufferOutOfSync = true;
+                        sReceiveBufferIndex = 0;
+                    }
+                } else {
+                    // plain message byte
+                    sReceiveBuffer[sReceiveBufferIndex++] = tByte;
+                }
             }
         }
     }
-}
 #else // USE_SIMPLE_SERIAL line 294
 
 /*
