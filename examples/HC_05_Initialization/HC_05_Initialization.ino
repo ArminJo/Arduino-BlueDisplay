@@ -6,8 +6,8 @@
  * 0. Modify the lines 71 and 72.
  * 1. Load this sketch to your Arduino.
  * 2. Disconnect Arduino from power.
- * 3. Connect Arduino rx/tx with HC-05 module tx/rx (crossover!) and do not forget to attach 5V to the module.
- * 4. Connect key pin of HC-05 module with 3.3V line (of Arduino).
+ * 3. Connect Arduino rx/tx with HC-05 module tx/rx (crossover!) and do not forget to attach 5 Volt to the module.
+ * 4. Connect key pin of HC-05 module with 3.3 Volt line (of Arduino).
  *    On my kind of board (a single sided one) it is sufficient to press the tiny button while powering up.
  *    If the module is in programming state, it blinks 4 seconds on and 4 seconds off.
  * 5. Apply power to Arduino and module.
@@ -15,7 +15,7 @@
  *    If it only blinks twice (after 8 seconds for boot flickering), check your wiring or just try it again at step 5 or 4.
  *    You can see also messages on the serial monitor with 38400 Baud.
  * 7. Disconnect Arduino and module from power.
- * 8. If connected, disconnect key pin of HC-05 module from 3.3V line of Arduino.
+ * 8. If connected, disconnect key pin of HC-05 module from 3.3 Volt line of Arduino.
  * 9. Congratulation, you're done.
  *
  * If you see " ... stk500_getsync(): not in sync .." while reprogramming the Arduino
@@ -47,7 +47,7 @@ SoftwareSerial BTModuleSerial(3, 2); // RX, TX - RX data is not very reliable at
 
 #define VERSION_EXAMPLE "2.0"
 
-// remove comment to enable JDY programming OR connect D2 to ground
+// remove comment to enable JDY programming OR connect pin D2 to ground
 //#define JDY_31_MODULE
 #define SPP_C_DETECT_PIN 4
 /*

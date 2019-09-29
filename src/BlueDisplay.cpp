@@ -74,7 +74,7 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aRedr
  * This results in a EVENT_REQUESTED_DATA_CANVAS_SIZE callback event, which sends display size and local timestamp.
  * If connection established successfully, call all 3 handlers once.
  *
- * Waits for 300ms for connection to be established -> bool BlueDisplay1.mConnectionEstablished
+ * Waits for 300 ms for connection to be established -> bool BlueDisplay1.mConnectionEstablished
  *
  * Reconnect and reorientation events also call the redraw callback.
  *
@@ -558,7 +558,7 @@ extern "C" void writeStringC(const char *aStringPtr, uint8_t aStringLength) {
 }
 
 /**
- * Output String as warning to log and present as toast every 500ms
+ * Output String as warning to log and present as toast every 500 ms
  */
 void BlueDisplay::debugMessage(const char *aStringPtr) {
     if (USART_isBluetoothPaired()) {
@@ -573,7 +573,7 @@ void BlueDisplay::debug(const char *aStringPtr) {
 }
 
 /**
- * Output as warning to log and present as toast every 500ms
+ * Output as warning to log and present as toast every 500 ms
  */
 void BlueDisplay::debug(uint8_t aByte) {
     char tStringBuffer[9];
@@ -1510,7 +1510,7 @@ float __attribute__((weak)) getTemperature(void) {
     bool tReferenceMustBeChanged = (ADMUX & (DEFAULT << SHIFT_VALUE_FOR_REFERENCE));
     if (tReferenceMustBeChanged) {
         tOldADMUX = ADMUX;
-        // set AREF  to 1.1V and wait for settling
+        // set AREF  to 1.1 Volt and wait for settling
         ADMUX = ADC_TEMPERATURE_CHANNEL_MUX | (INTERNAL << SHIFT_VALUE_FOR_REFERENCE);
         delayMicroseconds(4000); // measured value is 3500 us
     }

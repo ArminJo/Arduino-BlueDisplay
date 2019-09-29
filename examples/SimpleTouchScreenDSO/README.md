@@ -27,19 +27,19 @@ This DSO needs only a standard Arduino-Uno or Arduino-Nano, a HC-05 Bluetooth mo
   - active attenuator (pin 9 connected to ground) - still experimental.
 - Using 1.1 Volt internal reference. 5 Volt (VCC) is also selectable and is useful if no attenuator is attached.
 
-- Integrated frequency generator using 16 bit Timer1. Frequency from 119 mHz (8.388 second) to 8MHz
+- Integrated frequency generator using 16 bit Timer1. Frequency from 119 mHz (8.388 second) to 8 MHz
 
-- Integrated PWM Waveform generator for sinus, triangle and sawtooth using 16 bit Timer1. Frequency from 1.9 mHz to 7.8kHz
+- Integrated PWM Waveform generator for sinus, triangle and sawtooth using 16 bit Timer1. Frequency from 1.9 mHz to 7.8 kHz
 
 ## Bill of material
 1. Arduino Nano
 2. Breadboard 400 points
 3. Resistors
-   - Resistors for the simple (0-5Volt) version: 1x 10k, 2x 100k, 1x 4M or more.
-   - Resistors for the 3 range (0-110Volt) version: 1x 2.2k, 2x 10k, 3x 100k, 2x 220k, 2x 1M, 1x 4M or greater
+   - Resistors for the simple (0-5 Volt) version: 1x 10 kOhm, 2x 100 k, 1x 4 M or more.
+   - Resistors for the 3 range (0-110 Volt) version: 1x 2.2 kOhm, 2x 10 k, 3x 100 k, 2x 220 k, 2x 1 M, 1x 4 M or greater
 4. Capacitors
-   - Capacitors for the simple version: 1x 100nF / 10V (or more)
-   - Capacitors for the 3 range (0-110Volt) version: 4x 100nF / 100V (or more), 6.8 uF
+   - Capacitors for the simple version: 1x 100 nF / 10 Volt (or more)
+   - Capacitors for the 3 range (0-110 Volt) version: 4x 100 nF / 100 Volt (or more), 6.8 uF
 5. Jumper wires
 
 Optional for Bluetooth connection
@@ -73,8 +73,8 @@ If switching info mode, the chart content will be restored.
 
 ## SETTINGS PAGE GUI
 On this page you have all buttons to modify the **DSO acquisition mode**, to select the different **ADC channels** and for **page navigation**
-above the last button row the minimum stack size, the supply voltage and the internal chip temperature is shown. 
-The stack size is needed for testing different buffer size values during development and the temperature may be quite inaccurate. 
+above the last button row the minimum stack size, the supply voltage and the internal chip temperature is shown.
+The stack size is needed for testing different buffer size values during development and the temperature may be quite inaccurate.
 - **History** -> **red** history off, **green** history on, i.e. old chart data is not deleted, it stays as a light green trace. This button is also available (invisible) at the chart page.
 - Slope - **Slope A** -> trigger on ascending slope, **Slope D** -> trigger on descending slope.
 - **Back** -> Back to chart page.
@@ -100,11 +100,11 @@ The stack size is needed for testing different buffer size values during develop
   - **Offset 0V** -> Range starts at 0 Volt.
   - **Offset auto** -> For small signals with a high DC offset. If range is not the lowest one and the signal has a DC offset, then a lower range is choosen and the display offset is adapted to show the complete signal
   - **Offset man**
-- **DC** / **AC** 
+- **DC** / **AC**
   - Since the internal ADC converter has only a DC input, **AC** offsets the inputs DC value to 1/2 reference using Arduino pin A5 and compensates this offset for the display.
     Therefore you must apply the signal using a capacitor!
-- Reference Voltage 
-  - **Ref 1.1V** (recommended if having attenuators) -> uses the internal 1.1V reference for the ADC.
+- Reference Voltage
+  - **Ref 1.1V** (recommended if having attenuators) -> uses the internal 1.1 Volt reference for the ADC.
   - **Ref VCC** -> uses VCC (5 Volt supply) as reference for the ADC.
 
 ## INfO LINE REFERENCE
@@ -117,10 +117,10 @@ The stack size is needed for testing different buffer size values during develop
 First line
 - Timebase for div (31 pixel)
 - Slope of trigger
-- Input channel: (0-5), T->AVR-temperature, R->1.1Volt-internal-reference G->internal-ground
+- Input channel: (0-5), T->AVR-temperature, R->1.1 Volt-internal-reference G->internal-ground
 - Minimum, arithmetic-average, max and peak to peak voltage of actual chart (In hold mode, chart is longer than display!)
 - Trigger level
-- Reference used: 5=5V 1  1=1.1Volt-internal-reference
+- Reference used: 5=5 Volt,  1=1.1 Volt-internal-reference
 
 Second line
 - Frequency
@@ -135,9 +135,9 @@ Short touch switches info output, long touch shows active GUI elements.
 
 |Maximum values                                                      | Minimum values|
 | :--- | :--- |
-|SINE: clip to minimum 8 samples per period => 128us / 7812.5Hz       |7,421mHz|
-|SAWTOOTH: clip to minimum 16 samples per period => 256us / 3906.25Hz |3.725mHz|
-|TRIANGLE: clip to minimum 32 samples per period => 512us / 1953.125Hz|1.866mHz|
+|SINE: clip to minimum 8 samples per period => 128 us / 7812.5 Hz       |7,421 mHz|
+|SAWTOOTH: clip to minimum 16 samples per period => 256 us / 3906.25 Hz |3.725 mHz|
+|TRIANGLE: clip to minimum 32 samples per period => 512 us / 1953.125 Hz|1.866 mHz|
 
 ### RC-Filter suggestions
 - Simple: 2k2 Ohm and 100 nF
@@ -145,7 +145,7 @@ Short touch switches info output, long touch shows active GUI elements.
 - 2nd order (better for sawtooth):        1 kOhm and 22 nF  -> 4k7 Ohm and 4.7 nF
 
 **Do not run DSO acquisition and non square wave waveform generation at the same time.**
-Because of the interrupts at 62kHz rate, DSO is almost not usable during non square wave waveform generation 
+Because of the interrupts at 62 kHz rate, DSO is almost not usable during non square wave waveform generation
 and waveform frequency is not stable and decreased, since not all TIMER1 OVERFLOW interrupts are handled.
 
 # SCREENSHOTS

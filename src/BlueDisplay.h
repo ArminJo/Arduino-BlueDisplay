@@ -230,10 +230,10 @@ static const int FLAG_SLIDER_CAPTION_ABOVE = 0x04;
 // Android system tones
 // Codes start with 0 - 15 for DTMF tones and ends with code TONE_CDMA_SIGNAL_OFF=98 for silent tone (which does not work on lollipop)
 #define TONE_CDMA_KEYPAD_VOLUME_KEY_LITE 89
-#define TONE_PROP_BEEP_OK TONE_CDMA_KEYPAD_VOLUME_KEY_LITE // 120 ms 941 + 1477Hz - normal tone for OK Feedback
-#define TONE_PROP_BEEP_ERROR 28 // 2* 35/200 ms 400 + 1200Hz - normal tone for ERROR Feedback
-#define TONE_PROP_BEEP_ERROR_HIGH 25 // 2* 100/100 ms 1200Hz - high tone for ERROR Feedback
-#define TONE_PROP_BEEP_ERROR_LONG 26 // 2* 35/200 ms 400 + 1200Hz - normal tone for ERROR Feedback
+#define TONE_PROP_BEEP_OK TONE_CDMA_KEYPAD_VOLUME_KEY_LITE // 120 ms 941 + 1477 Hz - normal tone for OK Feedback
+#define TONE_PROP_BEEP_ERROR 28 // 2* 35/200 ms 400 + 1200 Hz - normal tone for ERROR Feedback
+#define TONE_PROP_BEEP_ERROR_HIGH 25 // 2* 100/100 ms 1200 Hz - high tone for ERROR Feedback
+#define TONE_PROP_BEEP_ERROR_LONG 26 // 2* 35/200 ms 400 + 1200 Hz - normal tone for ERROR Feedback
 #define TONE_SILENCE 50 // Since 98 does not work on Android Lollipop
 #define TONE_CDMA_ONE_MIN_BEEP 88
 #define TONE_DEFAULT TONE_CDMA_KEYPAD_VOLUME_KEY_LITE

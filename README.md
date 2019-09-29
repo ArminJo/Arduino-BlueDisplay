@@ -1,7 +1,9 @@
 # BlueDisplay Library for Arduino
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
 [![Build Status](https://travis-ci.org/ArminJo/Arduino-BlueDisplay.svg?branch=master)](https://travis-ci.org/ArminJo/Arduino-BlueDisplay)
+[![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2FArminJo%2FArduino-BlueDisplay)](https://github.com/brentvollebregt/hit-counter)
 
 This library enables an Android smartphone or tablet to act as a graphical display for your Arduino.
 
@@ -30,9 +32,13 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 - Debug messages as toasts.
 
 ## Examples
+Before using the examples take care that the BT-module (e.g. the the HC-05 module) is connected to your Android device and is visible in the Bluetooth Settings.
+
+All examples use the baudrate of 115200 which is **not** the factory setting of the HC-05 module. Please change the BT-Module settings e.g. by using the HC_05_Initialization.ino example **or** change the examples baudrate by acivating the line `#define HC_05_BAUD_RATE BAUD_9600` and deactivating `#define HC_05_BAUD_RATE BAUD_115200`. Not every example may run smooth with the reduced baudrate!
+
+- HC_05_Initialization - Simple helper program to configure your HC-05 (or JDY-31) modules name and default baudrate.
 - BlueDisplayBlink - Simple example to check your installation.
 - BlueDisplayExample - More elaborated example to shoe more features of the BlueDisplay library.
-- HC_05_Initialization - Simple helper program to configure your HC-05 module.
 - RcCarControl - Example of controlling a RC-car by smartphone accelerometer sensor 
 - **SimpleTouchScreenDSO** - 300 kSamples DSO without external hardware (except the HC-05 module). For AC input, only a capacitor and 4 resistors are needed.
 More information at [Arduino-Simple-DSO](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples/SimpleTouchScreenDSO)

@@ -40,6 +40,8 @@ Ticker Timer20ms;
 // Enable this to see information on each call
 // There should be no library which uses Serial, so enable it only for debugging purposes
 //#define TRACE
+// output can be directly used for Arduino Serial Plotter (Ctrl-Shift-L)
+//#define TRACE_FOR_SERIAL_PLOTTER
 
 // Enable this if you want to measure timing by toggling pin12 on an arduino
 //#define MEASURE_TIMING
@@ -155,9 +157,12 @@ ServoEasing::ServoEasing() // @suppress("Class members should be properly initia
 #endif
 
 /*
- * Return 0/false if not pin 9 or 10 else return aPin
- * Pin number != 9 results in using pin 10.
- * For PCA9685 expansion return true only if channel number between 0 and 15 since PCA9685 has only 16 channels
+ * If USE_LEIGHTWEIGHT_SERVO_LIB is enabled:
+ *      Return 0/false if not pin 9 or 10 else return aPin
+ *      Pin number != 9 results in using pin 10.
+ * If USE_PCA9685_SERVO_EXPANDER is enabled:
+ *      Return true only if channel number between 0 and 15 since PCA9685 has only 16 channels, else returns false
+ * Else return servoIndex / internal channel number
  */
 uint8_t ServoEasing::attach(int aPin) {
     mServoPin = aPin;
@@ -285,7 +290,9 @@ void ServoEasing::writeMicrosecondsOrUnits(int aValue) {
         Serial.print(aValue + mTrimMicrosecondsOrUnits);
     }
 #endif // TRACE
-
+#if defined(TRACE_FOR_SERIAL_PLOTTER)
+    Serial.println(aValue);
+#endif
     // Apply trim - this is the only place mTrimMicrosecondsOrUnits is evaluated
     aValue += mTrimMicrosecondsOrUnits;
     // Apply reverse - this is the only place mOperateServoReverse is evaluated
@@ -349,14 +356,14 @@ void ServoEasing::easeTo(int aDegree, uint16_t aDegreesPerSecond) {
     startEaseTo(aDegree, aDegreesPerSecond, false);
     do {
         // First do the delay, then check for update, since we are likely called directly after start and there is nothing to move yet
-        delay(REFRESH_INTERVAL / 1000); // 20ms - REFRESH_INTERVAL is in Microseconds
+        delay(REFRESH_INTERVAL / 1000); // 20 ms - REFRESH_INTERVAL is in Microseconds
     } while (!update());
 }
 
 void ServoEasing::easeToD(int aDegree, uint16_t aMillisForMove) {
     startEaseToD(aDegree, aMillisForMove, false);
     do {
-        delay(REFRESH_INTERVAL / 1000); // 20ms - REFRESH_INTERVAL is in Microseconds
+        delay(REFRESH_INTERVAL / 1000); // 20 ms - REFRESH_INTERVAL is in Microseconds
     } while (!update());
 }
 
@@ -750,6 +757,7 @@ int clipDegreeSpecial(uint8_t aDegreeToClip) {
 /*
  * Update all servos from list and check if all servos have stopped.
  * Can not call yield() here, since we are in an ISR context here.
+ * Defined weak in order to be able to overwrite it.
  */
 __attribute__((weak)) void handleServoTimerInterrupt() {
 #if defined(USE_PCA9685_SERVO_EXPANDER)
@@ -762,33 +770,39 @@ __attribute__((weak)) void handleServoTimerInterrupt() {
     }
 }
 
+/*
+ * Timer1 is used for the Arduino Servo library.
+ * To have non blocking easing functions its unused channel B is used to generate an interrupt 100 us before the end of the 20 ms Arduino Servo refresh period.
+ * This interrupt then updates all servo values for the next refresh period.
+ */
 void enableServoEasingInterrupt() {
 #if defined(__AVR__)
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 #if defined(USE_PCA9685_SERVO_EXPANDER)
     // TODO convert to timer 5
     // set timer 1 to 20 ms
-    TCCR1A = _BV(WGM11);// FastPWM Mode mode TOP (20ms) determined by ICR1 - non-inverting Compare Output mode OC1A+OC1B
+    TCCR1A = _BV(WGM11);// FastPWM Mode mode TOP (20 ms) determined by ICR1 - non-inverting Compare Output mode OC1A+OC1B
     TCCR1B = _BV(WGM13) | _BV(WGM12) | _BV(CS11);// set prescaler to 8, FastPWM mode mode bits WGM13 + WGM12
     ICR1 = 40000;// set period to 20 ms
 #endif
 
     TIFR5 |= _BV(OCF5B);     // clear any pending interrupts;
     TIMSK5 |= _BV(OCIE5B);// enable the output compare B interrupt
-    OCR5B = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL) / 8) - 100;// update values 100us before the new servo period starts
+    OCR5B = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL) / 8) - 100;// update values 100 us before the new servo period starts
 #else
 
 #if defined(USE_PCA9685_SERVO_EXPANDER)
 //    // set timer 1 to 20 ms
-    TCCR1A = _BV(WGM11);// FastPWM Mode mode TOP (20ms) determined by ICR1 - non-inverting Compare Output mode OC1A+OC1B
+    TCCR1A = _BV(WGM11);// FastPWM Mode mode TOP (20 ms) determined by ICR1 - non-inverting Compare Output mode OC1A+OC1B
     TCCR1B = _BV(WGM13) | _BV(WGM12) | _BV(CS11);// set prescaler to 8, FastPWM mode mode bits WGM13 + WGM12
     ICR1 = 40000;// set period to 20 ms
 #endif
 
-    TIFR1 |= _BV(OCF1B);     // clear any pending interrupts;
-    TIMSK1 |= _BV(OCIE1B);     // enable the output compare B interrupt
+    TIFR1 |= _BV(OCF1B);    // clear any pending interrupts;
+    TIMSK1 |= _BV(OCIE1B);  // enable the output compare B interrupt
+    TCCR1B |= _BV(ICNC1);   // used as flag, that interrupts are enabled again, if disable is suppressed because interrupt is used to synchronize e.g. NeoPixel
 #ifndef USE_LEIGHTWEIGHT_SERVO_LIB
-// update values 100us before the new servo period starts
+// update values 100 us before the new servo period starts
     OCR1B = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL) / 8) - 100;
 #endif
 #endif
@@ -810,8 +824,8 @@ void disableServoEasingInterrupt() {
 }
 
 /*
- * 60us for single servo + 160 us per servo if using I2C e.g.for PCA9685 expander at 400000Hz or + 100 at 800000Hz
- * 20us for last interrupt
+ * 60 us for single servo + 160 us per servo if using I2C e.g.for PCA9685 expander at 400000 Hz or + 100 at 800000 Hz
+ * 20 us for last interrupt
  * The first servo pulse starts just after this interrupt routine has finished
  */
 #if defined(__AVR__)
@@ -897,18 +911,22 @@ void setSpeedForAllServos(uint16_t aDegreesPerSecond) {
     }
 }
 
+#if defined(va_arg)
 void setDegreeForAllServos(uint8_t aNumberOfValues, va_list * aDegreeValues) {
     for (uint8_t tServoIndex = 0; tServoIndex < aNumberOfValues; ++tServoIndex) {
         sServoNextPositionArray[tServoIndex] = va_arg(*aDegreeValues, int);
     }
 }
+#endif
 
+#if defined(va_start)
 void setDegreeForAllServos(uint8_t aNumberOfValues, ...) {
     va_list aDegreeValues;
     va_start(aDegreeValues, aNumberOfValues);
     setDegreeForAllServos(aNumberOfValues, &aDegreeValues);
     va_end(aDegreeValues);
 }
+#endif
 
 /*
  * Sets target position using content of sServoNextPositionArray
@@ -927,6 +945,15 @@ bool setEaseToForAllServos(uint16_t aDegreesPerSecond) {
     bool tOneServoIsMoving = false;
     for (uint8_t tServoIndex = 0; tServoIndex < sServoCounter; ++tServoIndex) {
         tOneServoIsMoving = sServoArray[tServoIndex]->setEaseTo(sServoNextPositionArray[tServoIndex], aDegreesPerSecond)
+                || tOneServoIsMoving;
+    }
+    return tOneServoIsMoving;
+}
+
+bool setEaseToDForAllServos(uint16_t aMillisForMove) {
+    bool tOneServoIsMoving = false;
+    for (uint8_t tServoIndex = 0; tServoIndex < sServoCounter; ++tServoIndex) {
+        tOneServoIsMoving = sServoArray[tServoIndex]->setEaseToD(sServoNextPositionArray[tServoIndex], aMillisForMove)
                 || tOneServoIsMoving;
     }
     return tOneServoIsMoving;
@@ -962,7 +989,7 @@ bool updateAllServos() {
 void updateAndWaitForAllServosToStop() {
     do {
         // First do the delay, then check for update, since we are likely called directly after start and there is nothing to move yet
-        delay(REFRESH_INTERVAL / 1000); // 20ms - REFRESH_INTERVAL is in Microseconds
+        delay(REFRESH_INTERVAL / 1000); // 20 ms - REFRESH_INTERVAL is in Microseconds
     } while (!updateAllServos());
 }
 

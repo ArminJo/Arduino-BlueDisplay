@@ -35,8 +35,8 @@
 #include "BlueDisplay.h"
 
 // Change this if you have reprogrammed the hc05 module for higher baud rate
-//#define HC_05_BAUD_RATE BAUD_9600
 #define HC_05_BAUD_RATE BAUD_115200
+//#define HC_05_BAUD_RATE BAUD_9600
 #define DISPLAY_WIDTH 320
 #define DISPLAY_HEIGHT 256
 
