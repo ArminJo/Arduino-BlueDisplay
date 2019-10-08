@@ -420,7 +420,7 @@ void setACMode(bool aNewACMode) {
         }
     } else {
         /*
-         * DC mode here: Change AC_DC_BIAS_PIN pin to output and shorten bias to 0V
+         * DC mode here: Change AC_DC_BIAS_PIN pin to output and shorten bias to 0 Volt
          */
         DDRC = OUTPUT_MASK_PORTC;
         digitalWriteFast(AC_DC_BIAS_PIN, LOW);
@@ -1775,7 +1775,7 @@ void doShowSystemInfoPage(BDButton * aTheTouchedButton, int16_t aValue) {
 }
 
 /**
- * 3ms for FFT, 9ms complete with -OS
+ * 3 ms for FFT, 9 ms complete with -OS
  */
 void doShowFFT(BDButton * aTheTouchedButton, int16_t aValue) {
     DisplayControl.ShowFFT = aValue;

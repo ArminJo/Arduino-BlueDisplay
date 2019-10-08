@@ -6,9 +6,9 @@
  * New value is taken by a rolling index from a table for sine, or directly computed from that index for triangle and sawtooth waveforms.
  *
  * Maximum values:                                                          Minimum values:
- * SINE: clip to minimum 8 samples per period => 128us / 7812.5Hz           7,421mHz
- * SAWTOOTH: clip to minimum 16 samples per period => 256us / 3906.25Hz     3.725mHz
- * TRIANGLE: clip to minimum 32 samples per period => 512us / 1953.125Hz    1.866mHz
+ * SINE: clip to minimum 8 samples per period => 128 us / 7812.5 Hz           7,421 mHz
+ * SAWTOOTH: clip to minimum 16 samples per period => 256 us / 3906.25 Hz     3.725 mHz
+ * TRIANGLE: clip to minimum 32 samples per period => 512 us / 1953.125 Hz    1.866 mHz
  * By using a "floating point" index increment, every frequency lower than these maximum values can be generated.
  *
  * In CTC Mode Timer1 generates square wave from 0.119 Hz up to 8 MHz (full range of Timer1).
@@ -56,10 +56,10 @@ struct FrequencyInfoStruct sFrequencyInfo;
 const uint8_t sSineTableQuarter128[SIZE_OF_SINE_TABLE_QUARTER + 1] PROGMEM = { 128, 135, 141, 147, 153, 159, 165, 171, 177, 182,
         188, 193, 199, 204, 209, 213, 218, 222, 226, 230, 234, 237, 240, 243, 245, 248, 250, 251, 253, 254, 254, 255, 255 };
 // Base period, for which exact one next value from table/computation is taken at every interrupt
-// 8 Bit PWM resolution gives 488.28125Hz sine base frequency: 1/16 us * 256 * 128 = 16*128 = 2048us = 488.28125Hz
+// 8 Bit PWM resolution gives 488.28125 Hz sine base frequency: 1/16 us * 256 * 128 = 16*128 = 2048 us = 488.28125 Hz
 #define BASE_PERIOD_MICROS_FOR_SINE_TABLE 2048UL // ((1/F_CPU) * PWM_RESOLUTION) * (SIZE_OF_SINE_TABLE_QUARTER * 4)
-#define BASE_PERIOD_MICROS_FOR_TRIANGLE 8176UL // (1/F_CPU) * PWM_RESOLUTION * (256+255) Values -> 122.3092Hz
-#define BASE_PERIOD_MICROS_FOR_SAWTOOTH 4096UL // (1/F_CPU) * PWM_RESOLUTION * 256 Values -> 244.140625Hz
+#define BASE_PERIOD_MICROS_FOR_TRIANGLE 8176UL // (1/F_CPU) * PWM_RESOLUTION * (256+255) Values -> 122.3092 Hz
+#define BASE_PERIOD_MICROS_FOR_SAWTOOTH 4096UL // (1/F_CPU) * PWM_RESOLUTION * 256 Values -> 244.140625 Hz
 
 const char FrequencyFactorChars[4] = { 'm', ' ', 'k', 'M' };
 
@@ -91,7 +91,7 @@ void initTimer1ForCTC(void) {
 
     TCCR1A = _BV(COM1B0); // Toggle OC1B on compare match / CTC mode
     TCCR1B = _BV(WGM12); // CTC with OCR1A - no clock->timer disabled
-    OCR1A = 125 - 1; // set compare match register for 1kHz
+    OCR1A = 125 - 1; // set compare match register for 1 kHz
     TCNT1 = 0; // init counter
 }
 
@@ -157,7 +157,7 @@ void setNormalizedFrequencyFactor(int aIndexValue) {
 /*
  * Set display values sFrequencyNormalized and sFrequencyFactorIndex
  *
- * Problem is set e.g. value of 1Hz as 1000 mHz or 1Hz?
+ * Problem is set e.g. value of 1 Hz as 1000 mHz or 1 Hz?
  * so we just try to keep the existing range.
  * First put value of 1000 to next range,
  * then undo if value < 1.00001 and existing range is one lower
@@ -190,9 +190,9 @@ bool setWaveformFrequency() {
     return setWaveformFrequency((sFrequencyInfo.FrequencyNormalized * sFrequencyInfo.FrequencyFactorTimes1000) / 1000);
 }
 /*
- * SINE: clip to minimum 8 samples per period => 128us / 7812.5Hz
- * SAWTOOTH: clip to minimum 16 samples per period => 256us / 3906.25Hz
- * Triangle: clip to minimum 32 samples per period => 512us / 1953.125Hz
+ * SINE: clip to minimum 8 samples per period => 128 us / 7812.5 Hz
+ * SAWTOOTH: clip to minimum 16 samples per period => 256 us / 3906.25 Hz
+ * Triangle: clip to minimum 32 samples per period => 512 us / 1953.125 Hz
  * return true if clipping occurs
  */
 bool setWaveformFrequency(float aFrequency) {
@@ -229,7 +229,7 @@ bool setWaveformFrequency(float aFrequency) {
         if (sFrequencyInfo.isOutputEnabled) {
             // start Timer1 for PWM generation
             TCCR1B &= ~TIMER_PRESCALER_MASK;
-            TCCR1B |= _BV(CS10); // set prescaler to 1 -> gives 16us / 62.5kHz PWM
+            TCCR1B |= _BV(CS10); // set prescaler to 1 -> gives 16 us / 62.5 kHz PWM
         }
     }
     setNormalizedFrequencyAndFactor(sFrequencyInfo.Frequency);
@@ -243,7 +243,7 @@ bool setSquareWaveFrequency(float aFrequency) {
      * Timer runs in toggle mode and has 8 MHz / 0.125 us maximum frequency
      * Divider = (F_CPU/2) / sFrequency
      * Divider= 1, prescaler= 1 => 8 MHz
-     * Divider= 16348 * prescaler= 1024 = 0x200000000 => 8,388,608us => 0.119209Hz
+     * Divider= 16348 * prescaler= 1024 = 0x200000000 => 8,388,608 us => 0.119209 Hz
      */
     uint32_t tDividerInteger = (F_CPU / 2) / tFrequency;
     if (tDividerInteger == 0) {

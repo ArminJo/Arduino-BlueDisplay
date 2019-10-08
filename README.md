@@ -1,4 +1,4 @@
-# BlueDisplay Library for Arduino
+/*# BlueDisplay Library for Arduino
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
@@ -8,14 +8,15 @@
 This library enables an Android smartphone or tablet to act as a graphical display for your Arduino.
 
 ## SUMMARY
-Let your Arduino program create a GUI with **Graphics, Text, Buttons and Sliders** on your smartphone or tablet by simply connecting a HC-05 to the rx/tx pins of your Arduino.
+Let your Arduino program create a GUI with **Graphics, Text, Buttons and Sliders** on your smartphone or tablet by simply
+connecting a HC-05 to the rx/tx pins of your Arduino.
 The App receives draw requests from Arduino over Bluetooth and renders it.
 GUI callback, touch and sensor events are sent back to the Arduino.
 **No Android programming needed!**
 
 # Installation
-Install this "BlueDisplay" library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. Use "BlueDisplay" as filter string.
-Or download BlueDisplay.zip file or use the GitHub *clone or download -> Download ZIP* button, and add the .zip file with *Sketch -> Include Library -> add .ZIP Library...*.
+Install this "BlueDisplay" library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. Use "BlueDisplay" as filter string.<br/>
+Or download BlueDisplay.zip file or use the GitHub *clone or download -> Download ZIP* button, and add the .zip file with *Sketch -> Include Library -> add .ZIP Library...*.<br/>
 On Android you need to install the [BlueDisplay app](https://play.google.com/store/apps/details?id=de.joachimsmeyer.android.bluedisplay).
 
 ## Features
@@ -28,24 +29,27 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 - Easy mapping of UTF-8 characters like Ohm, Celsius etc..
 - Up to 115200 Baud using HC-05 modules.
 - Local display of received and sent commands for debug purposes.
-- Hex und ASCII output of received Bluetooth data at log level verbose.
+- Hex and ASCII output of received Bluetooth data at log level verbose.
 - Debug messages as toasts.
 
 ## Examples
-Before using the examples take care that the BT-module (e.g. the the HC-05 module) is connected to your Android device and is visible in the Bluetooth Settings.
+Before using the examples, take care that the BT-module (e.g. the the HC-05 module) is connected to your Android device and is visible in the Bluetooth Settings.
 
-All examples use the baudrate of 115200 which is **not** the factory setting of the HC-05 module. Please change the BT-Module settings e.g. by using the HC_05_Initialization.ino example **or** change the examples baudrate by acivating the line `#define HC_05_BAUD_RATE BAUD_9600` and deactivating `#define HC_05_BAUD_RATE BAUD_115200`. Not every example may run smooth with the reduced baudrate!
+All examples initially use the baudrate of 9600. Especially the SimpleTouchScreenDSO example will run smoother with a baudrate of 115200.<br/>
+For this, change the example baudrate by deactivating the line `#define HC_05_BAUD_RATE BAUD_9600` and activating `#define HC_05_BAUD_RATE BAUD_115200`.<br/>
+**AND** change the BT-Module baudrate e.g. by using the HC_05_Initialization.ino example.
+
 
 - HC_05_Initialization - Simple helper program to configure your HC-05 (or JDY-31) modules name and default baudrate.
 - BlueDisplayBlink - Simple example to check your installation.
 - BlueDisplayExample - More elaborated example to shoe more features of the BlueDisplay library.
-- RcCarControl - Example of controlling a RC-car by smartphone accelerometer sensor 
+- RcCarControl - Example of controlling a RC-car by smartphone accelerometer sensor
 - **SimpleTouchScreenDSO** - 300 kSamples DSO without external hardware (except the HC-05 module). For AC input, only a capacitor and 4 resistors are needed.
 More information at [Arduino-Simple-DSO](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples/SimpleTouchScreenDSO)
 - US_Distance - Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a parking assistance.
 
 ## Extras
-The extras folder (in the Arduino IDE use "Sketch/Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory) 
+The extras folder (in the Arduino IDE use "Sketch/Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
 contains more schematics, breadboard layouts and pictures which may help you building the example projects.
 
 ## Hints

@@ -39,9 +39,11 @@
 
 #define VERSION_EXAMPLE "1.1"
 
-// Change this if you have reprogrammed the hc05 module for higher baud rate
-//#define HC_05_BAUD_RATE BAUD_9600
-#define HC_05_BAUD_RATE BAUD_115200
+// Change this if you have programmed the HC-05 module for another baud rate
+#ifndef HC_05_BAUD_RATE
+//#define HC_05_BAUD_RATE BAUD_115200
+#define HC_05_BAUD_RATE BAUD_9600
+#endif
 
 const int LASER_POWER_PIN = 5; // uses timer0
 
@@ -250,9 +252,9 @@ void setup() {
 
 #ifndef USE_STANDARD_SERIAL
     /*
-     * If you want to see serial output if not connected with BlueDisplay "USE_STANDARD_SERIAL" must be defined globally.
+     * If you want to see serial output if not connected with BlueDisplay comment line 39 in BlueSerial.h or use global #define USE_STANDARD_SERIAL
      * e.g. with -DUSE_STANDARD_SERIAL as compiler parameter for c++ in order to force the BlueDisplay library to use the Arduino Serial object
-     * and release its own interrupt handler '__vector_18'
+     * and release the SimpleSerial interrupt handler '__vector_18'
      */
     initSimpleSerial(HC_05_BAUD_RATE);
 #else

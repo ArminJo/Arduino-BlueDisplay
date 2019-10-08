@@ -29,3 +29,5 @@ extern volatile unsigned long sUSPulseMicros;
 #endif
 
 #endif // HCSR04_H_
+
+#pragma once

@@ -67,9 +67,10 @@ unsigned int getCentimeterFromUSMicroSeconds(unsigned int aDistanceMicros) {
 }
 
 /*
- * returns aTimeoutMicros/58.5 if timeout happens
- * returns 0 if pins are not initialized
- * timeout of 5850 micros is equivalent to 1m
+ * @return  Distance in centimeter (time in us/58.5)
+ *          aTimeoutMicros/58.5 if timeout happens
+ *          0 if pins are not initialized
+ *          timeout of 5850 micros is equivalent to 1m
  */
 unsigned int getUSDistanceAsCentiMeter(unsigned int aTimeoutMicros) {
     unsigned int tDistanceMicros = getUSDistance(aTimeoutMicros);

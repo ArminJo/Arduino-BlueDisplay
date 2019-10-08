@@ -1,13 +1,13 @@
 /*
  * FrequencyGeneratorPage.cpp
  *
- * Frequency output from 119 mHz (8.388 second) to 8MHz square wave on Arduino using timer1.
+ * Frequency output from 119 mHz (8.388 second) to 8 MHz square wave on Arduino using timer1.
  * Sine waveform output from 7,421 mHz to 7812.5 Hz
  * Triangle from 3.725 mHz to 1953.125 Hz
  * Sawtooth from 1.866 mHz to 3906.25 Hz
  *
  * !!!Do not run DSO acquisition and non square wave waveform generation at the same time!!!
- * Because of the interrupts at 62kHz rate, DSO is almost not usable during non square wave waveform generation.
+ * Because of the interrupts at 62 kHz rate, DSO is almost not usable during non square wave waveform generation.
  * Waveform frequency is not stable and decreased, since not all TIMER1 OVERFLOW interrupts are handled.
  *
  * PWM RC-Filter suggestions
@@ -549,7 +549,7 @@ void printFrequencyAndPeriod() {
 }
 
 /**
- * Computes Autoreload value for synthesizer from 8,381 mHz (0xFFFFFFFF) to 18MHz (0x02) and prints frequency value
+ * Computes Autoreload value for synthesizer from 8,381 mHz (0xFFFFFFFF) to 18 MHz (0x02) and prints frequency value
  * @param aSetSlider
  * @param global variable Frequency
  * @return true if error / clipping happened
@@ -583,7 +583,7 @@ void setNormalizedFrequencyFactor(int aIndexValue) {
 /*
  * Set display values sFrequencyNormalized and sFrequencyFactorIndex
  *
- * Problem is set e.g. value of 1Hz as 1000 mHz or 1Hz?
+ * Problem is set e.g. value of 1 Hz as "1000mHz" or "1Hz"?
  * so we just try to keep the existing range.
  * First put value of 1000 to next range,
  * then undo if value < 1.00001 and existing range is one lower

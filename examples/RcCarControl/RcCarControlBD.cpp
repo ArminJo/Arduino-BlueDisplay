@@ -29,7 +29,11 @@
 
 #include <stdlib.h> // for dtostrf
 
-#define HC_05_BAUD_RATE BAUD_115200
+// Change this if you have programmed the HC-05 module for another baud rate
+#ifndef HC_05_BAUD_RATE
+//#define HC_05_BAUD_RATE BAUD_115200
+#define HC_05_BAUD_RATE BAUD_9600
+#endif
 
 // These pins are used by Timer 2
 const int BACKWARD_MOTOR_PWM_PIN = 11;
@@ -277,7 +281,12 @@ void BDsetup() {
     digitalWrite(LASER_POWER_PIN, LaserOn);
     ServoLaser.write(90);
 
+#ifdef USE_SIMPLE_SERIAL  // Comment line 39 in BlueSerial.h or use global #define USE_STANDARD_SERIAL to disable it
     initSimpleSerial(HC_05_BAUD_RATE);
+#else
+    Serial.begin(HC_05_BAUD_RATE);
+#endif
+
     ServoLaser.attach(LASER_SERVO_PIN);
 
     // Register callback handler and check for connection

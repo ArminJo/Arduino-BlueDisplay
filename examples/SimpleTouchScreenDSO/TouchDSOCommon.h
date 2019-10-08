@@ -96,7 +96,7 @@ extern const char * const ChannelDivByButtonStrings[NUMBER_OF_CHANNELS_WITH_FIXE
 /*****************************
  * Timebase stuff
  *****************************/
-#define TIMEBASE_INDEX_START_VALUE 7 // 2ms - shows 50 Hz
+#define TIMEBASE_INDEX_START_VALUE 7 // 2 ms - shows 50 Hz
 
 // ADC HW prescaler values
 #define ADC_PRESCALE4    2 // is noisy
@@ -129,11 +129,11 @@ extern const char * const ChannelDivByButtonStrings[NUMBER_OF_CHANNELS_WITH_FIXE
 #define HORIZONTAL_GRID_COUNT 6
 /**
  * Formula for Grid Height is:
- * 5V Reference, 10 bit Resolution => 1023/5 = 204.6 Pixel per Volt
+ * 5 Volt Reference, 10 bit Resolution => 1023/5 = 204.6 Pixel per Volt
  * 1 Volt per Grid -> 204,6 pixel. With scale (shift) 2 => 51.15 pixel.
  * 0.5 Volt -> 102.3 pixel with scale (shift) 1 => 51.15 pixel
  * 0.2 Volt -> 40.96 pixel
- * 1.1V Reference 1023/1.1 = 930 Pixel per Volt
+ * 1.1 Volt Reference 1023/1.1 = 930 Pixel per Volt
  * 0.2 Volt -> 186 pixel with scale (shift) 2 => 46.5 pixel
  * 0.1 Volt -> 93 pixel with scale (shift) 1 => 46.5 pixel
  * 0.05 Volt -> 46.5 pixel
@@ -149,7 +149,7 @@ extern const char * const ChannelDivByButtonStrings[NUMBER_OF_CHANNELS_WITH_FIXE
 #define TIMEBASE_INDEX_ULTRAFAST_MODES 2 // first 3 timebase (10 - 50) using PRESCALE4 is ultra fast polling without preprocessing and therefore needs double buffer size
 #define TIMEBASE_NUMBER_OF_XSCALE_CORRECTION 4  // number of timebase which are simulated by display XSale factor. Since PRESCALE4 gives bad quality, use PRESCALE8 and XScale for 201 us range
 #define TIMEBASE_INDEX_MILLIS 6 // min index to switch to ms instead of us display
-#define TIMEBASE_INDEX_DRAW_WHILE_ACQUIRE 11 // min index where chart is drawn while buffer is filled (11 => 50ms)
+#define TIMEBASE_INDEX_DRAW_WHILE_ACQUIRE 11 // min index where chart is drawn while buffer is filled (11 => 50 ms)
 #else
 /*
  * TIMEBASE
