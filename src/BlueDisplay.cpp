@@ -1481,10 +1481,10 @@ float __attribute__((weak)) getVCCVoltage(void) {
     uint8_t tOldADMUX = ADMUX;
     /*
      * Must wait >= 200 us if reference has to be switched to VSS
-     * Must wait >= 400 us if channel has to be switched to 1.1 Volt internal channel from channel with 5 Volt input
+     * Must wait >= 400 us if channel has to be switched to 1.1 volt internal channel from channel with 5 volt input
      */
     if ((ADMUX & (INTERNAL << SHIFT_VALUE_FOR_REFERENCE)) || ((ADMUX & 0x0F) != ADC_1_1_VOLT_CHANNEL_MUX)) {
-        // Switch to 1.1 Volt channel and AREF to VCC
+        // Switch to 1.1 volt channel and AREF to VCC
         ADMUX = ADC_1_1_VOLT_CHANNEL_MUX | (DEFAULT << SHIFT_VALUE_FOR_REFERENCE);
         // and wait for settling
         delayMicroseconds(400); // experimental value is >= 400 us
@@ -1504,13 +1504,13 @@ float __attribute__((weak)) getTemperature(void) {
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
     return 0.0;
 #else
-// use internal 1.1 Volt as reference
+// use internal 1.1 volt as reference
     uint8_t tOldADMUX;
 
     bool tReferenceMustBeChanged = (ADMUX & (DEFAULT << SHIFT_VALUE_FOR_REFERENCE));
     if (tReferenceMustBeChanged) {
         tOldADMUX = ADMUX;
-        // set AREF  to 1.1 Volt and wait for settling
+        // set AREF  to 1.1 volt and wait for settling
         ADMUX = ADC_TEMPERATURE_CHANNEL_MUX | (INTERNAL << SHIFT_VALUE_FOR_REFERENCE);
         delayMicroseconds(4000); // measured value is 3500 us
     }
@@ -1543,10 +1543,10 @@ void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aY
         float tTemp = getTemperature();
         dtostrf(tTemp, 4, 1, tTempString);
 
-        float tVCCVoltage = getVCCVoltage();
-        dtostrf(tVCCVoltage, 4, 2, tVCCString);
+        float tVCCvoltage = getVCCVoltage();
+        dtostrf(tVCCvoltage, 4, 2, tVCCString);
 
-        sprintf_P(tDataBuffer, PSTR("%s Volt %s\xB0" "C"), tVCCString, tTempString);
+        sprintf_P(tDataBuffer, PSTR("%s volt %s\xB0" "C"), tVCCString, tTempString);
         drawText(aXPos, aYPos, tDataBuffer, aTextSize, COLOR_BLACK, COLOR_WHITE);
     }
 }

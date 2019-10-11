@@ -420,7 +420,7 @@ void setACMode(bool aNewACMode) {
         }
     } else {
         /*
-         * DC mode here: Change AC_DC_BIAS_PIN pin to output and shorten bias to 0 Volt
+         * DC mode here: Change AC_DC_BIAS_PIN pin to output and shorten bias to 0 volt
          */
         DDRC = OUTPUT_MASK_PORTC;
         digitalWriteFast(AC_DC_BIAS_PIN, LOW);
@@ -1526,13 +1526,13 @@ void doRangeMode(BDButton * aTheTouchedButton, int16_t aValue) {
 }
 
 /*
- * step from 0 Volt to auto to manual offset
+ * step from 0 volt to auto to manual offset
  * No auto offset in AC Mode for AVR
  */
 void doOffsetMode(BDButton * aTheTouchedButton, int16_t aValue) {
     MeasurementControl.OffsetMode++;
     if (MeasurementControl.OffsetMode > OFFSET_MODE_MANUAL) {
-        // switch back from Mode Manual to mode 0 Volt and set range mode to automatic
+        // switch back from Mode Manual to mode 0 volt and set range mode to automatic
         MeasurementControl.OffsetMode = OFFSET_MODE_0_VOLT;
         setAutoRangeModeAndButtonCaption(true);
 #ifdef AVR

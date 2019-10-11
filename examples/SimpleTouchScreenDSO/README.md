@@ -25,7 +25,7 @@ This DSO needs only a standard Arduino-Uno or Arduino-Nano, a HC-05 Bluetooth mo
   - no attenuator (pin 8+9 left open).
   - passive attenuator with /1, /10, /100 attenuation (pin 8 connected to ground).
   - active attenuator (pin 9 connected to ground) - still experimental.
-- Using 1.1 Volt internal reference. 5 Volt (VCC) is also selectable and is useful if no attenuator is attached.
+- Using 1.1 volt internal reference. 5 volt (VCC) is also selectable and is useful if no attenuator is attached.
 
 - Integrated frequency generator using 16 bit Timer1. Frequency from 119 mHz (8.388 second) to 8 MHz
 
@@ -35,11 +35,11 @@ This DSO needs only a standard Arduino-Uno or Arduino-Nano, a HC-05 Bluetooth mo
 1. Arduino Nano
 2. Breadboard 400 points
 3. Resistors
-   - Resistors for the simple (0-5 Volt) version: 1x 10 kOhm, 2x 100 k, 1x 4 M or more.
-   - Resistors for the 3 range (0-110 Volt) version: 1x 2.2 kOhm, 2x 10 k, 3x 100 k, 2x 220 k, 2x 1 M, 1x 4 M or greater
+   - Resistors for the simple (0-5 volt) version: 1x 10 kOhm, 2x 100 k, 1x 4 M or more.
+   - Resistors for the 3 range (0-110 volt) version: 1x 2.2 kOhm, 2x 10 k, 3x 100 k, 2x 220 k, 2x 1 M, 1x 4 M or greater
 4. Capacitors
-   - Capacitors for the simple version: 1x 100 nF / 10 Volt (or more)
-   - Capacitors for the 3 range (0-110 Volt) version: 4x 100 nF / 100 Volt (or more), 6.8 uF
+   - Capacitors for the simple version: 1x 100 nF / 10 volt (or more)
+   - Capacitors for the 3 range (0-110 volt) version: 4x 100 nF / 100 volt (or more), 6.8 uF
 5. Jumper wires
 
 Optional for Bluetooth connection
@@ -93,19 +93,19 @@ The stack size is needed for testing different buffer size values during develop
   - **%100** -> Pin A2 with an 1 to 100 attenuator.
   - **CH 3** -> sequences through the channels **CH 4**, **Temp** (internal temperature sensor), **VRef** (internal reference).
 - **Frequency Generator** -> go to frequency generator page.
-- Range - There a 3 ranges, 0-2.5 , 0-5 and 0-10 Volt
+- Range - There a 3 ranges, 0-2.5 , 0-5 and 0-10 volt
   - **Range auto** -> let the DSO choose the range based on the minimum and maximum values of the last measurement.
   - **Range man** -> select the range by **vertical swiping** on the chart page.
 - Offset
-  - **Offset 0V** -> Range starts at 0 Volt.
+  - **Offset 0V** -> Range starts at 0 volt.
   - **Offset auto** -> For small signals with a high DC offset. If range is not the lowest one and the signal has a DC offset, then a lower range is choosen and the display offset is adapted to show the complete signal
   - **Offset man**
 - **DC** / **AC**
   - Since the internal ADC converter has only a DC input, **AC** offsets the inputs DC value to 1/2 reference using Arduino pin A5 and compensates this offset for the display.
     Therefore you must apply the signal using a capacitor!
-- Reference Voltage
-  - **Ref 1.1V** (recommended if having attenuators) -> uses the internal 1.1 Volt reference for the ADC.
-  - **Ref VCC** -> uses VCC (5 Volt supply) as reference for the ADC.
+- Reference voltage
+  - **Ref 1.1V** (recommended if having attenuators) -> uses the internal 1.1 volt reference for the ADC.
+  - **Ref VCC** -> uses VCC (5 volt supply) as reference for the ADC.
 
 ## INfO LINE REFERENCE
 ### SHORT INFO
@@ -117,10 +117,10 @@ The stack size is needed for testing different buffer size values during develop
 First line
 - Timebase for div (31 pixel)
 - Slope of trigger
-- Input channel: (0-5), T->AVR-temperature, R->1.1 Volt-internal-reference G->internal-ground
+- Input channel: (0-5), T->AVR-temperature, R->1.1 volt-internal-reference G->internal-ground
 - Minimum, arithmetic-average, max and peak to peak voltage of actual chart (In hold mode, chart is longer than display!)
 - Trigger level
-- Reference used: 5=5 Volt,  1=1.1 Volt-internal-reference
+- Reference used: 5=5 volt,  1=1.1 volt-internal-reference
 
 Second line
 - Frequency

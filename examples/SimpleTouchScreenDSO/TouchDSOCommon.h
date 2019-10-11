@@ -121,26 +121,26 @@ extern const char * const ChannelDivByButtonStrings[NUMBER_OF_CHANNELS_WITH_FIXE
  * PRESCALE8 has pretty good quality, but PRESCALE16 (496 us/div) performs slightly better.
  *
  * Different Acquisition modes depending on Timebase:
- * Mode ultrafast  10-50us - ADC free running with PRESCALE4 - one loop for read and store 10 bit => needs double buffer space - interrupts blocked for duration of loop
- * Mode fast       101-201us - ADC free running with PRESCALE8 - one loop for read but pre process 10 -> 8 Bit and store - interrupts blocked for duration of loop
- * mode ISR        >= 496us  - ADC generates Interrupts. Waits free running with PRESCALE16 for trigger then switch to timer0 based timebase
+ * Mode ultrafast  10-50 us - ADC free running with PRESCALE4 - one loop for read and store 10 bit => needs double buffer space - interrupts blocked for duration of loop
+ * Mode fast       101-201 us - ADC free running with PRESCALE8 - one loop for read but pre process 10 -> 8 Bit and store - interrupts blocked for duration of loop
+ * mode ISR        >= 496 us  - ADC generates Interrupts. Waits free running with PRESCALE16 for trigger then switch to timer0 based timebase
  */
 
 #define HORIZONTAL_GRID_COUNT 6
 /**
  * Formula for Grid Height is:
- * 5 Volt Reference, 10 bit Resolution => 1023/5 = 204.6 Pixel per Volt
- * 1 Volt per Grid -> 204,6 pixel. With scale (shift) 2 => 51.15 pixel.
- * 0.5 Volt -> 102.3 pixel with scale (shift) 1 => 51.15 pixel
- * 0.2 Volt -> 40.96 pixel
- * 1.1 Volt Reference 1023/1.1 = 930 Pixel per Volt
- * 0.2 Volt -> 186 pixel with scale (shift) 2 => 46.5 pixel
- * 0.1 Volt -> 93 pixel with scale (shift) 1 => 46.5 pixel
- * 0.05 Volt -> 46.5 pixel
+ * 5 volt Reference, 10 bit Resolution => 1023/5 = 204.6 Pixel per volt
+ * 1 volt per Grid -> 204,6 pixel. With scale (shift) 2 => 51.15 pixel.
+ * 0.5 volt -> 102.3 pixel with scale (shift) 1 => 51.15 pixel
+ * 0.2 volt -> 40.96 pixel
+ * 1.1 volt Reference 1023/1.1 = 930 Pixel per volt
+ * 0.2 volt -> 186 pixel with scale (shift) 2 => 46.5 pixel
+ * 0.1 volt -> 93 pixel with scale (shift) 1 => 46.5 pixel
+ * 0.05 volt -> 46.5 pixel
  */
 
-#define HORIZONTAL_GRID_HEIGHT_1_1V_SHIFT8 11904 // 46.5*256 for 0.05 to 0.2 Volt/div for 6 divs per screen
-#define HORIZONTAL_GRID_HEIGHT_2V_SHIFT8 6554 // 25.6*256 for 0.05 to 0.2 Volt/div for 10 divs per screen
+#define HORIZONTAL_GRID_HEIGHT_1_1V_SHIFT8 11904 // 46.5*256 for 0.05 to 0.2 volt/div for 6 divs per screen
+#define HORIZONTAL_GRID_HEIGHT_2V_SHIFT8 6554 // 25.6*256 for 0.05 to 0.2 volt/div for 10 divs per screen
 #define ADC_CYCLES_PER_CONVERSION 13
 #define TIMING_GRID_WIDTH 31 // with 31 instead of 32 the values fit better to 1-2-5 timebase scale
 #define TIMEBASE_NUMBER_OF_ENTRIES 15 // the number of different timebases provided
