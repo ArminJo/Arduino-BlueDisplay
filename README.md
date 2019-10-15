@@ -33,14 +33,14 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 - Debug messages as toasts.
 
 ## Examples
-Before using the examples, take care that the BT-module (e.g. the the HC-05 module) is connected to your Android device and is visible in the Bluetooth Settings.
+Before using the examples, take care that the Bluetooth-module (e.g. the the HC-05 module) is connected to your Android device and is visible in the Bluetooth Settings.
 
 All examples initially use the baudrate of 9600. Especially the SimpleTouchScreenDSO example will run smoother with a baudrate of 115200.<br/>
-For this, change the example baudrate by deactivating the line `#define HC_05_BAUD_RATE BAUD_9600` and activating `#define HC_05_BAUD_RATE BAUD_115200`.<br/>
-**AND** change the BT-Module baudrate e.g. by using the HC_05_Initialization.ino example.
+For this, change the example baudrate by deactivating the line `#define BLUETOOTH_BAUD_RATE BAUD_9600` and activating `#define BLUETOOTH_BAUD_RATE BAUD_115200`.<br/>
+**AND** change the Bluetooth-module baudrate e.g. by using the BTModuleProgrammer.ino example.
 
 
-- HC_05_Initialization - Simple helper program to configure your HC-05 (or JDY-31) modules name and default baudrate.
+- BTModuleProgrammer - Simple helper program to configure your HC-05 or JDY-31 modules name and default baudrate with a serial monitor.
 - BlueDisplayBlink - Simple example to check your installation.
 - BlueDisplayExample - More elaborated example to shoe more features of the BlueDisplay library.
 - RcCarControl - Example of controlling a RC-car by smartphone accelerometer sensor

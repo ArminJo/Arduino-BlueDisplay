@@ -1,6 +1,8 @@
 /*
- * BT_Initialization.cpp
- * Program for easy changing name of HC-05 or JDY-31 Bluetooth modules and to set baudrate to 115200
+ * BTModuleProgrammer.cpp
+ * Program for easy changing name of HC-05 or JDY-31 Bluetooth modules and to set baudrate to 115200.
+ *
+ * The baudrate is specified on line 84 and 85, change these lines if you need.
  *
  * Serial is used for connection with host.
  * SoftwareSerial is used for connection with BT module.
@@ -89,7 +91,7 @@ char StringBufferForModuleName[] = "AT+NAME=                    ";
 #define INDEX_OF_JDY31_NAME_IN_BUFFER 7
 
 char StringBuffer[1400];
-uint16_t readModuleResponseToBuffer(char * aStringBuffer);
+uint16_t readModuleResponseToBuffer(char * aStringBufferPtr);
 uint16_t sendWaitAndReceive(const char * tATString);
 void waitAndEmptySerialReceiveBuffer(uint16_t aDelayMillis);
 uint16_t readStringWithTimeoutFromSerial(char* aStringBufferPtr, uint16_t aTimeoutSeconds);
@@ -156,10 +158,10 @@ void loop() {
         _SFR_BYTE(TIMSK0) |= _BV(TOIE0);
         // read AT command and send it to the module
         uint8_t tLength = readStringWithTimeoutFromSerial(StringBuffer, 1);
-        Serial.print(F("Length="));
-        Serial.print(tLength);
-        Serial.print(F(" Command="));
-        Serial.println(StringBuffer);
+//        Serial.print(F("Length="));
+//        Serial.print(tLength);
+//        Serial.print(F(" Command="));
+//        Serial.println(StringBuffer);
         if (tLength >= 2 && StringBuffer[0] == 'A' && StringBuffer[1] == 'T') {
             Serial.println(F("Send manual AT command now."));
             sendWaitAndReceive(StringBuffer);
@@ -383,10 +385,9 @@ bool setupJDY_31() {
  * Try for 100 milliseconds to read input from software serial.
  * millis() interrupt is disabled here!
  */
-uint16_t readModuleResponseToBuffer(char * aStringBuffer) {
+uint16_t readModuleResponseToBuffer(char * aStringBufferPtr) {
     uint16_t tDelayCount = 0;
     uint16_t tReturnedBytes = 0;
-    uint16_t tStringIndex = 0;
 // wait for 300 milliseconds to read input
     while (tDelayCount < 500) {
         int tReturnedBytesPerRead = BTModuleSerial.available();
@@ -402,25 +403,26 @@ uint16_t readModuleResponseToBuffer(char * aStringBuffer) {
                  * Convert special character
                  */
                 if (tChar >= ' ') {
-                    StringBuffer[tStringIndex] = tChar;
+                    *aStringBufferPtr++ = tChar;
                 } else if (tChar == '\r') {
-                    StringBuffer[tStringIndex] = '\\';
-                    tStringIndex++;
-                    StringBuffer[tStringIndex] = 'r';
+                    *aStringBufferPtr++ = '\\';
+                    *aStringBufferPtr++ = 'r';
                 } else if (tChar == '\n') {
-                    StringBuffer[tStringIndex] = '\\';
-                    tStringIndex++;
-                    StringBuffer[tStringIndex] = 'n';
+                    *aStringBufferPtr++ = '\\';
+                    *aStringBufferPtr++ = 'n';
                 }
-                if (tStringIndex < (sizeof(StringBuffer) - 1)) {
-                    tStringIndex++;
+                /*
+                 * Let space for 2 chars
+                 */
+                while (aStringBufferPtr > &StringBuffer[(sizeof(StringBuffer) - 2)]) {
+                    aStringBufferPtr--;
                 }
             }
         }
         delayMicroseconds(1000);
         tDelayCount++;
     }
-    StringBuffer[tStringIndex] = '\0';
+    *aStringBufferPtr = '\0';
 
     return tReturnedBytes;
 }
