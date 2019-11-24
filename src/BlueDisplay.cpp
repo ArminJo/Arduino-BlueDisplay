@@ -929,7 +929,7 @@ uint16_t BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStri
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
     strncpy_P(tStringBuffer, tPGMString, tTextLength);
 #ifdef LOCAL_DISPLAY_EXISTS
-    tRetValue = LocalDisplay.drawTextPGM(aPosX, aPosY - getTextAscend(aTextSize), aPGMString, getLocalTextSize(aTextSize), aFGColor,
+    tRetValue = LocalDisplay.drawTextPGM(aPosX, aPosY - getTextAscend(aTextSize), tPGMString, getLocalTextSize(aTextSize), aFGColor,
             aBGColor);
 #endif
     if (USART_isBluetoothPaired()) {

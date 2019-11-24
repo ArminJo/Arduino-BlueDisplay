@@ -1,15 +1,16 @@
-# BlueDisplay Library for Arduino
-
+# [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
+### Version 1.0.1
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
 [![Build Status](https://travis-ci.org/ArminJo/Arduino-BlueDisplay.svg?branch=master)](https://travis-ci.org/ArminJo/Arduino-BlueDisplay)
 [![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2FArminJo%2FArduino-BlueDisplay)](https://github.com/brentvollebregt/hit-counter)
 
-This library enables an Android smartphone or tablet to act as a graphical display for your Arduino.
+This library enables an Android smartphone / tablet to act as a graphical display for your Arduino.
 
 ## SUMMARY
-Let your Arduino program create a GUI with **Graphics, Text, Buttons and Sliders** on your smartphone or tablet by simply
-connecting a HC-05 to the rx/tx pins of your Arduino.
+Let your Arduino program create a GUI with **Graphics, Text, Buttons and Sliders** on your smartphone / tablet by simply
+connecting a HC-05 to the rx/tx pins of your Arduino. 
+Directly connecting the Arduino with an USB cable and an USB-OTG adapter to your smartphone is also supported.<br/>
 The App receives draw requests from Arduino over Bluetooth and renders it.
 GUI callback, touch and sensor events are sent back to the Arduino.
 **No Android programming needed!**
@@ -28,7 +29,8 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 - Automatic and manually scaling of display region.
 - Easy mapping of UTF-8 characters like Ohm, Celsius etc..
 - Up to 115200 Baud using HC-05 modules.
-- Local display of received and sent commands for debug purposes.
+- USB OTG connection can be used instead of Bluetooth.
+- Local display of received and sent commands for debugging purposes.
 - Hex and ASCII output of received Bluetooth data at log level verbose.
 - Debug messages as toasts.
 

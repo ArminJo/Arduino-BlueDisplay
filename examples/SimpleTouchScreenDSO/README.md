@@ -1,13 +1,14 @@
 # Arduino-Simple-DSO
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2FArminJo%2FArduino-Simple-DSO)](https://github.com/brentvollebregt/hit-counter)
 
 ## SUMMARY
 This DSO needs only a standard Arduino-Uno or Arduino-Nano, a HC-05 Bluetooth module a few resistors and capacitators and this software.
 
 | Simple DSO with no attenuator on breadboard | DSO Chart screen |
 | :-: | :-: |
-| ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/media/ArduinoDSO_Simple.jpg) | ![DSO chart screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/media/Chart.jpg) |
+| ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/ArduinoDSO_simple.jpg) | ![DSO chart screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart.jpg) |
 
 ## Features
 - 150 kSamples per second with good quality.
@@ -107,7 +108,7 @@ The stack size is needed for testing different buffer size values during develop
   - **Ref 1.1V** (recommended if having attenuators) -> uses the internal 1.1 volt reference for the ADC.
   - **Ref VCC** -> uses VCC (5 volt supply) as reference for the ADC.
 
-## INfO LINE REFERENCE
+## INFO LINE REFERENCE
 ### SHORT INFO
 - Arithmetic-average and peak to peak voltage of actual chart (In analyze mode, chart is longer than the display!)
 - Frequency
@@ -150,23 +151,30 @@ and waveform frequency is not stable and decreased, since not all TIMER1 OVERFLO
 
 # SCREENSHOTS
 DSO start screen
-![DSO start screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/media/Welcome.jpg)
+![DSO start screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Welcome.jpg)
 
 | DSO Chart screen | DSO Chart screen with long info |
 | :-: | :-: |
-| ![DSO chart screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/media/Chart.jpg) | ![DSO chart screen with long info](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/media/Chart_Long_Info.jpg) |
+| ![DSO chart screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart.jpg) | ![DSO chart screen with long info](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart_Long_Info.jpg) |
 | DSO settings menu | DSO frequency / waveform generator menu |
-| ![DSO settings menu](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/media/Settings_Passive_Attenuator.jpg) | ![Frequency / waveform generator menu](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/media/Frequency.jpg) |
+| ![DSO settings menu](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Settings_Passive_Attenuator.jpg) | ![Frequency / waveform generator menu](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Frequency.jpg) |
 | ![DSO at work](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/DSO+Tablet.jpg) |  |
 
 # SCHEMATICS
 | SIMPLE 1 RANGE VERSION | 3 RANGE VERSION |
 | :-: | :-: |
-| ![Fritzing schematic](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_Simple_Schaltplan.png) | ![Fritzing schematic](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_Schaltplan.png) |
-| ![Fritzing breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_Simple_Steckplatine.png) | ![Fritzing breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_Steckplatine.png) |
-| ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/media/ArduinoDSO_Simple.jpg) | ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/media/ArduinoDSO.jpg) |
+| ![Fritzing schematic](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_simple_Schaltplan.png) | ![Fritzing schematic](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_BT_full_Schaltplan.png) |
+| ![Fritzing breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_simple_Steckplatine.png) | ![Fritzing breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_BT_full_Steckplatine.png) |
+| ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/ArduinoDSO_simple.jpg) | ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/ArduinoDSO.jpg) |
 
 # Revision History
-### Version 1.0.0
-Initial Arduino library version
+### Version 3.2 - 11/2019
+- Clear data buffer at start and at switching inputs.
+- Multiline button caption.
+
+### Version 3.1
+- Stop response improved for fast mode.
+- Value computation for ultra fast modes fixed.
+- millis() timer compensation formula fixed.
+- AC/DC button and info line handling improved.
 
