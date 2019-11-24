@@ -114,6 +114,7 @@ void setup() {
 
     if (digitalRead(JDY_31_SELECT_PIN) != LOW) {
         // Time to release key button for HC-05
+        Serial.println(F("Give 3 seconds for HC-05 module key release."));
         delay(3000);
     }
 
@@ -235,7 +236,7 @@ void doProgramModules() {
     Serial.println(F("- Connect another board."));
     Serial.println(F("- Press reset for a new try."));
     Serial.println(F("- Enter \"AT+<Command>\"."));
-
+    waitAndEmptySerialReceiveBuffer(1);
 }
 
 void delayMilliseconds(unsigned int aMillis) {
@@ -259,10 +260,9 @@ bool setupHC_05() {
         Serial.println(F("Get current baud"));
         sendWaitAndReceive("AT+UART");
 
-        Serial.setTimeout(20000);
-        Serial.println(F("Enter new module name to reprogram or empty string to skip - Timeout is 20 seconds"));
-        waitAndEmptySerialReceiveBuffer(3); // read 3 character at 9600
-        uint8_t tLenght = readStringWithTimeoutFromSerial(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER], 20);
+        Serial.println(F("Enter new module name to reprogram or empty string to skip - Timeout is 60 seconds"));
+        waitAndEmptySerialReceiveBuffer(3); // 3 ms is sufficient for reading 3 character at 9600
+        uint8_t tLenght = readStringWithTimeoutFromSerial(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER], 60);
         if (tLenght > 0) {
             Serial.println();
             Serial.print(F("Enter any character to set name of the module to "));
@@ -294,6 +294,7 @@ bool setupHC_05() {
             sendWaitAndReceive("AT+UART=" MY_HC05_BAUDRATE ",0,0");
 
             Serial.println(F("Successful programmed module."));
+            waitAndEmptySerialReceiveBuffer(1);
             return true;
         }
     } else {
@@ -325,10 +326,9 @@ bool setupJDY_31() {
         Serial.println(F("Get current name"));
         sendWaitAndReceive("AT+NAME");
 
-        Serial.setTimeout(20000);
-        Serial.println(F("Enter new module name to reprogram or empty string to skip - Timeout is 20 seconds"));
-        waitAndEmptySerialReceiveBuffer(3); // read 3 character at 9600
-        uint8_t tLenght = readStringWithTimeoutFromSerial(&StringBufferForModuleName[INDEX_OF_JDY31_NAME_IN_BUFFER], 20);
+        Serial.println(F("Enter new module name to reprogram or empty string to skip - Timeout is 60 seconds"));
+        waitAndEmptySerialReceiveBuffer(3); // 3 ms is sufficient for reading 3 character at 9600
+        uint8_t tLenght = readStringWithTimeoutFromSerial(&StringBufferForModuleName[INDEX_OF_JDY31_NAME_IN_BUFFER], 60);
         if (tLenght > 0) {
             Serial.println();
             Serial.print(F("Enter any character to set name of the module to "));

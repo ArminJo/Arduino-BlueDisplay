@@ -35,9 +35,9 @@
 #include "BlueDisplay.h"
 
 // Change this if you have programmed the HC-05 module for another baud rate
-#ifndef HC_05_BAUD_RATE
-//#define HC_05_BAUD_RATE BAUD_115200
-#define HC_05_BAUD_RATE BAUD_9600
+#ifndef BLUETOOTH_BAUD_RATE
+//#define BLUETOOTH_BAUD_RATE BAUD_115200
+#define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
 #define DISPLAY_WIDTH 320
@@ -61,7 +61,7 @@ void setup() {
     // Initialize the LED pin as output.
     pinMode(LED_BUILTIN, OUTPUT);
 
-    initSimpleSerial(HC_05_BAUD_RATE);
+    initSimpleSerial(BLUETOOTH_BAUD_RATE);
 
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
