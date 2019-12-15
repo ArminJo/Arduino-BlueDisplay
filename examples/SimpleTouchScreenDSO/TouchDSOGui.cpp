@@ -500,7 +500,7 @@ BDButton TouchButtonTriggerMode;
 BDButton TouchButtonTriggerDelay;
 BDButton TouchButtonChartHistoryOnOff;
 BDButton TouchButtonSlope;
-char SlopeButtonString[] = "Slope A";
+char SlopeButtonString[] = "Slope\nascending";
 
 BDButton TouchButtonChannels[NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR];
 BDButton TouchButtonChannelSelect;
@@ -536,13 +536,13 @@ const char * const ChannelDivByButtonStrings[NUMBER_OF_CHANNELS_WITH_FIXED_ATTEN
 BDButton TouchButtonChannelMode;
 
 BDButton TouchButtonAutoOffsetMode;
-const char AutoOffsetButtonStringMan[] PROGMEM = "Offset man";
-const char AutoOffsetButtonStringAuto[] PROGMEM = "Offset auto";
-const char AutoOffsetButtonString0[] PROGMEM = "Offset 0V";
+const char AutoOffsetButtonStringMan[] PROGMEM = "Offset\nman";
+const char AutoOffsetButtonStringAuto[] PROGMEM = "Offset\nauto";
+const char AutoOffsetButtonString0[] PROGMEM = "Offset\n0V";
 
 BDButton TouchButtonAutoRangeOnOff;
-const char AutoRangeButtonStringAuto[] PROGMEM = "Range auto";
-const char AutoRangeButtonStringManual[] PROGMEM = "Range man";
+const char AutoRangeButtonStringAuto[] PROGMEM = "Range\nauto";
+const char AutoRangeButtonStringManual[] PROGMEM = "Range\nman";
 
 BDButton TouchButtonSettingsPage;
 BDButton TouchButtonFrequencyPage;
@@ -619,9 +619,8 @@ void initDSOGUI(void) {
     setSlopeButtonCaption();
 
 // Back button for sub pages
-    TouchButtonBack.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
-            F("Back"),
-            TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doDefaultBackButton);
+    TouchButtonBack.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL, F("Back"),
+    TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doDefaultBackButton);
 
 // 2. row
     tPosY += SETTINGS_PAGE_ROW_INCREMENT;
@@ -1219,9 +1218,11 @@ void setChannelButtonsCaption(void) {
 void setSlopeButtonCaption(void) {
     uint8_t tChar;
     if (MeasurementControl.TriggerSlopeRising) {
-        tChar = 'A'; // 0xD1; //ascending
+        tChar = 'a'; // 0xD1; //ascending
+        SlopeButtonString[SLOPE_STRING_INDEX + 1] = 's'; // for ascending
     } else {
-        tChar = 'D'; // 0xD2; //descending
+        tChar = 'd'; // 0xD2; //descending
+        SlopeButtonString[SLOPE_STRING_INDEX + 1] = 'e'; // for decending
     }
     SlopeButtonString[SLOPE_STRING_INDEX] = tChar;
     TouchButtonSlope.setCaption(SlopeButtonString, (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS));
@@ -1232,19 +1233,19 @@ void setTriggerModeButtonCaption(void) {
 // switch statement code is 12 bytes shorter here
     switch (MeasurementControl.TriggerMode) {
     case TRIGGER_MODE_AUTOMATIC:
-        tCaption = PSTR("Trigger auto");
+        tCaption = PSTR("Trigger\nauto");
         break;
     case TRIGGER_MODE_MANUAL_TIMEOUT:
-        tCaption = PSTR("Trigger man\ntimeout");
+        tCaption = PSTR("Trigger\nman timeout");
         break;
     case TRIGGER_MODE_MANUAL:
-        tCaption = PSTR("Trigger man");
+        tCaption = PSTR("Trigger\nman");
         break;
     case TRIGGER_MODE_FREE:
-        tCaption = PSTR("Trigger free");
+        tCaption = PSTR("Trigger\nfree");
         break;
     default:
-        tCaption = PSTR("Trigger ext");
+        tCaption = PSTR("Trigger\next");
         break;
     }
     TouchButtonTriggerMode.setCaptionPGM(tCaption, (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS));
@@ -1286,7 +1287,7 @@ void setACModeButtonCaption(void) {
 
 #ifdef AVR
 void setTriggerDelayCaption(void) {
-    strcpy_P(&sStringBuffer[0], PSTR("Trigger delay\n"));
+    strcpy_P(&sStringBuffer[0], PSTR("Trigger\nset delay"));
     if (MeasurementControl.TriggerDelayMode != TRIGGER_DELAY_NONE) {
         printfTriggerDelay(&sStringBuffer[14], MeasurementControl.TriggerDelayMillisOrMicros);
     }
@@ -1592,6 +1593,8 @@ void doChannelSelect(BDButton * aTheTouchedButton, int16_t aValue) {
         }
         setChannel(tNewChannelValue);
     }
+    clearDataBuffer();
+
     /*
      * Refresh page if necessary
      */

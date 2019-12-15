@@ -32,6 +32,10 @@
 #include <Arduino.h>
 #include "BlueDisplay.h"
 
+#if !defined(va_start)
+#include <cstdarg> // for va_start, va_list etc.
+#endif
+
 // definitions from <wiring_private.h>
 #ifndef cbi
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
@@ -60,19 +64,19 @@ bool USART_isBluetoothPaired(void) {
     }
     return false;
 }
-#endif
+#endif // defined(LOCAL_DISPLAY_EXISTS) && defined(REMOTE_DISPLAY_SUPPORTED)
 
 #ifdef USE_SIMPLE_SERIAL
-#ifdef LOCAL_DISPLAY_EXISTS
+  #ifdef LOCAL_DISPLAY_EXISTS
 void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin) {
     if (aUsePairedPin) {
         pinMode(PAIRED_PIN, INPUT);
     }
-#else
+  #else
 void initSimpleSerial(uint32_t aBaudRate) {
-#endif
+  #endif // LOCAL_DISPLAY_EXISTS
     uint16_t baud_setting;
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
+  #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
     // Use TX1 on MEGA and on Leonardo, which has no TX0
     UCSR1A = 1 << U2X1;// Double Speed Mode
     // Exact value = 17,3611 (- 1) for 115200  2,1%
@@ -87,7 +91,7 @@ void initSimpleSerial(uint32_t aBaudRate) {
 
     // enable: TX, RX, RX Complete Interrupt
     UCSR1B = (1 << RXEN1) | (1 << TXEN1) | (1 << RXCIE1);
-#else
+  #else
     UCSR0A = 1 << U2X0; // Double Speed Mode
     // Exact value = 17,3611 (- 1) for 115200  2,1%
     // 8,68 (- 1) for 230400 8,5% for 8, 3.7% for 9
@@ -101,7 +105,7 @@ void initSimpleSerial(uint32_t aBaudRate) {
 
     // enable: TX, RX, RX Complete Interrupt
     UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
-#endif
+  #endif // defined(__AVR_ATmega1280__) || ...
     remoteEvent.EventType = EVENT_NO_EVENT;
     remoteTouchDownEvent.EventType = EVENT_NO_EVENT;
 }
@@ -111,18 +115,18 @@ void initSimpleSerial(uint32_t aBaudRate) {
  */
 void sendUSART(char aChar) {
     // wait for buffer to become empty
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
+  #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
     // Use TX1 on MEGA and on Leonardo, which has no TX0
         while (!((UCSR1A) & (1 << UDRE1))) {
             ;
         }
         UDR1 = aChar;
-#else
+  #else
     while (!((UCSR0A) & (1 << UDRE0))) {
         ;
     }
     UDR0 = aChar;
-#endif // Atmega...
+  #endif // Atmega...
 }
 
 //void USART_send(char aChar) {
@@ -218,6 +222,8 @@ void sendUSART5Args(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, ui
     *tBufferPointer++ = aColor;
     sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], 14, NULL, 0);
 }
+
+
 
 /**
  *

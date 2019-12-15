@@ -24,16 +24,22 @@
 #ifndef SERVOEASING_H_
 #define SERVOEASING_H_
 
+// @formatter:off
 /*  *****************************************************************************************************************************
  *  To access the library files from your sketch, you have to first use `Sketch/Show Sketch Folder (Ctrl+K)` in the Arduino IDE.
  *  Then navigate to the parallel `libraries` folder and select the library you want to access.
  *  The library files itself are located in the `src` sub-directory.
  *  If you did not yet store the example as your own sketch, then with Ctrl+K you are instantly in the right library folder.
  *  *****************************************************************************************************************************/
+
+
 /*
  * For use with e.g. the Adafruit PCA9685 16-Channel Servo Driver aOffUnits.
+ * One PCA9685 has 16 outputs. You must modify MAX_EASING_SERVOS below, if you have more than one PCA9685 attached!
  */
 //#define USE_PCA9685_SERVO_EXPANDER
+
+
 /*
  * If you have only one or two servos, then you can save program space by defining symbol `USE_LEIGHTWEIGHT_SERVO_LIB`.
  * This saves 742 bytes FLASH and 42 bytes RAM.
@@ -42,6 +48,8 @@
  * If not using the Arduino IDE take care that Arduino Servo library sources are not compiled / included in the project.
  */
 //#define USE_LEIGHTWEIGHT_SERVO_LIB
+
+
 #if ( defined(ESP8266) || defined(ESP32) || defined(__STM32F1__)) && defined(USE_LEIGHTWEIGHT_SERVO_LIB)
 #error "No Lightweight Servo Library available (and needed) for ESP boards"
 #endif
@@ -59,35 +67,45 @@
  *
  * If you do not need these functions, you may define MAX_EASING_SERVOS as 1
  ****************************************************************************************/
-#if defined(USE_PCA9685_SERVO_EXPANDER) || defined(USE_LEIGHTWEIGHT_SERVO_LIB)
+#if !defined(USE_PCA9685_SERVO_EXPANDER) && !defined(USE_LEIGHTWEIGHT_SERVO_LIB)
+  #if defined(ESP32)
+#include <ESP32Servo.h>
+  #else
+#include <Servo.h>
+  #endif // defined(ESP32)
 
-#if defined(USE_PCA9685_SERVO_EXPANDER)
-#include <Wire.h>
-#ifndef MAX_EASING_SERVOS
-#define MAX_EASING_SERVOS 16 // One PCA9685 has 16 outputs. You must MODIFY this, if you have more than one PCA9685 attached!
-#endif
-
-#elif defined(USE_LEIGHTWEIGHT_SERVO_LIB)
-#include "LightweightServo.h"
-#ifndef MAX_EASING_SERVOS
-#define MAX_EASING_SERVOS 2 // default value for UNO etc.
-#endif
-#endif
+  #ifndef MAX_EASING_SERVOS
+    #ifdef MAX_SERVOS
+#define MAX_EASING_SERVOS MAX_SERVOS // =12 use default value from Servo.h for UNO etc.
+    #else
+#define MAX_EASING_SERVOS 12 // just take default value from Servo.h for UNO etc.
+    #endif
+  #endif
 
 #else  // defined(USE_PCA9685_SERVO_EXPANDER) || defined(USE_LEIGHTWEIGHT_SERVO_LIB)
-#if defined(ESP32)
-#include <ESP32Servo.h>
-#else
-#include <Servo.h>
-#endif
+  #if defined(USE_PCA9685_SERVO_EXPANDER)
+    #ifndef MAX_EASING_SERVOS
+#define MAX_EASING_SERVOS 16 // One PCA9685 has 16 outputs. You must MODIFY this, if you have more than one PCA9685 attached!
+    #endif // defined(USE_PCA9685_SERVO_EXPANDER)
 
-#ifndef MAX_EASING_SERVOS
-#ifdef MAX_SERVOS
-#define MAX_EASING_SERVOS MAX_SERVOS // =12 use default value from Servo.h for UNO etc.
-#else
-#define MAX_EASING_SERVOS 12 // just take default value from Servo.h for UNO etc.
-#endif
-#endif
+#include <Wire.h>
+// PCA9685 works with up to 1 MHz I2C frequency
+    #if defined(ESP32)
+// The ESP32 I2C interferes with the Ticker / Timer library used.
+// Even with 100000 we have some dropouts / NAK's because of sending address again instead of first data.
+#define I2C_CLOCK_FREQUENCY 100000 // 200000 does not work for my ESP32 module together with the timer :-(
+    #elif defined(ESP8266)
+#define I2C_CLOCK_FREQUENCY 400000 // 400000 is the maximum for 80 MHz clocked ESP8266 (I measured real 330000 Hz for this setting)
+    #else
+#define I2C_CLOCK_FREQUENCY 800000 // 1000000 does not work for my Arduino Nano, maybe because of parasitic breadboard capacities
+    #endif
+
+  #elif defined(USE_LEIGHTWEIGHT_SERVO_LIB)
+#include "LightweightServo.h"
+    #ifndef MAX_EASING_SERVOS
+#define MAX_EASING_SERVOS 2 // default value for UNO etc.
+    #endif
+  #endif // defined(USE_PCA9685_SERVO_EXPANDER)
 #endif // defined(USE_PCA9685_SERVO_EXPANDER) || defined(USE_LEIGHTWEIGHT_SERVO_LIB)
 
 #if ! defined(REFRESH_INTERVAL)
@@ -102,24 +120,62 @@
  * It disables the SINE, CIRCULAR, BACK, ELASTIC and BOUNCE easings.
  * The saving comes mainly from avoiding the sin() cos() sqrt() and pow() library functions in this code.
  * If you need only one complex easing function and want to save space,
- * you can specify it any time as a user functions. See EaseQuadraticInQuarticOut() function in AsymmetricEasing example line 195.
+ * you can specify it any time as a user functions. See EaseQuadraticInQuarticOut() function in AsymmetricEasing example line 206.
  */
 //#define KEEP_SERVO_EASING_LIBRARY_SMALL
-//
+
+
 /*
  * If you need only the linear movement you may define `PROVIDE_ONLY_LINEAR_MOVEMENT`. This saves additional 1540 Bytes FLASH.
  */
 //#define PROVIDE_ONLY_LINEAR_MOVEMENT
-//
+
+
 // Enable this if you want to measure timing by toggling pin12 on an arduino
 //#define MEASURE_TIMING
-//
+
+
 // Enable this to generate output for Arduino Serial Plotter (Ctrl-Shift-L)
 //#define PRINT_FOR_SERIAL_PLOTTER
-//
-#define VERSION_SERVO_EASING 1.4.1
+
 
 /*
+ * Enable this to see information on each call.
+ * Since there should be no library which uses Serial, enable TRACE only for development purposes.
+ */
+//#define TRACE
+//#define DEBUG
+// Propagate debug level
+#ifdef TRACE
+#define DEBUG
+#endif
+#ifdef DEBUG
+#define INFO
+#endif
+#ifdef INFO
+#define WARN
+#endif
+#ifdef WARN
+#define ERROR
+#endif
+
+#define VERSION_SERVO_EASING 1.4.3
+
+// @formatter:on
+
+/*
+ * Version 1.4.4
+ * - New PCA9685_ExpanderFor32Servos example.
+ *
+ * Version 1.4.3 - 12/2019
+ * - Improved detach() handling.
+ * - Initialize mSpeed explicitly to 0 in constructor. On an ESP8266 it was NOT initialized to 0 :-(.
+ *
+ * Version 1.4.2 - 11/2019
+ * - Improved INVALID_SERVO handling.
+ * - Speed 0 (not initialized) handling.
+ * - Fixed bug in ThreeServos example.
+ *
  * Version 1.4.1 - 11/2019
  * - Improved documentation and definitions for continuous rotating servo. Thanks to Eebel!
  * - Improved support and documentation for generating Arduino Serial Plotter output.
@@ -157,26 +213,6 @@
  * - added compile switch PROVIDE_ONLY_LINEAR_MOVEMENT to save additional 1500 bytes FLASH if enabled.
  * - added convenience function clipDegreeSpecial().
  */
-
-/*
- * Enable this to see information on each call.
- * Since there should be no library which uses Serial, enable TRACE only for development purposes.
- */
-//#define TRACE
-//#define DEBUG
-// Propagate debug level
-#ifdef TRACE
-#define DEBUG
-#endif
-#ifdef DEBUG
-#define INFO
-#endif
-#ifdef INFO
-#define WARN
-#endif
-#ifdef WARN
-#define ERROR
-#endif
 
 #define DEFAULT_MICROSECONDS_FOR_0_DEGREE 544
 #define DEFAULT_MICROSECONDS_FOR_180_DEGREE 2400
@@ -301,11 +337,17 @@ class ServoEasing
 public:
 
 #if defined(USE_PCA9685_SERVO_EXPANDER)
+#if defined(ARDUINO_SAM_DUE)
+    ServoEasing(uint8_t aPCA9685I2CAddress = PCA9685_DEFAULT_ADDRESS, TwoWire *aI2CClass = &Wire1);
+#else
     ServoEasing(uint8_t aPCA9685I2CAddress = PCA9685_DEFAULT_ADDRESS, TwoWire *aI2CClass = &Wire);
+#endif
+    void I2CInit();
     void PCA9685Reset();
     void PCA9685Init();
     void I2CWriteByte(uint8_t aAddress, uint8_t aData);
     void setPWM(uint16_t aOffUnits);
+    void setPWM(uint16_t aPWMOnValueAsUnits, uint16_t aPWMOffValueAsUnits);
     // main mapping function for us to PCA9685 Units (20000/4096 = 4.88 us)
     int MicrosecondsToPCA9685Units(int aMicroseconds);
 #else
@@ -395,7 +437,7 @@ public:
 #endif
     uint8_t mServoPin; // pin number or NO_SERVO_ATTACHED_PIN_NUMBER - at least needed for Lightweight Servo Lib
 
-    uint8_t mServoIndex; // Index in sServoArray
+    uint8_t mServoIndex; // Index in sServoArray or INVALID_SERVO if error while attach() or if detached
 
     uint32_t mMillisAtStartMove;
     uint16_t mMillisForCompleteMove;
@@ -413,16 +455,19 @@ public:
 };
 
 /*
- * List of all servos to enable synchronized movings
- * Servos are inserted in the order, in which they are declared
+ * Array of all servos to enable synchronized movings
+ * Servos are inserted in the order, in which they are attached
+ * I use an fixed array and not a list, since accessing an array is much easier and faster.
+ * Using an dynamic array may be possible, but in this case we must first malloc(), then memcpy() and then free(), which leads to heap fragmentation.
  */
-extern uint8_t sServoCounter;
+extern uint8_t sServoArrayMaxIndex; // maximum index of an attached servo in sServoArray[]
 extern ServoEasing * sServoArray[MAX_EASING_SERVOS];
 extern int sServoNextPositionArray[MAX_EASING_SERVOS]; // use int since we want to support negative values
 
 /*
  * Functions working on all servos in the list
  */
+void writeAllServos(int aValue);
 void setSpeedForAllServos(uint16_t aDegreesPerSecond);
 #if defined(va_arg)
 void setDegreeForAllServos(uint8_t aNumberOfValues, va_list * aDegreeValues);

@@ -32,7 +32,7 @@
 
 #include <stddef.h>
 
-#ifndef USE_STANDARD_SERIAL
+#if !defined(USE_STANDARD_SERIAL) && defined (AVR)
 // Simple serial is a simple blocking serial version without receive buffer and other overhead.
 // Using it saves up to 1250 byte FLASH and 185 byte RAM since USART is used directly
 // Simple serial on the MEGA2560 uses USART1

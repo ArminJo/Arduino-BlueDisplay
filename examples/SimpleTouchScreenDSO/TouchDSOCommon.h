@@ -17,16 +17,6 @@
 #include "FrequencyGeneratorPage.h"
 #endif
 
-// Internal version
-#define VERSION_DSO "3.1"
-/*
- * Version 3.1
- * - stop response improved for fast mode.
- * - value computation for ultra fast modes fixed.
- * - millis() timer compensation formula fixed.
- * - AC/DC button and info line handling improved.
- */
-
 #ifdef AVR
 #else
 // No PROGMEM on ARM
@@ -51,16 +41,6 @@
 
 #define DISPLAY_VALUE_FOR_ZERO (REMOTE_DISPLAY_HEIGHT - 1)
 //#define DISPLAY_VALUE_FOR_ZERO (REMOTE_DISPLAY_HEIGHT - 2) // Zero line is not exactly at bottom of display to improve readability
-
-//Line colors
-#define COLOR_VOLTAGE_PICKER COLOR_YELLOW
-#define COLOR_VOLTAGE_PICKER_SLIDER RGB(0xFF,0XFF,0xE0) // Light Yellow
-#define COLOR_TRIGGER_LINE COLOR_PURPLE
-#define COLOR_TRIGGER_SLIDER RGB(0xFF,0XF0,0xFF) // light Magenta
-
-#define COLOR_MAX_MIN_LINE COLOR_GREEN
-#define COLOR_HOR_GRID_LINE_LABEL COLOR_BLUE
-#define COLOR_HOR_GRID_LINE_LABEL_NEGATIVE COLOR_RED
 
 /*
  * CHANNEL
@@ -182,6 +162,36 @@ extern const float TimebaseExactDivValuesMicros[] PROGMEM;
 #define OFFSET_MODE_0_VOLT 0
 #define OFFSET_MODE_AUTOMATIC 1
 #define OFFSET_MODE_MANUAL 2    // not implemented for AVR Implies range mode manual.
+
+/*
+ * COLORS
+ */
+#define COLOR_BACKGROUND_DSO COLOR_WHITE
+#define COLOR_INFO_BACKGROUND RGB(0xC8,0xC8,0x00) // background for info lines or elements
+
+// Data colors
+#define COLOR_DATA_RUN COLOR_BLUE
+#define COLOR_DATA_HOLD COLOR_RED
+// to see old chart values
+#define COLOR_DATA_HISTORY RGB(0x20,0xFF,0x20)
+
+// Button colors
+#define COLOR_GUI_CONTROL COLOR_RED
+#define COLOR_GUI_TRIGGER COLOR_BLUE
+#define COLOR_GUI_SOURCE_TIMEBASE RGB(0x00,0xE0,0x00)
+
+// Line colors
+#define COLOR_VOLTAGE_PICKER COLOR_YELLOW
+#define COLOR_VOLTAGE_PICKER_SLIDER RGB(0xFF,0XFF,0xD0) // Light Yellow
+#define COLOR_TRIGGER_LINE COLOR_PURPLE
+#define COLOR_TRIGGER_SLIDER RGB(0xFF,0XE8,0xFF) // light Magenta
+#define COLOR_HOR_REF_LINE_LABEL COLOR_BLUE
+#define COLOR_MAX_MIN_LINE COLOR_GREEN
+#define COLOR_GRID_LINES RGB(0x00,0x98,0x00)
+
+// Label colors
+#define COLOR_HOR_GRID_LINE_LABEL COLOR_BLUE
+#define COLOR_HOR_GRID_LINE_LABEL_NEGATIVE COLOR_RED
 
 /*
  * GUI LAYOUT,  POSITIONS + SIZES
@@ -313,6 +323,7 @@ extern BDSlider TouchSliderVoltagePicker;
 void startAcquisition(void);
 void prepareForStart(void);
 void setChannel(uint8_t aChannel);
+void clearDataBuffer();
 
 // Stack info
 void initStackFreeMeasurement(void);

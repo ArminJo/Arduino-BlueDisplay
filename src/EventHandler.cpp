@@ -32,16 +32,16 @@
 #include "EventHandler.h"
 #include "BlueDisplay.h"
 
-#ifdef AVR
+#ifdef ARDUINO
 #include <Arduino.h> // for millis()
 #else
 #include "timing.h" // for getMillisSinceBoot()
-#ifdef USE_STM32F3_DISCO
+  #ifdef USE_STM32F3_DISCO
 #include "stm32f3_discovery.h"  // For LEDx
-#endif
+  #endif
 #include "stm32fx0xPeripherals.h" // For Watchdog_reload()
 #include <stdio.h> // for printf
-#endif
+#endif // ARDUINO
 
 #ifdef LOCAL_DISPLAY_EXISTS
 #include "ADS7846.h"
@@ -79,7 +79,7 @@ bool sDisableTouchUpOnce = false;
 bool sDisableUntilTouchUpIsDone = false;
 
 struct BluetoothEvent remoteEvent;
-#ifdef AVR
+#ifdef ARDUINO
 // Serves also as second buffer for regular events to avoid overwriting of touch down events if CPU is busy and interrupt in not enabled
 struct BluetoothEvent remoteTouchDownEvent;
 #endif
@@ -202,16 +202,16 @@ void registerSensorChangeCallback(uint8_t aSensorType, uint8_t aSensorRate, uint
  * AVR - Is not affected by overflow of millis()!
  */
 void delayMillisWithCheckAndHandleEvents(unsigned long aTimeMillis) {
-#ifdef AVR
+#ifdef ARDUINO
     unsigned long tStartMillis = millis();
     while (millis() - tStartMillis < aTimeMillis) {
-#ifndef USE_SIMPLE_SERIAL
+#if !defined(USE_SIMPLE_SERIAL) && defined (AVR)
         // check for Arduino serial - code from arduino main.cpp / main()
         if (serialEventRun) {
             serialEventRun();
         }
 #endif
-#else // AVR
+#else // ARDUINO
     unsigned long tStartMillis = getMillisSinceBoot();
     while (getMillisSinceBoot() - tStartMillis < aTimeMillis) {
 #endif
@@ -292,7 +292,7 @@ void checkAndHandleEvents(void) {
     }
 #endif
 
-#ifdef AVR
+#ifdef ARDUINO
 #ifndef USE_SIMPLE_SERIAL
     // get Arduino Serial data first
     serialEvent();

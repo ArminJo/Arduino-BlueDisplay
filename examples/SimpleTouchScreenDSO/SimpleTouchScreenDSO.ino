@@ -475,6 +475,7 @@ void setup() {
     DisplayControl.showInfoMode = INFO_MODE_SHORT_INFO;
 
     //setACMode(!digitalReadFast(AC_DC_PIN));
+    clearDataBuffer();
 
     // first synchronize. Since a complete chart data can be missing, send minimum 320 byte
     for (int i = 0; i < 16; ++i) {
@@ -1597,7 +1598,7 @@ uint16_t getAttenuatorFactor(void) {
 /*
  * toggle between DC and AC mode
  */
-void doAcDcMode(__attribute__((unused)) BDButton * aTheTouchedButton, __attribute__((unused)) int16_t aValue) {
+void doAcDcMode(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
     setACMode(!MeasurementControl.ChannelIsACMode);
 }
 
@@ -1631,7 +1632,7 @@ void doSetTriggerDelay(float aValue) {
 /*
  * toggle between 5 and 1.1 volt reference
  */
-void doADCReference(__attribute__((unused)) BDButton * aTheTouchedButton, __attribute__((unused)) int16_t aValue) {
+void doADCReference(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
     uint8_t tNewReference = MeasurementControl.ADCReference;
     if (MeasurementControl.ADCReference == DEFAULT) {
         tNewReference = INTERNAL;
@@ -1646,7 +1647,7 @@ void doADCReference(__attribute__((unused)) BDButton * aTheTouchedButton, __attr
     }
 }
 
-void doStartStopDSO(__attribute__((unused)) BDButton * aTheTouchedButton, __attribute__((unused)) int16_t aValue) {
+void doStartStopDSO(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
     if (MeasurementControl.isRunning) {
         /*
          * Stop here
@@ -1762,6 +1763,9 @@ void clearDisplayedChart(uint8_t * aDisplayBufferPtr) {
             sizeof(DataBufferControl.DisplayBuffer));
 }
 
+void clearDataBuffer() {
+    memset(DataBufferControl.DataBuffer, 0, sizeof(DataBufferControl.DataBuffer));
+}
 /*
  * Draws only one chart value - used for drawing while sampling
  */
