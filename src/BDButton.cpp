@@ -341,7 +341,8 @@ void BDButton::deactivateAllButtons(void) {
     }
 }
 
-#ifdef AVR
+#ifdef ARDUINO
+// Arduino has mapping defines
 void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
         const __FlashStringHelper * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
         void (*aOnTouchHandler)(BDButton*, int16_t)) {

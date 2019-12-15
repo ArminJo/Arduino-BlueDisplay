@@ -28,9 +28,9 @@
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
  ***************************************************************************/
-#ifndef HC_05_BAUD_RATE
-//#define HC_05_BAUD_RATE BAUD_115200
-#define HC_05_BAUD_RATE BAUD_9600
+#ifndef BLUETOOTH_BAUD_RATE
+//#define BLUETOOTH_BAUD_RATE BAUD_115200
+#define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
 #define MILLIS_BETWEEN_INFO_OUTPUT 1000

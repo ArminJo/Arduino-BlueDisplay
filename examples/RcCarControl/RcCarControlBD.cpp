@@ -30,9 +30,9 @@
 #include <stdlib.h> // for dtostrf
 
 // Change this if you have programmed the HC-05 module for another baud rate
-#ifndef HC_05_BAUD_RATE
-//#define HC_05_BAUD_RATE BAUD_115200
-#define HC_05_BAUD_RATE BAUD_9600
+#ifndef BLUETOOTH_BAUD_RATE
+//#define BLUETOOTH_BAUD_RATE BAUD_115200
+#define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
 // These pins are used by Timer 2
@@ -281,10 +281,11 @@ void BDsetup() {
     digitalWrite(LASER_POWER_PIN, LaserOn);
     ServoLaser.write(90);
 
+
 #ifdef USE_SIMPLE_SERIAL  // Comment line 39 in BlueSerial.h or use global #define USE_STANDARD_SERIAL to disable it
-    initSimpleSerial(HC_05_BAUD_RATE);
+    initSimpleSerial(BLUETOOTH_BAUD_RATE);
 #else
-    Serial.begin(HC_05_BAUD_RATE);
+    Serial.begin(BLUETOOTH_BAUD_RATE);
 #endif
 
     ServoLaser.attach(LASER_SERVO_PIN);
@@ -305,10 +306,12 @@ void BDloop() {
         resetOutputs();
     }
 
+#ifdef AVR
     /*
      * Print VCC and temperature each second
      */
     BlueDisplay1.printVCCAndTemperaturePeriodically(sActualDisplayWidth / 4, sTextSize, sTextSize, 2000);
+#endif
 
     /*
      * Check if receive buffer contains an event

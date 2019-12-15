@@ -136,8 +136,10 @@ void setup() {
 }
 
 void loop() {
+#ifdef TIMSK0
     // disable millis interrupt in order to read undisturbed from a newly attached module
     _SFR_BYTE(TIMSK0) &= ~_BV(TOIE0);
+#endif
     if (readModuleResponseToBuffer(StringBuffer) > 0) {
         Serial.print(F("Received: \""));
         Serial.print(StringBuffer);
@@ -149,14 +151,18 @@ void loop() {
         Serial.println();
 
         delayMilliseconds(1000);
+#ifdef TIMSK0
         // enable millis interrupt
         _SFR_BYTE(TIMSK0) |= _BV(TOIE0);
+#endif
 
         doProgramModules();
     }
     if (Serial.available()) {
+#ifdef TIMSK0
         // enable millis interrupt
         _SFR_BYTE(TIMSK0) |= _BV(TOIE0);
+#endif
         // read AT command and send it to the module
         uint8_t tLength = readStringWithTimeoutFromSerial(StringBuffer, 1);
 //        Serial.print(F("Length="));

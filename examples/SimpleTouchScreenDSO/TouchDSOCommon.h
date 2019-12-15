@@ -17,8 +17,7 @@
 #include "FrequencyGeneratorPage.h"
 #endif
 
-#ifdef AVR
-#else
+#if ! defined(AVR)
 // No PROGMEM on ARM
 #define PROGMEM
 #define __FlashStringHelper char

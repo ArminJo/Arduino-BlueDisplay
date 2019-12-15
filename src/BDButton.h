@@ -32,7 +32,7 @@
 
 #include <stdint.h>
 
-#ifdef AVR
+#ifdef ARDUINO
 #include <avr/pgmspace.h>
 #include "WString.h"    // for __FlashStringHelper
 #endif
@@ -260,7 +260,7 @@ public:
     void activate(void);
     void deactivate(void);
 
-#ifdef AVR
+#ifdef ARDUINO
     void initPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
             const char * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(BDButton*, int16_t));

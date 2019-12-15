@@ -30,18 +30,43 @@
 #ifndef BLUEDISPLAY_H_
 #define BLUEDISPLAY_H_
 
+#ifdef ARDUINO
+// For not AVR platforms this contains mapping defines (at least for STM32)
+#include <avr/pgmspace.h>
+// this define is not included in the pgmspace.h file :-(
+  #if defined(strcpy_P) // check if we have mapping defines
+#define strncpy_P(dest, src, size) strncpy((dest), (src), (size))
+  #endif
+#else
+  #ifndef PROGMEM
+# define PROGMEM
+  #endif
+
+  #ifndef PGM_P
+# define PGM_P const char *
+  #endif
+
+  #ifndef PSTR
+# define PSTR(str) (str)
+  #endif
+
+  #ifndef F
+# define F(str) (str)
+  #endif
+
+  #ifndef __FlashStringHelper
+#define __FlashStringHelper char
+  #endif
+#endif
+
 #include "Colors.h"
 
 #include "BlueDisplayProtocol.h"
 #include "BlueSerial.h"
 #include "EventHandler.h"
 
-#include <stdbool.h>
-#include <stddef.h>
 
-#ifdef AVR
-#include <avr/pgmspace.h>
-#endif
+
 
 #ifdef __cplusplus
 #include "BDButton.h" // for BDButtonHandle_t

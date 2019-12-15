@@ -387,7 +387,7 @@ void setup() {
     DIDR0 = ADC0D | ADC1D | ADC2D | ADC3D | ADC4D | ADC5D;
 
     // Must be simple serial for the DSO!
-    initSimpleSerial(HC_05_BAUD_RATE);
+    initSimpleSerial(BLUETOOTH_BAUD_RATE);
 
     // initialize values
     MeasurementControl.isRunning = false;

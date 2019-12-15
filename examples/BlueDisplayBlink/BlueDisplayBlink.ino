@@ -61,7 +61,11 @@ void setup() {
     // Initialize the LED pin as output.
     pinMode(LED_BUILTIN, OUTPUT);
 
-    initSimpleSerial(BLUETOOTH_BAUD_RATE);
+#ifdef USE_SIMPLE_SERIAL
+    initSimpleSerial(HC_05_BAUD_RATE);
+#else
+    Serial.begin(HC_05_BAUD_RATE);
+#endif
 
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);

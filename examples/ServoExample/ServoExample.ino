@@ -40,9 +40,9 @@
 #define VERSION_EXAMPLE "1.1"
 
 // Change this if you have programmed the HC-05 module for another baud rate
-#ifndef HC_05_BAUD_RATE
-//#define HC_05_BAUD_RATE BAUD_115200
-#define HC_05_BAUD_RATE BAUD_9600
+#ifndef BLUETOOTH_BAUD_RATE
+//#define BLUETOOTH_BAUD_RATE BAUD_115200
+#define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
 const int LASER_POWER_PIN = 5; // uses timer0
@@ -227,7 +227,7 @@ void initDisplay(void) {
             sActualDisplayHeight / 4,
             COLOR_BLUE, "Start", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sStarted,
             &doServosStartStop);
-    TouchButtonServosStartStop.setCaptionPGMForValueTrue(PSTR("Stop"));
+    TouchButtonServosStartStop.setCaptionForValueTrue(F("Stop"));
 
     TouchButtonSetBias.init(sActualDisplayWidth - sActualDisplayWidth / 4,
             (sActualDisplayHeight - sActualDisplayHeight / 2) - sActualDisplayHeight / 32, sActualDisplayWidth / 4,
@@ -240,7 +240,7 @@ void initDisplay(void) {
     TouchButtonAutoMove.init(sActualDisplayWidth - sActualDisplayWidth / 4, sActualDisplayHeight / 4 - sActualDisplayHeight / 16,
             sActualDisplayWidth / 4, sActualDisplayHeight / 4, COLOR_BLUE, "Move", sTextSizeVCC,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoAutomove, &doEnableAutoMove);
-    TouchButtonAutoMove.setCaptionPGMForValueTrue(PSTR("Stop"));
+    TouchButtonAutoMove.setCaptionForValueTrue(F("Stop"));
 
 }
 
@@ -250,15 +250,15 @@ void setup() {
     pinMode(LASER_POWER_PIN, OUTPUT);
     analogWrite(LASER_POWER_PIN, 0);
 
-#ifndef USE_STANDARD_SERIAL
+#ifdef USE_SIMPLE_SERIAL
     /*
      * If you want to see serial output if not connected with BlueDisplay comment line 39 in BlueSerial.h or use global #define USE_STANDARD_SERIAL
      * e.g. with -DUSE_STANDARD_SERIAL as compiler parameter for c++ in order to force the BlueDisplay library to use the Arduino Serial object
      * and release the SimpleSerial interrupt handler '__vector_18'
      */
-    initSimpleSerial(HC_05_BAUD_RATE);
+    initSimpleSerial(BLUETOOTH_BAUD_RATE);
 #else
-    Serial.begin(HC_05_BAUD_RATE);
+    Serial.begin(BLUETOOTH_BAUD_RATE);
 #endif
 
     // Register callback handler and check for connection
@@ -366,6 +366,7 @@ void loop() {
         }
     }
 
+#ifdef AVR
     if (BlueDisplay1.isConnectionEstablished()) {
         /*
          * Print VCC and temperature each second
@@ -373,6 +374,7 @@ void loop() {
         BlueDisplay1.printVCCAndTemperaturePeriodically(sActualDisplayWidth / 4, sTextSizeVCC, sTextSizeVCC,
         VCC_INFO_PERIOD_MILLIS);
     }
+#endif
 
     /*
      * Check if receive buffer contains an event
