@@ -439,16 +439,20 @@ uint16_t sendWaitAndReceive(const char * tATString) {
     Serial.println(F("\\r\\n\""));
     Serial.flush(); // needed in order not to disturb SoftwareSerial
 
-// disable millis interrupt
+#ifdef TIMSK0
+    // disable millis interrupt
     _SFR_BYTE(TIMSK0) &= ~_BV(TOIE0);
+#endif
     BTModuleSerial.println(tATString);
     /*
      * Around 1 ms for sending the command at 115200
      * For JDY-31 at115200 I measured 1 ms delay between end of the command and start of the answer
      */
     uint16_t tReturnedBytes = readModuleResponseToBuffer(StringBuffer);
+#ifdef TIMSK0
 // enable millis interrupt
     _SFR_BYTE(TIMSK0) |= _BV(TOIE0);
+#endif
 
     Serial.print(F("Received: \""));
     Serial.print(StringBuffer);

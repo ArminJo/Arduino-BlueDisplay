@@ -10,42 +10,18 @@ git:
 env:
    global:
    - PRETTYNAME="BlueDisplay"
+   - INSTALL_PLATFORMS="avr,STM32"
 before_install:
-# Workaround for avoiding STM32: Unknown package
-- echo "Removing STM cache to avoid STM32 Unknown package"
-- rm -rf ~/.arduino15/packages/STM32
-- source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/install.sh)
-# must only be done once
-- arduino --save-prefs --pref "boardsmanager.additional.urls=https://github.com/stm32duino/BoardManagerFiles/raw/dev/STM32/package_stm_index.json"
-- ls -la
-- ls -la ~/.arduino15/packages/
-- echo $TRAVIS_BUILD_DIR
-# Arduino IDE adds a lot of noise caused by network traffic, trying to firewall it off
-- sudo iptables -P INPUT DROP
-- sudo iptables -P FORWARD DROP
-- sudo iptables -P OUTPUT ACCEPT
-- sudo iptables -A INPUT -i lo -j ACCEPT
-- sudo iptables -A OUTPUT -o lo -j ACCEPT
-- sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-# must only be done once
-- if test ! -d ~/.arduino15/packages/STM32; then arduino --install-boards STM32:stm32:1.7.0; fi
-# check if board type is recognized by arduino now
-#- arduino --board STM32:stm32:GenF1:pnum=BLUEPILL_F103C8 --save-prefs
+- source <(curl -SLs https://raw.githubusercontent.com/ArminJo/travis-ci-arduino/master/install.sh)
 # enable all compilation warnings
 #- arduino --pref "compiler.warning_level=all" --save-prefs
-# Other commandline arguments for Arduino found in CommandlineParser.java
-# - arduino --verbose --verify --preferences-file --buildpath --verbose-upload --verbose-build --preserve-temp-files --version --install-boards --install-library --get-pref
-- arduino --pref "build.verbose=true" --save-prefs
 script:
-- build_platform "STM32:stm32:GenF1:pnum=BLUEPILL_F103C8"
-#- arduino --verbose --verbose-build --verify --board $Board Test.ino
+- build_platform BluePill
 - build_platform uno
 - build_platform leonardo
-# we get fork/exec /bin/arm-none-eabi-g++: no such file or directory
 - build_platform cplayClassic
 notifications:
    email:
-#- build_platform zero
       recipients:
       - armin.arduino@gmail.com
       on_success: change

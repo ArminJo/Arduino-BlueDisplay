@@ -78,8 +78,17 @@ void setup(void) {
      */
     initSimpleSerial(BLUETOOTH_BAUD_RATE);
 #else
+#  if defined (USE_SERIAL1)
+    Serial1.begin(BLUETOOTH_BAUD_RATE);
+#    if defined(SERIAL_USB)
+    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+#    endif
+    // Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+#  else
     Serial.begin(BLUETOOTH_BAUD_RATE);
-#endif
+#  endif
+#endif // USE_SIMPLE_SERIAL
 
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&handleConnectAndReorientation, &drawGui);
@@ -91,9 +100,10 @@ void setup(void) {
         tone(TONE_PIN, 3000, 50);
         delay(100);
     } else {
-#ifdef USE_STANDARD_SERIAL
-        while (!Serial)
-            ; //delay for Leonardo
+#if defined (USE_STANDARD_SERIAL) && !defined(USE_SERIAL1)
+#if defined(__AVR_ATmega32U4__)
+    while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
+#endif
         // Just to know which program is running on my Arduino
         Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from  " __DATE__));
 #endif

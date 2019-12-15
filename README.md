@@ -34,21 +34,46 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 - Hex and ASCII output of received Bluetooth data at log level verbose.
 - Debug messages as toasts.
 
-## Examples
+## Determine Serial interface used
+For boards which have more than one serial interface I try to use **Serial1** for the connection. But usage of Serial1 **disables the direct USB connection** to the smartphone / tablet.<br/>
+If you want to use **Serial** instead to **enable direct USB connection**, open the library file *BlueSerial.h* and comment out line`#define USE_USB_SERIAL` or 
+define global symbol with `-DUSE_USB_SERIAL` which is not yet possible in Arduino IDE:-(.<br/>
+To **change the serial interface manually** you only have to change the last lines of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp*.
+
+# [Examples](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples)
 Before using the examples, take care that the Bluetooth-module (e.g. the the HC-05 module) is connected to your Android device and is visible in the Bluetooth Settings.
 
 All examples initially use the baudrate of 9600. Especially the SimpleTouchScreenDSO example will run smoother with a baudrate of 115200.<br/>
 For this, change the example baudrate by deactivating the line `#define BLUETOOTH_BAUD_RATE BAUD_9600` and activating `#define BLUETOOTH_BAUD_RATE BAUD_115200`.<br/>
 **AND** change the Bluetooth-module baudrate e.g. by using the BTModuleProgrammer.ino example.
 
+## BlueDisplayBlink
+Simple example to check your installation.
 
-- BTModuleProgrammer - Simple helper program to configure your HC-05 or JDY-31 modules name and default baudrate with a serial monitor.
-- BlueDisplayBlink - Simple example to check your installation.
-- BlueDisplayExample - More elaborated example to shoe more features of the BlueDisplay library.
-- RcCarControl - Example of controlling a RC-car by smartphone accelerometer sensor
-- **SimpleTouchScreenDSO** - 300 kSamples DSO without external hardware (except the HC-05 module). For AC input, only a capacitor and 4 resistors are needed.
-More information at [Arduino-Simple-DSO](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples/SimpleTouchScreenDSO)
-- US_Distance - Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a parking assistance.
+## BlueDisplayExample
+More elaborated example to shoe more features of the BlueDisplay library.
+
+## BTModuleProgrammer
+Simple helper program to configure your HC-05 or JDY-31 modules name and default baudrate with a serial monitor.
+
+## RcCarControl
+Example of controlling a RC-car by smartphone accelerometer sensor.
+
+## ServoExample
+The accelerometer sensor of the android display is used to control two servos in a frame which holds a laser.
+This is an example for using a fullscreen GUI.<br/>
+If no BD connection available, the servo first marks the border and then moves randomly in this area (Cat Mover).<br/>
+- Zero -> the actual sensor position is taken as the servos 90/90 degree position.
+- Bias (reverse of Zero) -> take actual servos position as position for horizontal sensors position.
+- Move -> moves randomly in the programmed border. Currently horizontal 45 to 135 and vertical 0 to 45.
+
+## **SimpleTouchScreenDSO**
+300 kSamples DSO without external hardware (except the HC-05 module). For AC input, only a capacitor and 4 resistors are needed.
+More information at [Arduino-Simple-DSO](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples/SimpleTouchScreenDSO).
+Not for STM32.
+
+## US_Distance
+Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a parking assistance.
 
 ## Extras
 The extras folder (in the Arduino IDE use "Sketch/Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
@@ -117,7 +142,7 @@ The NeoPatterns library examples are built on Travis CI for the following boards
 - Arduino Uno
 - Arduino Leonardo
 - Arduino cplayClassic
-- Arduino STM32:stm32:GenF1:pnum=BLUEPILL_F103C8
+- BluePill
 
 ## Requests for modifications / extensions
 Please write me a PM including your motivation/problem if you need a modification or an extension.

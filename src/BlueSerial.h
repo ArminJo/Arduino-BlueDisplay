@@ -30,13 +30,35 @@
 #ifndef BLUESERIAL_H_
 #define BLUESERIAL_H_
 
+#if defined(ARDUINO)
+#include <Arduino.h> // for UBRR1H + BOARD_HAVE_USART1 + SERIAL_USB
+#else
 #include <stddef.h>
+#endif
 
+//#define USE_STANDARD_SERIAL
 #if !defined(USE_STANDARD_SERIAL) && defined (AVR)
 // Simple serial is a simple blocking serial version without receive buffer and other overhead.
 // Using it saves up to 1250 byte FLASH and 185 byte RAM since USART is used directly
 // Simple serial on the MEGA2560 uses USART1
 #define USE_SIMPLE_SERIAL
+#endif
+
+// If Serial1 is available, but you want to use direct connection by USB to your smartphone / tablet, then you have to comment out the next line
+//#define USE_USB_SERIAL
+
+/*
+ * Determine which serial to use
+ * Standard Serial if USE_USB_SERIAL is defined use
+ * Serial1 on stm32 if SERIAL_USB and USART1 is existent. If no SERIAL_USB it needs USART2 to have Serial1.
+ * Serial1 on AVR if second USART is existent
+ */
+#if ! defined(USE_USB_SERIAL) && ((defined(BOARD_HAVE_USART1) && defined(SERIAL_USB)) \
+    || (defined(BOARD_HAVE_USART2) && ! defined(SERIAL_USB)) \
+    || defined(UBRR1H))
+#define USE_SERIAL1
+#else
+#define USE_SERIAL0
 #endif
 
 #define BAUD_STRING_4800 "4800"

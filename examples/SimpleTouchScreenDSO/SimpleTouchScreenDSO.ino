@@ -153,6 +153,9 @@
 #include "BlueDisplay.h"
 #include "digitalWriteFast.h"
 
+#if ! defined(USE_SIMPLE_SERIAL)
+#error "TochScreenDSO works only with USE_SIMPLE_SERIAL activated, since the serial interrupts kill the DSO timing!"
+#endif
 /**********************
  * Buttons
  *********************/

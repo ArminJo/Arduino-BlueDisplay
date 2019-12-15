@@ -29,7 +29,11 @@
 
 #include <stdlib.h> // for dtostrf
 
-// Change this if you have programmed the HC-05 module for another baud rate
+#define VERSION_EXAMPLE "1.1"
+
+/****************************************************************************
+ * Change this if you have reprogrammed the hc05 module for other baud rate
+ ***************************************************************************/
 #ifndef BLUETOOTH_BAUD_RATE
 //#define BLUETOOTH_BAUD_RATE BAUD_115200
 #define BLUETOOTH_BAUD_RATE BAUD_9600
@@ -285,8 +289,17 @@ void BDsetup() {
 #ifdef USE_SIMPLE_SERIAL  // Comment line 39 in BlueSerial.h or use global #define USE_STANDARD_SERIAL to disable it
     initSimpleSerial(BLUETOOTH_BAUD_RATE);
 #else
+#  if defined (USE_SERIAL1)
+    Serial1.begin(BLUETOOTH_BAUD_RATE);
+#    if defined(SERIAL_USB)
+    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+#    endif
+    // Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+#  else
     Serial.begin(BLUETOOTH_BAUD_RATE);
-#endif
+#  endif
+#endif // USE_SIMPLE_SERIAL
 
     ServoLaser.attach(LASER_SERVO_PIN);
 

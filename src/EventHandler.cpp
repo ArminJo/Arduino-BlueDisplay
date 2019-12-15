@@ -36,9 +36,9 @@
 #include <Arduino.h> // for millis()
 #else
 #include "timing.h" // for getMillisSinceBoot()
-  #ifdef USE_STM32F3_DISCO
-#include "stm32f3_discovery.h"  // For LEDx
-  #endif
+#  ifdef USE_STM32F3_DISCO
+#  include "stm32f3_discovery.h"  // For LEDx
+#  endif
 #include "stm32fx0xPeripherals.h" // For Watchdog_reload()
 #include <stdio.h> // for printf
 #endif // ARDUINO
@@ -416,7 +416,7 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
         }
 #else
         //BDButton * is the same as BDButtonHandle_t * since BDButton only has one BDButtonHandle_t element
-        tButtonCallback = (void (*)(BDButtonHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;;// 2 ;; for pretty print :-(
+        tButtonCallback = (void (*)(BDButtonHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;; // 2 ;; for pretty print :-(
         tButtonCallback((BDButtonHandle_t*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex,
                 tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
 #endif

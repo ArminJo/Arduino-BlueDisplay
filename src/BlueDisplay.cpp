@@ -96,6 +96,9 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aReor
 		// wait for size to be sent back by a reorientation event. Time measured is between 50 and 150 ms (or 80 and 120)
 		delayMillisWithCheckAndHandleEvents(10);
 		if (mConnectionEstablished) { // is set by delayMillisWithCheckAndHandleEvents()
+#if defined(TRACE) && defined (USE_SERIAL1)
+			Serial.println("Connection established");
+#endif
 			/*
 			 * Call handler initially
 			 */
@@ -130,6 +133,9 @@ void BlueDisplay::setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHe
 	mReferenceDisplaySize.YHeight = aHeight;
 	if (USART_isBluetoothPaired()) {
 		if (aFlags & BD_FLAG_FIRST_RESET_ALL) {
+#if defined(TRACE) && defined (USE_SERIAL1)
+			Serial.println("Send reset all");
+#endif
 			// reset local buttons to be synchronized
 			BDButton::resetAllButtons();
 			BDSlider::resetAllSliders();
