@@ -1,5 +1,5 @@
 # [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
-### Version 1.0.1
+### Version 1.0.2
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
 [![Build Status](https://travis-ci.org/ArminJo/Arduino-BlueDisplay.svg?branch=master)](https://travis-ci.org/ArminJo/Arduino-BlueDisplay)
@@ -78,10 +78,14 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 | ![RC car control display](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
 
 # Revision History
+### Version 1.0.2
+- Porting to STM32.
+
 ### Version 1.0.1
 - Changed default baud rate for all examples to 9600.
-- Renamed USART_send() to sendUSART().
+- Renamed `USART_send()` to `sendUSART()`.
 - DSO example Version 3.1.
+
 ### Version 1.0.0
 Initial Arduino library version
 
@@ -113,6 +117,7 @@ The NeoPatterns library examples are built on Travis CI for the following boards
 - Arduino Uno
 - Arduino Leonardo
 - Arduino cplayClassic
+- Arduino STM32:stm32:GenF1:pnum=BLUEPILL_F103C8
 
 ## Requests for modifications / extensions
 Please write me a PM including your motivation/problem if you need a modification or an extension.

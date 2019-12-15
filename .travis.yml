@@ -1,5 +1,5 @@
 language: c
-sudo: false
+sudo: true
 cache:
    directories:
    - ~/arduino_ide
@@ -17,11 +17,29 @@ before_install:
 - arduino --save-prefs --pref "boardsmanager.additional.urls=https://github.com/stm32duino/BoardManagerFiles/raw/dev/STM32/package_stm_index.json"
 - ls -la
 - ls -la ~/.arduino15/packages/
+- echo $TRAVIS_BUILD_DIR
 # must only be done once
-- if test ! -d ~/.arduino15/packages/STM32; then arduino --install-boards STM32:stm32; fi
-- arduino --board STM32:stm32:GenF1:pnum=BLUEPILL_F103C8 --save-prefs
+# Arduino IDE adds a lot of noise caused by network traffic, trying to firewall it off
+- sudo iptables -P INPUT DROP
+- sudo iptables -P FORWARD DROP
+- sudo iptables -P OUTPUT ACCEPT
+- sudo iptables -A INPUT -i lo -j ACCEPT
+- sudo iptables -A OUTPUT -o lo -j ACCEPT
+- sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+- if test ! -d ~/.arduino15/packages/STM32; then arduino --install-boards STM32:stm32:1.7.0; fi
+# add the arduino directory so executables are also considered/searched for in that arduino-subfolder
+#- export PATH=$PATH:/usr/local/share/arduino
+# check if board type is recognized by arduino now
+#- arduino --board STM32:stm32:GenF1:pnum=BLUEPILL_F103C8 --save-prefs
+# enable all compilation warnings
+#- arduino --pref "compiler.warning_level=all" --save-prefs
+- arduino --pref "build.verbose=true" --save-prefs
+# Other commandline arguments for Arduino found in CommandlineParser.java
+# - arduino --verbose --verify --preferences-file --buildpath --verbose-upload --verbose-build --preserve-temp-files --version --install-boards --install-library --get-pref
 script:
+#- arduino --verbose --verbose-build --verify --board $Board Test.ino
 - build_platform "STM32:stm32:GenF1:pnum=BLUEPILL_F103C8"
+# we get fork/exec /bin/arm-none-eabi-g++: no such file or directory
 - build_platform uno
 - build_platform leonardo
 - build_platform cplayClassic
