@@ -1,5 +1,5 @@
 # [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
-### Version 1.0.2
+### Version 1.1.0
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
 [![Build Status](https://travis-ci.org/ArminJo/Arduino-BlueDisplay.svg?branch=master)](https://travis-ci.org/ArminJo/Arduino-BlueDisplay)
@@ -103,7 +103,7 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 | ![RC car control display](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
 
 # Revision History
-### Version 1.0.2
+### Version 1.1.0
 - Porting to STM32.
 
 ### Version 1.0.1
