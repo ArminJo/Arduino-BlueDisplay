@@ -903,7 +903,7 @@ void BlueDisplay::drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aString
 #endif
 
 #ifdef AVR
-uint16_t BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char * aPGMString, uint8_t aTextSize, color16_t aFGColor,
+uint16_t BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char * aPGMString, uint16_t aTextSize, color16_t aFGColor,
 		color16_t aBGColor) {
 	uint16_t tRetValue = 0;
 	uint8_t tTextLength = strlen_P(aPGMString);
@@ -923,7 +923,7 @@ uint16_t BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char * a
 	}
 	return tRetValue;
 }
-uint16_t BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStringHelper * aPGMString, uint8_t aTextSize,
+uint16_t BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStringHelper * aPGMString, uint16_t aTextSize,
 		color16_t aFGColor, color16_t aBGColor) {
 	uint16_t tRetValue = 0;
 	PGM_P tPGMString = reinterpret_cast<PGM_P>(aPGMString);
@@ -1535,7 +1535,7 @@ float __attribute__((weak)) getTemperature(void) {
 /*
  * Show temperature and VCC voltage
  */
-void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint8_t aTextSize, uint16_t aPeriodMillis) {
+void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis) {
 	static uint32_t sMillisOfLastVCCInfo = 0;
 	uint32_t tMillis = millis();
 

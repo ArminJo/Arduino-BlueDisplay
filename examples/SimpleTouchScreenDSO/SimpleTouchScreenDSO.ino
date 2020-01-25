@@ -65,6 +65,19 @@
  *      "Trigger ext" uses pin 2 as external trigger source.
  *      "Trigger delay" can be specified from 4 us to 64.000 ms (if you really want).
  *
+ *      Info line at the chart page
+ *      Short version - 1 line
+ *      Average voltage, peak to peak voltage, frequency, timebase
+ *
+ *      Long version - 2 lines
+ *      1. line: timebase, trigger slope, channel, (min, average, max, peak to peak) voltage, trigger level, reference voltage.
+ *                  - timebase: Time for div (31 pixel).
+ *                  - (min, average, max, peak to peak) voltage: In hold mode, chart is larger than display and the values are for the whole chart!
+ *                  - Reference voltage: 5=5V 1  1=1.1Volt-internal-reference.
+ *                  - Number of input channel (1-5) and Temp=AVR-temperature VRef=1.1Volt-internal-reference
+ *
+ *      2. line: frequency, period, 1st interval, 2nd interval (, trigger delay)
+ *
  *      "Offset man" is currently not implemented and works like "Offset 0V".
  *
  *      "DC / AC" Button is only visible for these channels having a AC/DC switch/input at configurations ATTENUATOR_TYPE_FIXED_ATTENUATOR + ATTENUATOR_TYPE_ACTIVE_ATTENUATOR
@@ -140,8 +153,7 @@
  */
 
 /*
- * IMPORTANT - do not use Arduino serial.* here otherwise the usart interrupt kills the timing.
- * -flto gives 1300 Bytes for SimpleTouchScreenDSO -- but disables debug output at .lss file
+ * IMPORTANT - do not use Arduino Serial.* here otherwise the usart interrupt kills the timing.
  */
 
 //#define DEBUG
@@ -1661,7 +1673,7 @@ void doStartStopDSO(__attribute__((unused))  BDButton * aTheTouchedButton, __att
          */
         DataBufferControl.DataBufferEndPointer = &DataBufferControl.DataBuffer[DATABUFFER_SIZE - 1];
 
-        // - use cli() to avoid race conditions
+        // - use noInterrupts() to avoid race conditions
         noInterrupts();
         if (MeasurementControl.TriggerStatus != TRIGGER_STATUS_FOUND) {
             if (MeasurementControl.TriggerMode == TRIGGER_MODE_EXTERN) {
@@ -1873,7 +1885,7 @@ void clearSingleshotMarker() {
 
 /*
  * Output info line
- * for documentation see line 33 of this file
+ * for documentation see start of this file
  */
 void printInfo(bool aRecomputeValues) {
     if (DisplayControl.showInfoMode == INFO_MODE_NO_INFO) {
@@ -2145,7 +2157,7 @@ uint16_t getStackFreeMinimumBytes(void) {
  */
 void printFreeStack(void) {
     uint16_t tUntouchesBytesOnStack = getStackFreeMinimumBytes();
-    sprintf_P(sStringBuffer, PSTR("%4u Bytes stack"), tUntouchesBytesOnStack);
+    sprintf_P(sStringBuffer, PSTR("%4u Stack[bytes]"), tUntouchesBytesOnStack);
     BlueDisplay1.drawText(0, SETTINGS_PAGE_INFO_Y, sStringBuffer,
     TEXT_SIZE_11, COLOR_BLACK, COLOR_BACKGROUND_DSO);
 }

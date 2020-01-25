@@ -252,25 +252,18 @@ void setup() {
     pinMode(LASER_POWER_PIN, OUTPUT);
     analogWrite(LASER_POWER_PIN, 0);
 
-#ifdef USE_SIMPLE_SERIAL
     /*
-     * If you want to see serial output if not connected with BlueDisplay comment line 39 in BlueSerial.h or use global #define USE_STANDARD_SERIAL
-     * e.g. with -DUSE_STANDARD_SERIAL as compiler parameter for c++ in order to force the BlueDisplay library to use the Arduino Serial object
-     * and release the SimpleSerial interrupt handler '__vector_18'
+     * If you want to see Serial.print output if not connected with BlueDisplay comment out the line "#define USE_STANDARD_SERIAL" in BlueSerial.h
+     * or define global symbol with -DUSE_STANDARD_SERIAL in order to force the BlueDisplay library to use the Arduino Serial object
+     * and to release the SimpleSerial interrupt handler '__vector_18'
      */
-    initSimpleSerial(BLUETOOTH_BAUD_RATE);
-#else
-#  if defined (USE_SERIAL1)
-    Serial1.begin(BLUETOOTH_BAUD_RATE);
-#    if defined(SERIAL_USB)
+    initSerial(BLUETOOTH_BAUD_RATE);
+#if defined (USE_SERIAL1) // defined in BlueSerial.h
+    // Can use Serial(0) for Serial.print  output.
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
-#    endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
-#  else
-    Serial.begin(BLUETOOTH_BAUD_RATE);
-#  endif
-#endif // USE_SIMPLE_SERIAL
+#endif
 
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
@@ -312,7 +305,7 @@ void setup() {
         /*
          * show border of area which can be reached by laser
          */
-#ifdef USE_STANDARD_SERIAL
+#if ! defined (USE_SIMPLE_SERIAL) || defined(USE_SERIAL1) // Can use first serial port for info output
         Serial.println(F("Not connected to BlueDisplay -> mark border of area and then do auto move."));
 #endif
         /*
@@ -354,16 +347,22 @@ void loop() {
             uint8_t tNewHorizontal = getRandomValue(&ServoHorizontalControl, &ServoHorizontal);
             uint8_t tNewVertical = getRandomValue(&ServoVerticalControl, &ServoVertical);
             int tSpeed = random(10, 90);
+#if ! defined (USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
+            // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
+#  if ! defined(USE_SERIAL1)
+            // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.
             if (!BlueDisplay1.isConnectionEstablished()) {
-#ifdef USE_STANDARD_SERIAL
+#  endif
                 Serial.print(F("Move to H="));
                 Serial.print(tNewHorizontal);
                 Serial.print(F(" V="));
                 Serial.print(tNewVertical);
                 Serial.print(F(" S="));
                 Serial.println(tSpeed);
-#endif
+#  if ! defined(USE_SERIAL1)
             }
+#  endif
+#endif
             ServoHorizontal.setEaseTo(tNewHorizontal, tSpeed);
             ServoVertical.setEaseTo(tNewVertical, tSpeed);
             synchronizeAllServosAndStartInterrupt();

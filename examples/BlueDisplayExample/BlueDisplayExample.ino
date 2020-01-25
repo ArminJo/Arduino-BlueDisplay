@@ -106,20 +106,18 @@ void setup() {
 	pinMode(TONE_PIN, OUTPUT);
 	pinMode(ANALOG_INPUT_PIN, INPUT);
 
-#ifdef USE_SIMPLE_SERIAL  // Comment line 39 in BlueSerial.h or use global #define USE_STANDARD_SERIAL to disable it
-	initSimpleSerial(BLUETOOTH_BAUD_RATE);
-#else
-#  if defined (USE_SERIAL1)
-	Serial1.begin(BLUETOOTH_BAUD_RATE);
-#    if defined(SERIAL_USB)
-	delay(2000); // To be able to connect Serial monitor after reset and before first printout
-#    endif
-	// Just to know which program is running on my Arduino
-	Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
-#  else
-	Serial.begin(BLUETOOTH_BAUD_RATE);
-#  endif
-#endif // USE_SIMPLE_SERIAL
+    /*
+     * If you want to see Serial.print output if not connected with BlueDisplay comment out the line "#define USE_STANDARD_SERIAL" in BlueSerial.h
+     * or define global symbol with -DUSE_STANDARD_SERIAL in order to force the BlueDisplay library to use the Arduino Serial object
+     * and to release the SimpleSerial interrupt handler '__vector_18'
+     */
+    initSerial(BLUETOOTH_BAUD_RATE);
+#if defined (USE_SERIAL1) // defined in BlueSerial.h
+    // Can use Serial(0) for Serial.print  output.
+    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+    // Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+#endif
 
 	// Register callback handler and check for connection
 	BlueDisplay1.initCommunication(&initDisplay, &drawGui);
@@ -162,12 +160,7 @@ void loop() {
 			 *  For Arduino serial check touch events 8 times while waiting.
 			 */
 			for (i = 0; i < 8; ++i) {
-#ifdef USE_SIMPLE_SERIAL
 				delayMillisWithCheckAndHandleEvents(sDelay / 8);
-#else
-				serialEvent();
-				delay(sDelay / 8);
-#endif
 				printDemoString();
 			}
 			/*
@@ -176,12 +169,7 @@ void loop() {
 			digitalWrite(LED_BUILTIN, LOW);
 			BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
 			for (i = 0; i < 8; ++i) {
-#ifdef USE_SIMPLE_SERIAL
 				delayMillisWithCheckAndHandleEvents(sDelay / 8);
-#else
-				serialEvent();
-				delay(sDelay / 8);
-#endif
 				printDemoString();
 			}
 			printDemoString();
@@ -196,12 +184,7 @@ void loop() {
 		}
 	}
 
-#ifdef USE_SIMPLE_SERIAL
 	checkAndHandleEvents();
-#else
-	serialEvent();
-#endif
-
 }
 
 void initDisplay(void) {

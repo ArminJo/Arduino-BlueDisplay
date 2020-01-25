@@ -1,5 +1,5 @@
 # [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
-### Version 1.1.0
+### Version 1.2.0
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
 [![Build Status](https://travis-ci.org/ArminJo/Arduino-BlueDisplay.svg?branch=master)](https://travis-ci.org/ArminJo/Arduino-BlueDisplay)
@@ -9,7 +9,7 @@ This library enables an Android smartphone / tablet to act as a graphical displa
 
 ## SUMMARY
 Let your Arduino program create a GUI with **Graphics, Text, Buttons and Sliders** on your smartphone / tablet by simply
-connecting a HC-05 to the rx/tx pins of your Arduino. 
+connecting a HC-05 to the rx/tx pins of your Arduino.
 Directly connecting the Arduino with an USB cable and an USB-OTG adapter to your smartphone is also supported.<br/>
 The App receives draw requests from Arduino over Bluetooth and renders it.
 GUI callback, touch and sensor events are sent back to the Arduino.
@@ -36,7 +36,7 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 
 ## Determine Serial interface used
 For boards which have more than one serial interface I try to use **Serial1** for the connection. But usage of Serial1 **disables the direct USB connection** to the smartphone / tablet.<br/>
-If you want to use **Serial** instead to **enable direct USB connection**, open the library file *BlueSerial.h* and comment out line`#define USE_USB_SERIAL` or 
+If you want to use **Serial** instead to **enable direct USB connection**, open the library file *BlueSerial.h* and comment out the line `#define USE_USB_SERIAL` or
 define global symbol with `-DUSE_USB_SERIAL` which is not yet possible in Arduino IDE:-(.<br/>
 To **change the serial interface manually** you only have to change the last lines of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp*.
 
@@ -103,18 +103,23 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 | ![RC car control display](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
 
 # Revision History
+### Version 1.2.0
+- Use type `Print *` instead of `Stream *`.
+- New function `initSerial()`
+- Changed parameter `aTextSize` to `uint16_t` also for AVR specific functions.
+
 ### Version 1.1.0
 - Porting to STM32.
 
 ### Version 1.0.1
-- Changed default baud rate for all examples to 9600.
+- Changed default baud rate for all examples to `9600`.
 - Renamed `USART_send()` to `sendUSART()`.
 - DSO example Version 3.1.
 
 ### Version 1.0.0
 Initial Arduino library version
 
-# Revision History corresponding to the Android BlueDisplay App
+# Old Revision History corresponding to the Android BlueDisplay App
 ### V 3.7
 Handling of no input for getNumber.
 Slider setScaleFactor() does not scale the actual value, mostly delivered as initial value at init().

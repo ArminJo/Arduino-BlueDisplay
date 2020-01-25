@@ -3,14 +3,21 @@
  *
  *  US Sensor (HC-SR04) functions especially non blocking functions using pin change interrupts
  *
- *  Copyright (C) 2016  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
+ *  Copyright (C) 2018-2020  Armin Joachimsmeyer
+ *  Email: armin.joachimsmeyer@gmail.com
+ *
+ *  This file is part of ArduinoUtils https://github.com/ArminJo/ArduinoUtils.
+ *
+ *  ArduinoUtils is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
-
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
@@ -50,8 +57,10 @@ unsigned int getUSDistance(unsigned int aTimeoutMicros) {
     digitalWrite(sTriggerOutPin, LOW);
 
     /*
-     * Get echo length. 58,48 us per centimeter (forth and back)
-     * => 50cm gives 2900 us, 2m gives 11900 us
+     * Get echo length.
+     * Speed of sound at 20 degree is 343,46 m/s => 58,23 us per centimeter and 17,17 cm/ms (forth and back)
+     * Speed of sound at 10 degree is 337,54 m/s => 59,25 us per centimeter and 16,877 cm/ms (forth and back)
+     * At 20 degree => 50cm gives 2914 us, 2m gives 11655 us
      */
     unsigned long tUSPulseMicros = pulseInLong(sEchoInPin, HIGH, aTimeoutMicros);
     if (tUSPulseMicros == 0) {
@@ -63,14 +72,15 @@ unsigned int getUSDistance(unsigned int aTimeoutMicros) {
 
 unsigned int getCentimeterFromUSMicroSeconds(unsigned int aDistanceMicros) {
     // The reciprocal of formula in getUSDistanceAsCentiMeterWithCentimeterTimeout()
-    return (aDistanceMicros * 10L) / 585;
+    return (aDistanceMicros * 100L) / 5825;
 }
 
 /*
- * @return  Distance in centimeter (time in us/58.5)
- *          aTimeoutMicros/58.5 if timeout happens
+ * @return  Distance in centimeter @20 degree (time in us/58.25)
+ *          aTimeoutMicros/58.25 if timeout happens
  *          0 if pins are not initialized
- *          timeout of 5850 micros is equivalent to 1m
+ *          timeout of 5825 micros is equivalent to 1 meter
+ *          Default timeout of 20000 micro seconds is 3.43 meter
  */
 unsigned int getUSDistanceAsCentiMeter(unsigned int aTimeoutMicros) {
     unsigned int tDistanceMicros = getUSDistance(aTimeoutMicros);
@@ -84,7 +94,7 @@ unsigned int getUSDistanceAsCentiMeter(unsigned int aTimeoutMicros) {
 // 58,48 us per centimeter (forth and back)
 unsigned int getUSDistanceAsCentiMeterWithCentimeterTimeout(unsigned int aTimeoutCentimeter) {
 // The reciprocal of formula in getCentimeterFromUSMicroSeconds()
-    unsigned int tTimeoutMicros = ((aTimeoutCentimeter * 117) + 1) / 2; // = * 58.5 (rounded by using +1)
+    unsigned int tTimeoutMicros = ((aTimeoutCentimeter * 233) + 2) / 4; // = * 58.25 (rounded by using +1)
     return getUSDistanceAsCentiMeter(tTimeoutMicros);
 }
 

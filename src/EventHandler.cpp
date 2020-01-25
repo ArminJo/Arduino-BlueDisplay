@@ -205,17 +205,18 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aTimeMillis) {
 #ifdef ARDUINO
     unsigned long tStartMillis = millis();
     while (millis() - tStartMillis < aTimeMillis) {
-#if !defined(USE_SIMPLE_SERIAL) && defined (AVR)
+#  if !defined(USE_SIMPLE_SERIAL) && defined (AVR)
         // check for Arduino serial - code from arduino main.cpp / main()
         if (serialEventRun) {
             serialEventRun();
         }
-#endif
+#  endif
 #else // ARDUINO
     unsigned long tStartMillis = getMillisSinceBoot();
     while (getMillisSinceBoot() - tStartMillis < aTimeMillis) {
 #endif
         checkAndHandleEvents();
+        yield();
     }
 }
 

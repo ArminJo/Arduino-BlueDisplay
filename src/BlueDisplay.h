@@ -72,9 +72,14 @@
 #include "BDSlider.h" // for BDSliderHandle_t
 #endif
 
-// This version corresponds to the version of the BlueDisplay app
-#define VERSION_BLUE_DISPLAY "3.7"
+#define VERSION_BLUE_DISPLAY "1.2.0"
 /*
+ * Version 1.2.0
+ * - Use type `Print *` instead of `Stream *`.
+ * - New function `initSerial()`
+ * - Changed parameter aTextSize to uint16_t also for AVR specific functions.
+ *
+ * This old version numbers corresponds to the version of the BlueDisplay app
  * Version 3.7
  * - Handling of no input for getNumber.
  * - Slider setScaleFactor() does not scale the actual value, mostly delivered as initial value at init().
@@ -421,12 +426,12 @@ public:
 #endif
 
 #ifdef AVR
-	uint16_t drawTextPGM(uint16_t aXStart, uint16_t aYStart, const char * aPGMString, uint8_t aFontSize, color16_t aFGColor,
+	uint16_t drawTextPGM(uint16_t aXStart, uint16_t aYStart, const char * aPGMString, uint16_t aTextSize, color16_t aFGColor,
 			color16_t aBGColor);
 	void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString);
 	void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString, float aInitialValue);
 
-	uint16_t drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper * aPGMString, uint8_t aFontSize,
+	uint16_t drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper * aPGMString, uint16_t aTextSize,
 			color16_t aFGColor, color16_t aBGColor);
 	void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString);
 	void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
@@ -434,7 +439,7 @@ public:
 
 	// Not yet implemented    void getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const __FlashStringHelper *aPGMShortPromptString);
 
-	void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint8_t aTextSize, uint16_t aPeriodMillis);
+	void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis);
 #endif
 	/*
 	 * Button stuff

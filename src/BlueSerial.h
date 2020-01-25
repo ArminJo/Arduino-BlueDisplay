@@ -36,29 +36,27 @@
 #include <stddef.h>
 #endif
 
-//#define USE_STANDARD_SERIAL
+//#define USE_STANDARD_SERIAL // vs. USE_SIMPLE_SERIAL - comment this out to override the default for AVR.
 #if !defined(USE_STANDARD_SERIAL) && defined (AVR)
 // Simple serial is a simple blocking serial version without receive buffer and other overhead.
 // Using it saves up to 1250 byte FLASH and 185 byte RAM since USART is used directly
 // Simple serial on the MEGA2560 uses USART1
-#define USE_SIMPLE_SERIAL
+#define USE_SIMPLE_SERIAL // default for AVR
 #endif
 
 // If Serial1 is available, but you want to use direct connection by USB to your smartphone / tablet, then you have to comment out the next line
 //#define USE_USB_SERIAL
 
 /*
- * Determine which serial to use
- * Standard Serial if USE_USB_SERIAL is defined use
- * Serial1 on stm32 if SERIAL_USB and USART1 is existent. If no SERIAL_USB it needs USART2 to have Serial1.
- * Serial1 on AVR if second USART is existent
+ * Determine which serial to use. Prefer the use of second USART, except for direct connection to your smartphone / tablet by USB cable.
+ * Use standard Serial if USE_USB_SERIAL is requested.
+ * Use Serial1 on stm32 if SERIAL_USB and USART1 is existent. If no SERIAL_USB existent, it needs USART2 to have Serial1 available.
+ * Use Serial1 on AVR if second USART is existent, as on the ATMega Boards.
  */
 #if ! defined(USE_USB_SERIAL) && ((defined(BOARD_HAVE_USART1) && defined(SERIAL_USB)) \
     || (defined(BOARD_HAVE_USART2) && ! defined(SERIAL_USB)) \
     || defined(UBRR1H))
 #define USE_SERIAL1
-#else
-#define USE_SERIAL0
 #endif
 
 #define BAUD_STRING_4800 "4800"
@@ -101,6 +99,7 @@ bool USART_isBluetoothPaired(void);
 void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
 #define USART_isBluetoothPaired() (false)
 #else
+void initSerial(uint32_t aBaudRate);
 void initSimpleSerial(uint32_t aBaudRate);
 #define USART_isBluetoothPaired() (true)
 #endif
