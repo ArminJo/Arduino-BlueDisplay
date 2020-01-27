@@ -144,24 +144,152 @@ int sTextSizeVCC;
 // a string buffer for any purpose...
 char sStringBuffer[128];
 
+// Callback handler for (re)connect and resize
+void initDisplay(void);
+void drawGui(void);
+
 void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallbackInfo);
+uint8_t getRandomValue(ServoControlStruct * aServoControlStruct, ServoEasing * aServoEasing);
 
 /*******************************************************************************************
  * Program code starts here
  *******************************************************************************************/
 
-void drawGui(void) {
-    BlueDisplay1.clearDisplay();
-    SliderUp.drawSlider();
-    SliderDown.drawSlider();
-    SliderRight.drawSlider();
-    SliderLeft.drawSlider();
-    SliderLaserPower.drawSlider();
+void setup() {
+// initialize the digital pin as an output.
+    pinMode(LED_BUILTIN, OUTPUT);
+    pinMode(LASER_POWER_PIN, OUTPUT);
+    analogWrite(LASER_POWER_PIN, 0);
 
-    TouchButtonSetZero.drawButton();
-    TouchButtonSetBias.drawButton();
-    TouchButtonAutoMove.drawButton();
-    TouchButtonServosStartStop.drawButton();
+    /*
+     * If you want to see Serial.print output if not connected with BlueDisplay comment out the line "#define USE_STANDARD_SERIAL" in BlueSerial.h
+     * or define global symbol with -DUSE_STANDARD_SERIAL in order to force the BlueDisplay library to use the Arduino Serial object
+     * and to release the SimpleSerial interrupt handler '__vector_18'
+     */
+    initSerial(BLUETOOTH_BAUD_RATE);
+#if defined (USE_SERIAL1) // defined in BlueSerial.h
+    // Can use Serial(0) for Serial.print  output.
+    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+    // Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+#endif
+
+    // Register callback handler and check for connection
+    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+
+    if (!BlueDisplay1.mConnectionEstablished) {
+#if defined (USE_STANDARD_SERIAL) && !defined(USE_SERIAL1)
+#if defined(__AVR_ATmega32U4__)
+    while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
+#endif
+        // Just to know which program is running on my Arduino
+        Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from  " __DATE__));
+#endif
+        sStarted = true;
+    } else {
+        // set sLastLaserSliderValue and sLaserPowerValue and enables laser
+        doLaserPowerSlider(NULL, sActualDisplayHeight / 8);
+        doServosStartStop(NULL, true);
+    }
+
+    /*
+     * Set up servos
+     */
+    ServoHorizontal.attach(HORIZONTAL_SERVO_PIN);
+    ServoVertical.attach(VERTICAL_SERVO_PIN);
+    ServoHorizontal.setEasingType(EASE_QUADRATIC_IN_OUT);
+    ServoVertical.setEasingType(EASE_QUADRATIC_IN_OUT);
+
+    ServoHorizontalControl.minDegree = 45;
+    ServoHorizontalControl.maxDegree = 135;
+    ServoVerticalControl.minDegree = 0;
+    ServoVerticalControl.maxDegree = 45;
+
+    resetOutputs();
+
+    delay(4000);
+
+    if (!BlueDisplay1.isConnectionEstablished()) {
+        sDoAutomove = true;
+        /*
+         * show border of area which can be reached by laser
+         */
+#if ! defined (USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
+        // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
+        Serial.println(F("Not connected to BlueDisplay -> mark border of area and then do auto move."));
+#endif
+        /*
+         * show border of area which can be reached by laser
+         */
+        ServoHorizontal.write(ServoHorizontalControl.minDegree);
+        ServoVertical.write(ServoVerticalControl.minDegree);
+        delay(500);
+        analogWrite(LASER_POWER_PIN, 255);
+        ServoHorizontal.easeTo(ServoHorizontalControl.maxDegree, 50);
+        ServoVertical.easeTo(ServoVerticalControl.maxDegree, 50);
+        ServoHorizontal.easeTo(ServoHorizontalControl.minDegree, 50);
+        ServoVertical.easeTo(ServoVerticalControl.minDegree, 50);
+    }
+}
+
+void loop() {
+
+    uint32_t tMillis = millis();
+
+    if (sDoAutomove) {
+        /*
+         * Start random auto-moves, if enabled or no Bluetooth connection available
+         */
+        if (!ServoHorizontal.isMoving()) {
+            // start new move
+            delay(random(500));
+            uint8_t tNewHorizontal = getRandomValue(&ServoHorizontalControl, &ServoHorizontal);
+            uint8_t tNewVertical = getRandomValue(&ServoVerticalControl, &ServoVertical);
+            int tSpeed = random(10, 90);
+#if ! defined (USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
+            // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
+#  if ! defined(USE_SERIAL1)
+            // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.
+            if (!BlueDisplay1.isConnectionEstablished()) {
+#  endif
+                Serial.print(F("Move to H="));
+                Serial.print(tNewHorizontal);
+                Serial.print(F(" V="));
+                Serial.print(tNewVertical);
+                Serial.print(F(" S="));
+                Serial.println(tSpeed);
+#  if ! defined(USE_SERIAL1)
+            }
+#  endif
+#endif
+            ServoHorizontal.setEaseTo(tNewHorizontal, tSpeed);
+            ServoVertical.setEaseTo(tNewVertical, tSpeed);
+            synchronizeAllServosAndStartInterrupt();
+        }
+    } else {
+        /*
+         * Stop servo output if stop requested or if connection lost
+         */
+        if (sStarted && (tMillis - sMillisOfLastReveivedEvent) > SENSOR_RECEIVE_TIMEOUT_MILLIS) {
+            disableServoEasingInterrupt();
+            resetOutputs();
+        }
+    }
+
+#ifdef AVR
+    if (BlueDisplay1.isConnectionEstablished()) {
+        /*
+         * Print VCC and temperature each second
+         */
+        BlueDisplay1.printVCCAndTemperaturePeriodically(sActualDisplayWidth / 4, sTextSizeVCC, sTextSizeVCC,
+        VCC_INFO_PERIOD_MILLIS);
+    }
+#endif
+
+    /*
+     * Check if receive buffer contains an event
+     */
+    checkAndHandleEvents();
 }
 
 void initDisplay(void) {
@@ -246,80 +374,18 @@ void initDisplay(void) {
 
 }
 
-void setup() {
-// initialize the digital pin as an output.
-    pinMode(LED_BUILTIN, OUTPUT);
-    pinMode(LASER_POWER_PIN, OUTPUT);
-    analogWrite(LASER_POWER_PIN, 0);
+void drawGui(void) {
+    BlueDisplay1.clearDisplay();
+    SliderUp.drawSlider();
+    SliderDown.drawSlider();
+    SliderRight.drawSlider();
+    SliderLeft.drawSlider();
+    SliderLaserPower.drawSlider();
 
-    /*
-     * If you want to see Serial.print output if not connected with BlueDisplay comment out the line "#define USE_STANDARD_SERIAL" in BlueSerial.h
-     * or define global symbol with -DUSE_STANDARD_SERIAL in order to force the BlueDisplay library to use the Arduino Serial object
-     * and to release the SimpleSerial interrupt handler '__vector_18'
-     */
-    initSerial(BLUETOOTH_BAUD_RATE);
-#if defined (USE_SERIAL1) // defined in BlueSerial.h
-    // Can use Serial(0) for Serial.print  output.
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
-    // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
-#endif
-
-    // Register callback handler and check for connection
-    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
-
-    if (!BlueDisplay1.mConnectionEstablished) {
-#if defined (USE_STANDARD_SERIAL) && !defined(USE_SERIAL1)
-#if defined(__AVR_ATmega32U4__)
-    while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
-#endif
-        // Just to know which program is running on my Arduino
-        Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from  " __DATE__));
-#endif
-        sStarted = true;
-    } else {
-        // set sLastLaserSliderValue and sLaserPowerValue and enables laser
-        doLaserPowerSlider(NULL, sActualDisplayHeight / 8);
-        doServosStartStop(NULL, true);
-    }
-
-    /*
-     * Set up servos
-     */
-    ServoHorizontal.attach(HORIZONTAL_SERVO_PIN);
-    ServoVertical.attach(VERTICAL_SERVO_PIN);
-    ServoHorizontal.setEasingType(EASE_QUADRATIC_IN_OUT);
-    ServoVertical.setEasingType(EASE_QUADRATIC_IN_OUT);
-
-    ServoHorizontalControl.minDegree = 45;
-    ServoHorizontalControl.maxDegree = 135;
-    ServoVerticalControl.minDegree = 0;
-    ServoVerticalControl.maxDegree = 45;
-
-    resetOutputs();
-
-    delay(4000);
-
-    if (!BlueDisplay1.isConnectionEstablished()) {
-        sDoAutomove = true;
-        /*
-         * show border of area which can be reached by laser
-         */
-#if ! defined (USE_SIMPLE_SERIAL) || defined(USE_SERIAL1) // Can use first serial port for info output
-        Serial.println(F("Not connected to BlueDisplay -> mark border of area and then do auto move."));
-#endif
-        /*
-         * show border of area which can be reached by laser
-         */
-        ServoHorizontal.write(ServoHorizontalControl.minDegree);
-        ServoVertical.write(ServoVerticalControl.minDegree);
-        delay(500);
-        analogWrite(LASER_POWER_PIN, 255);
-        ServoHorizontal.easeTo(ServoHorizontalControl.maxDegree, 50);
-        ServoVertical.easeTo(ServoVerticalControl.maxDegree, 50);
-        ServoHorizontal.easeTo(ServoHorizontalControl.minDegree, 50);
-        ServoVertical.easeTo(ServoVerticalControl.minDegree, 50);
-    }
+    TouchButtonSetZero.drawButton();
+    TouchButtonSetBias.drawButton();
+    TouchButtonAutoMove.drawButton();
+    TouchButtonServosStartStop.drawButton();
 }
 
 uint8_t getRandomValue(ServoControlStruct * aServoControlStruct, ServoEasing * aServoEasing) {
@@ -331,66 +397,6 @@ uint8_t getRandomValue(ServoControlStruct * aServoControlStruct, ServoEasing * a
         tNewTargetAngle = random(aServoControlStruct->minDegree, aServoControlStruct->maxDegree);
     } while (tNewTargetAngle == aServoEasing->MicrosecondsOrUnitsToDegree(aServoEasing->mCurrentMicrosecondsOrUnits)); // do not accept current angle as new value
     return tNewTargetAngle;
-}
-
-void loop() {
-
-    uint32_t tMillis = millis();
-
-    if (sDoAutomove) {
-        /*
-         * Start random auto-moves, if enabled or no Bluetooth connection available
-         */
-        if (!ServoHorizontal.isMoving()) {
-            // start new move
-            delay(random(500));
-            uint8_t tNewHorizontal = getRandomValue(&ServoHorizontalControl, &ServoHorizontal);
-            uint8_t tNewVertical = getRandomValue(&ServoVerticalControl, &ServoVertical);
-            int tSpeed = random(10, 90);
-#if ! defined (USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
-            // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
-#  if ! defined(USE_SERIAL1)
-            // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.
-            if (!BlueDisplay1.isConnectionEstablished()) {
-#  endif
-                Serial.print(F("Move to H="));
-                Serial.print(tNewHorizontal);
-                Serial.print(F(" V="));
-                Serial.print(tNewVertical);
-                Serial.print(F(" S="));
-                Serial.println(tSpeed);
-#  if ! defined(USE_SERIAL1)
-            }
-#  endif
-#endif
-            ServoHorizontal.setEaseTo(tNewHorizontal, tSpeed);
-            ServoVertical.setEaseTo(tNewVertical, tSpeed);
-            synchronizeAllServosAndStartInterrupt();
-        }
-    } else {
-        /*
-         * Stop servo output if stop requested or if connection lost
-         */
-        if (sStarted && (tMillis - sMillisOfLastReveivedEvent) > SENSOR_RECEIVE_TIMEOUT_MILLIS) {
-            disableServoEasingInterrupt();
-            resetOutputs();
-        }
-    }
-
-#ifdef AVR
-    if (BlueDisplay1.isConnectionEstablished()) {
-        /*
-         * Print VCC and temperature each second
-         */
-        BlueDisplay1.printVCCAndTemperaturePeriodically(sActualDisplayWidth / 4, sTextSizeVCC, sTextSizeVCC,
-        VCC_INFO_PERIOD_MILLIS);
-    }
-#endif
-
-    /*
-     * Check if receive buffer contains an event
-     */
-    checkAndHandleEvents();
 }
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"

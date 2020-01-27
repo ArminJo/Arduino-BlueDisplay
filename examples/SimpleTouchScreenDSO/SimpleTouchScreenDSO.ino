@@ -2411,7 +2411,7 @@ void initTimer2(void) {
 #if defined(TCCR2A)
     // initialization with 0 is essential otherwise timer will not work correctly!!!
     TCCR2A = 0; // set entire TCCR2A register to 0 - Normal mode
-    TCCR2B = 0; // same for TCCR2B
+    TCCR2B = 0; // same for TCCR2B ???
     TCCR2B = _BV(CS22); // Clock/64 => 4 us
 #else
             // ???initialization with 0 is essential otherwise timer will not work correctly???
@@ -2424,7 +2424,7 @@ void initTimer2(void) {
 }
 
 /*
- * Redirect interrupts for TIMER2 Overflow to existent arduino TIMER0 Overflow ISR
+ * Redirect interrupts for TIMER2 Overflow to existent arduino TIMER0 Overflow ISR used for millis()
  */
 #if defined(TCCR2A)
 ISR_ALIAS(TIMER2_OVF_vect, TIMER0_OVF_vect);

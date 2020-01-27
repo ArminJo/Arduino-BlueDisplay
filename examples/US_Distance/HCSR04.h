@@ -4,9 +4,9 @@
  *  Copyright (C) 2018-2020  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
  *
- *  This file is part of ArduinoUtils https://github.com/ArminJo/ArduinoUtils.
+ *  This file is part of Arduino-Utils https://github.com/ArminJo/Arduino-Utils.
  *
- *  ArduinoUtils is free software: you can redistribute it and/or modify
+ *  Arduino-Utils is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
@@ -27,13 +27,14 @@
 #define HCSR04_H_
 
 #define US_DISTANCE_DEFAULT_TIMEOUT 20000
-#define US_DISTANCE_DEFAULT_TIMEOUT_CENTIMETER 341
-// Timeout of 20000L is 3.41 meter
+#define US_DISTANCE_DEFAULT_TIMEOUT_CENTIMETER 343 // Timeout of 20000L is 3.43 meter
+
 void initUSDistancePins(uint8_t aTriggerOutPin, uint8_t aEchoInPin);
 unsigned int getUSDistance(unsigned int aTimeoutMicros = US_DISTANCE_DEFAULT_TIMEOUT);
 unsigned int getCentimeterFromUSMicroSeconds(unsigned int aDistanceMicros);
 unsigned int getUSDistanceAsCentiMeter(unsigned int aTimeoutMicros = US_DISTANCE_DEFAULT_TIMEOUT);
 unsigned int getUSDistanceAsCentiMeterWithCentimeterTimeout(unsigned int aTimeoutCentimeter);
+
 #if (defined(USE_PIN_CHANGE_INTERRUPT_D0_TO_D7) | defined(USE_PIN_CHANGE_INTERRUPT_D8_TO_D13) | defined(USE_PIN_CHANGE_INTERRUPT_A0_TO_A5))
 /*
  * Non blocking version

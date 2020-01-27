@@ -25,24 +25,28 @@
  */
 
 #include <Arduino.h>
-#include "HCSR04.h"
 
 #include "BlueDisplay.h"
 
+#include "HCSR04.h"
+
 #define VERSION_EXAMPLE "1.1"
 
-// Change this if you have programmed the HC-05 module for another baud rate
+/****************************************************************************
+ * Change this if you have reprogrammed the hc05 module for other baud rate
+ ***************************************************************************/
 #ifndef BLUETOOTH_BAUD_RATE
 //#define BLUETOOTH_BAUD_RATE BAUD_115200
 #define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
-int ECHO_IN_PIN = 2;
-int TRIGGER_OUT_PIN = 3;
-#define TONE_PIN 4
-#define MEASUREMENT_INTERVAL_MS 50
+int ECHO_IN_PIN = 4;
+int TRIGGER_OUT_PIN = 5;
+#define TONE_PIN 3 // must be 3 to be compatible with talkie
 
-#define DISTANCE_TIMEOUT_CM 350  // cm timeout for US reading
+#define MEASUREMENT_INTERVAL_MILLIS 50
+
+#define DISTANCE_TIMEOUT_CM 300  // cm timeout for US reading
 
 int sActualDisplayWidth;
 int sActualDisplayHeight;
@@ -63,11 +67,21 @@ BDSlider SliderShowDistance;
 
 char sStringBuffer[100];
 
+static unsigned int sCentimeterOld = 50;
+bool sToneIsOff = true;
+
 void handleConnectAndReorientation(void);
 void drawGui(void);
 
+void doStartStop(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue);
+void doGetOffset(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused)));
+
+/*******************************************************************************************
+ * Program code starts here
+ *******************************************************************************************/
+
 void setup(void) {
-    pinMode(TRIGGER_OUT_PIN, OUTPUT);
+
     initUSDistancePins(TRIGGER_OUT_PIN, ECHO_IN_PIN);
 
 #ifdef USE_SIMPLE_SERIAL
@@ -112,9 +126,6 @@ void setup(void) {
     delay(100);
 }
 
-static unsigned int sCentimeterOld = 50;
-bool sToneIsOff = true;
-
 void loop(void) {
     // Timeout of 20000L is 3.4 meter
     uint16_t tUSDistanceMicros = getUSDistance();
@@ -123,8 +134,12 @@ void loop(void) {
 //    while (!isUSDistanceMeasureFinished()) {
 //    }
 
-#ifdef USE_STANDARD_SERIAL
-    if (!BlueDisplay1.mConnectionEstablished) {
+#if ! defined (USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
+    // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
+#  if ! defined(USE_SERIAL1)
+    // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.
+    if (!BlueDisplay1.isConnectionEstablished()) {
+#  endif
         if (tUSDistanceCentimeter >= DISTANCE_TIMEOUT_CM) {
             Serial.println("timeout");
         } else {
@@ -133,22 +148,26 @@ void loop(void) {
             Serial.print(tUSDistanceMicros);
             Serial.println(" micro secounds.");
         }
+#  if ! defined(USE_SERIAL1)
     }
+#  endif
 #endif
 
     if (tUSDistanceCentimeter >= DISTANCE_TIMEOUT_CM) {
-        // timeout happened
+        /*
+         * timeout happened here
+         */
         tone(TONE_PIN, 1000, 50);
         delay(100);
         tone(TONE_PIN, 2000, 50);
-        delay((100 - MEASUREMENT_INTERVAL_MS) - 20);
+        delay((100 - MEASUREMENT_INTERVAL_MILLIS) - 20);
 
     } else {
         if (doTone && tUSDistanceCentimeter < 100) {
             /*
              * local feedback for distances < 100 cm
              */
-            tone(TONE_PIN, tUSDistanceCentimeter * 32, MEASUREMENT_INTERVAL_MS + 20);
+            tone(TONE_PIN, tUSDistanceCentimeter * 32, MEASUREMENT_INTERVAL_MILLIS + 20);
         }
         tUSDistanceCentimeter -= sOffset;
         if (tUSDistanceCentimeter != sCentimeterOld) {
@@ -197,37 +216,7 @@ void loop(void) {
     }
     checkAndHandleEvents();
     sCentimeterOld = tUSDistanceCentimeter;
-    delay(MEASUREMENT_INTERVAL_MS); // < 200
-}
-
-/*
- * Change doTone flag as well as color and caption of the button.
- */
-void doStartStop(__attribute__((unused))  BDButton * aTheTouchedButton, int16_t aValue) {
-    doTone = aValue;
-    if (!aValue) {
-        // Stop tone
-        BlueDisplay1.playTone(TONE_SILENCE);
-    }
-}
-
-/*
- * Handler for number receive event - set delay to value
- */
-void doSetOffset(float aValue) {
-// clip value
-    if (aValue > 20) {
-        aValue = 20;
-    } else if (aValue < -20) {
-        aValue = -20;
-    }
-    sOffset = aValue;
-}
-/*
- * Request delay value as number
- */
-void doGetOffset(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
-    BlueDisplay1.getNumberWithShortPrompt(&doSetOffset, "Offset distance [cm]");
+    delay(MEASUREMENT_INTERVAL_MILLIS); // < 200
 }
 
 /*
@@ -280,4 +269,33 @@ void drawGui(void) {
     TouchButtonOffset.drawButton();
 }
 
+/*
+ * Change doTone flag as well as color and caption of the button.
+ */
+void doStartStop(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue) {
+    doTone = aValue;
+    if (!aValue) {
+        // Stop tone
+        BlueDisplay1.playTone(TONE_SILENCE);
+    }
+}
+
+/*
+ * Handler for number receive event - set delay to value
+ */
+void doSetOffset(float aValue) {
+// clip value
+    if (aValue > 20) {
+        aValue = 20;
+    } else if (aValue < -20) {
+        aValue = -20;
+    }
+    sOffset = aValue;
+}
+/*
+ * Request delay value as number
+ */
+void doGetOffset(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+    BlueDisplay1.getNumberWithShortPrompt(&doSetOffset, "Offset distance [cm]");
+}
 

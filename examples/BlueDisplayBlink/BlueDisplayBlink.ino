@@ -61,6 +61,10 @@ void doBlinkStartStop(BDButton * aTheTochedButton, int16_t aValue);
 void initDisplay(void);
 void drawGui(void);
 
+/*******************************************************************************************
+ * Program code starts here
+ *******************************************************************************************/
+
 void setup() {
     // Initialize the LED pin as output.
     pinMode(LED_BUILTIN, OUTPUT);
@@ -116,8 +120,9 @@ void initDisplay(void) {
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, DISPLAY_WIDTH,
     DISPLAY_HEIGHT);
     // Initialize button position, size, colors etc.
-    TouchButtonBlinkStartStop.init((DISPLAY_WIDTH - BUTTON_WIDTH_2) / 2, BUTTON_HEIGHT_4_256_LINE_4, BUTTON_WIDTH_2, BUTTON_HEIGHT_4_256,
-    COLOR_BLUE, "Start", 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doBlinkStartStop);
+    TouchButtonBlinkStartStop.init((DISPLAY_WIDTH - BUTTON_WIDTH_2) / 2, BUTTON_HEIGHT_4_256_LINE_4, BUTTON_WIDTH_2,
+            BUTTON_HEIGHT_4_256,
+            COLOR_BLUE, "Start", 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doBlinkStartStop);
     TouchButtonBlinkStartStop.setCaptionForValueTrue("Stop");
 }
 
@@ -132,7 +137,7 @@ void drawGui(void) {
 /*
  * Change doBlink flag as well as color and caption of the button.
  */
-void doBlinkStartStop(BDButton * aTheTouchedButton, int16_t aValue) {
+void doBlinkStartStop(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue) {
     doBlink = aValue;
     /*
      * This debug output can also be recognized at the Arduino Serial Monitor

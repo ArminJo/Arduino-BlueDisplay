@@ -1,14 +1,15 @@
 /*
  *  HCSR04.cpp
  *
- *  US Sensor (HC-SR04) functions especially non blocking functions using pin change interrupts
+ *  US Sensor (HC-SR04) functions
+ *  The non blocking functions are using pin change interrupts and need the PinChangeInterrupt library to be installed.
  *
  *  Copyright (C) 2018-2020  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
  *
- *  This file is part of ArduinoUtils https://github.com/ArminJo/ArduinoUtils.
+ *  This file is part of Arduino-Utils https://github.com/ArminJo/Arduino-Utils.
  *
- *  ArduinoUtils is free software: you can redistribute it and/or modify
+ *  Arduino-Utils is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
@@ -25,6 +26,8 @@
 
 #include <Arduino.h>
 #include "HCSR04.h"
+
+#define DEBUG
 
 uint8_t sTriggerOutPin;
 uint8_t sEchoInPin;
@@ -91,7 +94,7 @@ unsigned int getUSDistanceAsCentiMeter(unsigned int aTimeoutMicros) {
     return (getCentimeterFromUSMicroSeconds(tDistanceMicros));
 }
 
-// 58,48 us per centimeter (forth and back)
+// 58,23 us per centimeter (forth and back)
 unsigned int getUSDistanceAsCentiMeterWithCentimeterTimeout(unsigned int aTimeoutCentimeter) {
 // The reciprocal of formula in getCentimeterFromUSMicroSeconds()
     unsigned int tTimeoutMicros = ((aTimeoutCentimeter * 233) + 2) / 4; // = * 58.25 (rounded by using +1)
@@ -179,7 +182,7 @@ void startUSDistanceAsCentiMeterWithCentimeterTimeoutNonBlocking(unsigned int aT
 // need minimum 10 usec Trigger Pulse
     digitalWrite(sTriggerOutPin, HIGH);
     sUSValueIsValid = false;
-    sTimeoutMicros = aTimeoutCentimeter * 59;
+    sTimeoutMicros = ((aTimeoutCentimeter * 233) + 2) / 4; // = * 58.25 (rounded by using +1)
     *digitalPinToPCMSK(sEchoInPin) |= bit(digitalPinToPCMSKbit(sEchoInPin));// enable pin for pin change interrupt
 // the 2 registers exists only once!
     PCICR |= bit(digitalPinToPCICRbit(sEchoInPin));// enable interrupt for the group
@@ -203,8 +206,7 @@ void startUSDistanceAsCentiMeterWithCentimeterTimeoutNonBlocking(unsigned int aT
  */
 bool isUSDistanceMeasureFinished() {
     if (sUSValueIsValid) {
-        int tDistance = ((sUSPulseMicros * 10) / 585);
-        sUSDistanceCentimeter = tDistance;
+        sUSDistanceCentimeter = getCentimeterFromUSMicroSeconds(sUSPulseMicros);
         return true;
     }
 
