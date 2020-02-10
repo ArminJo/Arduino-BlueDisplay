@@ -58,7 +58,7 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 #define BUTTON_DEFAULT_SPACING_HALF 8
 #define BUTTON_DEFAULT_SPACING_QUARTER 4
 
-#define BUTTON_HORIZONTAL_SPACING_DYN (sCurrentDisplayWidth/64)
+#define BUTTON_HORIZONTAL_SPACING_DYN (BlueDisplay1.mCurrentDisplaySize.XWidth/64)
 
 // for 2 buttons horizontal - 19 characters
 #define BUTTON_WIDTH_2 152
@@ -70,9 +70,9 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 #define BUTTON_WIDTH_3_POS_3 (LAYOUT_320_WIDTH - BUTTON_WIDTH_3)
 //
 // for 3 buttons horizontal - dynamic
-#define BUTTON_WIDTH_3_DYN (sCurrentDisplayWidth/3 - BUTTON_HORIZONTAL_SPACING_DYN)
-#define BUTTON_WIDTH_3_DYN_POS_2 (sCurrentDisplayWidth/3 + (BUTTON_HORIZONTAL_SPACING_DYN / 2))
-#define BUTTON_WIDTH_3_DYN_POS_3 (sCurrentDisplayWidth - BUTTON_WIDTH_3_DYN)
+#define BUTTON_WIDTH_3_DYN (BlueDisplay1.mCurrentDisplaySize.XWidth/3 - BUTTON_HORIZONTAL_SPACING_DYN)
+#define BUTTON_WIDTH_3_DYN_POS_2 (BlueDisplay1.mCurrentDisplaySize.XWidth/3 + (BUTTON_HORIZONTAL_SPACING_DYN / 2))
+#define BUTTON_WIDTH_3_DYN_POS_3 (BlueDisplay1.mCurrentDisplaySize.XWidth - BUTTON_WIDTH_3_DYN)
 
 // width 3.5
 #define BUTTON_WIDTH_3_5 82
@@ -84,10 +84,10 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 #define BUTTON_WIDTH_4_POS_4 (LAYOUT_320_WIDTH - BUTTON_WIDTH_4)//
 //
 // for 4 buttons horizontal - dynamic
-#define BUTTON_WIDTH_4_DYN (sCurrentDisplayWidth/4 - BUTTON_HORIZONTAL_SPACING_DYN)
-#define BUTTON_WIDTH_4_DYN_POS_2 (sCurrentDisplayWidth/4)
-#define BUTTON_WIDTH_4_DYN_POS_3 (sCurrentDisplayWidth/2)
-#define BUTTON_WIDTH_4_DYN_POS_4 (sCurrentDisplayWidth - BUTTON_WIDTH_4_DYN)
+#define BUTTON_WIDTH_4_DYN (BlueDisplay1.mCurrentDisplaySize.XWidth/4 - BUTTON_HORIZONTAL_SPACING_DYN)
+#define BUTTON_WIDTH_4_DYN_POS_2 (BlueDisplay1.mCurrentDisplaySize.XWidth/4)
+#define BUTTON_WIDTH_4_DYN_POS_3 (BlueDisplay1.mCurrentDisplaySize.XWidth/2)
+#define BUTTON_WIDTH_4_DYN_POS_4 (BlueDisplay1.mCurrentDisplaySize.XWidth - BUTTON_WIDTH_4_DYN)
 //
 // for 5 buttons horizontal 51,2  - 6 characters
 #define BUTTON_WIDTH_5 51
@@ -110,12 +110,12 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 #define BUTTON_WIDTH_6_POS_6 (LAYOUT_320_WIDTH - BUTTON_WIDTH_6)
 //
 // for 6 buttons horizontal - dynamic
-#define BUTTON_WIDTH_6_DYN (sCurrentDisplayWidth/6 - BUTTON_HORIZONTAL_SPACING_DYN)
-#define BUTTON_WIDTH_6_DYN_POS_2 (sCurrentDisplayWidth/6)
-#define BUTTON_WIDTH_6_DYN_POS_3 (sCurrentDisplayWidth/3)
-#define BUTTON_WIDTH_6_DYN_POS_4 (sCurrentDisplayWidth/2)
-#define BUTTON_WIDTH_6_DYN_POS_5 ((2*sCurrentDisplayWidth)/3)
-#define BUTTON_WIDTH_6_DYN_POS_6 (sCurrentDisplayWidth - BUTTON_WIDTH_6_DYN)
+#define BUTTON_WIDTH_6_DYN (BlueDisplay1.mCurrentDisplaySize.XWidth/6 - BUTTON_HORIZONTAL_SPACING_DYN)
+#define BUTTON_WIDTH_6_DYN_POS_2 (BlueDisplay1.mCurrentDisplaySize.XWidth/6)
+#define BUTTON_WIDTH_6_DYN_POS_3 (BlueDisplay1.mCurrentDisplaySize.XWidth/3)
+#define BUTTON_WIDTH_6_DYN_POS_4 (BlueDisplay1.mCurrentDisplaySize.XWidth/2)
+#define BUTTON_WIDTH_6_DYN_POS_5 ((2*BlueDisplay1.mCurrentDisplaySize.XWidth)/3)
+#define BUTTON_WIDTH_6_DYN_POS_6 (BlueDisplay1.mCurrentDisplaySize.XWidth - BUTTON_WIDTH_6_DYN)
 //
 // for 8 buttons horizontal
 #define BUTTON_WIDTH_8 33
@@ -145,7 +145,7 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 /**********************
  * HEIGHTS
  *********************/
-#define BUTTON_VERTICAL_SPACING_DYN (sCurrentDisplayHeight/32)
+#define BUTTON_VERTICAL_SPACING_DYN (BlueDisplay1.mCurrentDisplaySize.YHeight/32)
 
 // for 4 buttons vertical
 #define BUTTON_HEIGHT_4 48
@@ -160,10 +160,10 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 #define BUTTON_HEIGHT_4_256_LINE_4 (LAYOUT_256_HEIGHT - BUTTON_HEIGHT_4_256)
 //
 // for 4 buttons vertical and variable display height
-#define BUTTON_HEIGHT_4_DYN (sCurrentDisplayHeight/4 - BUTTON_VERTICAL_SPACING_DYN)
-#define BUTTON_HEIGHT_4_DYN_LINE_2 (sCurrentDisplayHeight/4)
-#define BUTTON_HEIGHT_4_DYN_LINE_3 (sCurrentDisplayHeight/2)
-#define BUTTON_HEIGHT_4_DYN_LINE_4 (sCurrentDisplayHeight - BUTTON_HEIGHT_4_DYN)
+#define BUTTON_HEIGHT_4_DYN (BlueDisplay1.mCurrentDisplaySize.YHeight/4 - BUTTON_VERTICAL_SPACING_DYN)
+#define BUTTON_HEIGHT_4_DYN_LINE_2 (BlueDisplay1.mCurrentDisplaySize.YHeight/4)
+#define BUTTON_HEIGHT_4_DYN_LINE_3 (BlueDisplay1.mCurrentDisplaySize.YHeight/2)
+#define BUTTON_HEIGHT_4_DYN_LINE_4 (BlueDisplay1.mCurrentDisplaySize.YHeight - BUTTON_HEIGHT_4_DYN)
 //
 // for 5 buttons vertical
 #define BUTTON_HEIGHT_5 38
@@ -180,11 +180,11 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 #define BUTTON_HEIGHT_5_256_LINE_5 (LAYOUT_256_HEIGHT - BUTTON_HEIGHT_5_256)
 //
 // for 5 buttons vertical and variable display height
-#define BUTTON_HEIGHT_5_DYN (sCurrentDisplayHeight/5 - BUTTON_VERTICAL_SPACING_DYN)
-#define BUTTON_HEIGHT_5_DYN_LINE_2 (sCurrentDisplayHeight/5)
-#define BUTTON_HEIGHT_5_DYN_LINE_3 ((sCurrentDisplayHeight/5)*2)
-#define BUTTON_HEIGHT_5_DYN_LINE_4 ((sCurrentDisplayHeight/5)*3)
-#define BUTTON_HEIGHT_5_DYN_LINE_5 (sCurrentDisplayHeight - BUTTON_HEIGHT_5_DYN)
+#define BUTTON_HEIGHT_5_DYN (BlueDisplay1.mCurrentDisplaySize.YHeight/5 - BUTTON_VERTICAL_SPACING_DYN)
+#define BUTTON_HEIGHT_5_DYN_LINE_2 (BlueDisplay1.mCurrentDisplaySize.YHeight/5)
+#define BUTTON_HEIGHT_5_DYN_LINE_3 ((BlueDisplay1.mCurrentDisplaySize.YHeight/5)*2)
+#define BUTTON_HEIGHT_5_DYN_LINE_4 ((BlueDisplay1.mCurrentDisplaySize.YHeight/5)*3)
+#define BUTTON_HEIGHT_5_DYN_LINE_5 (BlueDisplay1.mCurrentDisplaySize.YHeight - BUTTON_HEIGHT_5_DYN)
 //
 // for 6 buttons vertical
 #define BUTTON_HEIGHT_6 30

@@ -11,8 +11,7 @@
 #ifndef TOUCHDSOCOMMON_H_
 #define TOUCHDSOCOMMON_H_
 
-#include "BDButton.h"
-#include "BDSlider.h"
+#include "BlueDisplay.h"
 #ifdef AVR
 #include "FrequencyGeneratorPage.h"
 #endif

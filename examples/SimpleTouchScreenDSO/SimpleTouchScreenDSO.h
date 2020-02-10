@@ -38,8 +38,8 @@
 /*
  *  Display size
  */
-const unsigned int REMOTE_DISPLAY_HEIGHT = 256;
-const unsigned int REMOTE_DISPLAY_WIDTH = 320;
+const unsigned int REMOTE_DISPLAY_HEIGHT = 256; // we use 8 bit resolution and have 256 different analog values
+const unsigned int REMOTE_DISPLAY_WIDTH = DISPLAY_HALF_VGA_WIDTH; // 320
 
 #define THOUSANDS_SEPARATOR '.'
 

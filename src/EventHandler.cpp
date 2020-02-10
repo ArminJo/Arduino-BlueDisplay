@@ -547,7 +547,7 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
     }
 
     /*
-     * this type is set e.g. in EVENT_CONNECTION_BUILD_UP therefore cannot put it in switch (or use else if)
+     * This EventType is set in EVENT_REORIENTATION and EVENT_CONNECTION_BUILD_UP and therefore cannot be included in switch or else if.
      */
     if (tEventType == EVENT_REDRAW) {
         /*

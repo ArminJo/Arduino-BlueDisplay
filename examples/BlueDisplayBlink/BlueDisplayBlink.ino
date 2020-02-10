@@ -42,12 +42,12 @@
 #define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
-#define DISPLAY_WIDTH 320
-#define DISPLAY_HEIGHT 256
+#define DISPLAY_WIDTH  DISPLAY_HALF_VGA_WIDTH  // 320
+#define DISPLAY_HEIGHT DISPLAY_HALF_VGA_HEIGHT // 240
 
 bool doBlink = true;
 
-#define VERSION_EXAMPLE "1.1"
+#define VERSION_EXAMPLE "1.2"
 
 /*
  * The Start Stop button
