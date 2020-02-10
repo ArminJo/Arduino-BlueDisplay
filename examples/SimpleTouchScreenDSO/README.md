@@ -1,5 +1,5 @@
 # Arduino-Simple-DSO
-
+### [Version 3.2](https://github.com/ArminJo/Arduino-Simple-DSO/releases)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2FArminJo%2FArduino-Simple-DSO)](https://github.com/brentvollebregt/hit-counter)
 
@@ -9,6 +9,11 @@ This DSO needs only a standard Arduino-Uno or Arduino-Nano, a HC-05 Bluetooth mo
 | Simple DSO with no attenuator on breadboard | DSO Chart screen |
 | :-: | :-: |
 | ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/ArduinoDSO_simple.jpg) | ![DSO chart screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart.jpg) |
+
+The application is also available as an [example](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples/SimpleTouchScreenDSO) of the
+[Arduino BlueDisplay library](https://github.com/ArminJo/Arduino-BlueDisplay) - use *File -> Examples -> Examples from Custom Libraries*.
+You can load the library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. Use "BlueDisplay" as filter string.
+
 
 ## Features
 - 150 kSamples per second with good quality.

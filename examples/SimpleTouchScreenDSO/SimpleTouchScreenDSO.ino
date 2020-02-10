@@ -2094,7 +2094,7 @@ void printVCCAndTemperature(void) {
         setVCCValue();
         dtostrf(MeasurementControl.VCC, 4, 2, &sStringBuffer[30]);
 
-        sprintf_P(sStringBuffer, PSTR("%s volt %s\xB0" "C"), &sStringBuffer[30], &sStringBuffer[40]);
+        sprintf_P(sStringBuffer, PSTR("%s volt %s\xB0" "C"), &sStringBuffer[30], &sStringBuffer[40]); // \xB0 is degree character
         BlueDisplay1.drawText(BUTTON_WIDTH_3_POS_2, SETTINGS_PAGE_INFO_Y, sStringBuffer,
         TEXT_SIZE_11, COLOR_BLACK, COLOR_BACKGROUND_DSO);
     }

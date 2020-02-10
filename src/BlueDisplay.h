@@ -72,8 +72,14 @@
 #include "BDSlider.h" // for BDSliderHandle_t
 #endif
 
-#define VERSION_BLUE_DISPLAY "1.2.0"
+#define VERSION_BLUE_DISPLAY "1.2.1"
+#define VERSION_BLUE_DISPLAY_NUMERICAL 121
 /*
+ * Version 1.2.1
+ * - Added `sMillisOfLastReceivedBDEvent` for user timeout detection.
+ * - Fixed bug in `debug(const char* aMessage, float aFloat)`.
+ * - Added `*LOCK_SENSOR_LANDSCAPE` and `*LOCK_SENSOR_LANDSCAPE` in function `setScreenOrientationLock()`. Needs BD app version 4.2.
+ *
  * Version 1.2.0
  * - Use type `Print *` instead of `Stream *`.
  * - New function `initSerial()`
@@ -82,7 +88,7 @@
  * This old version numbers corresponds to the version of the BlueDisplay app
  * Version 3.7
  * - Handling of no input for getNumber.
- * - Slider setScaleFactor() does not scale the actual value, mostly delivered as initial value at init().
+ * - Slider setScaleFactor() does not scale the current value, mostly delivered as initial value at init().
  * Version 3.6 connect, reconnect and autoconnect improved/added. Improved debug() command. Simplified Red/Green button handling.
  * Version 3.5 Slider scaling changed and unit value added.
  * Version 3.4
@@ -207,8 +213,14 @@ static const int BD_FLAG_USE_MAX_SIZE = 0x10;      // Use maximum display size f
  ***************************************/
 static const int FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x00;
 static const int FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT = 0x01;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_ACTUAL = 0x02;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_ACTUAL = 0x02; // deprecated
+static const int FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x02;
 static const int FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x03;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE = 0x06; // both landscapes are allowed
+static const int FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_PORTRAIT = 0x07;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_LANDSCAPE = 0x08;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_PORTRAIT = 0x09;
+
 
 /**********************
  * Button
@@ -396,9 +408,9 @@ public:
 	struct XYSize * getMaxDisplaySize(void);
 	uint16_t getMaxDisplayWidth(void);
 	uint16_t getMaxDisplayHeight(void);
-	struct XYSize * getActualDisplaySize(void);
-	uint16_t getActualDisplayWidth(void);
-	uint16_t getActualDisplayHeight(void);
+    struct XYSize * getCurrentDisplaySize(void);
+    uint16_t getCurrentDisplayWidth(void);
+    uint16_t getCurrentDisplayHeight(void);
 	// returns requested size
 	struct XYSize * getReferenceDisplaySize(void);
 	uint16_t getDisplayWidth(void);
@@ -481,7 +493,7 @@ public:
 			void (*aOnChangeHandler)(BDSliderHandle_t *, int16_t));
 	void drawSlider(BDSliderHandle_t aSliderNumber);
 	void drawSliderBorder(BDSliderHandle_t aSliderNumber);
-	void setSliderActualValueAndDrawBar(BDSliderHandle_t aSliderNumber, int16_t aActualValue);
+    void setSliderValueAndDrawBar(BDSliderHandle_t aSliderNumber, int16_t aCurrentValue);
 	void setSliderColorBarThreshold(BDSliderHandle_t aSliderNumber, uint16_t aBarThresholdColor);
 	void setSliderColorBarBackground(BDSliderHandle_t aSliderNumber, uint16_t aBarBackgroundColor);
 
@@ -495,7 +507,7 @@ public:
 	void deactivateAllSliders(void);
 
 	struct XYSize mReferenceDisplaySize; // contains requested display size
-	struct XYSize mActualDisplaySize;
+	struct XYSize mCurrentDisplaySize;
 	struct XYSize mMaxDisplaySize;
 	uint32_t mHostUnixTimestamp;
 
@@ -509,8 +521,8 @@ public:
 	void generateColorSpectrum(void);
 
 private:
-	uint16_t mActualDisplayHeight;
-	uint16_t mActualDisplayWidth;
+	uint16_t mCurrentDisplayHeight;
+	uint16_t mCurrentDisplayWidth;
 };
 
 // The instance provided by the class itself

@@ -110,17 +110,16 @@ void setup() {
     pinMode(TONE_PIN, OUTPUT);
     pinMode(ANALOG_INPUT_PIN, INPUT);
 
-    /*
-     * If you want to see Serial.print output if not connected with BlueDisplay comment out the line "#define USE_STANDARD_SERIAL" in BlueSerial.h
-     * or define global symbol with -DUSE_STANDARD_SERIAL in order to force the BlueDisplay library to use the Arduino Serial object
-     * and to release the SimpleSerial interrupt handler '__vector_18'
-     */
     initSerial(BLUETOOTH_BAUD_RATE);
 #if defined (USE_SERIAL1) // defined in BlueSerial.h
-    // Can use Serial(0) for Serial.print  output.
+    // Serial(10) is available for Serial.print  output.
+#  if defined(SERIAL_USB)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
+#  endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+#else
+    BlueDisplay1.debug("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
 #endif
 
     // Register callback handler and check for connection
@@ -273,7 +272,7 @@ void doPlusMinus(BDButton * aTheTouchedButton __attribute__((unused)), int16_t a
         TouchButtonBDExampleBlinkStartStop.setValueAndDraw(doBlink);
     }
     // set slider bar accordingly
-    TouchSliderDelay.setActualValueAndDrawBar(sDelay);
+    TouchSliderDelay.setValueAndDrawBar(sDelay);
     /*
      * Example for debug/toast output by BlueDisplay
      */
@@ -292,7 +291,7 @@ void doSetDelay(float aValue) {
     }
     sDelay = aValue;
     // set slider bar accordingly
-    TouchSliderDelay.setActualValueAndDrawBar(sDelay);
+    TouchSliderDelay.setValueAndDrawBar(sDelay);
 }
 
 /*

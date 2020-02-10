@@ -69,19 +69,16 @@ void setup() {
     // Initialize the LED pin as output.
     pinMode(LED_BUILTIN, OUTPUT);
 
-#ifdef USE_SIMPLE_SERIAL
-    initSimpleSerial(BLUETOOTH_BAUD_RATE);
-#else
-#  if defined (USE_SERIAL1)
-    Serial1.begin(BLUETOOTH_BAUD_RATE);
-#    if defined(SERIAL_USB)
+    initSerial(BLUETOOTH_BAUD_RATE);
+#if defined (USE_SERIAL1) // defined in BlueSerial.h
+    // Serial(10) is available for Serial.print  output.
+#  if defined(SERIAL_USB)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
-#    endif
-	// Just to know which program is running on my Arduino
-	Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
-#  else
-    Serial.begin(BLUETOOTH_BAUD_RATE);
 #  endif
+    // Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+#else
+    BlueDisplay1.debug("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
 #endif
 
     // Register callback handler and check for connection
@@ -121,8 +118,8 @@ void initDisplay(void) {
     DISPLAY_HEIGHT);
     // Initialize button position, size, colors etc.
     TouchButtonBlinkStartStop.init((DISPLAY_WIDTH - BUTTON_WIDTH_2) / 2, BUTTON_HEIGHT_4_256_LINE_4, BUTTON_WIDTH_2,
-            BUTTON_HEIGHT_4_256,
-            COLOR_BLUE, "Start", 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doBlinkStartStop);
+    BUTTON_HEIGHT_4_256,
+    COLOR_BLUE, "Start", 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doBlinkStartStop);
     TouchButtonBlinkStartStop.setCaptionForValueTrue("Stop");
 }
 

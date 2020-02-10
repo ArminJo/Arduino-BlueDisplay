@@ -545,7 +545,7 @@ void printFrequencyAndPeriod() {
             tSliderValue -= (FREQ_SLIDER_MAX_VALUE / 3);
         }
     }
-    TouchSliderFrequency.setActualValueAndDrawBar(tSliderValue);
+    TouchSliderFrequency.setValueAndDrawBar(tSliderValue);
 }
 
 /**

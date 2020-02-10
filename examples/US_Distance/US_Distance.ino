@@ -40,6 +40,8 @@
 #define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
+//#define USE_US_SENSOR_1_PIN_MODE // Comment it out, if you use modified HC-SR04 modules or HY-SRF05 ones
+
 int ECHO_IN_PIN = 4;
 int TRIGGER_OUT_PIN = 5;
 #define TONE_PIN 3 // must be 3 to be compatible with talkie
@@ -82,27 +84,23 @@ void doGetOffset(BDButton * aTheTouchedButton __attribute__((unused)), int16_t a
 
 void setup(void) {
 
-    initUSDistancePins(TRIGGER_OUT_PIN, ECHO_IN_PIN);
+#ifdef USE_US_SENSOR_1_PIN_MODE
+    pinMode(LED_BUILTIN, OUTPUT);
 
-#ifdef USE_SIMPLE_SERIAL
-    /*
-     * If you want to see serial output if not connected with BlueDisplay comment line 39 in BlueSerial.h or use global #define USE_STANDARD_SERIAL
-     * e.g. with -DUSE_STANDARD_SERIAL as compiler parameter for c++ in order to force the BlueDisplay library to use the Arduino Serial object
-     * and release the SimpleSerial interrupt handler '__vector_18'
-     */
-    initSimpleSerial(BLUETOOTH_BAUD_RATE);
+    initUSDistancePin(TRIGGER_OUT_PIN);
 #else
-#  if defined (USE_SERIAL1)
-    Serial1.begin(BLUETOOTH_BAUD_RATE);
-#    if defined(SERIAL_USB)
+    initUSDistancePins(TRIGGER_OUT_PIN, ECHO_IN_PIN);
+#endif
+
+    initSerial(BLUETOOTH_BAUD_RATE);
+#if defined (USE_SERIAL1)
+    // Serial(0) is available for Serial.print output.
+#  if defined(SERIAL_USB)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
-#    endif
+#  endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
-#  else
-    Serial.begin(BLUETOOTH_BAUD_RATE);
-#  endif
-#endif // USE_SIMPLE_SERIAL
+#endif
 
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&handleConnectAndReorientation, &drawGui);
@@ -114,7 +112,7 @@ void setup(void) {
         tone(TONE_PIN, 3000, 50);
         delay(100);
     } else {
-#if defined (USE_STANDARD_SERIAL) && !defined(USE_SERIAL1)
+#if defined (USE_STANDARD_SERIAL) && !defined(USE_SERIAL1) // print it now if not printed above
 #if defined(__AVR_ATmega32U4__)
     while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
 #endif

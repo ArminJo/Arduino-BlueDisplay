@@ -115,22 +115,45 @@ void BDSlider::drawBorder(void) {
     }
 }
 
-void BDSlider::setActualValue(int16_t aActualValue) {
+void BDSlider::setValue(int16_t aCurrentValue) {
 #ifdef LOCAL_DISPLAY_EXISTS
-    mLocalSliderPointer->setActualValueAndDrawBar(aActualValue);
+    mLocalSliderPointer->setCurrentValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE, aActualValue);
+        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
     }
 }
 
-
-void BDSlider::setActualValueAndDrawBar(int16_t aActualValue) {
+/*
+ * Deprecated
+ */
+void BDSlider::setActualValue(int16_t aCurrentValue) {
 #ifdef LOCAL_DISPLAY_EXISTS
-    mLocalSliderPointer->setActualValueAndDrawBar(aActualValue);
+    mLocalSliderPointer->setCurrentValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aActualValue);
+        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
+    }
+}
+
+void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
+#ifdef LOCAL_DISPLAY_EXISTS
+    mLocalSliderPointer->setCurrentValueAndDrawBar(aCurrentValue);
+#endif
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);
+    }
+}
+
+/*
+ * Deprecated
+ */
+void BDSlider::setActualValueAndDrawBar(int16_t aCurrentValue) {
+#ifdef LOCAL_DISPLAY_EXISTS
+    mLocalSliderPointer->setCurrentValueAndDrawBar(aCurrentValue);
+#endif
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);
     }
 }
 
@@ -201,7 +224,8 @@ void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPri
 }
 
 /*
- * Scale factor of 2 means, that the slider is virtually 2 times larger than displayed
+ * Scale factor of 2 means, that the slider is virtually 2 times larger than displayed.
+ * Values were divided by scale factor before displayed on real slider.
  */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
@@ -213,7 +237,10 @@ void BDSlider::setScaleFactor(float aScaleFactor) {
     }
 }
 
-// better use setScaleFactor(1/aScaleFactorValue);
+/*
+ * The scale factor for displaying a slider value. 2 means, that values are multiplied by 2 before displayed on slider.
+ * Better use directly the call to setScaleFactor(1/aScaleFactorValue);
+ */
 void BDSlider::setValueScaleFactor(float aScaleFactorValue) {
     if (USART_isBluetoothPaired()) {
         setScaleFactor(1 / aScaleFactorValue);
@@ -258,8 +285,8 @@ void BDSlider::setXOffsetValue(int16_t aXOffsetValue) {
     mLocalSliderPointer->setXOffsetValue(aXOffsetValue);
 }
 
-int16_t BDSlider::getActualValue() const {
-    return mLocalSliderPointer->getActualValue();
+int16_t BDSlider::getCurrentValue() const {
+    return mLocalSliderPointer->getCurrentValue();
 }
 
 uint16_t BDSlider::getPositionXRight() const {

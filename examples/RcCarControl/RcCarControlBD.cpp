@@ -27,6 +27,7 @@
 
 #include "BlueDisplay.h"
 
+#include "HCSR04.h"
 #include "Servo.h"
 
 #include <stdlib.h> // for dtostrf
@@ -74,7 +75,7 @@ void doFollowerOnOff(BDButton * aTheTouchedButton, int16_t aValue);
 BDButton TouchButtonToneStartStop;
 void doToneStartStop(BDButton * aTheTochedButton, int16_t aValue);
 void resetOutputs(void);
-bool sStarted = true;
+bool sRCCarStarted = true;
 
 /*
  * Laser
@@ -130,8 +131,8 @@ uint32_t sMillisOfLastVCCInfo = 0;
 /*
  * Layout
  */
-int sActualDisplayWidth;
-int sActualDisplayHeight;
+int sCurrentDisplayWidth;
+int sCurrentDisplayHeight;
 int sSliderSize;
 #define VALUE_X_SLIDER_DEAD_BAND (sSliderSize/2)
 int sSliderHeight;
@@ -171,12 +172,12 @@ void drawGui(void) {
     SliderShowDistance.drawSlider();
     // draw cm string
     // y Formula is: mPositionY + tSliderLongWidth + aTextLayoutInfo.mMargin + (int) (0.76 * aTextLayoutInfo.mSize)
-    BlueDisplay1.drawText(sActualDisplayWidth / 2 + sSliderSize + 3 * getTextWidth(sTextSize),
+    BlueDisplay1.drawText(sCurrentDisplayWidth / 2 + sSliderSize + 3 * getTextWidth(sTextSize),
     BUTTON_HEIGHT_4_DYN_LINE_2 - BUTTON_VERTICAL_SPACING_DYN + sTextSize / 2 + getTextAscend(sTextSize), "cm", sTextSize,
     COLOR_BLACK,
     COLOR_WHITE);
     // draw Laser Position string
-    BlueDisplay1.drawText(0, sActualDisplayHeight / 32 + sSliderHeightLaser + sTextSize, "Laser position", sTextSize,
+    BlueDisplay1.drawText(0, sCurrentDisplayHeight / 32 + sSliderHeightLaser + sTextSize, "Laser position", sTextSize,
     COLOR_BLACK, COLOR_WHITE);
 
     SliderSpeed.drawSlider();
@@ -187,27 +188,27 @@ void initDisplay(void) {
     /*
      * handle display size
      */
-    sActualDisplayWidth = BlueDisplay1.getMaxDisplayWidth();
-    sActualDisplayHeight = BlueDisplay1.getMaxDisplayHeight();
-    if (sActualDisplayWidth < sActualDisplayHeight) {
+    sCurrentDisplayWidth = BlueDisplay1.getMaxDisplayWidth();
+    sCurrentDisplayHeight = BlueDisplay1.getMaxDisplayHeight();
+    if (sCurrentDisplayWidth < sCurrentDisplayHeight) {
         // Portrait -> change to landscape 3/2 format
-        sActualDisplayHeight = (sActualDisplayWidth / 3) * 2;
+        sCurrentDisplayHeight = (sCurrentDisplayWidth / 3) * 2;
     }
     /*
      * compute layout values
      */
-    sSliderSize = sActualDisplayWidth / 16;
-    sSliderWidth = sActualDisplayHeight / 4;
+    sSliderSize = sCurrentDisplayWidth / 16;
+    sSliderWidth = sCurrentDisplayHeight / 4;
 
-    // 3/8 of sActualDisplayHeight
-    sSliderHeightLaser = (sActualDisplayHeight / 2) + (sActualDisplayHeight / 8);
-    sSliderHeight = ((sActualDisplayHeight / 2) + sActualDisplayHeight / 4) / 2;
+    // 3/8 of sCurrentDisplayHeight
+    sSliderHeightLaser = (sCurrentDisplayHeight / 2) + (sCurrentDisplayHeight / 8);
+    sSliderHeight = ((sCurrentDisplayHeight / 2) + sCurrentDisplayHeight / 4) / 2;
 
     int tSliderThresholdVelocity = (sSliderHeight * (MOTOR_DEAD_BAND_VALUE + 1)) / 255;
-    sTextSize = sActualDisplayHeight / 16;
+    sTextSize = sCurrentDisplayHeight / 16;
     sTextSizeVCC = sTextSize * 2;
 
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sActualDisplayWidth, sActualDisplayHeight);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sCurrentDisplayWidth, sCurrentDisplayHeight);
 
     sYZeroValueAdded = 0;
     tSensorChangeCallCount = 0;
@@ -215,7 +216,7 @@ void initDisplay(void) {
     // Since landscape has 2 orientations, let the user choose the right one.
     BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_ACTUAL);
 
-    SliderSpeed.init(0, sActualDisplayHeight / 32, sSliderSize * 3, sSliderHeightLaser, sSliderHeightLaser, sSliderHeightLaser / 2,
+    SliderSpeed.init(0, sCurrentDisplayHeight / 32, sSliderSize * 3, sSliderHeightLaser, sSliderHeightLaser, sSliderHeightLaser / 2,
     SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doLaserPosition);
 
     /*
@@ -223,33 +224,33 @@ void initDisplay(void) {
      */
 // Position Slider at middle of screen
 // Top slider
-    SliderVelocityForward.init((sActualDisplayWidth - sSliderSize) / 2, (sActualDisplayHeight / 2) - sSliderHeight, sSliderSize,
+    SliderVelocityForward.init((sCurrentDisplayWidth - sSliderSize) / 2, (sCurrentDisplayHeight / 2) - sSliderHeight, sSliderSize,
             sSliderHeight, tSliderThresholdVelocity, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT,
             NULL);
     SliderVelocityForward.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
     // Bottom slider
-    SliderVelocityBackward.init((sActualDisplayWidth - sSliderSize) / 2, sActualDisplayHeight / 2, sSliderSize, -(sSliderHeight),
+    SliderVelocityBackward.init((sCurrentDisplayWidth - sSliderSize) / 2, sCurrentDisplayHeight / 2, sSliderSize, -(sSliderHeight),
             tSliderThresholdVelocity, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderVelocityBackward.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
 // Position slider right from velocity at middle of screen
-    SliderRight.init((sActualDisplayWidth + sSliderSize) / 2, (sActualDisplayHeight - sSliderSize) / 2, sSliderSize, sSliderWidth,
+    SliderRight.init((sCurrentDisplayWidth + sSliderSize) / 2, (sCurrentDisplayHeight - sSliderSize) / 2, sSliderSize, sSliderWidth,
     SLIDER_LEFT_RIGHT_THRESHOLD, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
             FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderRight.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
 // Position inverse slider left from Velocity at middle of screen
-    SliderLeft.init(((sActualDisplayWidth - sSliderSize) / 2) - sSliderWidth, (sActualDisplayHeight - sSliderSize) / 2, sSliderSize,
+    SliderLeft.init(((sCurrentDisplayWidth - sSliderSize) / 2) - sSliderWidth, (sCurrentDisplayHeight - sSliderSize) / 2, sSliderSize,
             -(sSliderWidth), SLIDER_LEFT_RIGHT_THRESHOLD, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
             FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderLeft.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
     // Distance slider
-    SliderShowDistance.init(sActualDisplayWidth / 2 + sSliderSize,
-    BUTTON_HEIGHT_4_DYN_LINE_2 - sSliderSize - BUTTON_VERTICAL_SPACING_DYN, sSliderSize, sActualDisplayWidth / 2 - sSliderSize, 99,
+    SliderShowDistance.init(sCurrentDisplayWidth / 2 + sSliderSize,
+    BUTTON_HEIGHT_4_DYN_LINE_2 - sSliderSize - BUTTON_VERTICAL_SPACING_DYN, sSliderSize, sCurrentDisplayWidth / 2 - sSliderSize, 99,
             0, COLOR_WHITE, COLOR_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT | FLAG_SLIDER_SHOW_VALUE, NULL);
-    float tScaleFactor = ((2 - sSliderSize) * 100) / sActualDisplayWidth;
+    float tScaleFactor = ((2 - sSliderSize) * 100) / sCurrentDisplayWidth;
     SliderShowDistance.setScaleFactor(tScaleFactor);
     SliderShowDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR_BLACK, COLOR_WHITE);
 
@@ -257,7 +258,7 @@ void initDisplay(void) {
      * Buttons
      */
     TouchButtonToneStartStop.init(0, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN,
-    COLOR_BLUE, F("Start"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sStarted,
+    COLOR_BLUE, F("Start"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sRCCarStarted,
             &doToneStartStop);
     TouchButtonToneStartStop.setCaptionForValueTrue(F("Stop"));
 
@@ -281,8 +282,8 @@ void BDsetup() {
     pinMode(RIGHT_PIN, OUTPUT);
     pinMode(LEFT_PIN, OUTPUT);
     pinMode(LASER_POWER_PIN, OUTPUT);
-    pinMode(TRIGGER_PIN, OUTPUT);
-    pinMode(ECHO_PIN, INPUT);
+
+    initUSDistancePins(TRIGGER_PIN, ECHO_PIN);
 
     digitalWrite(LASER_POWER_PIN, LaserOn);
     ServoLaser.write(90);
@@ -323,7 +324,7 @@ void BDloop() {
     /*
      * Print VCC and temperature each second
      */
-    BlueDisplay1.printVCCAndTemperaturePeriodically(sActualDisplayWidth / 4, sTextSize, sTextSize, 2000);
+    BlueDisplay1.printVCCAndTemperaturePeriodically(sCurrentDisplayWidth / 4, sTextSize, sTextSize, 2000);
 #endif
 
     /*
@@ -331,18 +332,12 @@ void BDloop() {
      */
     checkAndHandleEvents();
 
-    if (sStarted) {
+    if (sRCCarStarted) {
         /*
          * Measure distance
          */
-        // need 10 usec Trigger Pulse
-        digitalWrite(TRIGGER_PIN, HIGH);
-        delayMicroseconds(40);
-        // falling edge starts measurement
-        digitalWrite(TRIGGER_PIN, LOW);
-
-        unsigned long tPulseLength = pulseInLong(ECHO_PIN, HIGH, 5850); // timeout at 1m
-        if (tPulseLength != 0) {
+        unsigned long tPulseLength = getUSDistance(US_DISTANCE_TIMEOUT_MICROS_FOR_1_METER); // timeout at 1m
+        if (tPulseLength != US_DISTANCE_TIMEOUT_MICROS_FOR_1_METER) {
             /*
              * Filter value
              */
@@ -355,7 +350,7 @@ void BDloop() {
             int tCentimeterNew = (sPulseLengthFiltered / 58) + 1;
 
             if (sCentimeterOld != tCentimeterNew) {
-                SliderShowDistance.setActualValueAndDrawBar(tCentimeterNew);
+                SliderShowDistance.setValueAndDrawBar(tCentimeterNew);
                 sCentimeterOld = tCentimeterNew;
             }
 
@@ -396,11 +391,11 @@ void BDloop() {
                 }
             }
         } else if (sCentimeterOld != 100) {
-            SliderShowDistance.setActualValueAndDrawBar(100);
+            SliderShowDistance.setValueAndDrawBar(100);
             sCentimeterOld = 100;
         }
     } else if (sCentimeterOld != 0) {
-        SliderShowDistance.setActualValueAndDrawBar(0);
+        SliderShowDistance.setValueAndDrawBar(0);
         sCentimeterOld = 0;
     }
 }
@@ -437,8 +432,8 @@ void doLaserPosition(BDSlider * aTheTouchedSlider, uint16_t aValue) {
  * Handle Start/Stop
  */
 void doToneStartStop(BDButton * aTheTouchedButton, int16_t aValue) {
-    sStarted = aValue;
-    if (sStarted) {
+    sRCCarStarted = aValue;
+    if (sRCCarStarted) {
         registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, &doSensorChange);
     } else {
         registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, NULL);
@@ -513,8 +508,8 @@ void processVerticalSensorValue(float tSensorValue) {
     }
     if (sLastSliderVelocityValue != tSliderValue) {
         sLastSliderVelocityValue = tSliderValue;
-        tActiveSlider.setActualValueAndDrawBar(tSliderValue);
-        tInactiveSlider.setActualValueAndDrawBar(0);
+        tActiveSlider.setValueAndDrawBar(tSliderValue);
+        tInactiveSlider.setValueAndDrawBar(0);
         if (sLastMotorValue != tMotorValue) {
             sLastMotorValue = tMotorValue;
             sprintf(sStringBuffer, "%3d", tMotorValue);
@@ -573,8 +568,8 @@ void processHorizontalSensorValue(float tSensorValue) {
 // use this as delay between deactivating one pin and activating the other
     if (sLastLeftRightValue != tLeftRightValue) {
         sLastLeftRightValue = tLeftRightValue;
-        tActiveSlider.setActualValueAndDrawBar(tLeftRightValue);
-        tInactiveSlider.setActualValueAndDrawBar(0);
+        tActiveSlider.setValueAndDrawBar(tLeftRightValue);
+        tInactiveSlider.setValueAndDrawBar(0);
     }
 
     digitalWrite(tActivePin, tActiveValue);
@@ -606,7 +601,7 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallback
     } else {
         tSensorChangeCallCount = CALLS_FOR_ZERO_ADJUSTMENT + 1; // to prevent overflow
 //        printSensorInfo(aSensorCallbackInfo);
-        if (sStarted && !sFollowerMode) {
+        if (sRCCarStarted && !sFollowerMode) {
             processVerticalSensorValue(aSensorCallbackInfo->ValueY);
             processHorizontalSensorValue(aSensorCallbackInfo->ValueX);
         }

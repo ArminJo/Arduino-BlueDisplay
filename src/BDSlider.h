@@ -86,8 +86,10 @@ public:
 
     void drawSlider(void);
     void drawBorder(void);
-    void setActualValue(int16_t aActualValue);
-    void setActualValueAndDrawBar(int16_t aActualValue);
+    void setValue(int16_t aCurrentValue);
+    void setValueAndDrawBar(int16_t aCurrentValue);
+    void setActualValue(int16_t aCurrentValue);// deprecated
+    void setActualValueAndDrawBar(int16_t aCurrentValue); // deprecated
     void setBarColor(color16_t aBarColor);
     void setBarThresholdColor(color16_t aBarThresholdColor);
     void setBarBackgroundColor(color16_t aBarBackgroundColor);
@@ -115,7 +117,7 @@ public:
     int printValue();
     void setXOffsetValue(int16_t aXOffsetValue);
 
-    int16_t getActualValue(void) const;
+    int16_t getCurrentValue(void) const;
     uint16_t getPositionXRight(void) const;
     uint16_t getPositionYBottom(void) const;
     void deinit(void);
