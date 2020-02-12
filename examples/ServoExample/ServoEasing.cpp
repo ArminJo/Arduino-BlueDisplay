@@ -186,7 +186,7 @@ void ServoEasing::setPWM(uint16_t aPWMOnValueAsUnits, uint16_t aPWMPulseDuration
 }
 int ServoEasing::MicrosecondsToPCA9685Units(int aMicroseconds) {
 	/*
-	 * 4096 units per 20 milliseconds
+	 * 4096 units per 20 milliseconds => aMicroseconds / 4.8828
 	 */
 	return ((4096L * aMicroseconds) / REFRESH_INTERVAL);
 }

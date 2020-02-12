@@ -34,7 +34,6 @@
 #include "BlueSerial.h"
 
 #include <string.h>  // for strlen
-#include <stdlib.h> // for malloc/free
 
 BDSliderHandle_t sLocalSliderIndex = 0;
 
@@ -175,6 +174,10 @@ void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
     }
 }
 
+/*
+ * Default values are ((BlueDisplay1.mReferenceDisplaySize.YHeight / 12), (FLAG_SLIDER_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_CAPTION_ABOVE),
+ *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR_BLACK, COLOR_WHITE);
+ */
 void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPosition, uint8_t aCaptionMargin, color16_t aCaptionColor,
         color16_t aCaptionBackgroundColor) {
 #ifdef LOCAL_DISPLAY_EXISTS
@@ -195,6 +198,10 @@ void BDSlider::setCaption(const char * aCaption) {
     }
 }
 
+/*
+ * Sets the unit behind the value e.g. cm or mph
+ * This unit string is always appended to the value string.
+ */
 void BDSlider::setValueUnitString(const char * aValueUnitString) {
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_VALUE_UNIT_STRING, 1, mSliderHandle, strlen(aValueUnitString),
@@ -203,7 +210,8 @@ void BDSlider::setValueUnitString(const char * aValueUnitString) {
 }
 
 /*
- * Default is "%3d"
+ * This format string is used in (Java) String.format(mValueFormatString, mCurrentValue) which uses the printf specs.
+ * Default is "%2d" for a slider with virtual slider length from 10 to 99 and "%3d" for length 100 to 999.
  */
 void BDSlider::setValueFormatString(const char * aValueFormatString) {
     if (USART_isBluetoothPaired()) {
@@ -212,6 +220,10 @@ void BDSlider::setValueFormatString(const char * aValueFormatString) {
     }
 }
 
+/*
+ * Default values are ((BlueDisplay1.mReferenceDisplaySize.YHeight / 20), (FLAG_SLIDER_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_CAPTION_BELOW),
+ *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR_BLACK, COLOR_WHITE);
+ */
 void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPrintValuePosition, uint8_t aPrintValueMargin,
         color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor) {
 #ifdef LOCAL_DISPLAY_EXISTS
@@ -225,7 +237,7 @@ void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPri
 
 /*
  * Scale factor of 2 means, that the slider is virtually 2 times larger than displayed.
- * Values were divided by scale factor before displayed on real slider.
+ * => values were divided by scale factor before displayed on real slider.
  */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
@@ -239,7 +251,7 @@ void BDSlider::setScaleFactor(float aScaleFactor) {
 
 /*
  * The scale factor for displaying a slider value. 2 means, that values are multiplied by 2 before displayed on slider.
- * Better use directly the call to setScaleFactor(1/aScaleFactorValue);
+ * Better use the call to setScaleFactor(1/aScaleFactorValue);
  */
 void BDSlider::setValueScaleFactor(float aScaleFactorValue) {
     if (USART_isBluetoothPaired()) {

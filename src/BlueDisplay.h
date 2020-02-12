@@ -132,7 +132,7 @@
 #define TEXT_SIZE_33 33
 // for factor 4 of 8*12 font
 #define TEXT_SIZE_44 44
-// TextSize * 0.6
+// TextWidth = TextSize * 0.6
 #ifdef LOCAL_DISPLAY_EXISTS
 // 8/16 instead of 7/13 to be compatible with 8*12 font
 #define TEXT_SIZE_11_WIDTH 8
@@ -151,6 +151,7 @@
 
 // TextSize * 1,125 ( 1 + 1/8)
 // 12 instead of 11 to be compatible with 8*12 font and have a margin
+#define TEXT_SIZE_10_HEIGHT 11
 #define TEXT_SIZE_11_HEIGHT 12
 #define TEXT_SIZE_12_HEIGHT 13
 #define TEXT_SIZE_22_HEIGHT 24

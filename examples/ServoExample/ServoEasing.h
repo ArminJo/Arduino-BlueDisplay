@@ -221,9 +221,11 @@
 
 #define DEFAULT_MICROSECONDS_FOR_0_DEGREE 544
 #define DEFAULT_MICROSECONDS_FOR_180_DEGREE 2400
+// Approximately 10 microseconds per degree
 
 #define DEFAULT_PCA9685_UNITS_FOR_0_DEGREE  111 // 111.411 = 544 us
 #define DEFAULT_PCA9685_UNITS_FOR_180_DEGREE 491 // 491.52 = 2400 us
+// Approximately 2 units per degree
 
 /*
  * Definitions for continuous rotating servo - Values are taken from the Parallax Continuous Rotation Servo manual
