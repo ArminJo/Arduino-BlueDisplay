@@ -4,7 +4,7 @@
  *  US Sensor (HC-SR04) functions.
  *  The non blocking functions are using pin change interrupts and need the PinChangeInterrupt library to be installed.
  *
- *  Supports also 1 Pin mode as you get on the HY-SRF05 if you connect OUT to ground.
+ *  Supports 1 Pin mode as you get on the HY-SRF05 if you connect OUT to ground.
  *  You can modify the HC-SR04 modules to 1 Pin mode by:
  *  Old module with 3 16 pin chips: Connect Trigger and Echo direct or use a resistor < 4.7 kOhm.
  *        If you remove both 10 kOhm pullup resistor you can use a connecting resistor < 47 kOhm, but I suggest to use 10 kOhm which is more reliable.
