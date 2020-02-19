@@ -334,6 +334,7 @@ const int FUNCTION_BUTTON_GLOBAL_SETTINGS = 0x4A;
 
 // Function with variable data size
 const int FUNCTION_BUTTON_CREATE = 0x70;
+const int FUNCTION_BUTTON_INIT = 0x70;
 const int FUNCTION_BUTTON_SET_CAPTION_FOR_VALUE_TRUE = 0x71;
 const int FUNCTION_BUTTON_SET_CAPTION = 0x72;
 const int FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON = 0x73;
@@ -342,6 +343,7 @@ const int FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON = 0x73;
  * Slider functions
  *********************/
 static const int FUNCTION_SLIDER_CREATE = 0x50;
+static const int FUNCTION_SLIDER_INIT = 0x50;
 static const int FUNCTION_SLIDER_DRAW = 0x51;
 static const int FUNCTION_SLIDER_SETTINGS = 0x52;
 static const int FUNCTION_SLIDER_DRAW_BORDER = 0x53;

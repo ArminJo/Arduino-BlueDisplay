@@ -224,6 +224,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t * aParameterBufferPointer, int aParamete
  * 3. Short length of parameters (here 5*2)
  * 4. Short n parameters
  */
+// using this function saves 300 bytes for SimpleDSO
 void sendUSART5Args(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, uint16_t aColor) {
     uint16_t tParamBuffer[MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS];
 
@@ -291,29 +292,6 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, int aNumberOfArgs, ...) {
     va_end(argp);
 
     sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], aNumberOfArgs * 2 + 8, aBufferPtr, tLength);
-}
-
-/**
- * Assembles parameter header and appends header for data field
- */
-void sendUSART5ArgsAndByteBuffer(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd,
-        uint16_t aColor, uint8_t * aBufferPtr, size_t aBufferLength) {
-
-    uint16_t tParamBuffer[MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS];
-
-    uint16_t * tBufferPointer = &tParamBuffer[0];
-    *tBufferPointer++ = aFunctionTag << 8 | SYNC_TOKEN; // add sync token
-    *tBufferPointer++ = 10; // length
-    *tBufferPointer++ = aXStart;
-    *tBufferPointer++ = aYStart;
-    *tBufferPointer++ = aXEnd;
-    *tBufferPointer++ = aYEnd;
-    *tBufferPointer++ = aColor;
-
-    // add data field header
-    *tBufferPointer++ = DATAFIELD_TAG_BYTE << 8 | SYNC_TOKEN; // start new transmission block
-    *tBufferPointer++ = aBufferLength; // length in byte
-    sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], 18, aBufferPtr, aBufferLength);
 }
 
 /**

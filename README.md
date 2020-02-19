@@ -108,6 +108,8 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 - Fixed bug in `debug(const char* aMessage, float aFloat)`.
 - Added `*LOCK_SENSOR_LANDSCAPE` and `*LOCK_SENSOR_LANDSCAPE` in function `setScreenOrientationLock()`. Needs BD app version 4.2.
 - Removed unused `mCurrentDisplayHeight` and `mCurrentDisplayWidth` member variables.
+- Fixed bug in draw function from `drawByte` to `drawLong`.
+- Added short `drawText` functions. Needs BD app version 4.2.
 
 ### Version 1.2.0
 - Use type `Print *` instead of `Stream *`.

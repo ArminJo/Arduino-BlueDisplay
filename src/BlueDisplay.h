@@ -79,6 +79,9 @@
  * - Added `sMillisOfLastReceivedBDEvent` for user timeout detection.
  * - Fixed bug in `debug(const char* aMessage, float aFloat)`.
  * - Added `*LOCK_SENSOR_LANDSCAPE` and `*LOCK_SENSOR_LANDSCAPE` in function `setScreenOrientationLock()`. Needs BD app version 4.2.
+ * - Removed unused `mCurrentDisplayHeight` and `mCurrentDisplayWidth` member variables.
+ * - Fixed bug in draw function from `drawByte` to `drawLong`.
+ * - Added short `drawText` functions. Needs BD app version 4.2.
  *
  * Version 1.2.0
  * - Use type `Print *` instead of `Stream *`.
@@ -357,6 +360,7 @@ public:
     uint16_t drawChar(uint16_t aPosX, uint16_t aPosY, char aChar, uint16_t aCharSize, color16_t aFGColor, color16_t aBGColor);
     uint16_t drawText(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr, uint16_t aFontSize, color16_t aFGColor,
             color16_t aBGColor);
+    void drawText(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr);
 
     uint16_t drawByte(uint16_t aPosX, uint16_t aPosY, int8_t aByte, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
     COLOR_BLACK, color16_t aBGColor = COLOR_WHITE);
@@ -443,11 +447,13 @@ public:
 #ifdef AVR
     uint16_t drawTextPGM(uint16_t aXStart, uint16_t aYStart, const char * aPGMString, uint16_t aTextSize, color16_t aFGColor,
             color16_t aBGColor);
+    void drawTextPGM(uint16_t aXStart, uint16_t aYStart, const char * aPGMString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString, float aInitialValue);
 
     uint16_t drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper * aPGMString, uint16_t aTextSize,
             color16_t aFGColor, color16_t aBGColor);
+    void drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper * aPGMString);
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString);
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
             float aInitialValue);
