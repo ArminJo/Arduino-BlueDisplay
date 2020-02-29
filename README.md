@@ -2,7 +2,8 @@
 ### [Version 1.3.0](https://github.com/ArminJo/Arduino-BlueDisplay/releases)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
-[![Build Status](https://travis-ci.org/ArminJo/Arduino-BlueDisplay.svg?branch=master)](https://travis-ci.org/ArminJo/Arduino-BlueDisplay)
+[![Commits since latest](https://img.shields.io/github/commits-since/ArminJo/Arduino-BlueDisplay/latest)](https://github.com/ArminJo/Arduino-BlueDisplay/commits/master)
+[![Build Status](https://github.com/ArminJo/Arduino-BlueDisplay/workflows/LibraryBuild/badge.svg)](https://github.com/ArminJo/Arduino-BlueDisplay/actions)
 [![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2FArminJo%2FArduino-BlueDisplay)](https://github.com/brentvollebregt/hit-counter)
 
 This library enables an Android smartphone / tablet to act as a graphical display for your Arduino.
@@ -149,13 +150,13 @@ Local display of received and sent commands for debug purposes.
 ### V 3.0
 Android sensor accessible by Arduino.
 
-## Travis CI
-The NeoPatterns library examples are built on Travis CI for the following boards:
+# CI
+Since Travis CI is unreliable and slow, the library examples are now tested with GitHub Actions for the following boards:
 
-- Arduino Uno
-- Arduino Leonardo
-- Arduino cplayClassic
-- BluePill
+- arduino:avr:uno
+- arduino:avr:leonardo
+- arduino:avr:mega
+- STM32:stm32:GenF1:pnum=BLUEPILL_F103C8
 
 ## Requests for modifications / extensions
 Please write me a PM including your motivation/problem if you need a modification or an extension.

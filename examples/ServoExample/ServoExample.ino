@@ -69,7 +69,7 @@ ServoEasing ServoVertical;
 BDButton TouchButtonServosStartStop;
 void doServosStartStop(BDButton * aTheTochedButton, int16_t aValue);
 void resetOutputs(void);
-bool sExampleIsRunning;
+bool sExampleIsRunning;  // true running, false stopped
 
 BDButton TouchButtonSetZero;
 void doSetZero(BDButton * aTheTouchedButton, int16_t aValue);
@@ -181,14 +181,17 @@ void setup() {
 
     if (!BlueDisplay1.isConnectionEstablished()) {
 #if defined (USE_STANDARD_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
-#if defined(__AVR_ATmega32U4__)
+#  if defined(__AVR_ATmega32U4__)
     while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
-#endif
+#  endif
         // Just to know which program is running on my Arduino
         Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from  " __DATE__));
 #endif
-        sExampleIsRunning = true;
+        sExampleIsRunning = true; // no start button available to start example, so do "autostart" here
     } else {
+        // Just to know which program is running on my Arduino
+        BlueDisplay1.debug("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
+
         // set sLastLaserSliderValue and sLaserPowerValue and enables laser
         doLaserPowerSlider(NULL, sCurrentDisplayHeight / 8);
         doServosStartStop(NULL, true);

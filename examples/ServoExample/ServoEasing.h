@@ -37,14 +37,14 @@
 
 
 /*
- * For use with e.g. the Adafruit PCA9685 16-Channel Servo Driver aOffUnits.
+ * For use with e.g. the Adafruit PCA9685 16-Channel Servo Driver board. It has a resolution of 4096 per 20 ms => 4.88 us per step/unit.
  * One PCA9685 has 16 outputs. You must modify MAX_EASING_SERVOS below, if you have more than one PCA9685 attached!
  */
 //#define USE_PCA9685_SERVO_EXPANDER
 
 
 /*
- * If you have only one or two servos, then you can save program space by defining symbol `USE_LEIGHTWEIGHT_SERVO_LIB`.
+ * If you have only one or two servos and an ATMega328, then you can save program space by defining symbol `USE_LEIGHTWEIGHT_SERVO_LIB`.
  * This saves 742 bytes FLASH and 42 bytes RAM.
  * Using Lightweight Servo library (or PCA9685 servo expander) makes the servo pulse generating immune
  * to other libraries blocking interrupts for a longer time like SoftwareSerial, Adafruit_NeoPixel and DmxSimple.
@@ -61,7 +61,7 @@
 #error "Please define only one of the symbols USE_PCA9685_SERVO_EXPANDER or USE_LEIGHTWEIGHT_SERVO_LIB"
 #endif
 
-#if ! ( defined(__AVR__) || defined(ESP8266) || defined(ESP32) || defined(__STM32F1__) || defined(__SAM3X8E__) )
+#if ! ( defined(__AVR__) || defined(ESP8266) || defined(ESP32) || defined(STM32F1xx) || defined(__STM32F1__) || defined(__SAM3X8E__) )
 #warning "No periodic timer support existent (or known) for this platform. Only blocking functions and simple example will run!"
 #endif
 
@@ -99,7 +99,7 @@
 // PCA9685 works with up to 1 MHz I2C frequency
 #    if defined(ESP32)
 // The ESP32 I2C interferes with the Ticker / Timer library used.
-// Even with 100000 we have some dropouts / NAK's because of sending address again instead of first data.
+// Even with 100 kHz clock we have some dropouts / NAK's because of sending address again instead of first data.
 #    define I2C_CLOCK_FREQUENCY 100000 // 200000 does not work for my ESP32 module together with the timer :-(
 #    elif defined(ESP8266)
 #    define I2C_CLOCK_FREQUENCY 400000 // 400000 is the maximum for 80 MHz clocked ESP8266 (I measured real 330000 Hz for this setting)
@@ -164,7 +164,10 @@
 // @formatter:on
 
 /*
- * Version 1.5.1 - x/2020
+ * Version 1.5.1 - 3/2020
+ * - Added support for STM32 cores of Arduino Board manager. Seen in the Arduino IDE as "Generic STM32F1 series" from STM32 Boards.
+ * - Inserted missing `Wire.begin()` in setup of `PCA9685_Expander` example.
+ * - in `isMovingAndCallYield()` yield() only called/needed for an ESP8266.
  *
  * Version 1.5.0 - 2/2020
  * - Use type `Print *` instead of `Stream *`.
@@ -382,7 +385,7 @@ public:
     float callEasingFunction(float aPercentageOfCompletion);    // used in update()
 #endif
 
-    void write(int aValue);                         // Apply trim and reverse to the value and write it direct to the Servo library.
+    void write(int aValue);                                     // Apply trim and reverse to the value and write it direct to the Servo library.
     void writeMicrosecondsOrUnits(int aValue);
 
     void setSpeed(uint16_t aDegreesPerSecond);                  // This speed is taken if no speed argument is given.
@@ -529,6 +532,9 @@ float ElasticEaseIn(float aPercentageOfCompletion);
 float EaseOutBounce(float aPercentageOfCompletion);
 
 extern float (*sEaseFunctionArray[])(float aPercentageOfCompletion);
+
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
 
 #endif /* SERVOEASING_H_ */
 
