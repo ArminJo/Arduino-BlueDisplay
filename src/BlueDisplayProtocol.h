@@ -1,7 +1,7 @@
 /*
  * BlueDisplayProtocol.h
  *
- * Defines all the protocol related constants and structures needed for the client stubs.
+ * Defines all the protocol related constants and structures required for the client stubs.
  *
  *  SUMMARY
  *  Blue Display is an Open Source Android remote Display for Arduino etc.

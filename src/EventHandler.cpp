@@ -218,7 +218,9 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aTimeMillis) {
     while (getMillisSinceBoot() - tStartMillis < aTimeMillis) {
 #endif
         checkAndHandleEvents();
-        yield();
+#if defined(ESP8266)
+        yield(); // required for ESP8266
+#endif
     }
 }
 
@@ -300,8 +302,8 @@ void checkAndHandleEvents(void) {
     // get Arduino Serial data first
     serialEvent();
 #endif
-        handleEvent(&remoteTouchDownEvent);
-        handleEvent(&remoteEvent);
+    handleEvent(&remoteTouchDownEvent);
+    handleEvent(&remoteEvent);
 #else
     /*
      * check USART buffer, which in turn calls handleEvent() if event was received
@@ -316,7 +318,7 @@ void checkAndHandleEvents(void) {
  */
 extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
     // First check if we really have an event here
-    if(aEvent->EventType == EVENT_NO_EVENT ){
+    if (aEvent->EventType == EVENT_NO_EVENT) {
         return;
     }
 

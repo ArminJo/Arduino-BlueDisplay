@@ -1,7 +1,7 @@
 /*
  * ServoEasing.h
  *
- *  Copyright (C) 2019  Armin Joachimsmeyer
+ *  Copyright (C) 2019-2020  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of ServoEasing https://github.com/ArminJo/ServoEasing.
@@ -24,8 +24,8 @@
 #ifndef SERVOEASING_H_
 #define SERVOEASING_H_
 
-#define VERSION_SERVO_EASING "1.5.1"
-#define VERSION_SERVO_EASING_NUMERICAL 151
+#define VERSION_SERVO_EASING "1.5.2"
+#define VERSION_SERVO_EASING_NUMERICAL 152
 
 // @formatter:off
 /*  *****************************************************************************************************************************
@@ -61,7 +61,7 @@
 #error "Please define only one of the symbols USE_PCA9685_SERVO_EXPANDER or USE_LEIGHTWEIGHT_SERVO_LIB"
 #endif
 
-#if ! ( defined(__AVR__) || defined(ESP8266) || defined(ESP32) || defined(STM32F1xx) || defined(__STM32F1__) || defined(__SAM3X8E__) )
+#if ! ( defined(__AVR__) || defined(ESP8266) || defined(ESP32) || defined(STM32F1xx) || defined(__STM32F1__) || defined(__SAM3X8E__) || defined(ARDUINO_ARCH_SAMD))
 #warning "No periodic timer support existent (or known) for this platform. Only blocking functions and simple example will run!"
 #endif
 
@@ -164,10 +164,15 @@
 // @formatter:on
 
 /*
+ * Version 1.5.2 - 3/2020
+ * - More examples using `areInterruptsActive()`.
+ * - Added support of Arduino SAMD boards.
+ *
  * Version 1.5.1 - 3/2020
  * - Added support for STM32 cores of Arduino Board manager. Seen in the Arduino IDE as "Generic STM32F1 series" from STM32 Boards.
  * - Inserted missing `Wire.begin()` in setup of `PCA9685_Expander` example.
- * - in `isMovingAndCallYield()` yield() only called/needed for an ESP8266.
+ * - In `isMovingAndCallYield()` yield() only called/needed for an ESP8266.
+ * - New function `areInterruptsActive()`, especially for ESP32.
  *
  * Version 1.5.0 - 2/2020
  * - Use type `Print *` instead of `Stream *`.
@@ -464,6 +469,15 @@ public:
     int mServo0DegreeMicrosecondsOrUnits;
     int mServo180DegreeMicrosecondsOrUnits;
 };
+
+/*
+ * It is needed for ESP32, where the timer interrupt routine does not block the loop. Maybe it runs on another CPU?
+ * The interrupt routine sets first the mServoMoves flag to false and then disables the timer,
+ * but on a ESP32 polling the flag and then starting next movement and enabling timer happens BEFORE the timer is disabled.
+ * And this crashes the kernel in esp_timer_delete, which will lead to a reboot.
+ */
+extern volatile bool sInterruptsAreActive; // true if interrupts are still active, i.e. at least one Servo is moving with interrupts.
+bool areInterruptsActive();
 
 /*
  * Array of all servos to enable synchronized movings

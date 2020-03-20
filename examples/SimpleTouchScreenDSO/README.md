@@ -1,6 +1,7 @@
 # Arduino-Simple-DSO
 ### [Version 3.2](https://github.com/ArminJo/Arduino-Simple-DSO/releases)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Build Status](https://github.com/ArminJo/Arduino-Simple-DSO/workflows/TestCompile/badge.svg)](https://github.com/ArminJo/Arduino-Simple-DSO/actions)
 [![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2FArminJo%2FArduino-Simple-DSO)](https://github.com/brentvollebregt/hit-counter)
 
 ## SUMMARY
