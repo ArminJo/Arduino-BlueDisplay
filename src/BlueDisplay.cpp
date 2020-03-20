@@ -62,7 +62,7 @@ void BlueDisplay::resetLocal(void) {
 }
 
 /*
- * Simple version. Reorientation callback function is only needed if we have a responsive layout,
+ * Simple version. Reorientation callback function is only required if we have a responsive layout,
  * since reorientation event also calls the redraw callback.
  */
 void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aRedrawCallback)(void)) {
@@ -1021,7 +1021,8 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
 }
 
 /*
- * Message size 3 or 4 shorts
+ * Message size is 3 (AVR) or 4 shorts
+ * If cancelled on the Host, nothing is sent back
  */
 void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const char *aShortPromptString, float aInitialValue) {
     if (USART_isBluetoothPaired()) {

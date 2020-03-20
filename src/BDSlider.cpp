@@ -80,7 +80,7 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
 
 #ifdef LOCAL_DISPLAY_EXISTS
     mLocalSliderPointer = new TouchSlider();
-    // Cast needed here. At runtime the right pointer is returned because of FLAG_USE_INDEX_FOR_CALLBACK
+    // Cast required here. At runtime the right pointer is returned because of FLAG_USE_INDEX_FOR_CALLBACK
     mLocalSliderPointer->initSlider(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue,
             aSliderColor, aBarColor, aFlags | FLAG_USE_BDSLIDER_FOR_CALLBACK,
             reinterpret_cast<void (*)(TouchSlider *, uint16_t)>( aOnChangeHandler));

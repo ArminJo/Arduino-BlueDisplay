@@ -437,7 +437,7 @@ uint16_t sendWaitAndReceive(const char * tATString) {
     Serial.print(F("Sent: \""));
     Serial.print(tATString);
     Serial.println(F("\\r\\n\""));
-    Serial.flush(); // needed in order not to disturb SoftwareSerial
+    Serial.flush(); // required in order not to disturb SoftwareSerial
 
 #ifdef TIMSK0
     // disable millis interrupt

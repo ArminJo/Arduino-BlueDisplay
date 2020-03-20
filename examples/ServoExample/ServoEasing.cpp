@@ -97,6 +97,8 @@ HardwareTimer Timer20ms(3);  // 4 timers and 4. timer is used for tone()
 #define TIMING_PIN 12
 #endif
 
+volatile bool sInterruptsAreActive = false; // true if interrupts are still active, i.e. at least one Servo is moving with interrupts.
+
 /*
  * list to hold all ServoEasing Objects in order to move them together
  * Cannot use "static servo_t servos[MAX_SERVOS];" from Servo library since it is static :-(
@@ -505,13 +507,13 @@ void ServoEasing::writeMicrosecondsOrUnits(int aValue) {
 #elif defined(USE_PCA9685_SERVO_EXPANDER)
 #  if defined(TRACE)
 	Serial.print(F(" s="));
-	Serial.print(mServoPin * (4096 - (DEFAULT_PCA9685_UNITS_FOR_180_DEGREE + 100)) / 15); // mServoPin * 235
+	Serial.print(mServoPin * (4096 - (DEFAULT_PCA9685_UNITS_FOR_180_DEGREE + 100)) / 15); // mServoPin * 233
 #  endif
     /*
      * Distribute the servo start time over the 20 ms period.
      * Unexpectedly this even saves 20 bytes Flash for an ATMega328P
      */
-    setPWM(mServoPin * ((4096 - (DEFAULT_PCA9685_UNITS_FOR_180_DEGREE + 100)) / 15), aValue); // mServoPin * 235
+    setPWM(mServoPin * ((4096 - (DEFAULT_PCA9685_UNITS_FOR_180_DEGREE + 100)) / 15), aValue); // mServoPin * 233
 #else
 	Servo::writeMicroseconds(aValue); // needs 7 us
 #endif
@@ -1006,6 +1008,13 @@ int clipDegreeSpecial(uint8_t aDegreeToClip) {
     return 0;
 }
 
+bool areInterruptsActive(){
+#if defined(ESP8266)
+    yield(); // required for ESP8266
+#endif
+	return sInterruptsAreActive;
+}
+
 /*
  * Update all servos from list and check if all servos have stopped.
  * Defined weak in order to be able to overwrite it.
@@ -1069,6 +1078,9 @@ void enableServoEasingInterrupt() {
 #  endif
 
 #elif defined(ESP8266) || defined(ESP32)
+    if(sInterruptsAreActive) {
+        Timer20ms.detach(); // otherwise the ESP32 kernel at least will crash and reboot
+    }
 	Timer20ms.attach_ms(20, handleServoTimerInterrupt);
 
 // BluePill in 2 flavors
@@ -1101,6 +1113,7 @@ void enableServoEasingInterrupt() {
 	// Disable all others.
 	TC_FOR_20_MS_TIMER->TC_CHANNEL[CHANNEL_FOR_20_MS_TIMER].TC_IDR = ~TC_IER_CPCS;
 #endif
+	sInterruptsAreActive = true;
 }
 
 void disableServoEasingInterrupt() {
@@ -1125,6 +1138,7 @@ void disableServoEasingInterrupt() {
 #elif defined(__SAM3X8E__)  // Arduino DUE
 	NVIC_DisableIRQ(IRQn_FOR_20_MS_TIMER);
 #endif
+	sInterruptsAreActive = false;
 }
 
 /*

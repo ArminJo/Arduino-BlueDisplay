@@ -7,10 +7,29 @@
  *  Supports 1 Pin mode as you get on the HY-SRF05 if you connect OUT to ground.
  *  You can modify the HC-SR04 modules to 1 Pin mode by:
  *  Old module with 3 16 pin chips: Connect Trigger and Echo direct or use a resistor < 4.7 kOhm.
- *        If you remove both 10 kOhm pullup resistor you can use a connecting resistor < 47 kOhm, but I suggest to use 10 kOhm which is more reliable.
+ *        If you remove both 10 kOhm pullup resistors you can use a connecting resistor < 47 kOhm, but I suggest to use 10 kOhm which is more reliable.
  *  Old module with 3 16 pin chips but with no pullup resistors near the connector row: Connect Trigger and Echo with a resistor > 200 Ohm. Use 10 kOhm.
  *  New module with 1 16 pin and 2 8 pin chips: Connect Trigger and Echo by a resistor > 200 Ohm and < 22 kOhm.
  *  All modules: Connect Trigger and Echo by a resistor of 4.7 kOhm.
+ *  Some old HY-SRF05 modules of mine cannot be converted by adding a 4.7 kOhm resistor,
+ *  since the output signal going low triggers the next measurement. But they work with removing the 10 kOhm pull up resistors and adding 10 kOhm.
+ *
+ * Sensitivity is increased by removing C3 / the low pass part of the 22 kHz Bandpass filter.
+ * After this the crosstalking of the output signal will be detected as a low distance. We can avoid this by changing R7 to 0 Ohm.
+ *
+ *  Module Type                   |   Characteristics     |         3 Pin Mode          | Increase sensitivity
+ *  ------------------------------------------------------------------------------------------------------------
+ *  3 * 14 pin IC's 2 transistors | C2 below right IC/U2  | 10 kOhm pin 1+2 middle IC   | not needed, because of Max232
+ *                                | right IC is Max232    |                             |
+ *  3 * 14 pin IC's 2 transistors | Transistor between    |                             | -C2, R11=1.5MOhm, R12=0
+ *                                | middle and right IC   |                             |
+ *  3 * 14 pin IC's               | R17 below right IC    | 10 kOhm pin 1+2 middle IC   |
+ *  1*4 2*8 pin IC's              |                       | 10 kOhm pin 3+4 right IC    | -C4, R7=1.5MOhm, R10=0
+ *  HY-SRF05 3 * 14 pin IC's      |                       | 10 kOhm pin 1+2 middle IC   | - bottom left C, R16=1.5MOhm, R15=?
+ *
+ *  The CS100A module is not very sensitive at short or mid range but can detect up to 3m. Smallest distance is 2 cm.
+ *  The amplified analog signal is available at pin 5 and the comparator output at pin 6. There you can see other echoes.
+ *  3 Pin mode is difficult since it retriggers itself at distances below 7 cm.
  *
  *  Copyright (C) 2018-2020  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
@@ -100,11 +119,21 @@ unsigned int getUSDistance(unsigned int aTimeoutMicros) {
     /*
      * Get echo length.
      * Speed of sound is: 331.5 + (0.6 * TemperatureCelsius).
-     * Exact value at 20 degree is 343,46 m/s => 58,23 us per centimeter and 17,17 cm/ms (forth and back)
-     * Exact value at 10 degree is 337,54 m/s => 59,25 us per centimeter and 16,877 cm/ms (forth and back)
-     * At 20 degree => 50cm gives 2914 us, 2m gives 11655 us
+     * Exact value at 20 degree celsius is 343,46 m/s => 58,23 us per centimeter and 17,17 cm/ms (forth and back)
+     * Exact value at 10 degree celsius is 337,54 m/s => 59,25 us per centimeter and 16,877 cm/ms (forth and back)
+     * At 20 degree celsius => 50cm gives 2914 us, 2m gives 11655 us
+     *
+     * Use pulseInLong, this uses micros() as counter, relying on interrupts being enabled, which is not disturbed by (e.g. the 1 ms timer) interrupts.
+     * Only thing is that the pulse ends when we are in an interrupt routine, thus prolonging the measured pulse duration.
+     * Alternatively we can use pulseIn() in a noInterrupts() context, but this will effectively stop the millis() timer for duration of pulse / or timeout.
      */
+#if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny87__) || defined(__AVR_ATtiny167__)
+    noInterrupts();
+    unsigned long tUSPulseMicros = pulseIn(tEchoInPin, HIGH, aTimeoutMicros);
+    interrupts();
+#else
     unsigned long tUSPulseMicros = pulseInLong(tEchoInPin, HIGH, aTimeoutMicros);
+#endif
     if (tUSPulseMicros == 0) {
 // timeout happened -> change value to timeout value. This eases comparison with different distances.
         tUSPulseMicros = aTimeoutMicros;

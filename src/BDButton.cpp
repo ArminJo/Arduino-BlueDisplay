@@ -107,7 +107,7 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
     } else {
         mLocalButtonPtr = new TouchButton();
     }
-    // Cast needed here. At runtime the right pointer is returned because of FLAG_USE_BDBUTTON_FOR_CALLBACK
+    // Cast required here. At runtime the right pointer is returned because of FLAG_USE_BDBUTTON_FOR_CALLBACK
     mLocalButtonPtr->initButton(aPositionX, aPositionY, aWidthX, aHeightY, aButtonColor, aCaption, aCaptionSize,
             aFlags | FLAG_USE_BDBUTTON_FOR_CALLBACK, aValue, reinterpret_cast<void (*)(TouchButton*, int16_t)> (aOnTouchHandler));
 
