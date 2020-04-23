@@ -70,16 +70,28 @@ bool USART_isBluetoothPaired(void) {
 #define Serial Serial1
 #endif
 
+#if defined(ESP32)
+#include "BluetoothSerial.h"
+BluetoothSerial SerialBT;
+#define Serial SerialBT
+#endif
+
 /*
  * Wrapper for calling initSimpleSerial or Serial[0,1].begin
  */
-void initSerial(uint32_t aBaudRate) {
-#ifdef USE_SIMPLE_SERIAL
-    initSimpleSerial(aBaudRate);
-#else
-    Serial.begin(aBaudRate);
-#endif
+#if defined(ESP32)
+void initSerial(String aBTClientName) {
+    Serial.begin(aBTClientName, false);
 }
+#else
+void initSerial(uint32_t aBaudRate) {
+#  ifdef USE_SIMPLE_SERIAL
+    initSimpleSerial(aBaudRate);
+#  else
+    Serial.begin(aBaudRate);
+#  endif
+}
+#endif
 
 #ifdef USE_SIMPLE_SERIAL
 #  ifdef LOCAL_DISPLAY_EXISTS
@@ -416,7 +428,7 @@ void serialEvent(void) {
 		}
 		if (sReceivedEventType != EVENT_NO_EVENT) {
 			if (tBytesAvailable > sReceivedDataSize) {
-				// touch or size event complete received, now read data and sync token
+				// Event complete received, now read data and sync token
 				Serial.readBytes((char *) sReceiveBuffer, sReceivedDataSize);
 				if (Serial.read() == SYNC_TOKEN) {
 					remoteEvent.EventType = sReceivedEventType;

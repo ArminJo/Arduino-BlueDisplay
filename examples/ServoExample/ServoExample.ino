@@ -598,6 +598,7 @@ void printSensorInfo(struct SensorCallback* aSensorCallbackInfo) {
     dtostrf(aSensorCallbackInfo->ValueY, 7, 4, &sStringBuffer[60]);
     dtostrf(aSensorCallbackInfo->ValueZ, 7, 4, &sStringBuffer[70]);
     dtostrf(sYZeroCompensationValue, 7, 4, &sStringBuffer[80]);
+#pragma GCC diagnostic ignored "-Wformat-truncation=" // We know, each argument is a string of size 7
     snprintf(sStringBuffer, sizeof sStringBuffer, "X=%s Y=%s Z=%s Zero=%s", &sStringBuffer[50], &sStringBuffer[60],
             &sStringBuffer[70], &sStringBuffer[80]);
     BlueDisplay1.drawText(0, sTextSize, sStringBuffer, sTextSize, COLOR_BLACK, COLOR_GREEN);

@@ -33,7 +33,10 @@
 #include <stdint.h>
 
 #ifdef ARDUINO
+#  if ! defined(ESP32)
+// For not AVR platforms this contains mapping defines (at least for STM32)
 #include <avr/pgmspace.h>
+#  endif
 #include "WString.h"    // for __FlashStringHelper
 #endif
 

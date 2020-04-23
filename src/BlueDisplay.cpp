@@ -509,6 +509,8 @@ uint16_t BlueDisplay::drawLong(uint16_t aPosX, uint16_t aPosY, int32_t aLong, ui
     char tStringBuffer[12];
 #ifdef AVR
     sprintf_P(tStringBuffer, PSTR("%11ld"), aLong);
+#elif defined(__XTENSA__)
+	sprintf(tStringBuffer, "%11ld", (long)aLong);
 #else
 	sprintf(tStringBuffer, "%11ld", aLong);
 #endif
@@ -658,7 +660,7 @@ void BlueDisplay::debug(uint16_t aShort) {
     }
 }
 
-void BlueDisplay::debug(int aShort) {
+void BlueDisplay::debug(int16_t aShort) {
     char tStringBuffer[14]; //6 decimal + 3 " 0x" + 4 hex +1
 // hd -> short int instead of int with d
 #ifdef AVR
@@ -684,7 +686,7 @@ void BlueDisplay::debug(const char* aMessage, uint16_t aShort) {
     }
 }
 
-void BlueDisplay::debug(const char* aMessage, int aShort) {
+void BlueDisplay::debug(const char* aMessage, int16_t aShort) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hd -> short int instead of int with d
 #ifdef AVR
@@ -701,6 +703,8 @@ void BlueDisplay::debug(uint32_t aLong) {
     char tStringBuffer[22]; //10 decimal + 3 " 0x" + 8 hex +1
 #ifdef AVR
     sprintf_P(tStringBuffer, PSTR("%10lu 0x%lX"), aLong, aLong);
+#elif defined(__XTENSA__)
+    sprintf(tStringBuffer, "%10lu 0x%lX", (long)aLong, (long)aLong);
 #else
 	sprintf(tStringBuffer, "%10lu 0x%lX", aLong, aLong);
 #endif
@@ -713,6 +717,8 @@ void BlueDisplay::debug(int32_t aLong) {
     char tStringBuffer[23]; //11 decimal + 3 " 0x" + 8 hex +1
 #ifdef AVR
     sprintf_P(tStringBuffer, PSTR("%11ld 0x%lX"), aLong, aLong);
+#elif defined(__XTENSA__)
+    sprintf(tStringBuffer, "%11ld 0x%lX", (long)aLong, (long)aLong);
 #else
 	sprintf(tStringBuffer, "%11ld 0x%lX", aLong, aLong);
 #endif
@@ -725,6 +731,8 @@ void BlueDisplay::debug(const char* aMessage, uint32_t aLong) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 #ifdef AVR
     snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%10lu 0x%lX"), aMessage, aLong, aLong);
+#elif defined(__XTENSA__)
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu 0x%lX", aMessage, (long)aLong, (long)aLong);
 #else
 	snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu 0x%lX", aMessage, aLong, aLong);
 #endif
@@ -737,6 +745,8 @@ void BlueDisplay::debug(const char* aMessage, int32_t aLong) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 #ifdef AVR
     snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%11ld 0x%lX"), aMessage, aLong, aLong);
+#elif defined(__XTENSA__)
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%11ld 0x%lX", aMessage, (long)aLong, (long)aLong);
 #else
 	snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%11ld 0x%lX", aMessage, aLong, aLong);
 #endif
@@ -997,7 +1007,7 @@ void BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStringHe
  */
 void BlueDisplay::getNumber(void (*aNumberHandler)(float)) {
     if (USART_isBluetoothPaired()) {
-#ifndef AVR
+#if __SIZEOF_POINTER__ == 4
 		sendUSARTArgs(FUNCTION_GET_NUMBER, 2, aNumberHandler, (reinterpret_cast<uint32_t>(aNumberHandler) >> 16));
 #else
         sendUSARTArgs(FUNCTION_GET_NUMBER, 1, aNumberHandler);
@@ -1010,7 +1020,7 @@ void BlueDisplay::getNumber(void (*aNumberHandler)(float)) {
  */
 void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const char *aShortPromptString) {
     if (USART_isBluetoothPaired()) {
-#ifndef AVR
+#if __SIZEOF_POINTER__ == 4
 		sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 2, aNumberHandler,
 				(reinterpret_cast<uint32_t>(aNumberHandler) >> 16), strlen(aShortPromptString), (uint8_t*) aShortPromptString);
 #else
@@ -1021,7 +1031,7 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
 }
 
 /*
- * Message size is 3 (AVR) or 4 shorts
+ * Message size is 3 (__AVR__) or 4 shorts
  * If cancelled on the Host, nothing is sent back
  */
 void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const char *aShortPromptString, float aInitialValue) {
@@ -1031,7 +1041,7 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
             uint16_t shortArray[2];
         } floatToShortArray;
         floatToShortArray.floatValue = aInitialValue;
-#ifndef AVR
+#if __SIZEOF_POINTER__ == 4
 		sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 4, aNumberHandler,
 				(reinterpret_cast<uint32_t>(aNumberHandler) >> 16), floatToShortArray.shortArray[0],
 				floatToShortArray.shortArray[1], strlen(aShortPromptString), (uint8_t*) aShortPromptString);
@@ -1044,7 +1054,7 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
 
 //void BlueDisplay::getText(void (*aTextHandler)(char *)) {
 //    if (USART_isBluetoothPaired()) {
-//#ifndef AVR
+//#if __SIZEOF_POINTER__ == 4
 //        sendUSARTArgs(FUNCTION_GET_TEXT, 2, aTextHandler, (reinterpret_cast<uint32_t>(aTextHandler) >> 16));
 //#else
 //        sendUSARTArgs(FUNCTION_GET_TEXT, 1, aTextHandler);
@@ -1057,7 +1067,7 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
  */
 void BlueDisplay::getInfo(uint8_t aInfoSubcommand, void (*aInfoHandler)(uint8_t, uint8_t, uint16_t, ByteShortLongFloatUnion)) {
     if (USART_isBluetoothPaired()) {
-#ifndef AVR
+#if __SIZEOF_POINTER__ == 4
 		sendUSARTArgs(FUNCTION_GET_INFO, 3, aInfoSubcommand, aInfoHandler, (reinterpret_cast<uint32_t>(aInfoHandler) >> 16));
 #else
         sendUSARTArgs(FUNCTION_GET_INFO, 2, aInfoSubcommand, aInfoHandler);
@@ -1148,7 +1158,7 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
 //            char tStringBuffer[STRING_BUFFER_STACK_SIZE];
 //            strcpy_P(tStringBuffer, aPGMShortPromptString);
 //
-//#ifndef AVR
+//#if __SIZEOF_POINTER__ == 4
 //            sendUSARTArgsAndByteBuffer(FUNCTION_GET_TEXT_WITH_SHORT_PROMPT, 2, aTextHandler,
 //                    (reinterpret_cast<uint32_t>(aTextHandler) >> 16), tShortPromptLength, (uint8_t*) tStringBuffer);
 //#else
@@ -1190,7 +1200,7 @@ BDButtonHandle_t BlueDisplay::createButton(uint16_t aPositionX, uint16_t aPositi
     BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
 
     if (USART_isBluetoothPaired()) {
-#ifndef AVR
+#if __SIZEOF_POINTER__ == 4
 		sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 10, tButtonNumber, aPositionX, aPositionY, aWidthX, aHeightY,
 				aButtonColor, aCaptionSize | (aFlags << 8), aValue, aOnTouchHandler,
 				(reinterpret_cast<uint32_t>(aOnTouchHandler) >> 16), strlen(aCaption), aCaption);
@@ -1369,8 +1379,7 @@ BDSliderHandle_t BlueDisplay::createSlider(uint16_t aPositionX, uint16_t aPositi
     BDSliderHandle_t tSliderNumber = sLocalSliderIndex++;
 
     if (USART_isBluetoothPaired()) {
-#ifndef AVR
-
+#if __SIZEOF_POINTER__ == 4
 		sendUSARTArgs(FUNCTION_SLIDER_CREATE, 12, tSliderNumber, aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue,
 				aInitalValue, aSliderColor, aBarColor, aFlags, aOnChangeHandler,
 				(reinterpret_cast<uint32_t>(aOnChangeHandler) >> 16));

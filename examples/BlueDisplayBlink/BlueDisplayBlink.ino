@@ -1,30 +1,23 @@
 /*
- *  BlueDisplayBlink.cpp
- *
+ * BlueDisplayBlink.cpp
  *
  *  Demo of using the BlueDisplay library for HC-05 on Arduino
- *  Blink frequency can be entered in 3 different ways by GUI.
- *  1. By + and - buttons
- *  2. By slider
- *  3. By numeric keypad
  *
- *  Output of actual delay is numeric and by slider bar
-
- *  Copyright (C) 2014  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2020  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
- *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
+ *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *
  *  BlueDisplay is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
-
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
-
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
@@ -47,7 +40,7 @@
 
 bool doBlink = true;
 
-#define VERSION_EXAMPLE "1.2"
+#define VERSION_EXAMPLE "2.0"
 
 /*
  * The Start Stop button
@@ -69,7 +62,14 @@ void setup() {
     // Initialize the LED pin as output.
     pinMode(LED_BUILTIN, OUTPUT);
 
+#if defined(ESP32)
+    Serial.begin(115299);
+    Serial.println("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
+    initSerial("ESP-BD_Example");
+    Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
+#else
     initSerial(BLUETOOTH_BAUD_RATE);
+#endif
 #if defined (USE_SERIAL1) // defined in BlueSerial.h
     // Serial(10) is available for Serial.print  output.
 #  if defined(SERIAL_USB)
@@ -117,9 +117,9 @@ void initDisplay(void) {
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, DISPLAY_WIDTH,
     DISPLAY_HEIGHT);
     // Initialize button position, size, colors etc.
-    TouchButtonBlinkStartStop.init((DISPLAY_WIDTH - BUTTON_WIDTH_2) / 2, BUTTON_HEIGHT_4_256_LINE_4, BUTTON_WIDTH_2,
-    BUTTON_HEIGHT_4_256,
-    COLOR_BLUE, "Start", 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doBlinkStartStop);
+    TouchButtonBlinkStartStop.init((DISPLAY_WIDTH - BUTTON_WIDTH_2) / 2, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_2,
+    BUTTON_HEIGHT_4, COLOR_BLUE, "Start", 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink,
+            &doBlinkStartStop);
     TouchButtonBlinkStartStop.setCaptionForValueTrue("Stop");
 }
 

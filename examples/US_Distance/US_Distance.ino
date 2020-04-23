@@ -42,16 +42,27 @@
 
 //#define USE_US_SENSOR_1_PIN_MODE // Comment it out, if you use modified HC-SR04 modules or HY-SRF05 ones
 
-int ECHO_IN_PIN = 4;
-int TRIGGER_OUT_PIN = 5;
-#define TONE_PIN 3 // must be 3 to be compatible with talkie
+#if defined(ESP8266)
+#define TONE_PIN         14 // D5
+#define ECHO_IN_PIN      13 // D7
+#define TRIGGER_OUT_PIN  15 // D8
+
+#elif defined(ESP32)
+#define tone(a,b,c) void() // no tone() available on ESP32
+#define noTone(a) void()
+#define ECHO_IN_PIN      12 // D12
+#define TRIGGER_OUT_PIN  13 // D13
+
+#else
+#define ECHO_IN_PIN      4
+#define TRIGGER_OUT_PIN  5
+#define TONE_PIN         3 // must be 3 to be compatible with talkie
+#endif
 
 #define MEASUREMENT_INTERVAL_MILLIS 50
 
 #define DISTANCE_TIMEOUT_CM 300  // cm timeout for US reading
 
-int sActualDisplayWidth;
-int sActualDisplayHeight;
 int sCaptionTextSize;
 int sCaptionStartX;
 int sValueStartY;
@@ -92,7 +103,16 @@ void setup(void) {
     initUSDistancePins(TRIGGER_OUT_PIN, ECHO_IN_PIN);
 #endif
 
+#if defined(ESP32)
+    Serial.begin(115299);
+    Serial.println("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
+    initSerial("ESP-BD_Example");
+    Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
+#else
+    pinMode(TONE_PIN, OUTPUT);
     initSerial(BLUETOOTH_BAUD_RATE);
+#endif
+
 #if defined (USE_SERIAL1)
     // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
@@ -174,7 +194,7 @@ void loop(void) {
                         tUSDistanceCentimeter, sCaptionTextSize * 2, COLOR_YELLOW,
                         COLOR_BLUE);
                 BlueDisplay1.drawText(tCmXPosition, sValueStartY, "cm", sCaptionTextSize, COLOR_WHITE, COLOR_BLUE);
-                SliderShowDistance.setActualValueAndDrawBar(tUSDistanceCentimeter);
+                SliderShowDistance.setValueAndDrawBar(tUSDistanceCentimeter);
             }
             if (tUSDistanceCentimeter >= 40 || !doTone) {
                 /*
@@ -223,17 +243,17 @@ void loop(void) {
 void handleConnectAndReorientation(void) {
 //    tone(TONE_PIN, 1000, 50);
     // manage positions according to actual display size
-    sActualDisplayWidth = BlueDisplay1.getMaxDisplayWidth();
-    sActualDisplayHeight = BlueDisplay1.getMaxDisplayHeight();
-    if (sActualDisplayWidth < sActualDisplayHeight) {
+    int tCurrentDisplayWidth = BlueDisplay1.getMaxDisplayWidth();
+    int tCurrentDisplayHeight = BlueDisplay1.getMaxDisplayHeight();
+    if (tCurrentDisplayWidth < tCurrentDisplayHeight) {
         // Portrait -> change to landscape 3/2 format
-        sActualDisplayHeight = (sActualDisplayWidth / 3) * 2;
+        tCurrentDisplayHeight = (tCurrentDisplayWidth / 3) * 2;
     }
-    sCaptionTextSize = sActualDisplayHeight / 4;
+    sCaptionTextSize = tCurrentDisplayHeight / 4;
     // Position Caption at middle of screen
-    sCaptionStartX = (sActualDisplayWidth - (getTextWidth(sCaptionTextSize) * strlen("Distance"))) / 2;
+    sCaptionStartX = (tCurrentDisplayWidth - (getTextWidth(sCaptionTextSize) * strlen("Distance"))) / 2;
 
-    sprintf(sStringBuffer, "sActualDisplayWidth=%d", sActualDisplayWidth);
+    sprintf(sStringBuffer, "sCurrentDisplayWidth=%d", tCurrentDisplayWidth);
     BlueDisplay1.debugMessage(sStringBuffer);
 
     if (sCaptionStartX < 0) {
@@ -241,11 +261,11 @@ void handleConnectAndReorientation(void) {
     }
 
     sValueStartY = getTextAscend(sCaptionTextSize * 2) + sCaptionTextSize + sCaptionTextSize / 4;
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sActualDisplayWidth, sActualDisplayHeight);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, tCurrentDisplayWidth, tCurrentDisplayHeight);
 
-    SliderShowDistance.init(0, sCaptionTextSize * 3, sCaptionTextSize / 4, sActualDisplayWidth, 199, 0, COLOR_BLUE,
+    SliderShowDistance.init(0, sCaptionTextSize * 3, sCaptionTextSize / 4, tCurrentDisplayWidth, 199, 0, COLOR_BLUE,
     COLOR_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    SliderShowDistance.setScaleFactor(200.0 / sActualDisplayWidth);
+    SliderShowDistance.setScaleFactor(200.0 / tCurrentDisplayWidth);
 
     // Initialize button position, size, colors etc.
     TouchButtonStartStop.init(0, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR_BLUE, "Start Tone",

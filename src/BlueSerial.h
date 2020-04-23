@@ -37,7 +37,7 @@
 #endif
 
 //#define USE_STANDARD_SERIAL // vs. USE_SIMPLE_SERIAL - comment this out to override the default for AVR.
-#if !defined(USE_STANDARD_SERIAL) && defined (AVR)
+#if !defined(USE_STANDARD_SERIAL) && defined (__AVR__)
 // Simple serial is a simple blocking serial version without receive buffer and other overhead.
 // Using it saves up to 1250 byte FLASH and 185 byte RAM since USART is used directly
 // Simple serial on the MEGA2560 uses USART1
@@ -99,8 +99,12 @@ bool USART_isBluetoothPaired(void);
 void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
 #define USART_isBluetoothPaired() (false)
 #else
+#  if defined(ESP32)
+void initSerial(String aBTClientName);
+#  else
 void initSerial(uint32_t aBaudRate);
 void initSimpleSerial(uint32_t aBaudRate);
+# endif
 #define USART_isBluetoothPaired() (true)
 #endif
 #endif

@@ -7,8 +7,15 @@
 
 # This is the name of the workflow, visible on GitHub UI.
 name: LibraryBuild
-on: [push, pull_request] # see: https://help.github.com/en/actions/reference/events-that-trigger-workflows#pull-request-event-pull_request
-
+on:  
+  push: # see: https://help.github.com/en/actions/reference/events-that-trigger-workflows#pull-request-event-pull_request
+    paths:
+    - '**.ino'
+    - '**.cpp'
+    - '**.h'
+    - '**LibraryBuild.yml'
+  pull_request:
+  
 jobs:
   build:
     name: ${{ matrix.arduino-boards-fqbn }} - test compiling examples
@@ -49,11 +56,11 @@ jobs:
 
           - arduino-boards-fqbn: esp8266:esp8266:huzzah:eesz=4M3M,xtal=80
             platform-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
-            examples-exclude: SimpleTouchScreenDSO
+            examples-exclude: SimpleTouchScreenDSO,BTModuleProgrammer
             
           - arduino-boards-fqbn: esp32:esp32:featheresp32:FlashFreq=80
             platform-url: https://dl.espressif.com/dl/package_esp32_index.json
-            examples-exclude: SimpleTouchScreenDSO
+            examples-exclude: SimpleTouchScreenDSO,RcCarControl,BTModuleProgrammer,ServoExample
                         
       # Do not cancel all jobs / architectures if one job fails
       fail-fast: false
@@ -62,10 +69,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
 
-      - name: Compile all examples
-        uses: ArminJo/arduino-test-compile@master
-        with:
-          arduino-board-fqbn: ${{ matrix.arduino-boards-fqbn }}
-          platform-url: ${{ matrix.platform-url }}
-          required-libraries: ${{ env.REQUIRED_LIBRARIES }}
-          examples-exclude: ${{ matrix.examples-exclude }}
+      # Use the arduino-test-compile script, because it is faster
+      - name: Compile all examples using the bash script arduino-test-compile.sh
+        env:
+          # Passing parameters to the script by setting the appropriate ENV_* variables.
+          ENV_ARDUINO_BOARD_FQBN: ${{ matrix.arduino-boards-fqbn }}
+          ENV_PLATFORM_URL: ${{ matrix.platform-url }}
+          ENV_REQUIRED_LIBRARIES: ${{ env.REQUIRED_LIBRARIES }}
+          ENV_EXAMPLES_EXCLUDE: ${{ matrix.examples-exclude }}
+          ENV_EXAMPLES_BUILD_PROPERTIES: ${{ toJson(matrix.examples-build-properties) }}
+        run: |
+          wget --quiet https://raw.githubusercontent.com/ArminJo/arduino-test-compile/master/arduino-test-compile.sh
+            ls -l arduino-test-compile.sh
+            chmod +x arduino-test-compile.sh
+            ./arduino-test-compile.sh
