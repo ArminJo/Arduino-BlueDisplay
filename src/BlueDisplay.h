@@ -31,8 +31,10 @@
 #define BLUEDISPLAY_H_
 
 #ifdef ARDUINO
+#  if ! defined(ESP32)
 // For not AVR platforms this contains mapping defines (at least for STM32)
 #include <avr/pgmspace.h>
+#  endif
 #  if defined(strcpy_P) // check if we have mapping defines
 #    if ! defined(strncpy_P)
 // this define is not included in the pgmspace.h file :-(
@@ -385,8 +387,8 @@ public:
     void debug(int8_t aByte);
     void debug(uint16_t aShort);
     void debug(const char* aMessage, uint16_t aShort);
-    void debug(int aShort);
-    void debug(const char* aMessage, int aShort);
+    void debug(int16_t aShort);
+    void debug(const char* aMessage, int16_t aShort);
     void debug(uint32_t aLong);
     void debug(const char* aMessage, uint32_t aLong);
     void debug(int32_t aLong);
@@ -570,7 +572,7 @@ void writeStringC(const char *aStringPtr, uint8_t aStringLength);
  */
 #ifdef AVR
 uint16_t readADCChannelWithReferenceOversample(uint8_t aChannelNumber, uint8_t aReference, uint8_t aOversampleExponent);
-float getVCCValue(void);
+float getVCCValue(void) __attribute__ ((deprecated ("Renamed to getVCCVoltage()")));
 float getVCCVoltage(void);
 float getTemperature(void);
 #endif

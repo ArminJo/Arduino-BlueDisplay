@@ -214,7 +214,7 @@ void initDisplay(void) {
     tSensorChangeCallCount = 0;
     registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, &doSensorChange);
     // Since landscape has 2 orientations, let the user choose the right one.
-    BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_ACTUAL);
+    BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_CURRENT);
 
     SliderSpeed.init(0, sCurrentDisplayHeight / 32, sSliderSize * 3, sSliderHeightLaser, sSliderHeightLaser, sSliderHeightLaser / 2,
     SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doLaserPosition);

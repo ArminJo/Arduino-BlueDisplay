@@ -93,8 +93,8 @@ public:
     void drawBorder(void);
     void setValue(int16_t aCurrentValue);
     void setValueAndDrawBar(int16_t aCurrentValue);
-    void setActualValue(int16_t aCurrentValue);// deprecated
-    void setActualValueAndDrawBar(int16_t aCurrentValue); // deprecated
+    void setActualValue(int16_t aCurrentValue) __attribute__ ((deprecated ("Renamed to setValue()")));// deprecated
+    void setActualValueAndDrawBar(int16_t aCurrentValue) __attribute__ ((deprecated ("Renamed to setValueAndDrawBar()"))); // deprecated
     void setBarColor(color16_t aBarColor);
     void setBarThresholdColor(color16_t aBarThresholdColor);
     void setBarBackgroundColor(color16_t aBarBackgroundColor);

@@ -164,6 +164,9 @@
 // @formatter:on
 
 /*
+ * Version 1.5.3 - 4/2020
+ * - Print library version in examples.
+ *
  * Version 1.5.2 - 3/2020
  * - More examples using `areInterruptsActive()`.
  * - Added support of Arduino SAMD boards.
@@ -413,7 +416,7 @@ public:
     int getDeltaMicrosecondsOrUnits();
     int getMillisForCompleteMove();
     bool isMoving();
-    bool isMovingAndCallYield();
+    bool isMovingAndCallYield() __attribute__ ((deprecated ("Most times better use areInterruptsActive()")))  ;
 
     int MicrosecondsOrUnitsToDegree(int aMicrosecondsOrUnits);
     int DegreeToMicrosecondsOrUnits(int aDegree);

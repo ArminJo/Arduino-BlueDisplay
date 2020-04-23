@@ -35,10 +35,6 @@
 #if defined(ESP8266) || defined(ESP32)
 #include "Ticker.h" // for ServoEasingInterrupt functions
 Ticker Timer20ms;
-#elif defined(STM32_HIGH_DENSITY)
-
-#include <HardwareTimer.h> // 8 timers and 8. timer is used for tone()
-HardwareTimer Timer20ms(7);
 
 // BluePill in 2 flavors
 #elif defined(STM32F1xx)   // for "Generic STM32F1 series" from STM32 Boards from STM32 cores of Arduino Board manager
@@ -47,13 +43,12 @@ HardwareTimer Timer20ms(7);
  * Use timer 3 for ServoEasingInterrupt functions.
  * Timer 3 blocks PA6, PA7, PB0, PB1, so if you need one them as Servo output, you must choose another timer.
  */
-HardwareTimer sSTM32Timer(TIM3);
+HardwareTimer Timer20ms(TIM3);
 
 #elif defined(__STM32F1__) // for "Generic STM32F103C series" from STM32F1 Boards (STM32duino.com) of manual installed hardware folder
 #include <HardwareTimer.h>
 #  if defined(STM32_HIGH_DENSITY)
 HardwareTimer Timer20ms(7);  // 8 timers and 8. timer is used for tone()
-
 #  else
 /*
  * Use timer 3 for ServoEasingInterrupt functions.
@@ -61,6 +56,7 @@ HardwareTimer Timer20ms(7);  // 8 timers and 8. timer is used for tone()
  */
 HardwareTimer Timer20ms(3);  // 4 timers and 4. timer is used for tone()
 #  endif
+
 #elif defined(__SAM3X8E__)  // Arduino DUE
 /*
  * Timer 0 to 5 are used by Servo library (by defining handlers)
@@ -1038,8 +1034,6 @@ __attribute__((weak)) void handleServoTimerInterrupt()
 	}
 }
 
-#if defined(ARDUINO_ARCH_SAMD)
-#endif
 /*
  * Timer1 is used for the Arduino Servo library.
  * To have non blocking easing functions its unused channel B is used to generate an interrupt 100 us before the end of the 20 ms Arduino Servo refresh period.
@@ -1090,10 +1084,10 @@ void enableServoEasingInterrupt() {
 
 // BluePill in 2 flavors
 #elif defined(STM32F1xx)   // for "Generic STM32F1 series" from STM32 Boards from STM32 cores of Arduino Board manager
-	sSTM32Timer.setMode(LL_TIM_CHANNEL_CH1, TIMER_OUTPUT_COMPARE, NC); // used for generating only interrupts, no pin specified
-	sSTM32Timer.setOverflow(20000, MICROSEC_FORMAT);// microsecond period
-	sSTM32Timer.attachInterrupt(handleServoTimerInterrupt);// this sets update interrupt enable
-	sSTM32Timer.resume();// Start or resume HardwareTimer: all channels are resumed, interrupts are enabled if necessary
+	Timer20ms.setMode(LL_TIM_CHANNEL_CH1, TIMER_OUTPUT_COMPARE, NC); // used for generating only interrupts, no pin specified
+	Timer20ms.setOverflow(20000, MICROSEC_FORMAT);// microsecond period
+	Timer20ms.attachInterrupt(handleServoTimerInterrupt);// this sets update interrupt enable
+	Timer20ms.resume();// Start or resume HardwareTimer: all channels are resumed, interrupts are enabled if necessary
 
 #elif defined(__STM32F1__) // for "Generic STM32F103C series" from STM32F1 Boards (STM32duino.com) of manual installed hardware folder
 	Timer20ms.setMode(TIMER_CH1, TIMER_OUTPUT_COMPARE);
@@ -1121,24 +1115,18 @@ void enableServoEasingInterrupt() {
 #elif defined(ARDUINO_ARCH_SAMD)
 	// Enable GCLK for TCC2 and TC5 (timer counter input clock)
 	GCLK->CLKCTRL.reg = (uint16_t) (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK1 | GCLK_CLKCTRL_ID(GCM_TC4_TC5)); // GCLK1=32kHz,  GCLK0=48Mhz
-	while (GCLK->STATUS.bit.SYNCBUSY) {
-		;
-	}
+	while (GCLK->STATUS.bit.SYNCBUSY);
+
 	// Reset TCx
 	TC5->COUNT16.CTRLA.reg = TC_CTRLA_SWRST;
-	while (TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY) {
-		;
-	}
-	while (TC5->COUNT16.CTRLA.bit.SWRST) {
-		;
-	}
+	while (TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY);
+	while (TC5->COUNT16.CTRLA.bit.SWRST);
+
 	TC5->COUNT16.CTRLA.reg |= TC_CTRLA_MODE_COUNT16; // Set Timer counter Mode to 16 bits
 	TC5->COUNT16.CTRLA.reg |= TC_CTRLA_WAVEGEN_MFRQ; // Set TC5 mode as match frequency
 	TC5->COUNT16.CTRLA.reg |= TC_CTRLA_PRESCALER_DIV1 | TC_CTRLA_ENABLE; // Prescaler DIV1 (=no prescaler div), start counter
-	TC5->COUNT16.CC[0].reg = (uint16_t) ((32768 / 50) - 1); //value; // (32kHz / sampleRate - 1);
-	while (TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY) {
-		;
-	}
+	TC5->COUNT16.CC[0].reg = (uint16_t) ((32768 / 50) - 1); // (32kHz / sampleRate - 1);
+	while (TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY);
 
 	// Configure interrupt request
 	NVIC_DisableIRQ(TC5_IRQn);
@@ -1148,9 +1136,7 @@ void enableServoEasingInterrupt() {
 
 	// Enable the TC5 interrupt request
 	TC5->COUNT16.INTENSET.bit.MC0 = 1;
-	while (TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY) {
-		; //wait until TC5 is done syncing
-	}
+	while (TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY); // wait until TC5 is done syncing
 #endif
 	sInterruptsAreActive = true;
 }
@@ -1167,8 +1153,8 @@ void disableServoEasingInterrupt() {
 	Timer20ms.detach();
 
 #elif defined(STM32F1xx)   // for "Generic STM32F1 series" from STM32 Boards from STM32 cores of Arduino Board manager
-	sSTM32Timer.setMode(LL_TIM_CHANNEL_CH1, TIMER_DISABLED);
-	sSTM32Timer.detachInterrupt();
+	Timer20ms.setMode(LL_TIM_CHANNEL_CH1, TIMER_DISABLED);
+	Timer20ms.detachInterrupt();
 
 #elif defined(__STM32F1__) // for "Generic STM32F103C series" from STM32F1 Boards (STM32duino.com) of manual installed hardware folder
 	Timer20ms.setMode(TIMER_CH1, TIMER_DISABLED);
@@ -1179,9 +1165,7 @@ void disableServoEasingInterrupt() {
 
 #elif defined(ARDUINO_ARCH_SAMD)
 	TC5->COUNT16.CTRLA.reg &= ~TC_CTRLA_ENABLE;
-	while (TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY) {
-		; //wait until TC5 is done syncing
-	}
+	while (TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY); //wait until TC5 is done syncing
 #endif
 	sInterruptsAreActive = false;
 }
