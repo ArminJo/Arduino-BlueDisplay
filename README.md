@@ -1,24 +1,23 @@
 # [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
-### [Version 1.3.0](https://github.com/ArminJo/Arduino-BlueDisplay/releases)
+### [Version 2.0.0](https://github.com/ArminJo/Arduino-BlueDisplay/releases)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
 [![Commits since latest](https://img.shields.io/github/commits-since/ArminJo/Arduino-BlueDisplay/latest)](https://github.com/ArminJo/Arduino-BlueDisplay/commits/master)
 [![Build Status](https://github.com/ArminJo/Arduino-BlueDisplay/workflows/LibraryBuild/badge.svg)](https://github.com/ArminJo/Arduino-BlueDisplay/actions)
-[![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2FArminJo%2FArduino-BlueDisplay)](https://github.com/brentvollebregt/hit-counter)
+[![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https://github.com/ArminJo/Arduino-BlueDisplay)](https://github.com/brentvollebregt/hit-counter)
 
-This library enables an Android smartphone / tablet to act as a graphical display for your Arduino.
+This library enables an Android smartphone / tablet to act as a graphical display for your Arduino or ESP32.
 
 ## SUMMARY
-Let your Arduino program create a GUI with **Graphics, Text, Buttons and Sliders** on your smartphone / tablet by simply
-connecting a HC-05 to the rx/tx pins of your Arduino.
-Directly connecting the Arduino with an USB cable and an USB-OTG adapter to your smartphone is also supported.<br/>
-The App receives draw requests from Arduino over Bluetooth and renders it.
-GUI callback, touch and sensor events are sent back to the Arduino.
-**No Android programming needed!**
+With the BlueDisplay library you create the GUI with **Graphics, Text, Buttons and Sliders** and their callbacks on the Arduino.
+The Arduino is connected via USB-cable or Bluetooth with your smartphone / tablet where the BlueDisplay app renders the GUI.
+GUI callback, touch and sensor events are sent back to the Arduino.<br/>
+**No Android programming needed!**<br/>
+Bluetooth connection can be achieved by using an ESP32 or connecting a HC-05 to the RX/TX pins of your Arduino.
+Connecting the Arduino with an USB cable to your smartphone requires an USB-OTG adapter.<br/>
 
 # Installation
 Install this "BlueDisplay" library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. Use "BlueDisplay" as filter string.<br/>
-Or download BlueDisplay.zip file or use the GitHub *clone or download -> Download ZIP* button, and add the .zip file with *Sketch -> Include Library -> add .ZIP Library...*.<br/>
 On Android you need to install the [BlueDisplay app](https://play.google.com/store/apps/details?id=de.joachimsmeyer.android.bluedisplay).
 
 ## Features
@@ -35,24 +34,24 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 - Hex and ASCII output of received Bluetooth data at log level verbose.
 - Debug messages as toasts.
 
-## Determine Serial interface used
-For boards which have more than one serial interface I try to use **Serial1** for the connection. But usage of Serial1 **disables the direct USB connection** to the smartphone / tablet.<br/>
-If you want to use **Serial** instead to **enable direct USB connection**, open the library file *BlueSerial.h* and comment out the line `#define USE_USB_SERIAL` or
-define global symbol with `-DUSE_USB_SERIAL` which is not yet possible in Arduino IDE:-(.<br/>
-To **change the serial interface manually** you only have to change the last lines of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp*.
+## Which Serial interface?
+For boards which have more than one serial interface, the library tries to use **Serial1** for the connection to leave Serial, which is mostly connected to the USB, for other purposes as logging etc..
+If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must open the library file *BlueSerial.h* and comment out the line `#define USE_USB_SERIAL`.<br/>
+Another way is to **modify the central serial interface function**. You only have to change the first 2 lines of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
 
 # [Examples](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples)
-Before using the examples, take care that the Bluetooth-module (e.g. the the HC-05 module) is connected to your Android device and is visible in the Bluetooth Settings.
+Before using the examples, take care that the Bluetooth-module (e.g. the the HC-05 module) or ESP32 program is connected to your Android device and is visible in the Bluetooth Settings.
 
 All examples initially use the baudrate of 9600. Especially the SimpleTouchScreenDSO example will run smoother with a baudrate of 115200.<br/>
 For this, change the example baudrate by deactivating the line `#define BLUETOOTH_BAUD_RATE BAUD_9600` and activating `#define BLUETOOTH_BAUD_RATE BAUD_115200`.<br/>
-**AND** change the Bluetooth-module baudrate e.g. by using the BTModuleProgrammer.ino example.
+**AND** change the Bluetooth-module baudrate e.g. by using the BTModuleProgrammer.ino example.<br/>
+For ESP32 no baudrate must be specified :-).
 
 ## BlueDisplayBlink
 Simple example to check your installation.
 
 ## BlueDisplayExample
-More elaborated example to shoe more features of the BlueDisplay library.
+More elaborated example to show more features of the BlueDisplay library.
 
 ## BTModuleProgrammer
 Simple helper program to configure your HC-05 or JDY-31 modules name and default baudrate with a serial monitor.
@@ -70,7 +69,7 @@ If no BD connection available, the servo first marks the border and then moves r
 
 ## **SimpleTouchScreenDSO**
 300 kSamples DSO without external hardware (except the HC-05 module). For AC input, only a capacitor and 4 resistors are needed.
-More information at [Arduino-Simple-DSO](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples/SimpleTouchScreenDSO).
+More information at [Arduino-Simple-DSO](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples/SimpleTouchScreenDSO).<br/>
 Not for STM32.
 
 ## US_Distance
@@ -104,6 +103,9 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 | ![RC car control display](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
 
 # Revision History
+### Version 2.0.0
+- ESP32 and ESP8266 support added. External BT module needed for ESP8266.
+
 ### Version 1.3.0
 - Added `sMillisOfLastReceivedBDEvent` for user timeout detection.
 - Fixed bug in `debug(const char* aMessage, float aFloat)`.
@@ -156,7 +158,11 @@ Since Travis CI is unreliable and slow, the library examples are now tested with
 - arduino:avr:uno
 - arduino:avr:leonardo
 - arduino:avr:mega
+- esp8266:esp8266:huzzah:eesz=4M3M,xtal=80
+- esp32:esp32:featheresp32:FlashFreq=80
 - STM32:stm32:GenF1:pnum=BLUEPILL_F103C8
 
 ## Requests for modifications / extensions
 Please write me a PM including your motivation/problem if you need a modification or an extension.
+
+#### If you find this library useful, please give it a star.
