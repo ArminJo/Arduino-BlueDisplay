@@ -184,11 +184,17 @@ uint8_t sReceiveBufferIndex = 0; // Index of first free position in buffer
 bool sReceiveBufferOutOfSync = false;
 
 /**
- * very simple blocking USART send routine - works 100%!
+ * The central point for sending bytes
  */
 void sendUSARTBufferNoSizeCheck(uint8_t * aParameterBufferPointer, int aParameterBufferLength, uint8_t * aDataBufferPointer,
         int16_t aDataBufferLength) {
-#ifdef USE_SIMPLE_SERIAL
+#if ! defined(USE_SIMPLE_SERIAL)
+    Serial.write(aParameterBufferPointer, aParameterBufferLength);
+    Serial.write(aDataBufferPointer, aDataBufferLength);
+#else
+/*
+ * Simple and reliable blocking version for Atmega328
+ */
     while (aParameterBufferLength > 0) {
         // wait for USART send buffer to become empty
 #  if (defined(UCSR1A) && ! defined(USE_USB_SERIAL)) || ! defined (UCSR0A) // Use TX1 on MEGA and on Leonardo, which has no TX0
@@ -223,9 +229,6 @@ void sendUSARTBufferNoSizeCheck(uint8_t * aParameterBufferPointer, int aParamete
         aDataBufferPointer++;
         aDataBufferLength--;
     }
-#else // USE_SIMPLE_SERIAL
-	Serial.write(aParameterBufferPointer, aParameterBufferLength);
-	Serial.write(aDataBufferPointer, aDataBufferLength);
 #endif // USE_SIMPLE_SERIAL
 }
 

@@ -74,9 +74,12 @@
 #include "BDSlider.h" // for BDSliderHandle_t
 #endif
 
-#define VERSION_BLUE_DISPLAY "1.3.0"
-#define VERSION_BLUE_DISPLAY_NUMERICAL 130
+#define VERSION_BLUE_DISPLAY "2.0.0"
+#define VERSION_BLUE_DISPLAY_NUMERICAL 200
 /*
+ * Version 2.0.0
+ * - ESP32 and ESP8266 support added. External BT module needed for ESP8266.
+ *
  * Version 1.3.0
  * - Added `sMillisOfLastReceivedBDEvent` for user timeout detection.
  * - Fixed bug in `debug(const char* aMessage, float aFloat)`.
