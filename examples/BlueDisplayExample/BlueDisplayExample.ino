@@ -94,7 +94,7 @@ struct tm * sTimeInfo;
 
 bool sConnected = false;
 bool doBlink = true;
-volatile int16_t sDelay = 600;
+volatile int16_t sDelay = DELAY_START_VALUE; // 600
 
 // a string buffer for any purpose...
 char sStringBuffer[128];
@@ -258,7 +258,7 @@ void initDisplay(void) {
     // F("...") and init saves RAM since string "..." is stored in flash
     TouchButtonValueDirect.init(210, 150, 90, 55, COLOR_YELLOW, F("..."), 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetDelay);
 
-    TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE / 10, COLOR_YELLOW, COLOR_GREEN,
+    TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE, COLOR_YELLOW, COLOR_GREEN,
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_HORIZONTAL, &doDelay);
     TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_RIGHT, 4, COLOR_RED,
     COLOR_DEMO_BACKGROUND);
