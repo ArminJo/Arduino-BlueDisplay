@@ -40,7 +40,7 @@
 
 bool doBlink = true;
 
-#define VERSION_EXAMPLE "2.0"
+#define VERSION_EXAMPLE "2.1"
 
 /*
  * The Start Stop button
@@ -70,8 +70,12 @@ void setup() {
 #else
     initSerial(BLUETOOTH_BAUD_RATE);
 #endif
+
+    // Register callback handler and check for connection
+    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+
 #if defined (USE_SERIAL1) // defined in BlueSerial.h
-    // Serial(10) is available for Serial.print  output.
+    // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #  endif
@@ -81,8 +85,6 @@ void setup() {
     BlueDisplay1.debug("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
 #endif
 
-    // Register callback handler and check for connection
-    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 }
 
 void loop() {

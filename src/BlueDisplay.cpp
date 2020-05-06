@@ -10,7 +10,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2020  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -72,13 +72,11 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aRedr
 /**
  * Sets callback handler and calls host for requestMaxCanvasSize().
  * This results in a EVENT_REQUESTED_DATA_CANVAS_SIZE callback event, which sends display size and local timestamp.
- * If connection established successfully, call all 3 handlers once.
+ * This event calls the ConnectCallback as well as the RedrawCallback.
  *
  * Waits for 300 ms for connection to be established -> bool BlueDisplay1.mConnectionEstablished
- *
- * Reconnect and reorientation events also call the redraw callback.
- *
  */
+// TODO switch last 2 parameters and make one function with 3. parameter optional
 void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aReorientationCallback)(void),
         void (*aRedrawCallback)(void)) {
     registerConnectCallback(aConnectCallback);
@@ -93,24 +91,16 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aReor
     requestMaxCanvasSize();
 
     for (uint8_t i = 0; i < 30; ++i) {
-        // wait for size to be sent back by a reorientation event. Time measured is between 50 and 150 ms (or 80 and 120)
+        /*
+         * Wait 300 ms for size to be sent back by a canvas size event.
+         * Time measured is between 50 and 150 ms (or 80 and 120) for Bluetooth.
+         */
         delayMillisWithCheckAndHandleEvents(10);
         if (mConnectionEstablished) { // is set by delayMillisWithCheckAndHandleEvents()
 #if defined(TRACE) && defined (USE_SERIAL1)
 			Serial.println("Connection established");
 #endif
-            /*
-             * Call handler initially
-             */
-            if (aConnectCallback != NULL) {
-                aConnectCallback();
-            }
-            if (aReorientationCallback != NULL && aReorientationCallback != aConnectCallback) {
-                aReorientationCallback();
-            }
-            if (aRedrawCallback != NULL) {
-                aRedrawCallback();
-            }
+            // Handler are called initially by the received canvas size event
             break;
         }
     }

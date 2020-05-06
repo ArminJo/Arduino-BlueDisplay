@@ -113,6 +113,9 @@ void setup(void) {
     initSerial(BLUETOOTH_BAUD_RATE);
 #endif
 
+    // Register callback handler and check for connection
+    BlueDisplay1.initCommunication(&handleConnectAndReorientation, &drawGui);
+
 #if defined (USE_SERIAL1)
     // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
@@ -121,9 +124,6 @@ void setup(void) {
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
 #endif
-
-    // Register callback handler and check for connection
-    BlueDisplay1.initCommunication(&handleConnectAndReorientation, &drawGui);
 
     /*
      * on double tone, we received max canvas size. Otherwise no connection is available.

@@ -46,7 +46,7 @@
 #include "TimeLib.h"
 #endif
 
-#define VERSION_EXAMPLE "2.0"
+#define VERSION_EXAMPLE "2.1"
 
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
@@ -155,8 +155,11 @@ void setup() {
     initSerial(BLUETOOTH_BAUD_RATE);
 #endif
 
+    // Register callback handler and check for connection
+    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+
 #if defined (USE_SERIAL1) // defined in BlueSerial.h
-	// Serial(10) is available for Serial.print  output.
+	// Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
 	delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #  endif
@@ -166,11 +169,8 @@ void setup() {
     BlueDisplay1.debug("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
 #endif
 
-    // Register callback handler and check for connection
-    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
-
 #if ! defined(USE_C_TIME)
-    //set function to call when time sync required (default: after 300 seconds)
+    // Set function to call when time sync required (default: after 300 seconds)
     setSyncProvider(requestTimeSync);
 #endif
 
@@ -181,20 +181,24 @@ void setup() {
 void loop() {
     static unsigned long sLastMilisOfTimePrinted;
 
-    /*
-     * This debug output can also be recognized at the Arduino Serial Monitor
-     */
-//    BlueDisplay1.debug("\r\nDoBlink=", (uint8_t) doBlink);
     if (!BlueDisplay1.isConnectionEstablished()) {
         uint16_t tBlinkDuration = analogRead(ANALOG_INPUT_PIN);
 
-        // This serial output is readable at the Arduino serial monitor
+        /*
+         * This serial output is readable at the Arduino serial monitor
+         */
+#if!defined(USE_STANDARD_SERIAL) || defined (USE_SERIAL1)
         BlueDisplay1.debug("\r\nAnalogIn=", tBlinkDuration);
+#else
+        Serial.print("\r\nAnalogIn=");
+        Serial.println(tBlinkDuration);
+#endif
 
         digitalWrite(LED_BUILTIN, HIGH);
-        delay(tBlinkDuration / 2);
+        // Delay and check for connection
+        delayMillisWithCheckAndHandleEvents(tBlinkDuration / 2);
         digitalWrite(LED_BUILTIN, LOW);
-        delay(tBlinkDuration / 2);
+        delayMillisWithCheckAndHandleEvents(tBlinkDuration / 2);
     } else {
         if (doBlink) {
 
@@ -260,14 +264,12 @@ void initDisplay(void) {
 
     TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE, COLOR_YELLOW, COLOR_GREEN,
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_HORIZONTAL, &doDelay);
-    TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_RIGHT, 4, COLOR_RED,
-    COLOR_DEMO_BACKGROUND);
+    TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_RIGHT, 4, COLOR_RED, COLOR_DEMO_BACKGROUND);
     TouchSliderDelay.setCaption("Delay");
     TouchSliderDelay.setScaleFactor(10); // Slider is virtually 10 times larger
     TouchSliderDelay.setValueUnitString("ms");
 
-    TouchSliderDelay.setPrintValueProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_LEFT, 4, COLOR_WHITE,
-    COLOR_DEMO_BACKGROUND);
+    TouchSliderDelay.setPrintValueProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_LEFT, 4, COLOR_WHITE, COLOR_DEMO_BACKGROUND);
 
     // here we have received a new local timestamp
 #if defined(USE_C_TIME)

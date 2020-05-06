@@ -1,12 +1,12 @@
 /*
  * ServoExample.cpp
  *
- *  Demo of using the BlueDisplay library for HC-05 on Arduino
+ *  BlueDisplay demo which behaves differently if connected or not.
  *  The accelerometer sensor of the android display is used to control two servos
  *  in a frame which holds a laser.
  *  This is an example for using a fullscreen GUI.
  *
- *  If no BD connection available, the servo first marks the border and then moves randomly in this area (Cat Mover).
+ *  If no BlueDisplay connection available, the servo first marks the border and then moves randomly in this area (Cat Mover).
  *
  *  Zero -> the actual sensor position is taken as the servos 90/90 degree position.
  *  Bias (reverse of Zero) -> take actual servos position as position for horizontal sensors position.
@@ -39,7 +39,7 @@
 
 #include <BlueDisplay.h>
 
-#define VERSION_EXAMPLE "1.1"
+#define VERSION_EXAMPLE "1.2"
 
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
@@ -169,6 +169,10 @@ void setup() {
      * and to release the SimpleSerial interrupt handler '__vector_18'
      */
     initSerial(BLUETOOTH_BAUD_RATE);
+
+    // Register callback handler and check for connection
+    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+
 #if defined (USE_SERIAL1) // defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
@@ -177,9 +181,6 @@ void setup() {
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
 #endif
-
-    // Register callback handler and check for connection
-    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 
     if (!BlueDisplay1.isConnectionEstablished()) {
 #if defined (USE_STANDARD_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
@@ -320,7 +321,8 @@ void initDisplay(void) {
     sTextSize = sCurrentDisplayHeight / 16;
     sTextSizeVCC = sTextSize * 2;
 
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sCurrentDisplayWidth, sCurrentDisplayHeight);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sCurrentDisplayWidth,
+            sCurrentDisplayHeight);
 
     tSensorChangeCallCount = 0;
     // Since landscape has 2 orientations, let the user choose the right one.
@@ -345,8 +347,8 @@ void initDisplay(void) {
     SliderDown.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
 // Position slider right from vertical one at middle of screen
-    SliderRight.init((sCurrentDisplayWidth + sSliderSize) / 2, ((sCurrentDisplayHeight - sSliderSize) / 2) + sSliderSize, sSliderSize,
-            sSliderWidth,
+    SliderRight.init((sCurrentDisplayWidth + sSliderSize) / 2, ((sCurrentDisplayHeight - sSliderSize) / 2) + sSliderSize,
+            sSliderSize, sSliderWidth,
             SLIDER_LEFT_RIGHT_THRESHOLD, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
             FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderRight.setBarThresholdColor( SLIDER_THRESHOLD_COLOR);
@@ -374,9 +376,9 @@ void initDisplay(void) {
             sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4, COLOR_RED, "Zero", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0,
             &doSetZero);
 
-    TouchButtonAutoMove.init(sCurrentDisplayWidth - sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4 - sCurrentDisplayHeight / 16,
-            sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4, COLOR_BLUE, "Move", sTextSizeVCC,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoAutomove, &doEnableAutoMove);
+    TouchButtonAutoMove.init(sCurrentDisplayWidth - sCurrentDisplayWidth / 4,
+            sCurrentDisplayHeight / 4 - sCurrentDisplayHeight / 16, sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4, COLOR_BLUE,
+            "Move", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoAutomove, &doEnableAutoMove);
     TouchButtonAutoMove.setCaptionForValueTrue(F("Stop"));
 
 }

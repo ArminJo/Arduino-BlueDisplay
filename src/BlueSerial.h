@@ -7,7 +7,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2020  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -48,10 +48,12 @@
 //#define USE_USB_SERIAL
 
 /*
- * Determine which serial to use. Prefer the use of second USART, except for direct connection to your smartphone / tablet by USB cable.
- * Use standard Serial if USE_USB_SERIAL is requested.
- * Use Serial1 on stm32 if SERIAL_USB and USART1 is existent. If no SERIAL_USB existent, it needs USART2 to have Serial1 available.
- * Use Serial1 on AVR if second USART is existent, as on the ATMega Boards.
+ * Determine which serial to use.
+ * - Prefer the use of second USART, to have the standard Serial available for application (debug) use,
+ *   except for direct connection to your smartphone / tablet by USB cable.
+ * - Use standard Serial if USE_USB_SERIAL is requested.
+ * - Use Serial1 on stm32 if SERIAL_USB and USART1 is existent. If no SERIAL_USB existent, it needs USART2 to have Serial1 available.
+ * - Use Serial1 on AVR if second USART is existent, as on the ATMega Boards.
  */
 #if ! defined(USE_USB_SERIAL) && ((defined(BOARD_HAVE_USART1) && defined(SERIAL_USB)) \
     || (defined(BOARD_HAVE_USART2) && ! defined(SERIAL_USB)) \
