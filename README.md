@@ -75,6 +75,15 @@ Not for STM32.
 ## US_Distance
 Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a parking assistance.
 
+## Random delays
+Depending on the device you use, you can observe some random **"delays"** up to 500 ms in the timing of the display refresh. 
+The **delays does not occur if you use a USB connection** instead of the Bluetooth one.<br/>
+The reason is, that the Bluetooth driver does not return its received bytes for a longer time.<br/>
+If you send to much data during this delay the **driver may hang**, as you can observe for the SimpleDSO Application, which runs **smooth with a USB** connection. Hanging may be avoided if using flow control, but the HC05 firmware and breakout boards do not support it. On the ESP32, the BluetoothSerial library supports it and there you can observe that the client program also delays, when the smartphone driver takes its delay.<br/>
+This Bluetooth driver is usually delivered by the hardware vendor, so it may depend on the chips used in your smartphone.<br/>
+In my opinion the Bluetooth SPP (Serial Port Profile) driver is not really specified/tested/optimized for real time behavior.<br/>
+Known devices with these "delays" are: Lenovo K3 Note 6.0, Nexus7 with AW-NH665 BT-Chip running 6.0.1, Nexus 6P with ?8.x?, Kindle Fire HD 8 with Broadcom BCM2076 running 6.3.1.5.
+
 ## Extras
 The extras folder (in the Arduino IDE use "Sketch/Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
 contains more schematics, breadboard layouts and pictures which may help you building the example projects.
