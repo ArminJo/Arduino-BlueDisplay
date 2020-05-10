@@ -226,6 +226,16 @@ void BlueDisplay::clearDisplay(color16_t aColor) {
     }
 }
 
+/*
+ * If the buffer of the display device is full, commands up to this command may be skipped and display cleared.
+ * Useful if we send commands faster than the display may able to handle, to avoid increasing delay between sending and rendering.
+ */
+void BlueDisplay::clearDisplayOptional(color16_t aColor) {
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgs(FUNCTION_CLEAR_DISPLAY_OPTIONAL, 1, aColor);
+    }
+}
+
 // forces an rendering of the drawn bitmap
 void BlueDisplay::drawDisplayDirect(void) {
     if (USART_isBluetoothPaired()) {

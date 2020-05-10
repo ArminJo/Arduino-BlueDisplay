@@ -7,7 +7,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2020  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -77,6 +77,9 @@
 #define VERSION_BLUE_DISPLAY "2.0.0"
 #define VERSION_BLUE_DISPLAY_NUMERICAL 200
 /*
+ * Version 2.1.0
+ * - Improved initCommunication and late connection handling.
+ *
  * Version 2.0.0
  * - ESP32 and ESP8266 support added. External BT module needed for ESP8266.
  *
@@ -351,6 +354,7 @@ public:
     void setLongTouchDownTimeout(uint16_t aLongTouchDownTimeoutMillis);
 
     void clearDisplay(color16_t aColor = COLOR_WHITE);
+    void clearDisplayOptional(color16_t aColor = COLOR_WHITE);
     void drawDisplayDirect(void);
     void setScreenOrientationLock(uint8_t aLockMode);
 

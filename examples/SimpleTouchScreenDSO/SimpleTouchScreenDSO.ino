@@ -563,6 +563,10 @@ void __attribute__((noreturn)) loop(void) {
                         sDoInfoOutput = false;
 
                         if (DisplayControl.DisplayPage == DISPLAY_PAGE_CHART) {
+                            if (!DisplayControl.showHistory) {
+                                // This enables slow display devices to skip frames
+                                BlueDisplay1.clearDisplayOptional(COLOR_BACKGROUND_DSO);
+                            }
                             drawGridLinesWithHorizLabelsAndTriggerLine();
                             if (DisplayControl.showInfoMode != INFO_MODE_NO_INFO) {
                                 printInfo();
@@ -603,7 +607,7 @@ void __attribute__((noreturn)) loop(void) {
                         redrawDisplay();
                     } else {
                         /*
-                         * Normal loop-> process data, draw new chart, and start next acquisition
+                         * Normal loop -> process data, draw new chart, and start next acquisition
                          */
                         uint8_t tLastTriggerDisplayValue = DisplayControl.TriggerLevelDisplayValue;
                         computeAutoTrigger();
@@ -618,7 +622,9 @@ void __attribute__((noreturn)) loop(void) {
                         }
 
                         if (!DisplayControl.DrawWhileAcquire) {
-                            // normal mode => clear old chart and draw new data
+                            /*
+                             * Clear old chart and draw new data
+                             */
                             drawDataBuffer(&DataBufferControl.DataBuffer[0], COLOR_DATA_RUN, DisplayControl.EraseColor);
                         }
                         startAcquisition();
@@ -1613,7 +1619,7 @@ uint16_t getAttenuatorFactor(void) {
 /*
  * toggle between DC and AC mode
  */
-void doAcDcMode(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
+void doAcDcMode(__attribute__((unused))    BDButton * aTheTouchedButton, __attribute__((unused))    int16_t aValue) {
     setACMode(!MeasurementControl.ChannelIsACMode);
 }
 
@@ -1647,7 +1653,7 @@ void doSetTriggerDelay(float aValue) {
 /*
  * toggle between 5 and 1.1 volt reference
  */
-void doADCReference(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
+void doADCReference(__attribute__((unused))    BDButton * aTheTouchedButton, __attribute__((unused))    int16_t aValue) {
     uint8_t tNewReference = MeasurementControl.ADCReference;
     if (MeasurementControl.ADCReference == DEFAULT) {
         tNewReference = INTERNAL;
@@ -1662,7 +1668,7 @@ void doADCReference(__attribute__((unused))  BDButton * aTheTouchedButton, __att
     }
 }
 
-void doStartStopDSO(__attribute__((unused))  BDButton * aTheTouchedButton, __attribute__((unused))  int16_t aValue) {
+void doStartStopDSO(__attribute__((unused))    BDButton * aTheTouchedButton, __attribute__((unused))    int16_t aValue) {
     if (MeasurementControl.isRunning) {
         /*
          * Stop here

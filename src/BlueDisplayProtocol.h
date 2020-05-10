@@ -38,7 +38,7 @@
  *
  * Data (expected for messages with function code >= 0x60):
  * 1. Sync Byte A5
- * 2. Byte Data_Size_Type token (byte, short etc.) - only byte used
+ * 2. Byte Data_Size_Type token (byte, short etc.) - only byte used now
  * 3. Short length of data in byte units
  * 4. (Length) items of data values
  *
@@ -266,6 +266,7 @@ const int FUNCTION_NOP = 0x7F;
  *********************/
 const int FUNCTION_CLEAR_DISPLAY = 0x10;
 const int FUNCTION_DRAW_DISPLAY = 0x11;
+const int FUNCTION_CLEAR_DISPLAY_OPTIONAL = 0x12;
 // 3 parameter
 const int FUNCTION_DRAW_PIXEL = 0x14;
 // 6 parameter

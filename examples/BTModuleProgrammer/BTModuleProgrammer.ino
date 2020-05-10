@@ -114,9 +114,15 @@ void setup() {
 
     if (digitalRead(JDY_31_SELECT_PIN) != LOW) {
         // Time to release key button for HC-05
-        Serial.println(F("Give 3 seconds for HC-05 module key release."));
+        Serial.println(F("HC-05 programming mode detected. Switch to JDY-31 mode by connecting pin 4 to ground."));
+        Serial.println(F("Now you have 3 seconds for HC-05 module key release."));
         delay(3000);
+    } else {
+        Serial.println(F("JDY-31 programming mode detected. Switch to HC-05 mode by disconnecting pin 4 from ground."));
     }
+    Serial.println();
+    Serial.println(F("Now try to connect to module, read version and baud and wait for new name to be entered."));
+    Serial.println();
 
     /*
      * Let the built-in LED blink once
@@ -177,7 +183,7 @@ void loop() {
             Serial.print(StringBuffer);
             Serial.println(F("\" does not start with \"AT\""));
         }
-        waitAndEmptySerialReceiveBuffer(3); // read 3 character at 9600
+        waitAndEmptySerialReceiveBuffer(3); // skip 3 character at 9600
     }
 
     delayMilliseconds(300);
@@ -228,7 +234,7 @@ void doProgramModules() {
     } else {
         Serial.println(F("HC-05 module selected.\r\n"));
         BTModuleSerial.begin(BAUD_38400); // HC-05 default speed in AT command mode
-        Serial.println(F("Set baudrate for HC-05 to 38400 - factory default for AT command mode"));
+        Serial.println(F("Start with baudrate 38400 for HC-05 - factory default for AT command mode"));
         hasSuccess = setupHC_05();
     }
 
@@ -242,7 +248,8 @@ void doProgramModules() {
     Serial.println(F("- Connect another board."));
     Serial.println(F("- Press reset for a new try."));
     Serial.println(F("- Enter \"AT+<Command>\"."));
-    waitAndEmptySerialReceiveBuffer(1);
+    Serial.println();
+    waitAndEmptySerialReceiveBuffer(1); // dummy wait 1 ms
 }
 
 void delayMilliseconds(unsigned int aMillis) {
@@ -260,18 +267,20 @@ bool setupHC_05() {
      */
     if (tReturnedBytes == 4 && StringBuffer[0] == 'O' && StringBuffer[1] == 'K') {
 
-        Serial.println(F("Module attached, get version"));
+        Serial.println(F("Module attached OK, first get version"));
         sendWaitAndReceive("AT+VERSION");
 
         Serial.println(F("Get current baud"));
         sendWaitAndReceive("AT+UART");
 
-        Serial.println(F("Enter new module name to reprogram or empty string to skip - Timeout is 60 seconds"));
+        Serial.println(F("Enter new module name to factory reset, set name and set baudrate to 115200 - you will be asked for confirmation."));
+        Serial.println(F("Or enter empty string to skip."));
+        Serial.println(F("Timeout is 60 seconds."));
         waitAndEmptySerialReceiveBuffer(3); // 3 ms is sufficient for reading 3 character at 9600
         uint8_t tLenght = readStringWithTimeoutFromSerial(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER], 60);
         if (tLenght > 0) {
             Serial.println();
-            Serial.print(F("Enter any character to set name of the module to "));
+            Serial.print(F("Enter any character to factory reset, program name of the module to "));
             Serial.print(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER]);
             Serial.println(F(" and baudrate to 115200 or press reset or remove power."));
             waitAndEmptySerialReceiveBuffer(3); // read 3 character at 9600

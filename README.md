@@ -83,6 +83,7 @@ If you send to much data during this delay the **driver may hang**, as you can o
 This Bluetooth driver is usually delivered by the hardware vendor, so it may depend on the chips used in your smartphone.<br/>
 In my opinion the Bluetooth SPP (Serial Port Profile) driver is not really specified/tested/optimized for real time behavior.<br/>
 Known devices with these "delays" are: Lenovo K3 Note 6.0, Nexus7 with AW-NH665 BT-Chip running 6.0.1, Nexus 6P with ?8.x?, Kindle Fire HD 8 with Broadcom BCM2076 running 6.3.1.5.
+Known devices **without** these "delays" are: Samsung Note 3 running 5.0, Lifetab P9702 running 7.1.2, Samsung Galaxy S3 GT-I9300 running Lineage 7.1.2, LUX10 running 5.0, iRULU X11 running 5.1.1
 
 ## Extras
 The extras folder (in the Arduino IDE use "Sketch/Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
@@ -112,6 +113,9 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 | ![RC car control display](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
 
 # Revision History
+### Version 2.1.0
+- New command FUNCTION_CLEAR_DISPLAY_OPTIONAL to enable resynchronization of slow displays. Used by SimpleTouchScreenDSO.
+
 ### Version 2.0.0
 - ESP32 and ESP8266 support added. External BT module needed for ESP8266.
 
