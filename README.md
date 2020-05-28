@@ -1,5 +1,8 @@
 # [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
+Available as Arduino library "BlueDisplay"
+
 ### [Version 2.0.0](https://github.com/ArminJo/Arduino-BlueDisplay/releases)
+
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
 [![Commits since latest](https://img.shields.io/github/commits-since/ArminJo/Arduino-BlueDisplay/latest)](https://github.com/ArminJo/Arduino-BlueDisplay/commits/master)
@@ -39,7 +42,7 @@ For boards which have more than one serial interface, the library tries to use *
 If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must open the library file *BlueSerial.h* and comment out the line `#define USE_USB_SERIAL`.<br/>
 Another way is to **modify the central serial interface function**. You only have to change the first 2 lines of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
 
-# [Examples](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples)
+# [Examples](examples)
 Before using the examples, take care that the Bluetooth-module (e.g. the the HC-05 module) or ESP32 program is connected to your Android device and is visible in the Bluetooth Settings.
 
 All examples initially use the baudrate of 9600. Especially the SimpleTouchScreenDSO example will run smoother with a baudrate of 115200.<br/>
@@ -69,7 +72,7 @@ If no BD connection available, the servo first marks the border and then moves r
 
 ## **SimpleTouchScreenDSO**
 300 kSamples DSO without external hardware (except the HC-05 module). For AC input, only a capacitor and 4 resistors are needed.
-More information at [Arduino-Simple-DSO](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples/SimpleTouchScreenDSO).<br/>
+More information at [Arduino-Simple-DSO](examples/SimpleTouchScreenDSO).<br/>
 Not for STM32.
 
 ## US_Distance
@@ -81,22 +84,26 @@ The **delays does not occur if you use a USB connection** instead of the Bluetoo
 The reason is, that the Bluetooth driver does not return its received bytes for a longer time.<br/>
 If you send to much data during this delay the **driver may hang**, as you can observe for the SimpleDSO Application, which runs **smooth with a USB** connection. Hanging may be avoided if using flow control, but the HC05 firmware and breakout boards do not support it. On the ESP32, the BluetoothSerial library supports it and there you can observe that the client program also delays, when the smartphone driver takes its delay.<br/>
 This Bluetooth driver is usually delivered by the hardware vendor, so it may depend on the chips used in your smartphone.<br/>
-In my opinion the Bluetooth SPP (Serial Port Profile) driver is not really specified/tested/optimized for real time behavior.<br/>
-Known devices with these "delays" are: Lenovo K3 Note 6.0, Nexus7 with AW-NH665 BT-Chip running 6.0.1, Nexus 6P with ?8.x?, Kindle Fire HD 8 with Broadcom BCM2076 running 6.3.1.5.
-Known devices **without** these "delays" are: Samsung Note 3 running 5.0, Lifetab P9702 running 7.1.2, Samsung Galaxy S3 GT-I9300 running Lineage 7.1.2, LUX10 running 5.0, iRULU X11 running 5.1.1
+In my opinion some Bluetooth SPP (Serial Port Profile) drivers are not really specified/tested/optimized for real time behavior.<br/>
+Known devices **with** these "delays" are:<br/>
+Lenovo K3 Note 6.0, Nexus7 with AW-NH665 BT-Chip running 6.0.1, Nexus 6P with ?8.x?, Kindle Fire HD 8 with Broadcom BCM2076 running 6.3.1.5.<br/>
+Known devices **without** these "delays" are:<br/>
+Samsung Note 3 running 5.0, Lifetab P9702 running 7.1.2, Lifetab E10310 running 4.2.2, XORO PAD 721 running 4.2.2, Samsung Galaxy S3 GT-I9300 running Lineage 7.1.2, LUX10 running 5.0, iRULU X11 running 5.1.1, Time2 TC1050G running 5.1, Pixel 4 XL running 10, 
 
 ## Extras
 The extras folder (in the Arduino IDE use "Sketch/Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
 contains more schematics, breadboard layouts and pictures which may help you building the example projects.
 
 ## Hints
-If you need debugging you must use the `debug()` functions since using `Serial.print()` etc. gives errors (we have only one serial port on the Arduino) . E.g.
+### Debugging
+If you need debugging, you must use the `debug()` functions since using `Serial.print()` etc. gives errors (we have only one serial port on the Arduino). 
 ```
 BlueDisplay1.debug("DoBlink=", doBlink);
 ```
-The debug content will then show up as toast on your Android device and is stored in the log like other commands received by the app.
-Change the **log level** in the app to see the information you need of the BlueDisplay communication.
+The debug content will then show up as **toast** on your Android device and is stored in the log.
+Change the **log level** in the app to see more or less information of the BlueDisplay communication.
 
+### Connecting TX
 To enable programming of the Arduino while the HC-05 module is connected, use a diode (eg. a BAT 42) to connect Arduino rx and HC-05 tx.
 On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
@@ -108,9 +115,9 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 
 | Fritzing schematic for BlueDisplay example | BlueDisplay example breadboard picture |
 | :-: | :-: |
-| ![Fritzing schematics](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/BlueDisplayBlink_Steckplatine.png) | ![Breadboard picture](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/Blink1.jpg) |
+| ![Fritzing schematics](extras/BlueDisplayBlink_Steckplatine.png) | ![Breadboard picture](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/Blink1.jpg) |
 | RC car control display | Hacked RC car |
-| ![RC car control display](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
+| ![RC car control display](extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
 
 # Revision History
 ### Version 2.1.0
