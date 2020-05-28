@@ -146,10 +146,10 @@ void setup() {
     pinMode(ANALOG_INPUT_PIN, INPUT);
 
 #if defined(ESP32)
-	Serial.begin(115299);
-	Serial.println("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
-	initSerial("ESP-BD_Example");
-	Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
+    Serial.begin(115299);
+    Serial.println("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
+    initSerial("ESP-BD_Example");
+    Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
 #else
     pinMode(TONE_PIN, OUTPUT);
     initSerial(BLUETOOTH_BAUD_RATE);
@@ -159,12 +159,12 @@ void setup() {
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 
 #if defined (USE_SERIAL1) // defined in BlueSerial.h
-	// Serial(0) is available for Serial.print output.
+// Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
-	delay(2000); // To be able to connect Serial monitor after reset and before first printout
+    delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #  endif
-	// Just to know which program is running on my Arduino
-	Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+// Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
 #else
     BlueDisplay1.debug("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
 #endif
@@ -234,7 +234,7 @@ void loop() {
         if (tMillis - sLastMilisOfTimePrinted > 1000) {
             sLastMilisOfTimePrinted = tMillis;
 #if defined(USE_C_TIME)
-			BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &infoEventCallback);
+            BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &infoEventCallback);
 #endif
             printTime();
         }
@@ -273,8 +273,8 @@ void initDisplay(void) {
 
     // here we have received a new local timestamp
 #if defined(USE_C_TIME)
-	// initialize sTimeInfo
-	sTimeInfo = localtime((const time_t*) &BlueDisplay1.mHostUnixTimestamp);
+// initialize sTimeInfo
+    sTimeInfo = localtime((const time_t*) &BlueDisplay1.mHostUnixTimestamp);
 #else
     setTime(BlueDisplay1.mHostUnixTimestamp);
 #endif
@@ -299,16 +299,16 @@ void doBDExampleBlinkStartStop(BDButton * aTheTouchedButton __attribute__((unuse
 
 #if defined(USE_C_TIME)
 void infoEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
-	if (aSubcommand == SUBFUNCTION_GET_INFO_LOCAL_TIME) {
-		sTimeInfo = localtime((const time_t*) &aLongInfo.uint32Value);
-	}
+    if (aSubcommand == SUBFUNCTION_GET_INFO_LOCAL_TIME) {
+        sTimeInfo = localtime((const time_t*) &aLongInfo.uint32Value);
+    }
 }
 
 void printTime() {
-	sprintf_P(sStringBuffer, PSTR("%02d.%02d.%4d %02d:%02d:%02d"), sTimeInfo->tm_mday, sTimeInfo->tm_mon, sTimeInfo->tm_year + 1900,
-			sTimeInfo->tm_hour, sTimeInfo->tm_min, sTimeInfo->tm_sec);
-	BlueDisplay1.drawText(DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer, 11,
-	COLOR_BLACK, COLOR_DEMO_BACKGROUND);
+    sprintf_P(sStringBuffer, PSTR("%02d.%02d.%4d %02d:%02d:%02d"), sTimeInfo->tm_mday, sTimeInfo->tm_mon, sTimeInfo->tm_year + 1900,
+    sTimeInfo->tm_hour, sTimeInfo->tm_min, sTimeInfo->tm_sec);
+    BlueDisplay1.drawText(DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer, 11,
+    COLOR_BLACK, COLOR_DEMO_BACKGROUND);
 }
 
 #else

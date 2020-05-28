@@ -75,7 +75,8 @@
 #endif
 
 #define VERSION_BLUE_DISPLAY "2.0.0"
-#define VERSION_BLUE_DISPLAY_NUMERICAL 200
+#define VERSION_BLUE_DISPLAY_MAJOR 2
+#define VERSION_BLUE_DISPLAY_MINOR 0
 /*
  * Version 2.1.0
  * - Improved initCommunication and late connection handling.
@@ -450,7 +451,7 @@ public:
     void setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSensorRate, uint8_t aFilterFlag);
 
 #ifdef LOCAL_DISPLAY_EXISTS
-	void drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor, color16_t aBGColor);
+    void drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor, color16_t aBGColor);
 #endif
 
 #ifdef AVR

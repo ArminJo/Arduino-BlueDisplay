@@ -515,9 +515,9 @@ void setup() {
 /************************************************************************
  * main loop - 32 microseconds
  ************************************************************************/
-// noreturn saves program space!
+// noreturn saves 56 byte program space!
 void __attribute__((noreturn)) loop(void) {
-    static uint32_t sMillisOfLastInfoOutput;
+    uint32_t sMillisOfLastInfoOutput;
 
     bool sDoInfoOutput = true; // Output info at least every second for settings page, single shot or trigger not found
 
