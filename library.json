@@ -1,0 +1,25 @@
+{
+  "name": "ServoEasing",
+  "keywords": "Servo",
+  "description": "Arduino library to enable smooth servo movement.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ArminJo/ServoEasing"
+  },
+  "version": "2.0.0",
+  "exclude": "pictures",
+  "authors": {
+    "name": "Armin Joachimsmeyer",
+    "email": "armin.joachimsmeyer@gmail.com"
+  },
+  "license": "GPL-3.0-or-later",
+  "frameworks": "arduino",
+  "platforms": [
+    "atmelavr",
+    "atmelmegaavr",
+    "atmelsam",
+    "espressif8266",
+    "espressif32",
+    "ststm32"
+  ]
+}
