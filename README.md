@@ -1,7 +1,7 @@
 # [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
 Available as Arduino library "BlueDisplay"
 
-### [Version 2.0.0](https://github.com/ArminJo/Arduino-BlueDisplay/releases)
+### [Version 2.1.0](https://github.com/ArminJo/Arduino-BlueDisplay/releases)
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
@@ -39,8 +39,8 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 
 ## Which Serial interface?
 For boards which have more than one serial interface, the library tries to use **Serial1** for the connection to leave Serial, which is mostly connected to the USB, for other purposes as logging etc..
-If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must open the library file *BlueSerial.h* and comment out the line `#define USE_USB_SERIAL`.<br/>
-Another way is to **modify the central serial interface function**. You only have to change the first 2 lines of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
+If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must open the library file *BlueSerial.h* and comment out the line [`#define USE_USB_SERIAL`](src/BlueSerial.h#L52).<br/>
+Another way is to **modify the central serial interface function**. You only have to change the [first 2 lines](src/BlueSerial.cpp#L192) of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
 
 # [Examples](examples)
 Before using the examples, take care that the Bluetooth-module (e.g. the the HC-05 module) or ESP32 program is connected to your Android device and is visible in the Bluetooth Settings.
@@ -121,7 +121,8 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 
 # Revision History
 ### Version 2.1.0
-- New command FUNCTION_CLEAR_DISPLAY_OPTIONAL to enable resynchronization of slow displays. Used by SimpleTouchScreenDSO.
+- Arduino Due support added.
+- New command `FUNCTION_CLEAR_DISPLAY_OPTIONAL` to enable resynchronization of slow displays. Used by SimpleTouchScreenDSO.
 
 ### Version 2.0.0
 - ESP32 and ESP8266 support added. External BT module needed for ESP8266.

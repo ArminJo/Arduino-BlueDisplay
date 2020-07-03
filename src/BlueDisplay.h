@@ -74,23 +74,24 @@
 #include "BDSlider.h" // for BDSliderHandle_t
 #endif
 
-#define VERSION_BLUE_DISPLAY "2.0.0"
+#define VERSION_BLUE_DISPLAY "2.1.0"
 #define VERSION_BLUE_DISPLAY_MAJOR 2
-#define VERSION_BLUE_DISPLAY_MINOR 0
+#define VERSION_BLUE_DISPLAY_MINOR 1
 /*
  * Version 2.1.0
  * - Improved initCommunication and late connection handling.
+ * - Arduino Due support added.
  *
  * Version 2.0.0
- * - ESP32 and ESP8266 support added. External BT module needed for ESP8266.
+ * - ESP32 and ESP8266 support added. External BT module required for ESP8266.
  *
  * Version 1.3.0
  * - Added `sMillisOfLastReceivedBDEvent` for user timeout detection.
  * - Fixed bug in `debug(const char* aMessage, float aFloat)`.
- * - Added `*LOCK_SENSOR_LANDSCAPE` and `*LOCK_SENSOR_LANDSCAPE` in function `setScreenOrientationLock()`. Needs BD app version 4.2.
+ * - Added `*LOCK_SENSOR_LANDSCAPE` and `*LOCK_SENSOR_LANDSCAPE` in function `setScreenOrientationLock()`. Requires BD app version 4.2.
  * - Removed unused `mCurrentDisplayHeight` and `mCurrentDisplayWidth` member variables.
  * - Fixed bug in draw function from `drawByte` to `drawLong`.
- * - Added short `drawText` functions. Needs BD app version 4.2.
+ * - Added short `drawText` functions. Requires BD app version 4.2.
  *
  * Version 1.2.0
  * - Use type `Print *` instead of `Stream *`.
@@ -221,7 +222,7 @@ static const int BD_FLAG_FIRST_RESET_ALL = 0x01;
 //
 static const int BD_FLAG_TOUCH_BASIC_DISABLE = 0x02; // Do not send plain touch events (UP, DOWN, MOVE) if no button or slider was touched, send only button and slider events. -> Disables also touch moves.
 static const int BD_FLAG_ONLY_TOUCH_MOVE_DISABLE = 0x04; // Do not send MOVE, only UP and DOWN.
-static const int BD_FLAG_LONG_TOUCH_ENABLE = 0x08; // If long touch detection is needed. This delays the sending of plain DOWN Events.
+static const int BD_FLAG_LONG_TOUCH_ENABLE = 0x08; // If long touch detection is required. This delays the sending of plain DOWN Events.
 static const int BD_FLAG_USE_MAX_SIZE = 0x10;      // Use maximum display size for given geometry. -> Scale automatically to screen.
 
 /****************************************
@@ -242,7 +243,7 @@ static const int FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_PORTRAIT = 0x09;
  *********************/
 // Flags for BUTTON_GLOBAL_SETTINGS
 static const int FLAG_BUTTON_GLOBAL_USE_DOWN_EVENTS_FOR_BUTTONS = 0x00; // Default
-static const int FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS = 0x01;   // If swipe can start on a button, you need this.
+static const int FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS = 0x01;   // If swipe can start on a button, you require this.
 static const int FLAG_BUTTON_GLOBAL_SET_BEEP_TONE = 0x02;   // Beep on button touch
 
 // Flags for init

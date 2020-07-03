@@ -328,7 +328,7 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
 #endif
     uint8_t tEventType = aEvent->EventType;
 
-    // local copy of event since the values in the original event may be overwritten if the handler needs long time for its action
+    // local copy of event since the values in the original event may be overwritten if the handler requires long time for its action
     struct BluetoothEvent tEvent = *aEvent;
 
     // avoid using event twice
@@ -347,7 +347,7 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
     void (*tSliderCallback)(BDSliderHandle_t *, int16_t);
     void (*tButtonCallback)(BDButtonHandle_t *, int16_t);
 
-    switch (tEventType) { // switch needs 36 bytes more code but is clearer to understand :-(
+    switch (tEventType) { // switch requires 36 bytes more code but is clearer to understand :-(
 
 #ifndef DO_NOT_NEED_BASIC_TOUCH_EVENTS
     case EVENT_TOUCH_ACTION_DOWN:
@@ -467,7 +467,7 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
         // reset flags, since swipe is sent at touch up
         sTouchIsStillDown = false;
         if (sSwipeEndCallback != NULL) {
-            // compute it locally - no need to send it over the line
+            // compute it locally - not required to send it over the line
             if (tEvent.EventData.SwipeInfo.SwipeMainDirectionIsX) {
                 tEvent.EventData.SwipeInfo.TouchDeltaAbsMax = abs(tEvent.EventData.SwipeInfo.TouchDeltaX);
             } else {
@@ -604,7 +604,7 @@ void handleLocalTouchUp(void) {
     }
     if (sSliderIsMoveTarget) {
         sSliderIsMoveTarget = false;
-        sDisableTouchUpOnce = true; // Do not call the touch up callback in handleEvent() since slider does not need one
+        sDisableTouchUpOnce = true; // Do not call the touch up callback in handleEvent() since slider does not require one
     } else if (sSwipeEndCallbackEnabled) {
         if (abs(sDownPosition.TouchPosition.PosX - sCurrentPosition.TouchPosition.PosX) >= TOUCH_SWIPE_THRESHOLD
                 || abs(sDownPosition.TouchPosition.PosY - sCurrentPosition.TouchPosition.PosY) >= TOUCH_SWIPE_THRESHOLD) {

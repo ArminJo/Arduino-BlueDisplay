@@ -39,8 +39,6 @@
 
 #include <BlueDisplay.h>
 
-#define VERSION_EXAMPLE "1.2"
-
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
  ***************************************************************************/
@@ -179,7 +177,7 @@ void setup() {
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #  endif
     // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
 #endif
 
     if (!BlueDisplay1.isConnectionEstablished()) {
@@ -188,12 +186,12 @@ void setup() {
     while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
 #  endif
         // Just to know which program is running on my Arduino
-        Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from  " __DATE__));
+        Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
 #endif
         sExampleIsRunning = true; // no start button available to start example, so do "autostart" here
     } else {
         // Just to know which program is running on my Arduino
-        BlueDisplay1.debug("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
+        BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
 
         // set sLastLaserSliderValue and sLaserPowerValue and enables laser
         doLaserPowerSlider(NULL, sCurrentDisplayHeight / 8);
@@ -593,20 +591,6 @@ void processHorizontalSensorValue(float aSensorValue) {
 }
 
 /*
- * Not used yet
- */
-void printSensorInfo(struct SensorCallback* aSensorCallbackInfo) {
-    dtostrf(aSensorCallbackInfo->ValueX, 7, 4, &sStringBuffer[50]);
-    dtostrf(aSensorCallbackInfo->ValueY, 7, 4, &sStringBuffer[60]);
-    dtostrf(aSensorCallbackInfo->ValueZ, 7, 4, &sStringBuffer[70]);
-    dtostrf(sYZeroCompensationValue, 7, 4, &sStringBuffer[80]);
-#pragma GCC diagnostic ignored "-Wformat-truncation=" // We know, each argument is a string of size 7
-    snprintf(sStringBuffer, sizeof sStringBuffer, "X=%s Y=%s Z=%s Zero=%s", &sStringBuffer[50], &sStringBuffer[60],
-            &sStringBuffer[70], &sStringBuffer[80]);
-    BlueDisplay1.drawText(0, sTextSize, sStringBuffer, sTextSize, COLOR_BLACK, COLOR_GREEN);
-}
-
-/*
  * Sensor callback handler
  */
 void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallbackInfo) {
@@ -633,7 +617,18 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallback
          * regular operation here!
          */
         tSensorChangeCallCount = CALLS_FOR_ZERO_ADJUSTMENT + 1; // to prevent overflow
-//        printSensorInfo(aSensorCallbackInfo);
+#ifdef DEBUG
+        void printSensorInfo(struct SensorCallback* aSensorCallbackInfo) {
+            dtostrf(aSensorCallbackInfo->ValueX, 7, 4, &sStringBuffer[50]);
+            dtostrf(aSensorCallbackInfo->ValueY, 7, 4, &sStringBuffer[60]);
+            dtostrf(aSensorCallbackInfo->ValueZ, 7, 4, &sStringBuffer[70]);
+            dtostrf(sYZeroCompensationValue, 7, 4, &sStringBuffer[80]);
+        #pragma GCC diagnostic ignored "-Wformat-truncation=" // We know, each argument is a string of size 7
+            snprintf(sStringBuffer, sizeof sStringBuffer, "X=%s Y=%s Z=%s Zero=%s", &sStringBuffer[50], &sStringBuffer[60],
+                    &sStringBuffer[70], &sStringBuffer[80]);
+            BlueDisplay1.drawText(0, sTextSize, sStringBuffer, sTextSize, COLOR_BLACK, COLOR_GREEN);
+        }
+#endif
         if (sExampleIsRunning) {
             processVerticalSensorValue(aSensorCallbackInfo->ValueY);
             processHorizontalSensorValue(aSensorCallbackInfo->ValueX);
@@ -644,3 +639,4 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallback
     sMillisOfLastReveivedEvent = millis();
     tSensorChangeCallCount++;
 }
+

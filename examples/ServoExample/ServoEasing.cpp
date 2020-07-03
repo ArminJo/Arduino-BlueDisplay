@@ -72,6 +72,10 @@ HardwareTimer Timer20ms(3);  // 4 timers and 4. timer is used for tone()
 #define ID_TC_FOR_20_MS_TIMER   ID_TC8 // Timer 8 is TC2 channel 2
 #define IRQn_FOR_20_MS_TIMER    TC8_IRQn
 #define HANDLER_FOR_20_MS_TIMER TC8_Handler
+
+#elif defined(TEENSYDUINO)
+// common for all Teensy
+IntervalTimer Timer20ms;
 #endif
 
 // Enable this to see information on each call
@@ -148,14 +152,15 @@ void ServoEasing::PCA9685Reset() {
 }
 
 /*
- * Set expander to 20 ms period and wait 2 milliseconds
+ * Set expander to 20 ms period for 4096-part cycle and wait 2 milliseconds
+ * This results in a resolution of 4.88 us per step.
  */
 void ServoEasing::PCA9685Init() {
     // Set expander to 20 ms period
     I2CWriteByte(PCA9685_MODE1_REGISTER, _BV(PCA9685_SLEEP)); // go to sleep
     I2CWriteByte(PCA9685_PRESCALE_REGISTER, PCA9685_PRESCALER_FOR_20_MS); // set the prescaler
     I2CWriteByte(PCA9685_MODE1_REGISTER, _BV(PCA9685_AUTOINCREMENT)); // reset sleep and enable auto increment
-    delay(2); // 500 us according to datasheet
+    delay(2); // > 500 us according to datasheet
 }
 
 void ServoEasing::I2CWriteByte(uint8_t aAddress, uint8_t aData) {
@@ -176,6 +181,7 @@ void ServoEasing::I2CWriteByte(uint8_t aAddress, uint8_t aData) {
 /*
  * aPWMValueAsUnits - The point in the 4096-part cycle, where the output goes OFF (LOW). On is fixed at 0.
  * Useful values are from 111 (111.411 = 544 us) to 491 (491.52 = 2400 us)
+ * This results in an resolution of approximately 0.5 degree.
  * 4096 means output is signal fully off
  */
 void ServoEasing::setPWM(uint16_t aPWMOffValueAsUnits) {
@@ -384,14 +390,9 @@ uint8_t ServoEasing::attach(int aPin, int aMicrosecondsForServoLowDegree, int aM
 void ServoEasing::detach() {
     if (mServoIndex != INVALID_SERVO) {
         sServoArray[mServoIndex] = NULL;
-        if (mServoIndex == sServoArrayMaxIndex) {
-            // if servo with highest index in array was detached, compute new sServoArrayMaxIndex
-            do {
-                sServoArrayMaxIndex--;
-                if (sServoArrayMaxIndex == 0) {
-                    break;
-                }
-            } while (sServoArray[sServoArrayMaxIndex] == NULL);
+        // If servo with highest index in array was detached, we want to find new sServoArrayMaxIndex
+        while (sServoArray[sServoArrayMaxIndex] == NULL && sServoArrayMaxIndex > 0) {
+            sServoArrayMaxIndex--;
         }
 
 #if defined(USE_PCA9685_SERVO_EXPANDER)
@@ -594,6 +595,9 @@ int ServoEasing::MicrosecondsOrUnitsToDegree(int aMicrosecondsOrUnits) {
 
 }
 
+/*
+ * We have around 10 us per degree
+ */
 int ServoEasing::DegreeToMicrosecondsOrUnits(int aDegree) {
 // For microseconds and PCA9685 units:
     return map(aDegree, 0, 180, mServo0DegreeMicrosecondsOrUnits, mServo180DegreeMicrosecondsOrUnits);
@@ -1100,19 +1104,30 @@ void enableServoEasingInterrupt() {
 // set timer 1 to 20 ms, since the servo library does not do this for us
     TCCR5A = _BV(WGM11);// FastPWM Mode mode TOP (20 ms) determined by ICR1 - non-inverting Compare Output mode OC1A+OC1B
     TCCR5B = _BV(WGM13) | _BV(WGM12) | _BV(CS11);// set prescaler to 8, FastPWM mode mode bits WGM13 + WGM12
-    ICR5 = 40000;// set period to 20 ms
+    ICR5 = (F_CPU / 8) / REFRESH_FREQUENCY; // 40000 - set period to 50 Hz / 20 ms
 #    endif
 
     TIFR5 |= _BV(OCF5B);     // clear any pending interrupts;
     TIMSK5 |= _BV(OCIE5B);// enable the output compare B interrupt
     OCR5B = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL_MICROS) / 8) - 100;// update values 100 us before the new servo period starts
-#  else // defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 
+#elif defined(__AVR_ATmega4809__) // Uno WiFi Rev 2, Nano Every
+    // TCB1 is used by Tone()
+    // TCB2 is used by Servo, but we cannot hijack the ISR, so we must use a dedicated timer for the 20 ms interrupt
+    // TCB3 is used by millis()
+    // Must use TCA0, since TCBx have only prescaler %2. Use single mode, because it seems to be easier :-)
+    TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_NORMAL_gc; // Frequency mode, top = PER
+    TCA0.SINGLE.PER = (((F_CPU / 1000000) * REFRESH_INTERVAL_MICROS) / 8); // (F_CPU / 1000000) = clockCyclesPerMicrosecond()
+//    TCA0.SINGLE.PER = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL_MICROS) / 8); // clockCyclesPerMicrosecond() is no macro here!
+    TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm; // Overflow interrupt
+    TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV8_gc | TCA_SINGLE_ENABLE_bm; // set prescaler to 8
+
+#  else // defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 #    if defined(USE_PCA9685_SERVO_EXPANDER) && ! defined(USE_SERVO_LIB)
 //    // set timer 1 to 20 ms, since the servo library does not do this for us
     TCCR1A = _BV(WGM11);     // FastPWM Mode mode TOP (20 ms) determined by ICR1 - non-inverting Compare Output mode OC1A+OC1B
     TCCR1B = _BV(WGM13) | _BV(WGM12) | _BV(CS11);     // set prescaler to 8, FastPWM mode mode bits WGM13 + WGM12
-    ICR1 = 40000;     // set period to 20 ms
+    ICR1 = (F_CPU / 8) / REFRESH_FREQUENCY; // 40000 - set period to 50 Hz / 20 ms
 #    endif
 
     TIFR1 |= _BV(OCF1B);    // clear any pending interrupts;
@@ -1156,7 +1171,7 @@ void enableServoEasingInterrupt() {
 
     // TIMER_CLOCK3 is MCK/32. MCK is 84MHz Set up the Timer in waveform mode which creates a PWM in UP mode with automatic trigger on RC Compare
     TC_Configure(TC_FOR_20_MS_TIMER, CHANNEL_FOR_20_MS_TIMER, TC_CMR_TCCLKS_TIMER_CLOCK3 | TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC);
-    TC_SetRC(TC_FOR_20_MS_TIMER, CHANNEL_FOR_20_MS_TIMER, (84000000 / 32) / REFRESH_FREQUENCY); // =52500 -> 20ms
+    TC_SetRC(TC_FOR_20_MS_TIMER, CHANNEL_FOR_20_MS_TIMER, (F_CPU / 32) / REFRESH_FREQUENCY); // =52500 -> 20ms
 
     TC_Start(TC_FOR_20_MS_TIMER, CHANNEL_FOR_20_MS_TIMER); // Enables the timer clock stopped by TC_Configure() and performs a software reset to start the counting
 
@@ -1172,10 +1187,16 @@ void enableServoEasingInterrupt() {
 //    while (GCLK->STATUS.bit.SYNCBUSY) // not required to wait
 //        ;
 
+    // The TC should be disabled before the TC is reset in order to avoid undefined behavior.
+    TC5->COUNT16.CTRLA.reg &= ~TC_CTRLA_ENABLE;
+    // 14.3.2.2 When write-synchronization is ongoing for a register, any subsequent write attempts to this register will be discarded, and an error will be reported.
+    // 14.3.1.4 It is also possible to perform the next read/write operation and wait,
+    // as this next operation will be started once the previous write/read operation is synchronized and/or complete. ???
+    while (TC5->COUNT16.STATUS.bit.SYNCBUSY == 1); // wait for sync
     // Reset TCx
     TC5->COUNT16.CTRLA.reg = TC_CTRLA_SWRST;
-    while (TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY)
-        ;
+    // When writing a ‘1’ to the CTRLA.SWRST bit it will immediately read as ‘1’.
+    // CTRL.SWRST will be cleared by hardware when the peripheral has been reset.
     while (TC5->COUNT16.CTRLA.bit.SWRST)
         ;
 
@@ -1183,8 +1204,8 @@ void enableServoEasingInterrupt() {
      * Set Timer counter mode to 16 bits, set mode as match frequency, prescaler is DIV64 => 750 kHz clock, start counter
      */
     TC5->COUNT16.CTRLA.reg |= TC_CTRLA_MODE_COUNT16| TC_CTRLA_WAVEGEN_MFRQ | TC_CTRLA_PRESCALER_DIV64 | TC_CTRLA_ENABLE;
-    TC5->COUNT16.CC[0].reg = (uint16_t) ((750000 / REFRESH_FREQUENCY) - 1); // (750 kHz / sampleRate - 1);
-//    while (TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY) // The next commands do an implicit wait :-)
+    TC5->COUNT16.CC[0].reg = (uint16_t) (((F_CPU/64) / REFRESH_FREQUENCY) - 1); // (750 kHz / sampleRate - 1);
+//    while (TC5->COUNT16.STATUS.bit.SYNCBUSY == 1) // The next commands do an implicit wait :-)
 //        ;
 
     // Configure interrupt request
@@ -1211,6 +1232,9 @@ void enableServoEasingInterrupt() {
     am_hal_ctimer_int_enable(AM_HAL_CTIMER_INT_TIMERA3);
     NVIC_EnableIRQ(CTIMER_IRQn);
 
+#elif defined(TEENSYDUINO)
+    // common for all Teensy
+    Timer20ms.begin(handleServoTimerInterrupt, REFRESH_INTERVAL_MICROS);
 #endif
     sInterruptsAreActive = true;
 }
@@ -1219,6 +1243,10 @@ void disableServoEasingInterrupt() {
 #if defined(__AVR__)
 #  if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
     TIMSK5 &= ~(_BV(OCIE5B)); // disable the output compare B interrupt
+
+#elif defined(__AVR_ATmega4809__) // Uno WiFi Rev 2, Nano Every
+    TCA0.SINGLE.INTCTRL &= ~(TCA_SINGLE_OVF_bm); // disable the overflow interrupt
+
 #  else
     TIMSK1 &= ~(_BV(OCIE1B)); // disable the output compare B interrupt
 #  endif
@@ -1244,6 +1272,8 @@ void disableServoEasingInterrupt() {
 #elif defined(ARDUINO_ARCH_APOLLO3)
     am_hal_ctimer_int_disable(AM_HAL_CTIMER_INT_TIMERA3);
 
+#elif defined(TEENSYDUINO)
+    Timer20ms.end();
 #endif
     sInterruptsAreActive = false;
 }
@@ -1258,6 +1288,12 @@ void disableServoEasingInterrupt() {
 ISR(TIMER5_COMPB_vect) {
     handleServoTimerInterrupt();
 }
+
+#elif defined(__AVR_ATmega4809__) // Uno WiFi Rev 2, Nano Every
+ISR(TCA0_OVF_vect) {
+    handleServoTimerInterrupt();
+}
+
 #  else // defined(__AVR__)
 ISR(TIMER1_COMPB_vect) {
 #    if defined(MEASURE_SERVO_EASING_INTERRUPT_TIMING)

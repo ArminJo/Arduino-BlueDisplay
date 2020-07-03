@@ -4,21 +4,22 @@
  *  Shows the distances measured by a HC-SR04 ultrasonic sensor
  *  Can be used as a parking assistance.
  *  This is an example for using a fullscreen GUI.
-
- *  Copyright (C) 2015, 2016  Armin Joachimsmeyer
+ *
+ *  Copyright (C) 2014-2020  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
- *  This file is part of BlueDisplay.
+ *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *
  *  BlueDisplay is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
-
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
-
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
@@ -28,9 +29,9 @@
 
 #include "BlueDisplay.h"
 
-#include "HCSR04.h"
+#include "PinDefinitionsAndMore.h"
 
-#define VERSION_EXAMPLE "1.1"
+#include "HCSR04.h"
 
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
@@ -41,23 +42,6 @@
 #endif
 
 //#define USE_US_SENSOR_1_PIN_MODE // Comment it out, if you use modified HC-SR04 modules or HY-SRF05 ones
-
-#if defined(ESP8266)
-#define TONE_PIN         14 // D5
-#define ECHO_IN_PIN      13 // D7
-#define TRIGGER_OUT_PIN  15 // D8
-
-#elif defined(ESP32)
-#define tone(a,b,c) void() // no tone() available on ESP32
-#define noTone(a) void()
-#define ECHO_IN_PIN      12 // D12
-#define TRIGGER_OUT_PIN  13 // D13
-
-#else
-#define ECHO_IN_PIN      4
-#define TRIGGER_OUT_PIN  5
-#define TONE_PIN         3 // must be 3 to be compatible with talkie
-#endif
 
 #define MEASUREMENT_INTERVAL_MILLIS 50
 
@@ -105,24 +89,28 @@ void setup(void) {
 
 #if defined(ESP32)
     Serial.begin(115299);
-    Serial.println("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
+    Serial.println("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
 #else
+#  if defined(TONE_PIN)
     pinMode(TONE_PIN, OUTPUT);
+#  endif
     initSerial(BLUETOOTH_BAUD_RATE);
 #endif
 
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&handleConnectAndReorientation, &drawGui);
 
-#if defined (USE_SERIAL1)
-    // Serial(0) is available for Serial.print output.
+#if defined (USE_SERIAL1) // defined in BlueSerial.h
+// Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #  endif
-    // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+// Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
+#else
+    BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
 #endif
 
     /*
@@ -137,7 +125,7 @@ void setup(void) {
     while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
 #endif
         // Just to know which program is running on my Arduino
-        Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from  " __DATE__));
+        Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
 #endif
     }
     tone(TONE_PIN, 3000, 50);
@@ -261,7 +249,8 @@ void handleConnectAndReorientation(void) {
     }
 
     sValueStartY = getTextAscend(sCaptionTextSize * 2) + sCaptionTextSize + sCaptionTextSize / 4;
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, tCurrentDisplayWidth, tCurrentDisplayHeight);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, tCurrentDisplayWidth,
+            tCurrentDisplayHeight);
 
     SliderShowDistance.init(0, sCaptionTextSize * 3, sCaptionTextSize / 4, tCurrentDisplayWidth, 199, 0, COLOR_BLUE,
     COLOR_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);

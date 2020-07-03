@@ -44,15 +44,19 @@
 #define USE_SIMPLE_SERIAL // default for AVR
 #endif
 
+#if defined(SERIAL_PORT_HARDWARE1) // is defined for Arduino Due
+#define BOARD_HAVE_USART2 // they start counting with 0
+#endif
+
 // If Serial1 is available, but you want to use direct connection by USB to your smartphone / tablet, then you have to comment out the next line
 //#define USE_USB_SERIAL
 
 /*
  * Determine which serial to use.
+ * - Use standard Serial if USE_USB_SERIAL is requested.
  * - Prefer the use of second USART, to have the standard Serial available for application (debug) use,
  *   except for direct connection to your smartphone / tablet by USB cable.
- * - Use standard Serial if USE_USB_SERIAL is requested.
- * - Use Serial1 on stm32 if SERIAL_USB and USART1 is existent. If no SERIAL_USB existent, it needs USART2 to have Serial1 available.
+ * - Use Serial1 on stm32 if SERIAL_USB and USART1 is existent. If no SERIAL_USB existent, it requires USART2 to have Serial1 available.
  * - Use Serial1 on AVR if second USART is existent, as on the ATMega Boards.
  */
 #if ! defined(USE_USB_SERIAL) && ((defined(BOARD_HAVE_USART1) && defined(SERIAL_USB)) \

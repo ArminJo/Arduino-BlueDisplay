@@ -40,8 +40,6 @@
 
 bool doBlink = true;
 
-#define VERSION_EXAMPLE "2.1"
-
 /*
  * The Start Stop button
  */
@@ -64,7 +62,7 @@ void setup() {
 
 #if defined(ESP32)
     Serial.begin(115299);
-    Serial.println("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
+    Serial.println("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
 #else
@@ -75,14 +73,14 @@ void setup() {
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 
 #if defined (USE_SERIAL1) // defined in BlueSerial.h
-    // Serial(0) is available for Serial.print output.
+// Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #  endif
-    // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+// Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
 #else
-    BlueDisplay1.debug("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
+    BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
 #endif
 
 }

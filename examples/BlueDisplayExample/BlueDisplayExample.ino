@@ -36,6 +36,8 @@
 
 #include "BlueDisplay.h"
 
+#include "PinDefinitionsAndMore.h"
+
 #if defined(ESP32) || defined(ESP8266)
 #define USE_C_TIME
 #endif
@@ -45,8 +47,6 @@
 #else
 #include "TimeLib.h"
 #endif
-
-#define VERSION_EXAMPLE "2.1"
 
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
@@ -66,27 +66,6 @@
 
 #define COLOR_DEMO_BACKGROUND COLOR_BLUE
 #define COLOR_CAPTION COLOR_RED
-
-#if defined(ESP8266)
-#define TONE_PIN 14  // D5
-#define ANALOG_INPUT_PIN 0
-
-#elif defined(ESP32)
-#define ANALOG_INPUT_PIN A0 // 36/VP
-#define tone(a,b,c) void() // no tone() available on ESP32
-#define noTone(a) void()
-
-#elif defined(STM32F1xx) || defined(__STM32F1__)
-// BluePill in 2 flavors
-// STM32F1xx is for "Generic STM32F1 series" from STM32 Boards from STM32 cores of Arduino Board manager
-// __STM32F1__is for "Generic STM32F103C series" from STM32F1 Boards (STM32duino.com) of manual installed hardware folder
-const int TONE_PIN = 2;
-const int ANALOG_INPUT_PIN = PA0;
-
-#else
-const int TONE_PIN = 2;
-const int ANALOG_INPUT_PIN = A0;
-#endif
 
 #if defined(USE_C_TIME)
 struct tm * sTimeInfo;
@@ -143,15 +122,16 @@ void drawGui(void);
 void setup() {
     // initialize the digital pin as an output.
     pinMode(LED_BUILTIN, OUTPUT);
-    pinMode(ANALOG_INPUT_PIN, INPUT);
 
 #if defined(ESP32)
     Serial.begin(115299);
-    Serial.println("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
+    Serial.println("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
 #else
+#  if defined(TONE_PIN)
     pinMode(TONE_PIN, OUTPUT);
+#  endif
     initSerial(BLUETOOTH_BAUD_RATE);
 #endif
 
@@ -164,9 +144,9 @@ void setup() {
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #  endif
 // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
 #else
-    BlueDisplay1.debug("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__);
+    BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
 #endif
 
 #if ! defined(USE_C_TIME)

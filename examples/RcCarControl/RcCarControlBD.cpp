@@ -32,8 +32,6 @@
 
 #include <stdlib.h> // for dtostrf
 
-#define VERSION_EXAMPLE "1.1"
-
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
  ***************************************************************************/
@@ -80,7 +78,6 @@ bool sRCCarStarted = true;
 /*
  * Laser
  */
-
 BDButton TouchButtonLaserOnOff;
 void doLaserOnOff(BDButton * aTheTouchedButton, int16_t aValue);
 BDSlider SliderSpeed;
@@ -296,10 +293,14 @@ void BDsetup() {
      */
     initSerial(BLUETOOTH_BAUD_RATE);
 #if defined (USE_SERIAL1) // defined in BlueSerial.h
-    // Can use Serial(0) for Serial.print  output.
+// Serial(0) is available for Serial.print output.
+#  if defined(SERIAL_USB)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
-    // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
+#  endif
+// Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
+#else
+    BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
 #endif
 
     ServoLaser.attach(LASER_SERVO_PIN);
@@ -576,19 +577,6 @@ void processHorizontalSensorValue(float tSensorValue) {
 }
 
 /*
- * Not used yet
- */
-void printSensorInfo(struct SensorCallback* aSensorCallbackInfo) {
-    dtostrf(aSensorCallbackInfo->ValueX, 7, 4, &sStringBuffer[50]);
-    dtostrf(aSensorCallbackInfo->ValueY, 7, 4, &sStringBuffer[60]);
-    dtostrf(aSensorCallbackInfo->ValueZ, 7, 4, &sStringBuffer[70]);
-    dtostrf(sYZeroValue, 7, 4, &sStringBuffer[80]);
-    snprintf(sStringBuffer, sizeof sStringBuffer, "X=%s Y=%s Z=%s Zero=%s", &sStringBuffer[50], &sStringBuffer[60],
-            &sStringBuffer[70], &sStringBuffer[80]);
-    BlueDisplay1.drawText(0, sTextSize, sStringBuffer, sTextSize, COLOR_BLACK, COLOR_GREEN);
-}
-
-/*
  * Sensor callback handler
  */
 void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallbackInfo) {
@@ -600,7 +588,15 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallback
         BlueDisplay1.playTone(24);
     } else {
         tSensorChangeCallCount = CALLS_FOR_ZERO_ADJUSTMENT + 1; // to prevent overflow
-//        printSensorInfo(aSensorCallbackInfo);
+#ifdef DEBUG
+        dtostrf(aSensorCallbackInfo->ValueX, 7, 4, &sStringBuffer[50]);
+        dtostrf(aSensorCallbackInfo->ValueY, 7, 4, &sStringBuffer[60]);
+        dtostrf(aSensorCallbackInfo->ValueZ, 7, 4, &sStringBuffer[70]);
+        dtostrf(sYZeroValue, 7, 4, &sStringBuffer[80]);
+        snprintf(sStringBuffer, sizeof sStringBuffer, "X=%s Y=%s Z=%s Zero=%s", &sStringBuffer[50], &sStringBuffer[60],
+                &sStringBuffer[70], &sStringBuffer[80]);
+        BlueDisplay1.drawText(0, sTextSize, sStringBuffer, sTextSize, COLOR_BLACK, COLOR_GREEN);
+#endif
         if (sRCCarStarted && !sFollowerMode) {
             processVerticalSensorValue(aSensorCallbackInfo->ValueY);
             processHorizontalSensorValue(aSensorCallbackInfo->ValueX);
