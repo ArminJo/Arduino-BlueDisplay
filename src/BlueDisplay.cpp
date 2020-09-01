@@ -222,6 +222,19 @@ void BlueDisplay::clearDisplay(color16_t aColor) {
     LocalDisplay.clearDisplay(aColor);
 #endif
     if (USART_isBluetoothPaired()) {
+        // saves 8 bytes for DSO, requires 8 bytes for RobotCar
+//        sendUSART(SYNC_TOKEN);
+//        sendUSART(FUNCTION_CLEAR_DISPLAY);
+//        sendUSART('\0');
+//        sendUSART('\0');
+//        sendUSART(aColor);
+//        sendUSART(aColor >> 8);
+        // requires 16 bytes for DSO, saves 26 bytes for RobotCar
+//        uint16_t tParamBuffer[3];
+//        tParamBuffer[0] = FUNCTION_CLEAR_DISPLAY << 8 | SYNC_TOKEN;
+//        tParamBuffer[1] = 1;
+//        tParamBuffer[2] = aColor;
+//        sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], 1 * 2 + 4, NULL, 0);
         sendUSARTArgs(FUNCTION_CLEAR_DISPLAY, 1, aColor);
     }
 }
@@ -608,6 +621,9 @@ void BlueDisplay::debug(uint8_t aByte) {
     }
 }
 
+/*
+ * Maximum size of aMessage string is 25 character.
+ */
 void BlueDisplay::debug(const char* aMessage, uint8_t aByte) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hhu -> unsigned char instead of unsigned int with u
@@ -621,13 +637,16 @@ void BlueDisplay::debug(const char* aMessage, uint8_t aByte) {
     }
 }
 
+/*
+ * Maximum size of aMessage string is 24 character.
+ */
 void BlueDisplay::debug(const char* aMessage, int8_t aByte) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hhd -> signed char instead of signed int with d
 #ifdef AVR
-    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%3hhd 0x%2.2hhX"), aMessage, aByte, aByte);
+    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%4hhd 0x%2.2hhX"), aMessage, aByte, aByte);
 #else
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%3hhd 0x%2.2hhX", aMessage, aByte, aByte);
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%4hhd 0x%2.2hhX", aMessage, aByte, aByte);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
@@ -673,6 +692,9 @@ void BlueDisplay::debug(int16_t aShort) {
     }
 }
 
+/*
+ * Maximum size of aMessage string is 21 character.
+ */
 void BlueDisplay::debug(const char* aMessage, uint16_t aShort) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hd -> short int instead of int with d
@@ -686,6 +708,9 @@ void BlueDisplay::debug(const char* aMessage, uint16_t aShort) {
     }
 }
 
+/*
+ * Maximum size of aMessage string is 20 character.
+ */
 void BlueDisplay::debug(const char* aMessage, int16_t aShort) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hd -> short int instead of int with d
@@ -727,6 +752,9 @@ void BlueDisplay::debug(int32_t aLong) {
     }
 }
 
+/*
+ * Maximum size of aMessage string is 13 to 20 character depending on content of aLong.
+ */
 void BlueDisplay::debug(const char* aMessage, uint32_t aLong) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 #ifdef AVR
@@ -741,6 +769,9 @@ void BlueDisplay::debug(const char* aMessage, uint32_t aLong) {
     }
 }
 
+/*
+ * Maximum size of aMessage string is 12 to 19 character depending on content of aLong.
+ */
 void BlueDisplay::debug(const char* aMessage, int32_t aLong) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 #ifdef AVR
@@ -767,6 +798,9 @@ void BlueDisplay::debug(float aFloat) {
     }
 }
 
+/*
+ * Maximum size of aMessage string is up to 30 character depending on content of aFloat.
+ */
 void BlueDisplay::debug(const char* aMessage, float aFloat) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 #ifdef AVR
@@ -1464,6 +1498,12 @@ void BlueDisplay::deactivateAllSliders(void) {
  * Utilities
  *
  **************************************************************************************************************************************************/
+
+void clearDisplayAndDisableButtonsAndSliders() {
+    BlueDisplay1.clearDisplay();
+    BDButton::deactivateAllButtons();
+    BDSlider::deactivateAllSliders();
+}
 
 void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
     BlueDisplay1.clearDisplay(aColor);

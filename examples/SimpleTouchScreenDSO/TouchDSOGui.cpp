@@ -386,7 +386,7 @@ void setACMode(bool aNewACMode) {
 #ifdef AVR
     if (MeasurementControl.isRunning) {
         //clear old grid, since it will be changed
-        BlueDisplay1.clearDisplay(COLOR_BACKGROUND_DSO);
+        BlueDisplay1.clearDisplay();
     }
 #endif
     MeasurementControl.isACMode = aNewACMode;
@@ -497,6 +497,15 @@ BDButton TouchButtonSingleshot;
 BDButton TouchButtonStartStopDSOMeasurement;
 
 BDButton TouchButtonTriggerMode;
+const char sTriggerModeButtonStringAuto[] PROGMEM = "Trigger\nauto";
+const char sTriggerModeButtonStringManualTimeout[] PROGMEM = "Trigger\nman timeout";
+const char sTriggerModeButtonStringManual[] PROGMEM = "Trigger\nman";
+const char sTriggerModeButtonStringFreeRunning[] PROGMEM = "Trigger\nfree";
+const char sTriggerModeButtonStringExternal[] PROGMEM = "Trigger\next";
+const char * const sTriggerModeButtonCaptionStringArray[] PROGMEM = { sTriggerModeButtonStringAuto,
+        sTriggerModeButtonStringManualTimeout, sTriggerModeButtonStringManual, sTriggerModeButtonStringFreeRunning,
+        sTriggerModeButtonStringExternal };
+
 BDButton TouchButtonTriggerDelay;
 BDButton TouchButtonChartHistoryOnOff;
 BDButton TouchButtonSlope;
@@ -513,32 +522,34 @@ const char StringTemperature[] PROGMEM = "Temp";
 const char StringVRefint[] PROGMEM = "VRef";
 const char StringVBattDiv2[] PROGMEM = "\xBD" "VBatt";
 #ifdef AVR
-const char * const ADCInputMUXChannelStrings[ADC_CHANNEL_COUNT] = { StringChannel0, StringChannel1, StringChannel2, StringChannel3,
-        StringChannel4, StringTemperature, StringVRefint };
+const char * const ADCInputMUXChannelStrings[] = { StringChannel0, StringChannel1, StringChannel2, StringChannel3, StringChannel4,
+        StringTemperature, StringVRefint };
 #else
 #ifdef STM32F30X
 const char * const ADCInputMUXChannelStrings[ADC_CHANNEL_COUNT] = {StringChannel2, StringChannel3, StringChannel4,
     StringTemperature, StringVBattDiv2, StringVRefint};
-uint8_t const ADCInputMUXChannels[ADC_CHANNEL_COUNT] = {ADC_CHANNEL_2, ADC_CHANNEL_3, ADC_CHANNEL_4,
+uint8_t const ADCInputMUXChannels[] = {ADC_CHANNEL_2, ADC_CHANNEL_3, ADC_CHANNEL_4,
     ADC_CHANNEL_TEMPSENSOR, ADC_CHANNEL_VBAT, ADC_CHANNEL_VREFINT};
 #else
-const char * const ADCInputMUXChannelStrings[ADC_CHANNEL_COUNT] = {StringChannel0, StringChannel1, StringChannel2, StringChannel3,
+const char * const ADCInputMUXChannelStrings[] = {StringChannel0, StringChannel1, StringChannel2, StringChannel3,
     StringTemperature, StringVRefint};
-const uint8_t ADCInputMUXChannels[ADC_CHANNEL_COUNT] = {ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_2, ADC_CHANNEL_3,
+const uint8_t ADCInputMUXChannels[] = {ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_2, ADC_CHANNEL_3,
     ADC_CHANNEL_TEMPSENSOR, ADC_CHANNEL_VREFINT};
 #endif
 #endif
 const char ChannelDivBy1ButtonString[] PROGMEM = "\xF7" "1";
 const char ChannelDivBy10ButtonString[] PROGMEM = "\xF7" "10";
 const char ChannelDivBy100ButtonString[] PROGMEM = "\xF7" "100";
-const char * const ChannelDivByButtonStrings[NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR] = { ChannelDivBy1ButtonString,
+const char * const ChannelDivByButtonStrings[] = { ChannelDivBy1ButtonString,
         ChannelDivBy10ButtonString, ChannelDivBy100ButtonString };
 BDButton TouchButtonChannelMode;
 
 BDButton TouchButtonAutoOffsetMode;
-const char AutoOffsetButtonStringMan[] PROGMEM = "Offset\nman";
-const char AutoOffsetButtonStringAuto[] PROGMEM = "Offset\nauto";
 const char AutoOffsetButtonString0[] PROGMEM = "Offset\n0V";
+const char AutoOffsetButtonStringAuto[] PROGMEM = "Offset\nauto";
+const char AutoOffsetButtonStringMan[] PROGMEM = "Offset\nman";
+const char * const sAutoOffsetButtonCaptionStringArray[] PROGMEM = { AutoOffsetButtonString0, AutoOffsetButtonStringAuto,
+        AutoOffsetButtonStringMan };
 
 BDButton TouchButtonAutoRangeOnOff;
 const char AutoRangeButtonStringAuto[] PROGMEM = "Range\nauto";
@@ -806,7 +817,7 @@ void activateChartGui(void) {
  ************************************************************************/
 
 void redrawDisplay() {
-    clearDisplayAndDisableButtonsAndSliders(COLOR_BACKGROUND_DSO);
+    clearDisplayAndDisableButtonsAndSliders();
 
     if (MeasurementControl.isRunning) {
         /*
@@ -978,7 +989,7 @@ void drawDSOMoreSettingsPage(void) {
 }
 
 void startDSOMoreSettingsPage(void) {
-    BlueDisplay1.clearDisplay(COLOR_BACKGROUND_DSO);
+    BlueDisplay1.clearDisplay();
     drawDSOMoreSettingsPage();
 }
 #endif
@@ -1208,6 +1219,7 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
 void setChannelButtonsCaption(void) {
     for (uint8_t i = 0; i < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR; ++i) {
         if (MeasurementControl.AttenuatorType == ATTENUATOR_TYPE_FIXED_ATTENUATOR) {
+//            TouchButtonAutoOffsetMode.setCaptionFromStringArrayPGM(ChannelDivByButtonStrings, i); // requires 16 butes more
             TouchButtonChannels[i].setCaptionPGM(ChannelDivByButtonStrings[i]);
         } else {
             TouchButtonChannels[i].setCaptionPGM(ADCInputMUXChannelStrings[i]);
@@ -1229,29 +1241,8 @@ void setSlopeButtonCaption(void) {
 }
 
 void setTriggerModeButtonCaption(void) {
-    const char * tCaption;
-// switch statement code is 12 bytes shorter here
-    switch (MeasurementControl.TriggerMode) {
-    case TRIGGER_MODE_AUTOMATIC:
-        tCaption = PSTR("Trigger\nauto");
-        break;
-    case TRIGGER_MODE_MANUAL_TIMEOUT:
-        tCaption = PSTR("Trigger\nman timeout");
-        break;
-    case TRIGGER_MODE_MANUAL:
-        tCaption = PSTR("Trigger\nman");
-        break;
-    case TRIGGER_MODE_FREE:
-        tCaption = PSTR("Trigger\nfree");
-        break;
-    default:
-        tCaption = PSTR("Trigger\next");
-        break;
-    }
-    TouchButtonTriggerMode.setCaptionPGM(tCaption, (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS));
-    /* This saves >12 byte program space but needs 10 byte RAM
-     TouchButtonTriggerMode.setCaptionPGM(TriggerModeButtonStrings[MeasurementControl.TriggerMode],(DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS));
-     */
+    TouchButtonTriggerMode.setCaptionFromStringArrayPGM(sTriggerModeButtonCaptionStringArray, MeasurementControl.TriggerMode,
+            (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS));
 }
 
 void setAutoRangeModeAndButtonCaption(bool aNewAutoRangeMode) {
@@ -1266,15 +1257,7 @@ void setAutoRangeModeAndButtonCaption(bool aNewAutoRangeMode) {
 }
 
 void setAutoOffsetButtonCaption(void) {
-    const char * tCaption;
-    if (MeasurementControl.OffsetMode == OFFSET_MODE_0_VOLT) {
-        tCaption = AutoOffsetButtonString0;
-    } else if (MeasurementControl.OffsetMode == OFFSET_MODE_AUTOMATIC) {
-        tCaption = AutoOffsetButtonStringAuto;
-    } else {
-        tCaption = AutoOffsetButtonStringMan;
-    }
-    TouchButtonAutoOffsetMode.setCaptionPGM(tCaption, (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS));
+    TouchButtonAutoOffsetMode.setCaptionFromStringArrayPGM(sAutoOffsetButtonCaptionStringArray, MeasurementControl.OffsetMode, (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS));
 }
 
 void setACModeButtonCaption(void) {
@@ -1316,7 +1299,7 @@ void setMinMaxModeButtonCaption(void) {
 #endif
 
 void startDSOSettingsPage(void) {
-    BlueDisplay1.clearDisplay(COLOR_BACKGROUND_DSO);
+    BlueDisplay1.clearDisplay();
     drawDSOSettingsPage();
 }
 
@@ -1638,7 +1621,7 @@ void doStartSingleshot(BDButton * aTheTouchedButton, int16_t aValue) {
     MeasurementControl.RawValueMin = 0;
 
 #ifdef AVR
-    BlueDisplay1.clearDisplay(COLOR_BACKGROUND_DSO);
+    BlueDisplay1.clearDisplay();
     drawGridLinesWithHorizLabelsAndTriggerLine();
     printSingleshotMarker();
 // Start a new single shot

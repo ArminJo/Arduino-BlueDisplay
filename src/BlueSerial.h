@@ -90,11 +90,14 @@
 /*
  * common functions
  */
-void sendUSARTArgs(uint8_t aFunctionTag, int aNumberOfArgs, ...);
-void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, int aNumberOfArgs, ...);
+void sendUSARTArgs(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...);
+void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...);
 void sendUSART5Args(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, uint16_t aColor);
 void sendUSART5ArgsAndByteBuffer(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd,
         uint16_t aColor, uint8_t * aBufferPtr, size_t aBufferLength);
+// used internal by the above functions
+void sendUSARTBufferNoSizeCheck(uint8_t * aParameterBufferPointer, uint8_t aParameterBufferLength, uint8_t * aDataBufferPointer,
+        int16_t aDataBufferLength);
 
 #define PAIRED_PIN 5
 

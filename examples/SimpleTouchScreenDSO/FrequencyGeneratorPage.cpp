@@ -180,7 +180,7 @@ void initFrequencyGeneratorPage(void) {
 }
 
 void startFrequencyGeneratorPage(void) {
-    BlueDisplay1.clearDisplay(COLOR_BACKGROUND_FREQ);
+    BlueDisplay1.clearDisplay();
 
 #ifdef LOCAL_DISPLAY_EXISTS
     // do it here to enable freeing of button resources in stopFrequencyGeneratorPage()

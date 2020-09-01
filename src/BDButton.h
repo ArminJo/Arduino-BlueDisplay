@@ -259,12 +259,10 @@ public:
     void drawButton(void);
     void removeButton(color16_t aBackgroundColor);
     void drawCaption(void);
-    void setCaption(const char * aCaption);
-    void setCaption(const char * aCaption, bool doDrawButton);
+    void setCaption(const char * aCaption, bool doDrawButton = false);
     void setCaptionForValueTrue(const char * aCaption);
     void setCaptionAndDraw(const char * aCaption);
-    void setValue(int16_t aValue);
-    void setValue(int16_t aValue, bool doDrawButton);
+    void setValue(int16_t aValue, bool doDrawButton = false);
     void setValueAndDraw(int16_t aValue);
     void setButtonColor(color16_t aButtonColor);
     void setButtonColorAndDraw(color16_t aButtonColor);
@@ -280,16 +278,17 @@ public:
             const char * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(BDButton*, int16_t));
 
-    void setCaptionPGM(const char * aPGMCaption);
     void setCaptionPGMForValueTrue(const char * aCaption);
-    void setCaptionPGM(const char * aPGMCaption, bool doDrawButton);
+    void setCaptionPGM(const char * aPGMCaption, bool doDrawButton = false);
+    void setCaptionFromStringArrayPGM(const char * const aPGMCaptionStringArrayPtr[], uint8_t aStringIndex, bool doDrawButton = false);
 
     void init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
             const __FlashStringHelper * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(BDButton*, int16_t));
-    void setCaption(const __FlashStringHelper * aPGMCaption);
+    void init(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper * aPGMCaption, int16_t aValue,
+            void (*aOnTouchHandler)(BDButton*, int16_t));
     void setCaptionForValueTrue(const __FlashStringHelper * aCaption);
-    void setCaption(const __FlashStringHelper * aPGMCaption, bool doDrawButton);
+    void setCaption(const __FlashStringHelper * aPGMCaption, bool doDrawButton = false);
 #endif
 
     BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions

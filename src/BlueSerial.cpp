@@ -136,11 +136,13 @@ void initSimpleSerial(uint32_t aBaudRate) {
     remoteEvent.EventType = EVENT_NO_EVENT;
     remoteTouchDownEvent.EventType = EVENT_NO_EVENT;
 }
+#endif // USE_SIMPLE_SERIAL
 
 /**
  * ultra simple blocking USART send routine - works 100%!
  */
 void sendUSART(char aChar) {
+#ifdef USE_SIMPLE_SERIAL
     // wait for buffer to become empty
 #  if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
     // Use TX1 on MEGA and on Leonardo, which has no TX0
@@ -154,6 +156,9 @@ void sendUSART(char aChar) {
     }
     UDR0 = aChar;
 #  endif // Atmega...
+#else
+    Serial.write(aChar);
+#endif // USE_SIMPLE_SERIAL
 }
 
 //void USART_send(char aChar) {
@@ -165,9 +170,7 @@ void sendUSART(const char * aString) {
         sendUSART(*aString);
         aString++;
     }
-
 }
-#endif // USE_SIMPLE_SERIAL
 
 /**
  * On Atmega328
@@ -186,15 +189,15 @@ bool sReceiveBufferOutOfSync = false;
 /**
  * The central point for sending bytes
  */
-void sendUSARTBufferNoSizeCheck(uint8_t * aParameterBufferPointer, int aParameterBufferLength, uint8_t * aDataBufferPointer,
+void sendUSARTBufferNoSizeCheck(uint8_t * aParameterBufferPointer, uint8_t aParameterBufferLength, uint8_t * aDataBufferPointer,
         int16_t aDataBufferLength) {
 #if ! defined(USE_SIMPLE_SERIAL)
     Serial.write(aParameterBufferPointer, aParameterBufferLength);
     Serial.write(aDataBufferPointer, aDataBufferLength);
 #else
-/*
- * Simple and reliable blocking version for Atmega328
- */
+    /*
+     * Simple and reliable blocking version for Atmega328
+     */
     while (aParameterBufferLength > 0) {
         // wait for USART send buffer to become empty
 #  if (defined(UCSR1A) && ! defined(USE_USB_SERIAL)) || ! defined (UCSR0A) // Use TX1 on MEGA and on Leonardo, which has no TX0
@@ -241,7 +244,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t * aParameterBufferPointer, int aParamete
  */
 // using this function saves 300 bytes for SimpleDSO
 void sendUSART5Args(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, uint16_t aColor) {
-    uint16_t tParamBuffer[MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS];
+    uint16_t tParamBuffer[7];
 
     uint16_t * tBufferPointer = &tParamBuffer[0];
     *tBufferPointer++ = aFunctionTag << 8 | SYNC_TOKEN; // add sync token
@@ -259,7 +262,7 @@ void sendUSART5Args(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, ui
  * @param aFunctionTag
  * @param aNumberOfArgs currently not more than 12 args (SHORT) are supported
  */
-void sendUSARTArgs(uint8_t aFunctionTag, int aNumberOfArgs, ...) {
+void sendUSARTArgs(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...) {
     if (aNumberOfArgs > MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS) {
         return;
     }
@@ -284,7 +287,7 @@ void sendUSARTArgs(uint8_t aFunctionTag, int aNumberOfArgs, ...) {
  * @param aNumberOfArgs currently not more than 12 args (SHORT) are supported
  * Last two arguments are length of buffer and buffer pointer (..., size_t aDataLength, uint8_t * aDataBufferPtr)
  */
-void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, int aNumberOfArgs, ...) {
+void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...) {
     if (aNumberOfArgs > MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS) {
         return;
     }

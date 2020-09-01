@@ -443,7 +443,7 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
 
             // synchronize local slider - remote one is synchronized by local slider itself
             if (aEvent != &localTouchEvent) {
-                tLocalSlider->setCurrentValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
+                tLocalSlider->setValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
             }
         }
 #else
@@ -585,7 +585,11 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
             sRedrawCallback();
         }
     }
+#ifdef ARDUINO
     sMillisOfLastReceivedBDEvent = millis(); // set time of (last) event
+#else
+    sMillisOfLastReceivedBDEvent = getMillisSinceBoot(); // set time of (last) event
+#endif
 }
 
 #ifdef LOCAL_DISPLAY_EXISTS

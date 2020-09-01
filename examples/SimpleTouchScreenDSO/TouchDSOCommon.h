@@ -22,8 +22,12 @@
 #define __FlashStringHelper char
 #define setCaptionPGM setCaption
 #define drawTextPGM drawText
+#  ifndef F
 #define F(a) a
+#  endif
+#  ifndef PSTR
 #define PSTR(a) a
+#  endif
 #endif
 
 #ifdef AVR
@@ -31,7 +35,7 @@
 #define DATABUFFER_SIZE (3*REMOTE_DISPLAY_WIDTH) //960
 #else
 #ifdef STM32F303xC
-#define DATABUFFER_SIZE_FACTOR 10
+#define DATABUFFER_SIZE_FACTOR 9
 #else
 #define DATABUFFER_SIZE_FACTOR 7
 #endif
@@ -57,8 +61,8 @@ extern uint8_t const ADCInputMUXChannels[ADC_CHANNEL_COUNT];
 #endif
 #define NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR 3 // Channel0 = /1, Ch1= /10, Ch2= /100
 
-extern const char * const ADCInputMUXChannelStrings[ADC_CHANNEL_COUNT];
-extern const char * const ChannelDivByButtonStrings[NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR];
+extern const char * const ADCInputMUXChannelStrings[];
+extern const char * const ChannelDivByButtonStrings[];
 
 /*
  * Trigger values

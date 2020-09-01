@@ -116,7 +116,7 @@ void BDSlider::drawBorder(void) {
 
 void BDSlider::setValue(int16_t aCurrentValue) {
 #ifdef LOCAL_DISPLAY_EXISTS
-    mLocalSliderPointer->setCurrentValueAndDrawBar(aCurrentValue);
+    mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
@@ -128,7 +128,7 @@ void BDSlider::setValue(int16_t aCurrentValue) {
  */
 void BDSlider::setActualValue(int16_t aCurrentValue) {
 #ifdef LOCAL_DISPLAY_EXISTS
-    mLocalSliderPointer->setCurrentValueAndDrawBar(aCurrentValue);
+    mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
@@ -137,7 +137,7 @@ void BDSlider::setActualValue(int16_t aCurrentValue) {
 
 void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
 #ifdef LOCAL_DISPLAY_EXISTS
-    mLocalSliderPointer->setCurrentValueAndDrawBar(aCurrentValue);
+    mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);
@@ -149,7 +149,7 @@ void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
  */
 void BDSlider::setActualValueAndDrawBar(int16_t aCurrentValue) {
 #ifdef LOCAL_DISPLAY_EXISTS
-    mLocalSliderPointer->setCurrentValueAndDrawBar(aCurrentValue);
+    mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);

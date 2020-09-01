@@ -1383,7 +1383,7 @@ void setInputRange(uint8_t aShiftValue, uint8_t aActiveAttenuatorValue) {
 
     if (MeasurementControl.isRunning && DisplayControl.DisplayPage == DISPLAY_PAGE_CHART) {
         //clear old grid, since it will be changed
-        BlueDisplay1.clearDisplay(COLOR_BACKGROUND_DSO);
+        BlueDisplay1.clearDisplay();
     }
     float tNewGridVoltage;
     uint16_t tHorizontalGridSizeShift8;
@@ -1563,7 +1563,7 @@ void computeAutoOffset(void) {
     }
     if (abs(MeasurementControl.OffsetGridCount - tNumberOfGridLinesToSkip) > 1) {
         // avoid jitter by not changing number if its delta is only 1
-        BlueDisplay1.clearDisplay(COLOR_BACKGROUND_DSO);
+        BlueDisplay1.clearDisplay();
         MeasurementControl.OffsetValue = tNumberOfGridLinesToSkip * tRawValuePerGrid;
         MeasurementControl.OffsetGridCount = tNumberOfGridLinesToSkip;
         drawGridLinesWithHorizLabelsAndTriggerLine();
@@ -1711,7 +1711,7 @@ void doStartStopDSO(__attribute__((unused))    BDButton * aTheTouchedButton, __a
         /*
          * Start here
          */
-        BlueDisplay1.clearDisplay(COLOR_BACKGROUND_DSO);
+        BlueDisplay1.clearDisplay();
         DisplayControl.DisplayPage = DISPLAY_PAGE_CHART;
         //DisplayControl.showInfoMode = true;
         activateChartGui();

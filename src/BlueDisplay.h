@@ -78,6 +78,9 @@
 #define VERSION_BLUE_DISPLAY_MAJOR 2
 #define VERSION_BLUE_DISPLAY_MINOR 1
 /*
+ * Version 2.1.1
+ * - New function `setCaptionFromStringArrayPGM()`.
+ *
  * Version 2.1.0
  * - Improved initCommunication and late connection handling.
  * - Arduino Due support added.
@@ -131,12 +134,15 @@
 /*
  * Some useful text sizes constants
  */
+#define TEXT_SIZE_8   8
+#define TEXT_SIZE_9   9
+#define TEXT_SIZE_10 10
 #define TEXT_SIZE_11 11
 #define TEXT_SIZE_13 13
 #define TEXT_SIZE_14 14
 #define TEXT_SIZE_16 16
 #define TEXT_SIZE_18 18
-#define TEXT_SIZE_11 11
+
 #define TEXT_SIZE_12 12
 // for factor 2 of 8*12 font
 #define TEXT_SIZE_22 22
@@ -545,6 +551,7 @@ public:
 // The instance provided by the class itself
 extern BlueDisplay BlueDisplay1;
 
+void clearDisplayAndDisableButtonsAndSliders();
 void clearDisplayAndDisableButtonsAndSliders(color16_t aColor);
 
 #ifdef LOCAL_DISPLAY_EXISTS
