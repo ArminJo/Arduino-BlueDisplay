@@ -58,7 +58,7 @@
 #elif defined(STM32F1xx) || defined(__STM32F1__)
 // BluePill in 2 flavors
 // STM32F1xx is for "Generic STM32F1 series" from STM32 Boards from STM32 cores of Arduino Board manager
-// __STM32F1__is for "Generic STM32F103C series" from STM32F1 Boards (STM32duino.com) of manual installed hardware folder
+// __STM32F1__is for "Generic STM32F103C series" from STM32F1 Boards (STM32duino.com) of Arduino Board manager
 #define TONE_PIN         2
 #define ANALOG_INPUT_PIN PA0
 #define ECHO_IN_PIN      PB0

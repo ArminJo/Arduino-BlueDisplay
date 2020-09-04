@@ -79,12 +79,14 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 
 // width 3.5
 #define BUTTON_WIDTH_3_5 82
+#define BUTTON_WIDTH_3_5_POS_2 (BUTTON_WIDTH_3_5 + BUTTON_DEFAULT_SPACING)
+#define BUTTON_WIDTH_3_5_POS_3 (2*(BUTTON_WIDTH_3_5 + BUTTON_DEFAULT_SPACING))
 //
 // for 4 buttons horizontal - 8 characters
 #define BUTTON_WIDTH_4 68
 #define BUTTON_WIDTH_4_POS_2 (BUTTON_WIDTH_4 + BUTTON_DEFAULT_SPACING)
 #define BUTTON_WIDTH_4_POS_3 (2*(BUTTON_WIDTH_4 + BUTTON_DEFAULT_SPACING))
-#define BUTTON_WIDTH_4_POS_4 (LAYOUT_320_WIDTH - BUTTON_WIDTH_4)//
+#define BUTTON_WIDTH_4_POS_4 (LAYOUT_320_WIDTH - BUTTON_WIDTH_4)
 //
 // for 4 buttons horizontal - dynamic
 #define BUTTON_WIDTH_4_DYN (BlueDisplay1.mCurrentDisplaySize.XWidth/4 - BUTTON_HORIZONTAL_SPACING_DYN)
@@ -141,6 +143,10 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 #define BUTTON_WIDTH_10_POS_8 (7*(BUTTON_WIDTH_10 + BUTTON_DEFAULT_SPACING_QUARTER))
 #define BUTTON_WIDTH_10_POS_9 (8*(BUTTON_WIDTH_10 + BUTTON_DEFAULT_SPACING_QUARTER))
 #define BUTTON_WIDTH_10_POS_10 (LAYOUT_320_WIDTH - BUTTON_WIDTH_0)
+
+#define BUTTON_WIDTH_12 23 // 12*23 + 11*4 = 276 + 44 = 320 :-)
+
+#define BUTTON_WIDTH_14 19 // 19*14 + 13*4 = 266 + 52 = 318
 
 #define BUTTON_WIDTH_16 16
 #define BUTTON_WIDTH_16_POS_2 (BUTTON_WIDTH_16 + BUTTON_DEFAULT_SPACING_QUARTER)

@@ -120,6 +120,9 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 | ![RC car control display](extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
 
 # Revision History
+### Version 2.1.1
+- New function `setCaptionFromStringArrayPGM()`.
+
 ### Version 2.1.0
 - Arduino Due support added.
 - New command `FUNCTION_CLEAR_DISPLAY_OPTIONAL` to enable resynchronization of slow displays. Used by SimpleTouchScreenDSO.
