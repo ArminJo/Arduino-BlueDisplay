@@ -385,8 +385,9 @@
 #define PCA9685_DEFAULT_ADDRESS     0x40
 #define PCA9685_MAX_CHANNELS        16 // 16 PWM channels on each PCA9685 expansion module
 #define PCA9685_MODE1_REGISTER      0x0
-#define PCA9685_AUTOINCREMENT       5
-#define PCA9685_SLEEP               4
+#define PCA9685_MODE_1_RESTART        7
+#define PCA9685_MODE_1_AUTOINCREMENT  5
+#define PCA9685_MODE_1_SLEEP          4
 #define PCA9685_FIRST_PWM_REGISTER  0x06
 #define PCA9685_PRESCALE_REGISTER   0xFE
 

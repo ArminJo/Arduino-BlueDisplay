@@ -49,6 +49,7 @@
 
 #include <stdlib.h> // for abs()
 
+bool sBDEventJustReceived = false;
 unsigned long sMillisOfLastReceivedBDEvent;
 
 #ifndef DO_NOT_NEED_BASIC_TOUCH_EVENTS
@@ -585,6 +586,7 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
             sRedrawCallback();
         }
     }
+    sBDEventJustReceived = true;
 #ifdef ARDUINO
     sMillisOfLastReceivedBDEvent = millis(); // set time of (last) event
 #else

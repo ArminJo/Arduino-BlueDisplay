@@ -42,6 +42,7 @@
 #include "BlueDisplayProtocol.h"
 #endif
 
+extern bool sBDEventJustReceived; // is exclusively set to true by BD library
 extern unsigned long sMillisOfLastReceivedBDEvent; // is updated with millis() at each received event. Can be used for timeout detection.
 
 #define TOUCH_STANDARD_CALLBACK_PERIOD_MILLIS 20 // Period between callbacks while touched (a swipe is app 100 ms)

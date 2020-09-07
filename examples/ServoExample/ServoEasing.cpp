@@ -159,9 +159,9 @@ void ServoEasing::PCA9685Reset() {
  */
 void ServoEasing::PCA9685Init() {
     // Set expander to 20 ms period
-    I2CWriteByte(PCA9685_MODE1_REGISTER, _BV(PCA9685_SLEEP)); // go to sleep
+    I2CWriteByte(PCA9685_MODE1_REGISTER, _BV(PCA9685_MODE_1_SLEEP)); // go to sleep
     I2CWriteByte(PCA9685_PRESCALE_REGISTER, PCA9685_PRESCALER_FOR_20_MS); // set the prescaler
-    I2CWriteByte(PCA9685_MODE1_REGISTER, _BV(PCA9685_AUTOINCREMENT)); // reset sleep and enable auto increment
+    I2CWriteByte(PCA9685_MODE1_REGISTER, _BV(PCA9685_MODE_1_AUTOINCREMENT)); // reset sleep and enable auto increment
     delay(2); // > 500 us according to datasheet
 }
 
@@ -172,7 +172,7 @@ void ServoEasing::I2CWriteByte(uint8_t aAddress, uint8_t aData) {
 #if defined(DEBUG)
     uint8_t tWireReturnCode = mI2CClass->endTransmission();
     if (tWireReturnCode != 0) {
-        // i have seen this at my ESP32 module :-( - but it is no buffer overflow.
+        // I have seen this at my ESP32 module :-( - but it is no buffer overflow.
         Serial.print((char) (tWireReturnCode + '0'));// Error enum i2c_err_t: I2C_ERROR_ACK = 2, I2C_ERROR_TIMEOUT = 3
     }
 #else
