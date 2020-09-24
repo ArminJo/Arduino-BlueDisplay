@@ -74,12 +74,13 @@
 #include "BDSlider.h" // for BDSliderHandle_t
 #endif
 
-#define VERSION_BLUE_DISPLAY "2.1.0"
+#define VERSION_BLUE_DISPLAY "2.1.1"
 #define VERSION_BLUE_DISPLAY_MAJOR 2
 #define VERSION_BLUE_DISPLAY_MINOR 1
 /*
  * Version 2.1.1
  * - New function `setCaptionFromStringArrayPGM()`.
+ * - Added flag `sBDEventJustReceived`.
  *
  * Version 2.1.0
  * - Improved initCommunication and late connection handling.

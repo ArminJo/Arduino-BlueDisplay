@@ -173,7 +173,7 @@ void setup() {
 
 #if defined (USE_SERIAL1) // defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.
-#  if defined(SERIAL_USB)
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #  endif
     // Just to know which program is running on my Arduino
@@ -182,10 +182,10 @@ void setup() {
 
     if (!BlueDisplay1.isConnectionEstablished()) {
 #if defined (USE_STANDARD_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
-#  if defined(__AVR_ATmega32U4__)
-    while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
+    delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #  endif
-        // Just to know which program is running on my Arduino
+    // Just to know which program is running on my Arduino
         Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
 #endif
         sExampleIsRunning = true; // no start button available to start example, so do "autostart" here

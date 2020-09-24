@@ -209,9 +209,9 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aTimeMillis) {
     unsigned long tStartMillis = millis();
     while (millis() - tStartMillis < aTimeMillis) {
 #  if !defined(USE_SIMPLE_SERIAL) && defined (__AVR__)
-        // check for Arduino serial - code from arduino main.cpp / main()
+        // check for Arduino serial - copied code from arduino main.cpp / main()
         if (serialEventRun) {
-            serialEventRun();
+            serialEventRun(); // this in turn calls serialEvent from BlueSerial.cpp
         }
 #  endif
 #else // ARDUINO
@@ -331,6 +331,9 @@ extern "C" void handleEvent(struct BluetoothEvent * aEvent) {
 
     // local copy of event since the values in the original event may be overwritten if the handler requires long time for its action
     struct BluetoothEvent tEvent = *aEvent;
+    // assignment has the same code size as:
+//    struct BluetoothEvent tEvent;
+//    memcpy(&tEvent, aEvent, sizeof(BluetoothEvent));
 
     // avoid using event twice
     aEvent->EventType = EVENT_NO_EVENT;

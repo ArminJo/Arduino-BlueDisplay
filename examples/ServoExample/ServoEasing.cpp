@@ -89,16 +89,6 @@ IntervalTimer Timer20ms;
 #define DEBUG
 #endif
 
-// Enable this to generate output for Arduino Serial Plotter (Ctrl-Shift-L)
-//#define PRINT_FOR_SERIAL_PLOTTER
-
-// Enable this if you want to measure timing by toggling pin12 on an arduino
-//#define MEASURE_SERVO_EASING_INTERRUPT_TIMING
-#if defined(MEASURE_SERVO_EASING_INTERRUPT_TIMING)
-#include "digitalWriteFast.h"
-#define TIMING_OUTPUT_PIN 12
-#endif
-
 volatile bool sInterruptsAreActive = false; // true if interrupts are still active, i.e. at least one Servo is moving with interrupts.
 
 /*
@@ -522,10 +512,6 @@ void ServoEasing::writeMicrosecondsOrUnits(int aValue) {
         Serial.print(aValue + mTrimMicrosecondsOrUnits);
     }
 #endif // TRACE
-#if defined(PRINT_FOR_SERIAL_PLOTTER)
-    Serial.print(' ');
-    Serial.print(aValue);
-#endif
 
 // Apply trim - this is the only place mTrimMicrosecondsOrUnits is evaluated
     aValue += mTrimMicrosecondsOrUnits;
@@ -538,6 +524,11 @@ void ServoEasing::writeMicrosecondsOrUnits(int aValue) {
         Serial.print(aValue);
 #endif
     }
+
+#if defined(PRINT_FOR_SERIAL_PLOTTER)
+    Serial.print(' ');
+    Serial.print(aValue);
+#endif
 
 #if defined(USE_LEIGHTWEIGHT_SERVO_LIB)
     writeMicrosecondsLightweightServo(aValue, (mServoPin == 9));
@@ -633,14 +624,22 @@ void ServoEasing::easeTo(int aDegree, uint_fast16_t aDegreesPerSecond) {
     do {
         // First do the delay, then check for update, since we are likely called directly after start and there is nothing to move yet
         delay(REFRESH_INTERVAL_MILLIS); // 20 ms
+#if defined(PRINT_FOR_SERIAL_PLOTTER)
+    } while (!updateAllServos());
+#else
     } while (!update());
+#endif
 }
 
 void ServoEasing::easeToD(int aDegree, uint_fast16_t aMillisForMove) {
     startEaseToD(aDegree, aMillisForMove, false);
     do {
         delay(REFRESH_INTERVAL_MILLIS); // 20 ms
+#if defined(PRINT_FOR_SERIAL_PLOTTER)
+    } while (!updateAllServos());
+#else
     } while (!update());
+#endif
 }
 
 bool ServoEasing::setEaseTo(int aDegree) {
@@ -801,6 +800,10 @@ bool ServoEasing::update() {
 bool ServoEasing::update() {
 
     if (!mServoMoves) {
+#  if defined(PRINT_FOR_SERIAL_PLOTTER)
+        // call it always for serial plotter
+        writeMicrosecondsOrUnits(mCurrentMicrosecondsOrUnits);
+#  endif
         return true;
     }
 
@@ -872,18 +875,17 @@ bool ServoEasing::update() {
         }
     }
 
+#  if defined(PRINT_FOR_SERIAL_PLOTTER)
+    // call it always for serial plotter
+    writeMicrosecondsOrUnits(tNewMicrosecondsOrUnits);
+#  else
     /*
      * Write new position only if changed
      */
     if (tNewMicrosecondsOrUnits != mCurrentMicrosecondsOrUnits) {
         writeMicrosecondsOrUnits(tNewMicrosecondsOrUnits);
     }
-#if defined(PRINT_FOR_SERIAL_PLOTTER)
-// call it anyway
-    else {
-        writeMicrosecondsOrUnits(tNewMicrosecondsOrUnits);
-    }
-#endif
+#  endif
     return false;
 }
 
@@ -905,7 +907,7 @@ float ServoEasing::callEasingFunction(float aPercentageOfCompletion) {
         return CubicEaseIn(aPercentageOfCompletion);
     case EASE_QUARTIC_IN:
         return QuarticEaseIn(aPercentageOfCompletion);
-#ifndef KEEP_SERVO_EASING_LIBRARY_SMALL
+#  ifndef KEEP_SERVO_EASING_LIBRARY_SMALL
     case EASE_SINE_IN:
         return SineEaseIn(aPercentageOfCompletion);
     case EASE_CIRCULAR_IN:
@@ -916,7 +918,7 @@ float ServoEasing::callEasingFunction(float aPercentageOfCompletion) {
         return ElasticEaseIn(aPercentageOfCompletion);
     case EASE_BOUNCE_OUT:
         return EaseOutBounce(aPercentageOfCompletion);
-#endif
+#  endif
     default:
         return 0.0;
     }

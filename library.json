@@ -1,12 +1,12 @@
 {
-  "name": "ServoEasing",
-  "keywords": "Servo",
-  "description": "Arduino library to enable smooth servo movement.",
+  "name": "BlueDisplay",
+  "keywords": "Bluetooth, display, remote, graphics, GUI",
+  "description": "This library enables an Android smartphone or tablet to act as a graphical display for your Arduino.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ArminJo/ServoEasing"
+    "url": "https://github.com/ArminJo/Arduino-BlueDisplay"
   },
-  "version": "2.0.0",
+  "version": "2.1.1",
   "exclude": "pictures",
   "authors": {
     "name": "Armin Joachimsmeyer",
@@ -17,7 +17,6 @@
   "platforms": [
     "atmelavr",
     "atmelmegaavr",
-    "atmelsam",
     "espressif8266",
     "espressif32",
     "ststm32"
