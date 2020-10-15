@@ -40,14 +40,25 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 ## Which Serial interface?
 For boards which have more than one serial interface, the library tries to use **Serial1** for the connection to leave Serial, which is mostly connected to the USB, for other purposes as logging etc..
 If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must open the library file *BlueSerial.h* and comment out the line [`#define USE_USB_SERIAL`](src/BlueSerial.h#L52).<br/>
-Another way is to **modify the central serial interface function**. You only have to change the [first 2 lines](src/BlueSerial.cpp#L192) of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
+Another way is to define/enable `USE_SIMPLE_SERIAL` in *BlueSerial.h* and **modify the central serial interface function**. You only have to change the [first 2 lines](src/BlueSerial.cpp#L192) of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
 
 # Compile options / macros for this library
 To customize the library to different requirements, there are some compile options / makros available.<br/>
-Modify it by commenting them out or in, or change the values if applicable. Or define the macro with the -D compiler option for gobal compile (the latter is not possible with the Arduino IDE, so consider to use [sloeber](https://eclipse.baeyens.it).
+Modify it by commenting them out or in, or change the values if applicable. Or define the macro with the -D compiler option for gobal compile (the latter is not possible with the Arduino IDE, so consider to use [Sloeber](https://eclipse.baeyens.it).
 | Macro | Default | File | Description |
 |-|-|-|-|
-| `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | EventHandler.h | | Saves up to 620 bytes FLASH and 36 bytes RAM. |
+| `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | EventHandler.h | Saves up to 620 bytes FLASH and 36 bytes RAM. |
+| `USE_SIMPLE_SERIAL` | disabled | BlueSerial.h | Saves up to 1250 bytes FLASH and 185 bytes RAM. |
+
+### Modifying library properties with Arduino IDE
+First use *Sketch/Show Sketch Folder (Ctrl+K)*.<br/>
+If you did not yet stored the example as your own sketch, then you are instantly in the right library folder.<br/>
+Otherwise you have to navigate to the parallel `libraries` folder and select the library you want to access.<br/>
+In both cases the library files itself are located in the `src` directory.<br/>
+
+### Modifying library properties with Sloeber IDE
+If you are using Sloeber as your IDE, you can easily define global symbols with *Properties/Arduino/CompileOptions*.<br/>
+![Sloeber settings](https://github.com/ArminJo/ServoEasing/blob/master/pictures/SloeberDefineSymbols.png)
 
 # [Examples](examples)
 Before using the examples, take care that the Bluetooth-module (e.g. the the HC-05 module) or ESP32 program is connected to your Android device and is visible in the Bluetooth Settings.
@@ -62,6 +73,9 @@ Simple example to check your installation.
 
 ## BlueDisplayExample
 More elaborated example to show more features of the BlueDisplay library.
+
+## ShowSensorValues
+Shows the accelerometer and gyroscope values received from the smarthone graphical and numerical.
 
 ## BTModuleProgrammer
 Simple helper program to configure your HC-05 or JDY-31 modules name and default baudrate with a serial monitor.
@@ -103,7 +117,8 @@ contains more schematics, breadboard layouts and pictures which may help you bui
 
 ## Hints
 ### Debugging
-If you need debugging, you must use the `debug()` functions since using `Serial.print()` etc. gives errors (we have only one serial port on the Arduino). 
+If you need debugging, you must use the `debug()` functions since using `Serial.print()` etc. gives errors (we have only one serial port on the Arduino).
+
 ```
 BlueDisplay1.debug("DoBlink=", doBlink);
 ```
@@ -127,6 +142,10 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 | ![RC car control display](extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
 
 # Revision History
+### Version 2.2.0
+- Changed default serial for AVR from `USE_SIMPLE_SERIAL` to standard Arduino Serial.
+- Added ShowSensorValues example.
+
 ### Version 2.1.1
 - New function `setCaptionFromStringArrayPGM()`.
 - Added flag `sBDEventJustReceived`.
