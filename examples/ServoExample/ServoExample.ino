@@ -161,17 +161,12 @@ void setup() {
     pinMode(LASER_POWER_PIN, OUTPUT);
     analogWrite(LASER_POWER_PIN, 0);
 
-    /*
-     * If you want to see Serial.print output if not connected with BlueDisplay comment out the line "#define USE_STANDARD_SERIAL" in BlueSerial.h
-     * or define global symbol with -DUSE_STANDARD_SERIAL in order to force the BlueDisplay library to use the Arduino Serial object
-     * and to release the SimpleSerial interrupt handler '__vector_18'
-     */
     initSerial(BLUETOOTH_BAUD_RATE);
 
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 
-#if defined (USE_SERIAL1) // defined in BlueSerial.h
+#if defined(USE_SERIAL1) // defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
@@ -180,22 +175,22 @@ void setup() {
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
 #endif
 
-    if (!BlueDisplay1.isConnectionEstablished()) {
-#if defined (USE_STANDARD_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
-#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
-#  endif
-    // Just to know which program is running on my Arduino
-        Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
-#endif
-        sExampleIsRunning = true; // no start button available to start example, so do "autostart" here
-    } else {
+    if (BlueDisplay1.isConnectionEstablished()) {
         // Just to know which program is running on my Arduino
         BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
 
         // set sLastLaserSliderValue and sLaserPowerValue and enables laser
         doLaserPowerSlider(NULL, sCurrentDisplayHeight / 8);
         doServosStartStop(NULL, true);
+    } else {
+#if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
+    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+#  endif
+        // Just to know which program is running on my Arduino
+        Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
+#endif
+        sExampleIsRunning = true; // no start button available to start example, so do "autostart" here
     }
 
     /*
@@ -220,7 +215,7 @@ void setup() {
         /*
          * show border of area which can be reached by laser
          */
-#if ! defined (USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
+#if ! defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
         // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
         Serial.println(F("Not connected to BlueDisplay -> mark border of area and then do auto move."));
 #endif
@@ -252,7 +247,7 @@ void loop() {
             uint8_t tNewHorizontal = getRandomValue(&ServoHorizontalControl, &ServoHorizontal);
             uint8_t tNewVertical = getRandomValue(&ServoVerticalControl, &ServoVertical);
             int tSpeed = random(10, 90);
-#if ! defined (USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
+#if ! defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
             // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
 #  if ! defined(USE_SERIAL1)
             // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.

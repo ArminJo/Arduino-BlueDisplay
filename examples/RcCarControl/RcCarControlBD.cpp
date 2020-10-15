@@ -87,9 +87,9 @@ Servo ServoLaser;
 
 BDButton TouchButtonSetZero;
 void doSetZero(BDButton * aTheTouchedButton, int16_t aValue);
-#define CALLS_FOR_ZERO_ADJUSTMENT 8
+#define CALLS_FOR_ZERO_ADJUSTMENT 8 // The values of the first 8 calls are used as zero value.
 int tSensorChangeCallCount;
-float sYZeroValueAdded;
+float sYZeroValueAdded; // The accumulator for the values of the first 8 calls.
 float sYZeroValue = 0;
 
 /*
@@ -199,13 +199,14 @@ void initDisplay(void) {
 
     // 3/8 of sCurrentDisplayHeight
     sSliderHeightLaser = (sCurrentDisplayHeight / 2) + (sCurrentDisplayHeight / 8);
-    sSliderHeight = ((sCurrentDisplayHeight / 2) + sCurrentDisplayHeight / 4) / 2;
+    sSliderHeight = (sCurrentDisplayHeight * 3) / 8;
 
     int tSliderThresholdVelocity = (sSliderHeight * (MOTOR_DEAD_BAND_VALUE + 1)) / 255;
     sTextSize = sCurrentDisplayHeight / 16;
     sTextSizeVCC = sTextSize * 2;
 
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sCurrentDisplayWidth, sCurrentDisplayHeight);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sCurrentDisplayWidth,
+            sCurrentDisplayHeight);
 
     sYZeroValueAdded = 0;
     tSensorChangeCallCount = 0;
@@ -238,8 +239,8 @@ void initDisplay(void) {
     SliderRight.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
 // Position inverse slider left from Velocity at middle of screen
-    SliderLeft.init(((sCurrentDisplayWidth - sSliderSize) / 2) - sSliderWidth, (sCurrentDisplayHeight - sSliderSize) / 2, sSliderSize,
-            -(sSliderWidth), SLIDER_LEFT_RIGHT_THRESHOLD, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
+    SliderLeft.init(((sCurrentDisplayWidth - sSliderSize) / 2) - sSliderWidth, (sCurrentDisplayHeight - sSliderSize) / 2,
+            sSliderSize, -(sSliderWidth), SLIDER_LEFT_RIGHT_THRESHOLD, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
             FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderLeft.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
@@ -285,23 +286,28 @@ void BDsetup() {
     digitalWrite(LASER_POWER_PIN, LaserOn);
     ServoLaser.write(90);
 
-
-    /*
-     * If you want to see Serial.print output if not connected with BlueDisplay comment out the line "#define USE_STANDARD_SERIAL" in BlueSerial.h
-     * or define global symbol with -DUSE_STANDARD_SERIAL in order to force the BlueDisplay library to use the Arduino Serial object
-     * and to release the SimpleSerial interrupt handler '__vector_18'
-     */
     initSerial(BLUETOOTH_BAUD_RATE);
-#if defined (USE_SERIAL1) // defined in BlueSerial.h
-// Serial(0) is available for Serial.print output.
-#  if defined(SERIAL_USB)
+
+#if defined(USE_SERIAL1) // defined in BlueSerial.h
+    // Serial(0) is available for Serial.print output.
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
+    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+#  endif
+    // Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
+#endif
+
+    if (BlueDisplay1.isConnectionEstablished()) {
+        BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
+    } else {
+#if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #  endif
 // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
-#else
-    BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
+        Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
 #endif
+    }
 
     ServoLaser.attach(LASER_SERVO_PIN);
 
@@ -581,11 +587,13 @@ void processHorizontalSensorValue(float tSensorValue) {
  */
 void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallbackInfo) {
     if (tSensorChangeCallCount < CALLS_FOR_ZERO_ADJUSTMENT) {
+        // The values of the first 8 calls are used as zero value.
         sYZeroValueAdded += aSensorCallbackInfo->ValueY;
     } else if (tSensorChangeCallCount == CALLS_FOR_ZERO_ADJUSTMENT) {
         // compute zero value
         sYZeroValue = sYZeroValueAdded / CALLS_FOR_ZERO_ADJUSTMENT;
-        BlueDisplay1.playTone(24);
+        BlueDisplay1.playTone(24); // feedback for zero value acquired
+
     } else {
         tSensorChangeCallCount = CALLS_FOR_ZERO_ADJUSTMENT + 1; // to prevent overflow
 #ifdef DEBUG

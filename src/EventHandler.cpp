@@ -186,8 +186,10 @@ void setSwipeEndCallbackEnabled(bool aSwipeEndCallbackEnabled) {
 }
 
 /**
- * @param aSensorType see see android.hardware.Sensor
- * @param aSensorRate see android.hardware.SensorManager (0-3) or in milli seconds
+ * Values received from accelerator sensor are in g (m/(s*s))
+ * @param aSensorType see see android.hardware.Sensor. FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_TYPE_GYROSCOPE (in BlueDisplay.h)
+ * @param aSensorRate see android.hardware.SensorManager (0-3) one of  {@link #FLAG_SENSOR_DELAY_NORMAL} 200 ms, {@link #FLAG_SENSOR_DELAY_UI} 60 ms,
+ *        {@link #FLAG_SENSOR_DELAY_GAME} 20ms, or {@link #FLAG_SENSOR_DELAY_FASTEST}
  * @param aSensorChangeCallback one callback for all sensors types
  */
 void registerSensorChangeCallback(uint8_t aSensorType, uint8_t aSensorRate, uint8_t aFilterFlag,
@@ -208,7 +210,7 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aTimeMillis) {
 #ifdef ARDUINO
     unsigned long tStartMillis = millis();
     while (millis() - tStartMillis < aTimeMillis) {
-#  if !defined(USE_SIMPLE_SERIAL) && defined (__AVR__)
+#  if !defined(USE_SIMPLE_SERIAL) && defined(__AVR__)
         // check for Arduino serial - copied code from arduino main.cpp / main()
         if (serialEventRun) {
             serialEventRun(); // this in turn calls serialEvent from BlueSerial.cpp

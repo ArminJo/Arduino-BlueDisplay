@@ -907,7 +907,7 @@ float ServoEasing::callEasingFunction(float aPercentageOfCompletion) {
         return CubicEaseIn(aPercentageOfCompletion);
     case EASE_QUARTIC_IN:
         return QuarticEaseIn(aPercentageOfCompletion);
-#  ifndef KEEP_SERVO_EASING_LIBRARY_SMALL
+#  ifndef DISABLE_COMPLEX_FUNCTIONS
     case EASE_SINE_IN:
         return SineEaseIn(aPercentageOfCompletion);
     case EASE_CIRCULAR_IN:

@@ -53,9 +53,9 @@ BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider * aLocalSliderPoi
  * @param aPositionY - Determines upper left corner
  * Only next 2 values are physical values in pixel
  * @param aBarWidth - Width of bar (and border) in pixel - no scaling!
- * @param aBarLength - Size of slider bar in pixel = maximum slider value - no scaling!
- * @param aThresholdValue - Scaling! If selected or sent value is bigger, then color of bar changes from BarColor to BarBackgroundColor
- * @param aInitalValue - Scaling!
+ * @param aBarLength - Size of slider bar in pixel = maximum slider value if no scaling applied!
+ * @param aThresholdValue - Scaling applied! If selected or sent value is bigger, then color of bar changes from BarColor to BarBackgroundColor
+ * @param aInitalValue - Scaling applied!
  * @param aSliderColor - Color of slider border. If no border specified, then bar background color.
  * @param aBarColor
  * @param aOptions - See #FLAG_SLIDER_SHOW_BORDER etc.

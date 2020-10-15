@@ -200,7 +200,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t * aParameterBufferPointer, uint8_t aPara
      */
     while (aParameterBufferLength > 0) {
         // wait for USART send buffer to become empty
-#  if (defined(UCSR1A) && ! defined(USE_USB_SERIAL)) || ! defined (UCSR0A) // Use TX1 on MEGA and on Leonardo, which has no TX0
+#  if (defined(UCSR1A) && ! defined(USE_USB_SERIAL)) || ! defined(UCSR0A) // Use TX1 on MEGA and on Leonardo, which has no TX0
         while (!((UCSR1A) & (1 << UDRE1))) {
             ;
         }
@@ -217,7 +217,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t * aParameterBufferPointer, uint8_t aPara
     }
     while (aDataBufferLength > 0) {
         // wait for USART send buffer to become empty
-#  if (defined(UCSR1A) && ! defined(USE_USB_SERIAL)) || ! defined (UCSR0A) // Use TX1 on MEGA and on Leonardo, which has no TX0
+#  if (defined(UCSR1A) && ! defined(USE_USB_SERIAL)) || ! defined(UCSR0A) // Use TX1 on MEGA and on Leonardo, which has no TX0
         while (!((UCSR1A) & (1 << UDRE1))) {
             ;
         }

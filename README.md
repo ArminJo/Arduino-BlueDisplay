@@ -75,7 +75,7 @@ Simple example to check your installation.
 More elaborated example to show more features of the BlueDisplay library.
 
 ## ShowSensorValues
-Shows the accelerometer and gyroscope values received from the smarthone graphical and numerical.
+Shows the accelerometer and gyroscope values received from the smartphone both graphical and numerical.
 
 ## BTModuleProgrammer
 Simple helper program to configure your HC-05 or JDY-31 modules name and default baudrate with a serial monitor.
@@ -142,7 +142,7 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 | ![RC car control display](extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
 
 # Revision History
-### Version 2.2.0
+### Version 2.2.0 - work in progress
 - Changed default serial for AVR from `USE_SIMPLE_SERIAL` to standard Arduino Serial.
 - Added ShowSensorValues example.
 

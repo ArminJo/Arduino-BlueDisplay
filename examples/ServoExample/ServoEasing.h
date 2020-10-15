@@ -62,20 +62,20 @@
 #endif
 
 #if ( defined(ESP8266) || defined(ESP32) || defined(__STM32F1__)) && defined(USE_LEIGHTWEIGHT_SERVO_LIB)
-#error "No Lightweight Servo Library available (and required) for ESP boards"
+#error No Lightweight Servo Library available (and required) for ESP boards
 #endif
 
 #if defined(USE_PCA9685_SERVO_EXPANDER) && defined(USE_LEIGHTWEIGHT_SERVO_LIB)
-#error "Please define only one of the symbols USE_PCA9685_SERVO_EXPANDER or USE_LEIGHTWEIGHT_SERVO_LIB"
+#error Please define only one of the symbols USE_PCA9685_SERVO_EXPANDER or USE_LEIGHTWEIGHT_SERVO_LIB
 #endif
 
 #if ! ( defined(__AVR__) || defined(ESP8266) || defined(ESP32) || defined(STM32F1xx) || defined(__STM32F1__) || defined(__SAM3X8E__) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_APOLLO3)|| defined(TEENSYDUINO))
-#warning "No periodic timer support existent (or known) for this platform. Only blocking functions and simple example will run!"
+#warning No periodic timer support existent (or known) for this platform. Only blocking functions and simple example will run!
 #endif
 
 #if ! defined(DO_NOT_USE_SERVO_LIB)
 #  if defined(ESP32)
-// This does not work in Arduino IDE for "Generating function prototypes..."
+// This does not work in Arduino IDE for step "Generating function prototypes..."
 //#    if ! __has_include("ESP32Servo.h")
 //#error This ServoEasing library requires the "ESP32Servo" library for running on an ESP32. Please install it via the Arduino library manager.
 //#    endif
@@ -138,13 +138,17 @@
 #define REFRESH_FREQUENCY (1000/REFRESH_INTERVAL_MILLIS) // 50
 
 /*
- * Define `KEEP_SERVO_EASING_LIBRARY_SMALL` if space (1850 Bytes) matters.
+ * Define `DISABLE_COMPLEX_FUNCTIONS` if space (1850 Bytes) matters.
  * It disables the SINE, CIRCULAR, BACK, ELASTIC and BOUNCE easings.
  * The saving comes mainly from avoiding the sin() cos() sqrt() and pow() library functions in this code.
- * If you need only one complex easing function and want to save space,
- * you can specify it any time as a user functions. See EaseQuadraticInQuarticOut() function in AsymmetricEasing example line 206.
+ * If you need only a single complex easing function and want to save space,
+ * you can specify it any time as a user function. See EaseQuadraticInQuarticOut() function in AsymmetricEasing example line 206.
  */
-//#define KEEP_SERVO_EASING_LIBRARY_SMALL
+#ifdef KEEP_SERVO_EASING_LIBRARY_SMALL // to be backwards compatible
+#warning Please change the defined macro KEEP_SERVO_EASING_LIBRARY_SMALL to the new name DISABLE_COMPLEX_FUNCTIONS
+#define DISABLE_COMPLEX_FUNCTIONS
+#endif
+//#define DISABLE_COMPLEX_FUNCTIONS
 
 /*
  * If you need only the linear movement you may define `PROVIDE_ONLY_LINEAR_MOVEMENT`. This saves additional 1540 Bytes FLASH.
@@ -350,7 +354,7 @@
 #define EASE_QUARTIC_IN_OUT     0x43
 #define EASE_QUARTIC_BOUNCING   0x63
 
-#ifndef KEEP_SERVO_EASING_LIBRARY_SMALL
+#ifndef DISABLE_COMPLEX_FUNCTIONS
 #define EASE_SINE_IN            0x08
 #define EASE_SINE_OUT           0x28
 #define EASE_SINE_IN_OUT        0x48

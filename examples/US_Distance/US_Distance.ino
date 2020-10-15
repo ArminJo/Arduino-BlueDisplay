@@ -45,8 +45,6 @@
 
 #define MEASUREMENT_INTERVAL_MILLIS 50
 
-#define DISTANCE_TIMEOUT_CM 300  // cm timeout for US reading
-
 int sCaptionTextSize;
 int sCaptionStartX;
 int sValueStartY;
@@ -102,25 +100,24 @@ void setup(void) {
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&handleConnectAndReorientation, &drawGui);
 
-#if defined (USE_SERIAL1) // defined in BlueSerial.h
+#if defined(USE_SERIAL1) // defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #  endif
 // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
-#else
-    BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
 #endif
 
     /*
      * on double tone, we received max canvas size. Otherwise no connection is available.
      */
     if (BlueDisplay1.mConnectionEstablished) {
+        BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
         tone(TONE_PIN, 3000, 50);
         delay(100);
     } else {
-#if defined (USE_STANDARD_SERIAL) && !defined(USE_SERIAL1) // print it now if not printed above
+#if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1) // print it now if not printed above
 #if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #endif
@@ -133,20 +130,20 @@ void setup(void) {
 }
 
 void loop(void) {
-    // Timeout of 20000L is 3.4 meter
+    // Default timeout of 20000L is 3.4 meter
     uint16_t tUSDistanceMicros = getUSDistance();
     uint16_t tUSDistanceCentimeter = getCentimeterFromUSMicroSeconds(tUSDistanceMicros);
 //    startUSDistanceAsCentiMeterWithCentimeterTimeoutNonBlocking(DISTANCE_TIMEOUT_CM);
 //    while (!isUSDistanceMeasureFinished()) {
 //    }
 
-#if ! defined (USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
+#if ! defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
 #  if ! defined(USE_SERIAL1)
     // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.
     if (!BlueDisplay1.isConnectionEstablished()) {
 #  endif
-        if (tUSDistanceCentimeter >= DISTANCE_TIMEOUT_CM) {
+        if (tUSDistanceCentimeter == 0) {
             Serial.println("timeout");
         } else {
             Serial.print(tUSDistanceCentimeter);
@@ -159,7 +156,7 @@ void loop(void) {
 #  endif
 #endif
 
-    if (tUSDistanceCentimeter >= DISTANCE_TIMEOUT_CM) {
+    if (tUSDistanceCentimeter == 0) {
         /*
          * timeout happened here
          */
@@ -179,8 +176,7 @@ void loop(void) {
         if (tUSDistanceCentimeter != sCentimeterOld) {
             if (BlueDisplay1.mConnectionEstablished) {
                 uint16_t tCmXPosition = BlueDisplay1.drawUnsignedByte(getTextWidth(sCaptionTextSize * 2), sValueStartY,
-                        tUSDistanceCentimeter, sCaptionTextSize * 2, COLOR_YELLOW,
-                        COLOR_BLUE);
+                        tUSDistanceCentimeter, sCaptionTextSize * 2, COLOR_YELLOW, COLOR_BLUE);
                 BlueDisplay1.drawText(tCmXPosition, sValueStartY, "cm", sCaptionTextSize, COLOR_WHITE, COLOR_BLUE);
                 SliderShowDistance.setValueAndDrawBar(tUSDistanceCentimeter);
             }
@@ -219,9 +215,9 @@ void loop(void) {
                 }
             }
         }
+        sCentimeterOld = tUSDistanceCentimeter;
     }
     checkAndHandleEvents();
-    sCentimeterOld = tUSDistanceCentimeter;
     delay(MEASUREMENT_INTERVAL_MILLIS); // < 200
 }
 

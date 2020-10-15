@@ -97,7 +97,7 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aReor
          */
         delayMillisWithCheckAndHandleEvents(10);
         if (mConnectionEstablished) { // is set by delayMillisWithCheckAndHandleEvents()
-#if defined(TRACE) && defined (USE_SERIAL1)
+#if defined(TRACE) && defined(USE_SERIAL1)
             Serial.println("Connection established");
 #endif
             // Handler are called initially by the received canvas size event
@@ -123,7 +123,7 @@ void BlueDisplay::setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHe
     mReferenceDisplaySize.YHeight = aHeight;
     if (USART_isBluetoothPaired()) {
         if (aFlags & BD_FLAG_FIRST_RESET_ALL) {
-#if defined(TRACE) && defined (USE_SERIAL1)
+#if defined(TRACE) && defined(USE_SERIAL1)
             Serial.println("Send reset all");
 #endif
             // reset local buttons to be synchronized
@@ -1211,9 +1211,9 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
 
 /**
  *
- * @param aSensorType
- * @param aSensorRate one of  {@link #SENSOR_DELAY_NORMAL}, {@link #SENSOR_DELAY_UI},
- *        {@link #SENSOR_DELAY_GAME}, or {@link #SENSOR_DELAY_FASTEST}
+ * @param aSensorType one of FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_TYPE_GYROSCOPE
+ * @param aSensorRate one of  {@link #FLAG_SENSOR_DELAY_NORMAL} 200 ms, {@link #FLAG_SENSOR_DELAY_UI} 60 ms,
+ *        {@link #FLAG_SENSOR_DELAY_GAME} 20ms, or {@link #FLAG_SENSOR_DELAY_FASTEST}
  */
 void BlueDisplay::setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSensorRate, uint8_t aFilterFlag) {
     aSensorRate &= 0x03;

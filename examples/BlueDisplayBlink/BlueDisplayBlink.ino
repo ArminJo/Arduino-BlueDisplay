@@ -72,7 +72,7 @@ void setup() {
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 
-#if defined (USE_SERIAL1) // defined in BlueSerial.h
+#if defined(USE_SERIAL1) // defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout

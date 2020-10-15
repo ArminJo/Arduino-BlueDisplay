@@ -179,6 +179,9 @@ struct GuiCallback {
     union ByteShortLongFloatUnion ValueForGuiHandler;
 };
 
+/*
+ * Values received from accelerator sensor range from -10 to 10
+ */
 struct SensorCallback {
     float ValueX;
     float ValueY;

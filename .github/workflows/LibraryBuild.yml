@@ -53,7 +53,7 @@ jobs:
         #############################################################################################################
         include:
           - arduino-boards-fqbn: arduino:sam:arduino_due_x
-            sketches-exclude: SimpleTouchScreenDSO,BTModuleProgrammer
+            sketches-exclude: SimpleTouchScreenDSO,BTModuleProgrammer,ShowSensorValues
 
           - arduino-boards-fqbn: esp8266:esp8266:huzzah:eesz=4M3M,xtal=80
             platform-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
@@ -86,7 +86,7 @@ jobs:
           ENV_PLATFORM_URL: ${{ matrix.platform-url }}
           ENV_REQUIRED_LIBRARIES: ${{ env.REQUIRED_LIBRARIES }}
           ENV_EXAMPLES_EXCLUDE: ${{ matrix.sketches-exclude }}
-          ENV_EXAMPLES_BUILD_PROPERTIES: ${{ toJson(matrix.build-properties) }}
+          ENV_EXAMPLES_BUILD_PROPERTIES: '{ "SimpleTouchScreenDSO": "-DUSE_SIMPLE_SERIAL" }'
         run: |
           wget --quiet https://raw.githubusercontent.com/ArminJo/arduino-test-compile/master/arduino-test-compile.sh
             ls -l arduino-test-compile.sh

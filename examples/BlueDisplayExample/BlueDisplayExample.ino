@@ -138,7 +138,7 @@ void setup() {
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 
-#if defined (USE_SERIAL1) // defined in BlueSerial.h
+#if defined(USE_SERIAL1) // defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
@@ -167,7 +167,7 @@ void loop() {
         /*
          * This serial output is readable at the Arduino serial monitor
          */
-#if!defined(USE_STANDARD_SERIAL) || defined (USE_SERIAL1)
+#if defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
         BlueDisplay1.debug("\r\nAnalogIn=", tBlinkDuration);
 #else
         Serial.print("\r\nAnalogIn=");
