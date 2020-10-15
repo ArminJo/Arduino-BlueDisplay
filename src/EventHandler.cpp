@@ -190,6 +190,9 @@ void setSwipeEndCallbackEnabled(bool aSwipeEndCallbackEnabled) {
  * @param aSensorType see see android.hardware.Sensor. FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_TYPE_GYROSCOPE (in BlueDisplay.h)
  * @param aSensorRate see android.hardware.SensorManager (0-3) one of  {@link #FLAG_SENSOR_DELAY_NORMAL} 200 ms, {@link #FLAG_SENSOR_DELAY_UI} 60 ms,
  *        {@link #FLAG_SENSOR_DELAY_GAME} 20ms, or {@link #FLAG_SENSOR_DELAY_FASTEST}
+ *        If aSensorRate is > FLAG_SENSOR_DELAY_NORMAL (3) the value is interpreted (by BD app) as milliseconds interval (down do 5 ms).
+ * @param aFilterFlag If FLAG_SENSOR_SIMPLE_FILTER, then sensor values are sent via BT only if value changed.
+ * To avoid noise (event value is solely switching between 2 values), values are skipped too if they are equal last or second last value.
  * @param aSensorChangeCallback one callback for all sensors types
  */
 void registerSensorChangeCallback(uint8_t aSensorType, uint8_t aSensorRate, uint8_t aFilterFlag,

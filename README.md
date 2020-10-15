@@ -42,6 +42,15 @@ For boards which have more than one serial interface, the library tries to use *
 If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must open the library file *BlueSerial.h* and comment out the line [`#define USE_USB_SERIAL`](src/BlueSerial.h#L52).<br/>
 Another way is to define/enable `USE_SIMPLE_SERIAL` in *BlueSerial.h* and **modify the central serial interface function**. You only have to change the [first 2 lines](src/BlueSerial.cpp#L192) of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
 
+# Sensor axis for an Arduino application
+Android axis are [defined for **natural screen orientation**](https://source.android.com/devices/sensors/sensor-types), which is portrait for my devices:
+- When the device lies flat on a table and its left side is down and right side is up or pushed on its left side toward the right, the X acceleration value is positive.
+- When the device lies flat on a table and its bottom side is down and top side is up or pushed on its bottom side toward the top, the Y acceleration value is positive.
+- When the device lies flat on a table, the acceleration value along Z is +9.81 (m/s^2).
+
+**The BlueDisplay application converts the axis, so that this definition holds for each screen orientation.**
+For detaild information to sensors see [ShowSensorValues example](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/examples/ShowSensorValues/ShowSensorValues.ino)
+
 # Compile options / macros for this library
 To customize the library to different requirements, there are some compile options / makros available.<br/>
 Modify it by commenting them out or in, or change the values if applicable. Or define the macro with the -D compiler option for gobal compile (the latter is not possible with the Arduino IDE, so consider to use [Sloeber](https://eclipse.baeyens.it).
@@ -76,6 +85,7 @@ More elaborated example to show more features of the BlueDisplay library.
 
 ## ShowSensorValues
 Shows the accelerometer and gyroscope values received from the smartphone both graphical and numerical.
+![Plotter output of accelerometer](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/AccelerometerOnPlotter.png)
 
 ## BTModuleProgrammer
 Simple helper program to configure your HC-05 or JDY-31 modules name and default baudrate with a serial monitor.
