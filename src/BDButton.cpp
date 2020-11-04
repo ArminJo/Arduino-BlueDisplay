@@ -51,7 +51,7 @@ BDButton::BDButton(BDButtonHandle_t aButtonHandle) { // @suppress("Class members
 }
 
 #ifdef LOCAL_DISPLAY_EXISTS
-BDButton::BDButton(BDButtonHandle_t aButtonHandle, TouchButton * aLocalButtonPtr) {
+BDButton::BDButton(BDButtonHandle_t aButtonHandle, TouchButton *aLocalButtonPtr) {
     mButtonHandle = aButtonHandle;
     mLocalButtonPtr = aLocalButtonPtr;
 }
@@ -87,7 +87,7 @@ bool BDButton::operator!=(const BDButton &aButton) {
  * Multi-line caption has \n as line separator.
  */
 void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
-        const char * aCaption, uint16_t aCaptionSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t)) {
+        const char *aCaption, uint16_t aCaptionSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t)) {
 
     BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
     if (USART_isBluetoothPaired()) {
@@ -156,7 +156,7 @@ void BDButton::drawCaption(void) {
     }
 }
 //
-//void BDButton::setCaption(const char * aCaption) {
+//void BDButton::setCaption(const char *aCaption) {
 //#ifdef LOCAL_DISPLAY_EXISTS
 //    mLocalButtonPtr->setCaption(aCaption);
 //#endif
@@ -168,7 +168,7 @@ void BDButton::drawCaption(void) {
 /*
  * Sets caption for value true (green button) if different from default false (red button) caption
  */
-void BDButton::setCaptionForValueTrue(const char * aCaption) {
+void BDButton::setCaptionForValueTrue(const char *aCaption) {
 #ifdef LOCAL_DISPLAY_EXISTS
     // not supported
 #endif
@@ -178,7 +178,7 @@ void BDButton::setCaptionForValueTrue(const char * aCaption) {
 }
 
 
-void BDButton::setCaption(const char * aCaption, bool doDrawButton) {
+void BDButton::setCaption(const char *aCaption, bool doDrawButton) {
 #ifdef LOCAL_DISPLAY_EXISTS
     mLocalButtonPtr->setCaption(aCaption);
     if (doDrawButton) {
@@ -330,7 +330,7 @@ void BDButton::deactivateAllButtons(void) {
 //color16_t sLastButtonColor;
 //uint8_t sLastCaptionSize;
 //uint8_t sLastFlags;
-//void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper * aPGMCaption, int16_t aValue,
+//void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMCaption, int16_t aValue,
 //        void (*aOnTouchHandler)(BDButton*, int16_t)) {
 //
 //    BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
@@ -357,7 +357,7 @@ void BDButton::deactivateAllButtons(void) {
 //}
 
 void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
-        const __FlashStringHelper * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
+        const __FlashStringHelper *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
         void (*aOnTouchHandler)(BDButton*, int16_t)) {
 
     BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
@@ -386,7 +386,7 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
 /*
  * Sets caption for value true (green button) if different from false (red button) caption
  */
-void BDButton::setCaptionPGMForValueTrue(const char * aPGMCaption) {
+void BDButton::setCaptionPGMForValueTrue(const char *aPGMCaption) {
     if (USART_isBluetoothPaired()) {
         uint8_t tCaptionLength = strlen_P(aPGMCaption);
         if (tCaptionLength > STRING_BUFFER_STACK_SIZE) {
@@ -398,16 +398,16 @@ void BDButton::setCaptionPGMForValueTrue(const char * aPGMCaption) {
     }
 }
 
-void BDButton::setCaptionForValueTrue(const __FlashStringHelper * aPGMCaption) {
+void BDButton::setCaptionForValueTrue(const __FlashStringHelper *aPGMCaption) {
     setCaptionPGMForValueTrue(reinterpret_cast<PGM_P>(aPGMCaption));
 }
 
 void BDButton::setCaptionFromStringArrayPGM(const char * const aPGMCaptionStringArrayPtr[], uint8_t aStringIndex, bool doDrawButton) {
-    __FlashStringHelper * tPGMCaption = (__FlashStringHelper *) pgm_read_word(&aPGMCaptionStringArrayPtr[aStringIndex]);
+    __FlashStringHelper *tPGMCaption = (__FlashStringHelper *) pgm_read_word(&aPGMCaptionStringArrayPtr[aStringIndex]);
     setCaption(tPGMCaption,  doDrawButton);
 }
 
-void BDButton::setCaptionPGM(const char * aPGMCaption, bool doDrawButton) {
+void BDButton::setCaptionPGM(const char *aPGMCaption, bool doDrawButton) {
     if (USART_isBluetoothPaired()) {
         uint8_t tCaptionLength = strlen_P(aPGMCaption);
         if (tCaptionLength > STRING_BUFFER_STACK_SIZE) {
@@ -426,7 +426,7 @@ void BDButton::setCaptionPGM(const char * aPGMCaption, bool doDrawButton) {
 /*
  * sets only caption
  */
-void BDButton::setCaption(const __FlashStringHelper * aPGMCaption, bool doDrawButton) {
+void BDButton::setCaption(const __FlashStringHelper *aPGMCaption, bool doDrawButton) {
     setCaptionPGM(reinterpret_cast<PGM_P>(aPGMCaption),doDrawButton);
 }
 

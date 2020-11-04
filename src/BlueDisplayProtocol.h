@@ -372,6 +372,9 @@ static const int FUNCTION_SLIDER_ACTIVATE_ALL = 0x58;
 static const int FUNCTION_SLIDER_DEACTIVATE_ALL = 0x59;
 static const int FUNCTION_SLIDER_GLOBAL_SETTINGS = 0x5A;
 
+// Flags for SLIDER_BLOBAL_SETTINGS
+static const int SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD = 0x01;
+
 // Function with variable data size
 const int FUNCTION_SLIDER_SET_CAPTION = 0x78;
 const int FUNCTION_SLIDER_PRINT_VALUE = 0x79;

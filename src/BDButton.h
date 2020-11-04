@@ -43,6 +43,23 @@
 #define BUTTON_AUTO_RED_GREEN_FALSE_COLOR COLOR_RED
 #define BUTTON_AUTO_RED_GREEN_TRUE_COLOR COLOR_GREEN
 
+// Flags for BUTTON_GLOBAL_SETTINGS
+static const int FLAG_BUTTON_GLOBAL_USE_DOWN_EVENTS_FOR_BUTTONS = 0x00; // Default
+static const int FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS = 0x01;   // If swipe can start on a button, you require this.
+static const int FLAG_BUTTON_GLOBAL_SET_BEEP_TONE = 0x02;   // Beep on button touch
+
+// Flags for init
+static const int FLAG_BUTTON_NO_BEEP_ON_TOUCH = 0x00;
+static const int FLAG_BUTTON_DO_BEEP_ON_TOUCH = 0x01;  // Beep on this button touch
+static const int FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN = 0x02; // Value true -> green, false -> red
+static const int FLAG_BUTTON_TYPE_AUTOREPEAT = 0x04;
+static const int FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH = 0x0A; // Button must be manually drawn after event to show new caption/color
+
+#ifdef USE_BUTTON_POOL
+#define INTERNAL_FLAG_MASK 0x80
+#define FLAG_IS_ALLOCATED 0x80 // For use with get and releaseButton
+#endif
+
 /**********************
  * BUTTON WIDTHS
  *********************/
@@ -250,7 +267,7 @@ public:
     BDButton();
     BDButton(BDButtonHandle_t aButtonHandle);
 #ifdef LOCAL_DISPLAY_EXISTS
-    BDButton(BDButtonHandle_t aButtonHandle, TouchButton * aLocalButtonPtr);
+    BDButton(BDButtonHandle_t aButtonHandle, TouchButton *aLocalButtonPtr);
 #endif
     BDButton(const BDButton &aButton);
     // Operators
@@ -259,15 +276,15 @@ public:
     bool operator!=(const BDButton &aButton);
 
     void init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
-            const char * aCaption, uint16_t aCaptionSize, uint8_t aFlags, int16_t aValue,
+            const char *aCaption, uint16_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(BDButton*, int16_t));
 
     void drawButton(void);
     void removeButton(color16_t aBackgroundColor);
     void drawCaption(void);
-    void setCaption(const char * aCaption, bool doDrawButton = false);
-    void setCaptionForValueTrue(const char * aCaption);
-    void setCaptionAndDraw(const char * aCaption);
+    void setCaption(const char *aCaption, bool doDrawButton = false);
+    void setCaptionForValueTrue(const char *aCaption);
+    void setCaptionAndDraw(const char *aCaption);
     void setValue(int16_t aValue, bool doDrawButton = false);
     void setValueAndDraw(int16_t aValue);
     void setButtonColor(color16_t aButtonColor);
@@ -281,27 +298,27 @@ public:
 
 #ifdef ARDUINO
     void initPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
-            const char * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
+            const char *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(BDButton*, int16_t));
 
-    void setCaptionPGMForValueTrue(const char * aCaption);
-    void setCaptionPGM(const char * aPGMCaption, bool doDrawButton = false);
+    void setCaptionPGMForValueTrue(const char *aCaption);
+    void setCaptionPGM(const char *aPGMCaption, bool doDrawButton = false);
     void setCaptionFromStringArrayPGM(const char * const aPGMCaptionStringArrayPtr[], uint8_t aStringIndex, bool doDrawButton = false);
 
     void init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
-            const __FlashStringHelper * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
+            const __FlashStringHelper *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(BDButton*, int16_t));
-    void init(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper * aPGMCaption, int16_t aValue,
+    void init(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMCaption, int16_t aValue,
             void (*aOnTouchHandler)(BDButton*, int16_t));
-    void setCaptionForValueTrue(const __FlashStringHelper * aCaption);
-    void setCaption(const __FlashStringHelper * aPGMCaption, bool doDrawButton = false);
+    void setCaptionForValueTrue(const __FlashStringHelper *aCaption);
+    void setCaption(const __FlashStringHelper *aPGMCaption, bool doDrawButton = false);
 #endif
 
     BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions
 
 #ifdef LOCAL_DISPLAY_EXISTS
     void deinit(void);
-    TouchButton * mLocalButtonPtr;
+    TouchButton *mLocalButtonPtr;
 #endif
 
 private:
@@ -310,3 +327,5 @@ private:
 #endif
 
 #endif /* BLUEDISPLAY_INCLUDE_BDBUTTON_H_ */
+
+#pragma once

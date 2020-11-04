@@ -165,7 +165,7 @@ void sendUSART(char aChar) {
 //    sendUSART(aChar);
 //}
 
-void sendUSART(const char * aString) {
+void sendUSART(const char *aString) {
     while (*aString != '0') {
         sendUSART(*aString);
         aString++;
@@ -189,7 +189,7 @@ bool sReceiveBufferOutOfSync = false;
 /**
  * The central point for sending bytes
  */
-void sendUSARTBufferNoSizeCheck(uint8_t * aParameterBufferPointer, uint8_t aParameterBufferLength, uint8_t * aDataBufferPointer,
+void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParameterBufferLength, uint8_t *aDataBufferPointer,
         int16_t aDataBufferLength) {
 #if ! defined(USE_SIMPLE_SERIAL)
     Serial.write(aParameterBufferPointer, aParameterBufferLength);
@@ -246,7 +246,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t * aParameterBufferPointer, uint8_t aPara
 void sendUSART5Args(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, uint16_t aColor) {
     uint16_t tParamBuffer[7];
 
-    uint16_t * tBufferPointer = &tParamBuffer[0];
+    uint16_t *tBufferPointer = &tParamBuffer[0];
     *tBufferPointer++ = aFunctionTag << 8 | SYNC_TOKEN; // add sync token
     *tBufferPointer++ = 10; // parameter length
     *tBufferPointer++ = aXStart;
@@ -269,7 +269,7 @@ void sendUSARTArgs(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...) {
 
     uint16_t tParamBuffer[MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS + 2];
     va_list argp;
-    uint16_t * tBufferPointer = &tParamBuffer[0];
+    uint16_t *tBufferPointer = &tParamBuffer[0];
     *tBufferPointer++ = aFunctionTag << 8 | SYNC_TOKEN; // add sync token
     va_start(argp, aNumberOfArgs);
 
@@ -285,7 +285,7 @@ void sendUSARTArgs(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...) {
  *
  * @param aFunctionTag
  * @param aNumberOfArgs currently not more than 12 args (SHORT) are supported
- * Last two arguments are length of buffer and buffer pointer (..., size_t aDataLength, uint8_t * aDataBufferPtr)
+ * Last two arguments are length of buffer and buffer pointer (..., size_t aDataLength, uint8_t *aDataBufferPtr)
  */
 void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...) {
     if (aNumberOfArgs > MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS) {
@@ -294,7 +294,7 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...
 
     uint16_t tParamBuffer[MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS + 4];
     va_list argp;
-    uint16_t * tBufferPointer = &tParamBuffer[0];
+    uint16_t *tBufferPointer = &tParamBuffer[0];
     *tBufferPointer++ = aFunctionTag << 8 | SYNC_TOKEN; // add sync token
     va_start(argp, aNumberOfArgs);
 
@@ -306,7 +306,7 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...
     *tBufferPointer++ = DATAFIELD_TAG_BYTE << 8 | SYNC_TOKEN; // start new transmission block
     uint16_t tLength = va_arg(argp, int); // length in byte
     *tBufferPointer++ = tLength;
-    uint8_t * aBufferPtr = (uint8_t *) va_arg(argp, int); // Buffer address
+    uint8_t *aBufferPtr = (uint8_t *) va_arg(argp, int); // Buffer address
     va_end(argp);
 
     sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], aNumberOfArgs * 2 + 8, aBufferPtr, tLength);
@@ -362,7 +362,7 @@ ISR(USART1_RX_vect) {
                         // event completely received
                         // we have one dedicated touch down event in order not to overwrite it with other events before processing it
                         // Yes it makes no sense if interrupts are allowed!
-                        struct BluetoothEvent * tRemoteTouchEventPtr = &remoteEvent;
+                        struct BluetoothEvent *tRemoteTouchEventPtr = &remoteEvent;
 #  ifndef DO_NOT_NEED_BASIC_TOUCH
                         if (sReceivedEventType == EVENT_TOUCH_ACTION_DOWN
                                 || (remoteTouchDownEvent.EventType == EVENT_NO_EVENT && remoteEvent.EventType == EVENT_NO_EVENT)) {

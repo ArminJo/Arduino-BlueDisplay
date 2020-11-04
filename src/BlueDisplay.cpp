@@ -45,8 +45,8 @@
 //-------------------- Constructor --------------------
 
 BlueDisplay::BlueDisplay(void) { // @suppress("Class members should be properly initialized")
-    mReferenceDisplaySize.XWidth = DISPLAY_DEFAULT_WIDTH;
-    mReferenceDisplaySize.YHeight = DISPLAY_DEFAULT_HEIGHT;
+    mRequestedDisplaySize.XWidth = DISPLAY_DEFAULT_WIDTH;
+    mRequestedDisplaySize.YHeight = DISPLAY_DEFAULT_HEIGHT;
     mConnectionEstablished = false;
 }
 
@@ -119,8 +119,8 @@ void BlueDisplay::sendSync(void) {
 }
 
 void BlueDisplay::setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHeight) {
-    mReferenceDisplaySize.XWidth = aWidth;
-    mReferenceDisplaySize.YHeight = aHeight;
+    mRequestedDisplaySize.XWidth = aWidth;
+    mRequestedDisplaySize.YHeight = aHeight;
     if (USART_isBluetoothPaired()) {
         if (aFlags & BD_FLAG_FIRST_RESET_ALL) {
 #if defined(TRACE) && defined(USE_SERIAL1)
@@ -540,9 +540,9 @@ uint16_t BlueDisplay::drawLong(uint16_t aPosX, uint16_t aPosY, int32_t aLong, ui
 }
 
 /*
- * for printf implementation
+ * for writeString implementation
  */
-void BlueDisplay::setPrintfSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
+void BlueDisplay::setWriteStringSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
         bool aClearOnNewScreen) {
 #ifdef LOCAL_DISPLAY_EXISTS
     printSetOptions(getLocalTextSize(aPrintSize), aPrintColor, aPrintBackgroundColor, aClearOnNewScreen);
@@ -553,7 +553,7 @@ void BlueDisplay::setPrintfSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aP
     }
 }
 
-void BlueDisplay::setPrintfPosition(uint16_t aPosX, uint16_t aPosY) {
+void BlueDisplay::setWriteStringPosition(uint16_t aPosX, uint16_t aPosY) {
 #ifdef LOCAL_DISPLAY_EXISTS
     printSetPosition(aPosX, aPosY);
 #endif
@@ -562,7 +562,7 @@ void BlueDisplay::setPrintfPosition(uint16_t aPosX, uint16_t aPosY) {
     }
 }
 
-void BlueDisplay::setPrintfPositionColumnLine(uint16_t aColumnNumber, uint16_t aLineNumber) {
+void BlueDisplay::setWriteStringPositionColumnLine(uint16_t aColumnNumber, uint16_t aLineNumber) {
 #ifdef LOCAL_DISPLAY_EXISTS
     printSetPositionColumnLine(aColumnNumber, aLineNumber);
 #endif
@@ -624,7 +624,7 @@ void BlueDisplay::debug(uint8_t aByte) {
 /*
  * Maximum size of aMessage string is 25 character.
  */
-void BlueDisplay::debug(const char* aMessage, uint8_t aByte) {
+void BlueDisplay::debug(const char *aMessage, uint8_t aByte) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hhu -> unsigned char instead of unsigned int with u
 #ifdef AVR
@@ -640,7 +640,7 @@ void BlueDisplay::debug(const char* aMessage, uint8_t aByte) {
 /*
  * Maximum size of aMessage string is 24 character.
  */
-void BlueDisplay::debug(const char* aMessage, int8_t aByte) {
+void BlueDisplay::debug(const char *aMessage, int8_t aByte) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hhd -> signed char instead of signed int with d
 #ifdef AVR
@@ -695,7 +695,7 @@ void BlueDisplay::debug(int16_t aShort) {
 /*
  * Maximum size of aMessage string is 21 character.
  */
-void BlueDisplay::debug(const char* aMessage, uint16_t aShort) {
+void BlueDisplay::debug(const char *aMessage, uint16_t aShort) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hd -> short int instead of int with d
 #ifdef AVR
@@ -711,7 +711,7 @@ void BlueDisplay::debug(const char* aMessage, uint16_t aShort) {
 /*
  * Maximum size of aMessage string is 20 character.
  */
-void BlueDisplay::debug(const char* aMessage, int16_t aShort) {
+void BlueDisplay::debug(const char *aMessage, int16_t aShort) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hd -> short int instead of int with d
 #ifdef AVR
@@ -755,7 +755,7 @@ void BlueDisplay::debug(int32_t aLong) {
 /*
  * Maximum size of aMessage string is 13 to 20 character depending on content of aLong.
  */
-void BlueDisplay::debug(const char* aMessage, uint32_t aLong) {
+void BlueDisplay::debug(const char *aMessage, uint32_t aLong) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 #ifdef AVR
     snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%10lu 0x%lX"), aMessage, aLong, aLong);
@@ -772,7 +772,7 @@ void BlueDisplay::debug(const char* aMessage, uint32_t aLong) {
 /*
  * Maximum size of aMessage string is 12 to 19 character depending on content of aLong.
  */
-void BlueDisplay::debug(const char* aMessage, int32_t aLong) {
+void BlueDisplay::debug(const char *aMessage, int32_t aLong) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 #ifdef AVR
     snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%11ld 0x%lX"), aMessage, aLong, aLong);
@@ -801,7 +801,7 @@ void BlueDisplay::debug(float aFloat) {
 /*
  * Maximum size of aMessage string is up to 30 character depending on content of aFloat.
  */
-void BlueDisplay::debug(const char* aMessage, float aFloat) {
+void BlueDisplay::debug(const char *aMessage, float aFloat) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 #ifdef AVR
     strncpy(tStringBuffer, aMessage, (STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE - 22));
@@ -854,7 +854,7 @@ void BlueDisplay::drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, colo
     }
 }
 
-struct XYSize * BlueDisplay::getMaxDisplaySize(void) {
+struct XYSize *BlueDisplay::getMaxDisplaySize(void) {
     return &mMaxDisplaySize;
 }
 
@@ -866,7 +866,7 @@ uint16_t BlueDisplay::getMaxDisplayHeight(void) {
     return mMaxDisplaySize.YHeight;
 }
 
-struct XYSize * BlueDisplay::getCurrentDisplaySize(void) {
+struct XYSize *BlueDisplay::getCurrentDisplaySize(void) {
     return &mCurrentDisplaySize;
 }
 
@@ -878,16 +878,16 @@ uint16_t BlueDisplay::getCurrentDisplayHeight(void) {
     return mCurrentDisplaySize.YHeight;
 }
 
-struct XYSize * BlueDisplay::getReferenceDisplaySize(void) {
-    return &mReferenceDisplaySize;
+struct XYSize *BlueDisplay::getRequestedDisplaySize(void) {
+    return &mRequestedDisplaySize;
 }
 
 uint16_t BlueDisplay::getDisplayWidth(void) {
-    return mReferenceDisplaySize.XWidth;
+    return mRequestedDisplaySize.XWidth;
 }
 
 uint16_t BlueDisplay::getDisplayHeight(void) {
-    return mReferenceDisplaySize.YHeight;
+    return mRequestedDisplaySize.YHeight;
 }
 
 bool BlueDisplay::isDisplayOrientationLandscape(void) {
@@ -901,7 +901,7 @@ bool BlueDisplay::isDisplayOrientationLandscape(void) {
 /**
  * aNewRelEndX + Y are new x and y values relative to start point
  */
-void BlueDisplay::refreshVector(struct ThickLine * aLine, int16_t aNewRelEndX, int16_t aNewRelEndY) {
+void BlueDisplay::refreshVector(struct ThickLine *aLine, int16_t aNewRelEndX, int16_t aNewRelEndY) {
     int16_t tNewEndX = aLine->StartX + aNewRelEndX;
     int16_t tNewEndY = aLine->StartY + aNewRelEndY;
     if (aLine->EndX != tNewEndX || aLine->EndX != tNewEndY) {
@@ -916,15 +916,15 @@ void BlueDisplay::refreshVector(struct ThickLine * aLine, int16_t aNewRelEndX, i
 #pragma GCC diagnostic ignored "-Wsign-compare"
         if (tNewEndX < 0) {
             tNewEndX = 0;
-        } else if (tNewEndX > mReferenceDisplaySize.XWidth - 1) {
-            tNewEndX = mReferenceDisplaySize.XWidth - 1;
+        } else if (tNewEndX > mRequestedDisplaySize.XWidth - 1) {
+            tNewEndX = mRequestedDisplaySize.XWidth - 1;
         }
         aLine->EndX = tNewEndX;
 
         if (tNewEndY < 0) {
             tNewEndY = 0;
-        } else if (tNewEndY > mReferenceDisplaySize.YHeight - 1) {
-            tNewEndY = mReferenceDisplaySize.YHeight - 1;
+        } else if (tNewEndY > mRequestedDisplaySize.YHeight - 1) {
+            tNewEndY = mRequestedDisplaySize.YHeight - 1;
         }
 #pragma GCC diagnostic pop
         aLine->EndY = tNewEndY;
@@ -960,7 +960,7 @@ void BlueDisplay::drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aString
 #endif
 
 #ifdef AVR
-uint16_t BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char * aPGMString, uint16_t aTextSize, color16_t aFGColor,
+uint16_t BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char *aPGMString, uint16_t aTextSize, color16_t aFGColor,
         color16_t aBGColor) {
     uint16_t tRetValue = 0;
     uint8_t tTextLength = strlen_P(aPGMString);
@@ -981,7 +981,7 @@ uint16_t BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char * a
     return tRetValue;
 }
 
-void BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char * aPGMString) {
+void BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char *aPGMString) {
     uint8_t tTextLength = strlen_P(aPGMString);
     if (tTextLength > STRING_BUFFER_STACK_SIZE) {
         tTextLength = STRING_BUFFER_STACK_SIZE;
@@ -993,7 +993,7 @@ void BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char * aPGMS
     }
 }
 
-uint16_t BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStringHelper * aPGMString, uint16_t aTextSize,
+uint16_t BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
         color16_t aFGColor, color16_t aBGColor) {
     uint16_t tRetValue = 0;
     PGM_P tPGMString = reinterpret_cast<PGM_P>(aPGMString);
@@ -1016,7 +1016,7 @@ uint16_t BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStri
     return tRetValue;
 }
 
-void BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStringHelper * aPGMString) {
+void BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStringHelper *aPGMString) {
     PGM_P tPGMString = reinterpret_cast<PGM_P>(aPGMString);
 
     uint8_t tTextLength = strlen_P(tPGMString);
@@ -1229,7 +1229,7 @@ void BlueDisplay::setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSens
  **************************************************************************************************************************************************/
 
 BDButtonHandle_t BlueDisplay::createButton(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY,
-        color16_t aButtonColor, const char * aCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
+        color16_t aButtonColor, const char *aCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
         void (*aOnTouchHandler)(BDButton *, int16_t)) {
     BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
 
@@ -1264,7 +1264,7 @@ void BlueDisplay::drawButtonCaption(BDButtonHandle_t aButtonNumber) {
     }
 }
 
-void BlueDisplay::setButtonCaption(BDButtonHandle_t aButtonNumber, const char * aCaption, bool doDrawButton) {
+void BlueDisplay::setButtonCaption(BDButtonHandle_t aButtonNumber, const char *aCaption, bool doDrawButton) {
     if (USART_isBluetoothPaired()) {
         uint8_t tFunctionCode = FUNCTION_BUTTON_SET_CAPTION;
         if (doDrawButton) {
@@ -1353,7 +1353,7 @@ void BlueDisplay::deactivateAllButtons(void) {
 
 #ifdef AVR
 BDButtonHandle_t BlueDisplay::createButtonPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY,
-        color16_t aButtonColor, const char * aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
+        color16_t aButtonColor, const char *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
         void (*aOnTouchHandler)(BDButton *, int16_t)) {
     BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
     if (USART_isBluetoothPaired()) {
@@ -1369,7 +1369,7 @@ BDButtonHandle_t BlueDisplay::createButtonPGM(uint16_t aPositionX, uint16_t aPos
     return tButtonNumber;
 }
 
-void BlueDisplay::setButtonCaptionPGM(BDButtonHandle_t aButtonNumber, const char * aPGMCaption, bool doDrawButton) {
+void BlueDisplay::setButtonCaptionPGM(BDButtonHandle_t aButtonNumber, const char *aPGMCaption, bool doDrawButton) {
     if (USART_isBluetoothPaired()) {
         uint8_t tCaptionLength = strlen_P(aPGMCaption);
         if (tCaptionLength > STRING_BUFFER_STACK_SIZE) {
@@ -1463,7 +1463,7 @@ void BlueDisplay::setSliderCaptionProperties(BDSliderHandle_t aSliderNumber, uin
     }
 }
 
-void BlueDisplay::setSliderCaption(BDSliderHandle_t aSliderNumber, const char * aCaption) {
+void BlueDisplay::setSliderCaption(BDSliderHandle_t aSliderNumber, const char *aCaption) {
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, aSliderNumber, strlen(aCaption), aCaption);
     }
@@ -1847,9 +1847,9 @@ void BlueDisplay::testDisplay(void) {
     clearDisplay();
 
     fillRectRel(0, 0, 2, 2, COLOR_RED);
-    fillRectRel(mReferenceDisplaySize.XWidth - 3, 0, 3, 3, COLOR_GREEN);
-    fillRectRel(0, mReferenceDisplaySize.YHeight - 4, 4, 4, COLOR_BLUE);
-    fillRectRel(mReferenceDisplaySize.XWidth - 3, mReferenceDisplaySize.YHeight - 3, 3, 3, COLOR_BLACK);
+    fillRectRel(mRequestedDisplaySize.XWidth - 3, 0, 3, 3, COLOR_GREEN);
+    fillRectRel(0, mRequestedDisplaySize.YHeight - 4, 4, 4, COLOR_BLUE);
+    fillRectRel(mRequestedDisplaySize.XWidth - 3, mRequestedDisplaySize.YHeight - 3, 3, 3, COLOR_BLACK);
 
     fillRectRel(2, 2, 4, 4, COLOR_RED);
     fillRectRel(10, 20, 10, 20, COLOR_RED);
@@ -1857,9 +1857,9 @@ void BlueDisplay::testDisplay(void) {
     drawCircle(15, 30, 5, COLOR_BLUE, 1);
     fillCircle(20, 10, 10, COLOR_BLUE);
 
-    drawLineRel(0, mReferenceDisplaySize.YHeight - 1, mReferenceDisplaySize.XWidth, -mReferenceDisplaySize.YHeight,
+    drawLineRel(0, mRequestedDisplaySize.YHeight - 1, mRequestedDisplaySize.XWidth, -mRequestedDisplaySize.YHeight,
     COLOR_GREEN);
-    drawLineRel(6, 6, mReferenceDisplaySize.XWidth - 9, mReferenceDisplaySize.YHeight - 9, COLOR_BLUE);
+    drawLineRel(6, 6, mRequestedDisplaySize.XWidth - 9, mRequestedDisplaySize.YHeight - 9, COLOR_BLUE);
     drawChar(50, TEXT_SIZE_11_ASCEND, 'y', TEXT_SIZE_11, COLOR_GREEN, COLOR_YELLOW);
     drawText(0, 50 + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR_BLACK, COLOR_WHITE);
     drawText(0, 50 + TEXT_SIZE_11_HEIGHT + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR_WHITE,
@@ -1932,9 +1932,9 @@ void BlueDisplay::generateColorSpectrum(void) {
     uint16_t tError;
 
     uint16_t tColorChangeAmount;
-    uint16_t tYpos = mReferenceDisplaySize.YHeight;
+    uint16_t tYpos = mRequestedDisplaySize.YHeight;
     uint16_t tColorLine;
-    for (uint16_t line = 4; line < mReferenceDisplaySize.YHeight + 4; ++line) {
+    for (uint16_t line = 4; line < mRequestedDisplaySize.YHeight + 4; ++line) {
         tColorLine = line / 4;
         // colors for line 31 and 32 are identical
         if (tColorLine >= COLOR_RESOLUTION) {
@@ -1960,19 +1960,19 @@ void BlueDisplay::generateColorSpectrum(void) {
 //                  tColor += tDelta;
 //              }
 //          }
-            tError = ((mReferenceDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1) / 2;
-            for (uint16_t j = 0; j < (mReferenceDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1; ++j) {
+            tError = ((mRequestedDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1) / 2;
+            for (uint16_t j = 0; j < (mRequestedDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1; ++j) {
                 drawPixel(tXPos++, tYpos, tColor);
                 tError += tColorChangeAmount;
-                if (tError > ((mReferenceDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1)) {
-                    tError -= ((mReferenceDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1);
+                if (tError > ((mRequestedDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1)) {
+                    tError -= ((mRequestedDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1);
                     tColor += tDelta;
                 }
             }
             // draw greyscale in the last 8 pixel :-)
-//          _drawPixel(mReferenceDisplaySize.XWidth - 2, tYpos, (tColorLine & 0x3E) << 10 | tColorLine << 5 | tColorLine >> 1);
-//          _drawPixel(mReferenceDisplaySize.XWidth - 1, tYpos, (tColorLine & 0x3E) << 10 | tColorLine << 5 | tColorLine >> 1);
-            drawLine(mReferenceDisplaySize.XWidth - 8, tYpos, mReferenceDisplaySize.XWidth - 1, tYpos,
+//          _drawPixel(mRequestedDisplaySize.XWidth - 2, tYpos, (tColorLine & 0x3E) << 10 | tColorLine << 5 | tColorLine >> 1);
+//          _drawPixel(mRequestedDisplaySize.XWidth - 1, tYpos, (tColorLine & 0x3E) << 10 | tColorLine << 5 | tColorLine >> 1);
+            drawLine(mRequestedDisplaySize.XWidth - 8, tYpos, mRequestedDisplaySize.XWidth - 1, tYpos,
                     (tColorLine & 0x3E) << 10 | tColorLine << 5 | tColorLine >> 1);
 
         }

@@ -34,6 +34,7 @@
 /*
  * For more slider constants see BlueDisplay.h
  */
+// Default values
 #define SLIDER_DEFAULT_BORDER_COLOR     COLOR_BLUE
 #define SLIDER_DEFAULT_BAR_COLOR        COLOR_GREEN
 #define SLIDER_DEFAULT_BACKGROUND_COLOR COLOR_WHITE
@@ -41,6 +42,24 @@
 
 #define SLIDER_DEFAULT_CAPTION_COLOR    COLOR_BLACK
 #define SLIDER_DEFAULT_CAPTION_BACKGROUND_COLOR    COLOR_WHITE
+
+// Flags for slider options
+static const int FLAG_SLIDER_VERTICAL = 0x00;
+static const int FLAG_SLIDER_VERTICAL_SHOW_NOTHING = 0x00;
+static const int FLAG_SLIDER_SHOW_BORDER = 0x01;
+static const int FLAG_SLIDER_SHOW_VALUE = 0x02;         // If set, ASCII value is printed along with change of bar value
+static const int FLAG_SLIDER_IS_HORIZONTAL = 0x04;
+static const int FLAG_SLIDER_IS_INVERSE = 0x08;         // is equivalent to negative slider length at init
+static const int FLAG_SLIDER_VALUE_BY_CALLBACK = 0x10; // If set,  bar (+ ASCII) value will be set by callback handler, not by touch
+static const int FLAG_SLIDER_IS_ONLY_OUTPUT = 0x20;     // is equivalent to slider aOnChangeHandler NULL at init
+
+// Flags for slider caption position
+static const int FLAG_SLIDER_CAPTION_ALIGN_LEFT_BELOW = 0x00;
+static const int FLAG_SLIDER_CAPTION_ALIGN_LEFT = 0x00;
+static const int FLAG_SLIDER_CAPTION_ALIGN_RIGHT = 0x01;
+static const int FLAG_SLIDER_CAPTION_ALIGN_MIDDLE = 0x02;
+static const int FLAG_SLIDER_CAPTION_BELOW = 0x00;
+static const int FLAG_SLIDER_CAPTION_ABOVE = 0x04;
 
 #ifdef LOCAL_DISPLAY_EXISTS
 #include "TouchSlider.h"
@@ -69,7 +88,7 @@ public:
     // Constructors
     BDSlider();
 #ifdef LOCAL_DISPLAY_EXISTS
-    BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider * aLocalSliderPointer);
+    BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPointer);
 #endif
 
     /**
@@ -93,20 +112,21 @@ public:
     void drawBorder(void);
     void setValue(int16_t aCurrentValue);
     void setValueAndDrawBar(int16_t aCurrentValue);
-    void setActualValue(int16_t aCurrentValue) __attribute__ ((deprecated ("Renamed to setValue()")));// deprecated
+    void setActualValue(int16_t aCurrentValue) __attribute__ ((deprecated ("Renamed to setValue()"))); // deprecated
     void setActualValueAndDrawBar(int16_t aCurrentValue) __attribute__ ((deprecated ("Renamed to setValueAndDrawBar()"))); // deprecated
     void setBarColor(color16_t aBarColor);
     void setBarThresholdColor(color16_t aBarThresholdColor);
+    void setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor);
     void setBarBackgroundColor(color16_t aBarBackgroundColor);
 
     void setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPosition, uint8_t aCaptionMargin, color16_t aCaptionColor,
             color16_t aCaptionBackgroundColor);
-    void setCaption(const char * aCaption);
-    void setValueUnitString(const char * aValueUnitString);
-    void setValueFormatString(const char * aValueFormatString);
+    void setCaption(const char *aCaption);
+    void setValueUnitString(const char *aValueUnitString);
+    void setValueFormatString(const char *aValueFormatString);
     void setPrintValueProperties(uint8_t aPrintValueSize, uint8_t aPrintValuePosition, uint8_t aPrintValueMargin,
             color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor);
-    void printValue(const char * aValueString);
+    void printValue(const char *aValueString);
     /*
      * Scale factor of 2 means, that the slider is virtually 2 times larger than displayed
      */
@@ -131,6 +151,21 @@ public:
 
 private:
 };
-#endif
+#endif // __cplusplus
+
+/*
+ * To show a signed value on two sliders positioned back to back (one of it is inverse or has a negative length value)
+ */
+struct positiveNegativeSlider {
+    BDSlider *positiveSliderPtr;
+    BDSlider *negativeSliderPtr;
+    int lastSliderValue;      // positive value with sensor dead band applied
+    BDSlider *lastZeroSlider; // to decide if we draw new zero slider
+};
+void initPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, BDSlider *aPositiveSliderPtr,
+        BDSlider *aNegativeSliderPtr);
+int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, int aValue, uint8_t aSliderDeadBand = 0);
 
 #endif /* BLUEDISPLAY_INCLUDE_BDSLIDER_H_ */
+
+#pragma once

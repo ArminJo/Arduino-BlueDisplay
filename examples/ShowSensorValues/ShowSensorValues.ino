@@ -1,8 +1,10 @@
 /*
- * ShowSensorValuesOnPlotter.cpp
+ * ShowSensorValues.cpp
  *
  *  Demo of using the sensor features of BlueDisplay library for HC-05 on Arduino.
  *  Screen orientation is fixed to the orientation at connect time.
+ *  Sensor values can be printed on plotter if one of the two macros
+ *  SHOW_ACCELEROMETER_VALUES_ON_PLOTTER or SHOW_GYROSCOPE_VALUES_ON_PLOTTER is defined
  *
  *  Android axis are defined for "natural" screen orientation, which is portrait for my devices:
  *  See https://source.android.com/devices/sensors/sensor-types
@@ -60,6 +62,10 @@
 // only one macro can be activated
 //#define SHOW_ACCELEROMETER_VALUES_ON_PLOTTER
 //#define SHOW_GYROSCOPE_VALUES_ON_PLOTTER
+#if defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER) && defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER)
+#warning We can only plot one sensor, but both are enabled -> plot only accelerometer.
+#undef SHOW_GYROSCOPE_VALUES_ON_PLOTTER
+#endif
 
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
@@ -106,6 +112,11 @@ BDSlider SliderRollForward;
 BDSlider SliderRollBackward;
 BDSlider SliderPitchRight;
 BDSlider SliderPitchLeft;
+
+struct positiveNegativeSlider sAccelerationForwardBackwardSliders;
+struct positiveNegativeSlider sAccelerationLeftRightSliders;
+struct positiveNegativeSlider sRollForwardBackwardSliders;
+struct positiveNegativeSlider sPitchLeftRightSliders;
 
 // to avoid redraw, if the value did not change
 int sAcceleratorForwardBackwardValue = 0;
@@ -170,14 +181,11 @@ void setup() {
 # endif
 #endif
 
-#if defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER) && defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER)
-#warning We can only plot one sensor, but both are enabled -> plot only accelerometer.
-#undef SHOW_GYROSCOPE_VALUES_ON_PLOTTER
-#endif
-
 #if defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER)
+    Serial.println();
     Serial.println(F("Acceleration_X Acceleration_Y Acceleration_Z")); // Caption for Plotter
 #elif defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER)
+    Serial.println();
     Serial.println(F("Roll Pitch Yaw")); // Caption for Plotter
 #endif
 }
@@ -207,46 +215,15 @@ void doAccelerometerChange(struct SensorCallback * aSensorCallbackInfo) {
     Serial.println();
 #else
     /*
-     * Show values on 4 sliders
+     * Show values on 4 sliders, no dead band applied
      */
     // scale value for full scale = SLIDER_BAR_LENGTH at at 30 degree
     int tLeftRightValue = aSensorCallbackInfo->ValueX * ((SLIDER_BAR_LENGTH) / 10);
-    if (sLastAcceleratorLeftRightValue != tLeftRightValue) {
-        bool tSignChanged = (sLastAcceleratorLeftRightValue ^ tLeftRightValue) < 0;
-        sLastAcceleratorLeftRightValue = tLeftRightValue;
-        if (tLeftRightValue > 0) {
-            sLastAcceleratorLeftSliderValue = tLeftRightValue;
-            SliderAccelerationLeft.setValueAndDrawBar(tLeftRightValue);
-            if (tSignChanged) {
-                SliderAccelerationRight.setValueAndDrawBar(0);
-            }
-        } else {
-            sLastAcceleratorRightSliderValue = -tLeftRightValue;
-            SliderAccelerationRight.setValueAndDrawBar(-tLeftRightValue);
-            if (tSignChanged) {
-                SliderAccelerationLeft.setValueAndDrawBar(0);
-            }
-        }
-    }
+    setPositiveNegativeSliders(&sAccelerationLeftRightSliders, tLeftRightValue, 0);
 
     int tForwardBackwardValue = aSensorCallbackInfo->ValueY * ((SLIDER_BAR_LENGTH) / 10);
-    if (sAcceleratorForwardBackwardValue != tForwardBackwardValue) {
-        bool tSignChanged = (sAcceleratorForwardBackwardValue ^ tForwardBackwardValue) < 0;
-        sAcceleratorForwardBackwardValue = tForwardBackwardValue;
-        if (tForwardBackwardValue > 0) {
-            sLastAcceleratorBackwardSliderValue = tForwardBackwardValue;
-            SliderAccelerationBackward.setValueAndDrawBar(tForwardBackwardValue);
-            if (tSignChanged) {
-                SliderAccelerationForward.setValueAndDrawBar(0);
-            }
-        } else {
-            sLastAcceleratorForwardSliderValue = -tForwardBackwardValue;
-            SliderAccelerationForward.setValueAndDrawBar(-tForwardBackwardValue);
-            if (tSignChanged) {
-                SliderAccelerationBackward.setValueAndDrawBar(0);
-            }
-        }
-    }
+    setPositiveNegativeSliders(&sAccelerationForwardBackwardSliders, tForwardBackwardValue, 0);
+
     uint16_t tYPos = ACCELERATION_SLIDER_CENTER_Y + 2 * TEXT_SIZE_11_HEIGHT;
     dtostrf(aSensorCallbackInfo->ValueX, 4, 1, &sStringBuffer[10]);
     sprintf_P(sStringBuffer, PSTR("Acc.X %s"), &sStringBuffer[10]);
@@ -292,39 +269,13 @@ void doGyroscopeChange(struct SensorCallback * aSensorCallbackInfo) {
      */
     // scale value for full scale = SLIDER_BAR_LENGTH at at 3.3
     int tLeftRightValue = aSensorCallbackInfo->ValueY * ((SLIDER_BAR_LENGTH * 5) / 10);
-    if (sLastGyroscopeLeftRightValue != tLeftRightValue) {
-        bool tSignChanged = (sLastGyroscopeLeftRightValue ^ tLeftRightValue) < 0;
-        sLastGyroscopeLeftRightValue = tLeftRightValue;
-        if (tLeftRightValue > 0) {
-            SliderPitchRight.setValueAndDrawBar(tLeftRightValue);
-            if (tSignChanged) {
-                // clear bar by overwrite wit accelerator value
-                SliderAccelerationLeft.setValueAndDrawBar(sLastAcceleratorLeftSliderValue);
-            }
-        } else {
-            SliderPitchLeft.setValueAndDrawBar(-tLeftRightValue);
-            if (tSignChanged) {
-                SliderAccelerationRight.setValueAndDrawBar(sLastAcceleratorRightSliderValue);
-            }
-        }
-    }
+    sPitchLeftRightSliders.lastSliderValue = 0; // draw always slider if value != 0
+    setPositiveNegativeSliders(&sPitchLeftRightSliders, tLeftRightValue, 0);
 
     int tForwardBackwardValue = aSensorCallbackInfo->ValueX * ((SLIDER_BAR_LENGTH * 5) / 10);
-    if (sGyroscopeForwardBackwardValue != tForwardBackwardValue) {
-        bool tSignChanged = (sGyroscopeForwardBackwardValue ^ tForwardBackwardValue) < 0;
-        sGyroscopeForwardBackwardValue = tForwardBackwardValue;
-        if (tForwardBackwardValue > 0) {
-            SliderRollBackward.setValueAndDrawBar(tForwardBackwardValue);
-            if (tSignChanged) {
-                SliderAccelerationForward.setValueAndDrawBar(sLastAcceleratorForwardSliderValue);
-            }
-        } else {
-            SliderRollForward.setValueAndDrawBar(-tForwardBackwardValue);
-            if (tSignChanged) {
-                SliderAccelerationBackward.setValueAndDrawBar(sLastAcceleratorBackwardSliderValue);
-            }
-        }
-    }
+    sRollForwardBackwardSliders.lastSliderValue = 0;
+    setPositiveNegativeSliders(&sRollForwardBackwardSliders, tForwardBackwardValue, 0);
+
     uint16_t tYPos = ACCELERATION_SLIDER_CENTER_Y + 2 * TEXT_SIZE_11_HEIGHT;
     dtostrf(aSensorCallbackInfo->ValueX, 4, 1, &sStringBuffer[10]);
     sprintf_P(sStringBuffer, PSTR("Roll  %s"), &sStringBuffer[10]);
@@ -357,6 +308,9 @@ void initDisplay(void) {
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, DISPLAY_WIDTH,
     DISPLAY_HEIGHT);
 
+    // Screen orientation is fixed to the orientation at connect time
+    BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_CURRENT);
+
     // FLAG_SENSOR_DELAY_UI -> 60 ms sensor rate, FLAG_SENSOR_DELAY_NORMAL -> 200 ms sensor rate
 #if !defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER)
     registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_NORMAL, FLAG_SENSOR_SIMPLE_FILTER,
@@ -368,33 +322,34 @@ void initDisplay(void) {
 
 #if !(defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER) || defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER))
 
-    // Screen orientation is fixed to the orientation at connect time
-    BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_CURRENT);
-
     /*
-     * 4 Slider
+     * 4 Slider positioned as a cross
      */
-// Position Slider at middle of screen
-// Top slider
+    // Top slider
     SliderAccelerationForward.init(ACCELERATION_SLIDER_LEFT_X, ACCELERATION_SLIDER_CENTER_Y - SLIDER_BAR_LENGTH,
     SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH, SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_GREEN, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+//    SliderAccelerationForward.setBarThresholdDefaultColor(COLOR_BLUE); // since app version 4.3
     SliderAccelerationForward.setBarThresholdColor(COLOR_BLUE);
+    sAccelerationForwardBackwardSliders.negativeSliderPtr = &SliderAccelerationForward;
 
-// Bottom slider
+    // Bottom inverse slider (length is negative)
     SliderAccelerationBackward.init(ACCELERATION_SLIDER_LEFT_X, ACCELERATION_SLIDER_CENTER_Y,
     SLIDER_BAR_WIDTH, -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_GREEN, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderAccelerationBackward.setBarThresholdColor(COLOR_BLUE);
+    sAccelerationForwardBackwardSliders.positiveSliderPtr = &SliderAccelerationBackward;
 
-// slider right from velocity at middle of screen
+    // slider right from forward
     SliderAccelerationRight.init(ACCELERATION_SLIDER_RIGHT_X, ACCELERATION_SLIDER_TOP_Y, SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH,
     SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderAccelerationRight.setBarThresholdColor(COLOR_BLUE);
+    sAccelerationLeftRightSliders.negativeSliderPtr = &SliderAccelerationRight;
 
-// Position inverse slider left from Velocity at middle of screen
+    // Position inverse slider left from forward
     SliderAccelerationLeft.init(ACCELERATION_SLIDER_LEFT_X - SLIDER_BAR_LENGTH, ACCELERATION_SLIDER_TOP_Y, SLIDER_BAR_WIDTH,
             -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_GREEN,
             FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderAccelerationLeft.setBarThresholdColor(COLOR_BLUE);
+    sAccelerationLeftRightSliders.positiveSliderPtr = &SliderAccelerationLeft;
 
     /*
      * This 4 sliders are thinner and overlay the acceleration sliders
@@ -404,20 +359,25 @@ void initDisplay(void) {
             FLAG_SLIDER_IS_ONLY_OUTPUT,
             NULL);
     SliderRollForward.setBarThresholdColor(COLOR_BLUE);
+    sRollForwardBackwardSliders.negativeSliderPtr = &SliderRollForward;
 
     SliderRollBackward.init(ROLL_PITCH_YAW_SLIDER_LEFT_X, ROLL_PITCH_YAW_SLIDER_CENTER_Y, ROLL_PITCH_YAW_SLIDER_BAR_WIDTH,
             -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_RED, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderRollBackward.setBarThresholdColor(COLOR_BLUE);
+    sRollForwardBackwardSliders.positiveSliderPtr = &SliderRollBackward;
 
     SliderPitchRight.init(ACCELERATION_SLIDER_RIGHT_X, ROLL_PITCH_YAW_SLIDER_TOP_Y, ROLL_PITCH_YAW_SLIDER_BAR_WIDTH,
     SLIDER_BAR_LENGTH,
     SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_RED, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderPitchRight.setBarThresholdColor(COLOR_BLUE);
+    sPitchLeftRightSliders.positiveSliderPtr = &SliderPitchRight;
 
     SliderPitchLeft.init(ACCELERATION_SLIDER_LEFT_X - SLIDER_BAR_LENGTH, ROLL_PITCH_YAW_SLIDER_TOP_Y,
     ROLL_PITCH_YAW_SLIDER_BAR_WIDTH, -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_RED,
             FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderPitchLeft.setBarThresholdColor(COLOR_BLUE);
+    sPitchLeftRightSliders.negativeSliderPtr = &SliderPitchLeft;
+
 #endif
 }
 

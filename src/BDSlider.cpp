@@ -41,7 +41,7 @@ BDSlider::BDSlider(void) { // @suppress("Class members should be properly initia
 }
 
 #ifdef LOCAL_DISPLAY_EXISTS
-BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider * aLocalSliderPointer) {
+BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPointer) {
     mSliderHandle = aSliderHandle;
     mLocalSliderPointer = aLocalSliderPointer;
 }
@@ -54,6 +54,7 @@ BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider * aLocalSliderPoi
  * Only next 2 values are physical values in pixel
  * @param aBarWidth - Width of bar (and border) in pixel - no scaling!
  * @param aBarLength - Size of slider bar in pixel = maximum slider value if no scaling applied!
+ *                     Negative means slider bar is top down an is equivalent to positive with FLAG_SLIDER_IS_INVERSE.
  * @param aThresholdValue - Scaling applied! If selected or sent value is bigger, then color of bar changes from BarColor to BarBackgroundColor
  * @param aInitalValue - Scaling applied!
  * @param aSliderColor - Color of slider border. If no border specified, then bar background color.
@@ -165,6 +166,19 @@ void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
     }
 }
 
+/*
+ * Default threshold color is COLOR_RED initially
+ */
+void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) {
+#ifdef LOCAL_DISPLAY_EXISTS
+    mLocalSliderPointer->setBarThresholdColor(aBarThresholdColor);
+#endif
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgs(FUNCTION_SLIDER_GLOBAL_SETTINGS, 2, SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD,
+                aBarThresholdDefaultColor);
+    }
+}
+
 void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
 #ifdef LOCAL_DISPLAY_EXISTS
     mLocalSliderPointer->setBarBackgroundColor(aBarBackgroundColor);
@@ -189,7 +203,7 @@ void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositi
     }
 }
 
-void BDSlider::setCaption(const char * aCaption) {
+void BDSlider::setCaption(const char *aCaption) {
 #ifdef LOCAL_DISPLAY_EXISTS
     mLocalSliderPointer->setCaption(aCaption);
 #endif
@@ -202,7 +216,7 @@ void BDSlider::setCaption(const char * aCaption) {
  * Sets the unit behind the value e.g. cm or mph
  * This unit string is always appended to the value string.
  */
-void BDSlider::setValueUnitString(const char * aValueUnitString) {
+void BDSlider::setValueUnitString(const char *aValueUnitString) {
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_VALUE_UNIT_STRING, 1, mSliderHandle, strlen(aValueUnitString),
                 aValueUnitString);
@@ -213,7 +227,7 @@ void BDSlider::setValueUnitString(const char * aValueUnitString) {
  * This format string is used in (Java) String.format(mValueFormatString, mCurrentValue) which uses the printf specs.
  * Default is "%2d" for a slider with virtual slider length from 10 to 99 and "%3d" for length 100 to 999.
  */
-void BDSlider::setValueFormatString(const char * aValueFormatString) {
+void BDSlider::setValueFormatString(const char *aValueFormatString) {
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING, 1, mSliderHandle, strlen(aValueFormatString),
                 aValueFormatString);
@@ -238,6 +252,7 @@ void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPri
 /*
  * Scale factor of 2 means, that the slider is virtually 2 times larger than displayed.
  * => values were divided by scale factor before displayed on real slider.
+ * formula aScaleFactor = virtualLength / realLength
  */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
@@ -260,7 +275,7 @@ void BDSlider::setValueScaleFactor(float aScaleFactorValue) {
 }
 #pragma GCC diagnostic pop
 
-void BDSlider::printValue(const char * aValueString) {
+void BDSlider::printValue(const char *aValueString) {
 #ifdef LOCAL_DISPLAY_EXISTS
     mLocalSliderPointer->printValue(aValueString);
 #endif
@@ -333,5 +348,59 @@ void BDSlider::deactivateAllSliders(void) {
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_DEACTIVATE_ALL, 0);
     }
+}
+
+/*
+ * Utility functions
+ */
+
+void initPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, BDSlider *aPositiveSliderPtr,
+        BDSlider *aNegativeSliderPtr) {
+    aSliderStructPtr->positiveSliderPtr = aPositiveSliderPtr;
+    aSliderStructPtr->negativeSliderPtr = aNegativeSliderPtr;
+}
+
+/*
+ * @return aValue with aSliderDeadBand applied
+ */
+int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, int aValue, uint8_t aSliderDeadBand) {
+    BDSlider *tValueSlider = aSliderStructPtr->positiveSliderPtr;
+    BDSlider *tZeroSlider = aSliderStructPtr->negativeSliderPtr;
+    if (aValue < 0) {
+        aValue = -aValue;
+        tValueSlider = tZeroSlider;
+        tZeroSlider = aSliderStructPtr->positiveSliderPtr;
+    }
+
+    /*
+     * Now we have a positive value for dead band and slider length
+     */
+    if (aValue > aSliderDeadBand) {
+        // dead band subtraction -> resulting values start at 0
+        aValue -= aSliderDeadBand;
+    } else {
+        aValue = 0;
+    }
+
+    /*
+     * Draw slider value if values changed
+     */
+    if (aSliderStructPtr->lastSliderValue != aValue) {
+        aSliderStructPtr->lastSliderValue = aValue;
+        tValueSlider->setValueAndDrawBar(aValue);
+        if (aSliderStructPtr->lastZeroSlider != tZeroSlider) {
+            aSliderStructPtr->lastZeroSlider = tZeroSlider;
+            // the sign has changed, clear old value
+            tZeroSlider->setValueAndDrawBar(0);
+        }
+    }
+
+    /*
+     * Restore sign for aValue with dead band applied
+     */
+    if (tZeroSlider == aSliderStructPtr->positiveSliderPtr) {
+        aValue = -aValue;
+    }
+    return aValue;
 }
 

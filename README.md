@@ -85,6 +85,7 @@ More elaborated example to show more features of the BlueDisplay library.
 
 ## ShowSensorValues
 Shows the accelerometer and gyroscope values received from the smartphone both graphical and numerical.
+Plotter output of accelerometer
 ![Plotter output of accelerometer](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/AccelerometerOnPlotter.png)
 
 ## BTModuleProgrammer
@@ -155,6 +156,10 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ### Version 2.2.0 - work in progress
 - Changed default serial for AVR from `USE_SIMPLE_SERIAL` to standard Arduino Serial.
 - Added ShowSensorValues example.
+- Renamed mReferenceDisplaySize to mRequestedDisplaySize and renamed related function to getRequestedDisplaySize().
+- New function `setBarThresholdDefaultColor`. Requires BlueDisplay app version 4.3.
+- New function `setPositiveNegativeSliders(..., aValue, aSliderDeadBand)`.
+- Renamed `setPrintf*` functions to `setWriteString*`.
 
 ### Version 2.1.1
 - New function `setCaptionFromStringArrayPGM()`.
@@ -169,11 +174,11 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 
 ### Version 1.3.0
 - Added `sMillisOfLastReceivedBDEvent` for user timeout detection.
-- Fixed bug in `debug(const char* aMessage, float aFloat)`.
-- Added `*LOCK_SENSOR_LANDSCAPE` and `*LOCK_SENSOR_LANDSCAPE` in function `setScreenOrientationLock()`. Needs BD app version 4.2.
+- Fixed bug in `debug(const char *aMessage, float aFloat)`.
+- Added `*LOCK_SENSOR_LANDSCAPE` and `*LOCK_SENSOR_LANDSCAPE` in function `setScreenOrientationLock()`. Requires BlueDisplay app version 4.2.
 - Removed unused `mCurrentDisplayHeight` and `mCurrentDisplayWidth` member variables.
 - Fixed bug in draw function from `drawByte` to `drawLong`.
-- Added short `drawText` functions. Needs BD app version 4.2.
+- Added short `drawText` functions. Requires BlueDisplay app version 4.2.
 
 ### Version 1.2.0
 - Use type `Print *` instead of `Stream *`.
