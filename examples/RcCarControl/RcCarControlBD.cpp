@@ -292,7 +292,7 @@ void BDsetup() {
     initSerial(BLUETOOTH_BAUD_RATE);
 
     // Register callback handler and check for connection
-    BlueDisplay1.initCommunication(&initDisplay, &initDisplay, &drawGui);
+    BlueDisplay1.initCommunication(&initDisplay, &drawGui, &initDisplay);
 
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.

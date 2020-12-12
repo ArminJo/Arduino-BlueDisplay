@@ -39,7 +39,7 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 
 ## Which Serial interface?
 For boards which have more than one serial interface, the library tries to use **Serial1** for the connection to leave Serial, which is mostly connected to the USB, for other purposes as logging etc..
-If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must open the library file *BlueSerial.h* and comment out the line [`#define USE_USB_SERIAL`](src/BlueSerial.h#L52).<br/>
+If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must open the library file *BlueSerial.h* and comment out the line [`#define USE_USB_SERIAL`](src/BlueSerial.h#L51).<br/>
 Another way is to define/enable `USE_SIMPLE_SERIAL` in *BlueSerial.h* and **modify the central serial interface function**. You only have to change the [first 2 lines](src/BlueSerial.cpp#L192) of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
 
 # Sensor axis for an Arduino application
@@ -59,14 +59,14 @@ Modify it by commenting them out or in, or change the values if applicable. Or d
 | `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | EventHandler.h | Saves up to 620 bytes FLASH and 36 bytes RAM. |
 | `USE_SIMPLE_SERIAL` | disabled | BlueSerial.h | Saves up to 1250 bytes FLASH and 185 bytes RAM. |
 
-### Modifying library properties with Arduino IDE
-First use *Sketch/Show Sketch Folder (Ctrl+K)*.<br/>
+### Modifying compile options with Arduino IDE
+First use *Sketch > Show Sketch Folder (Ctrl+K)*.<br/>
 If you did not yet stored the example as your own sketch, then you are instantly in the right library folder.<br/>
 Otherwise you have to navigate to the parallel `libraries` folder and select the library you want to access.<br/>
 In both cases the library files itself are located in the `src` directory.<br/>
 
-### Modifying library properties with Sloeber IDE
-If you are using Sloeber as your IDE, you can easily define global symbols with *Properties/Arduino/CompileOptions*.<br/>
+### Modifying compile options with Sloeber IDE
+If you are using Sloeber as your IDE, you can easily define global symbols with *Properties > Arduino > CompileOptions*.<br/>
 ![Sloeber settings](https://github.com/ArminJo/ServoEasing/blob/master/pictures/SloeberDefineSymbols.png)
 
 # [Examples](examples)
@@ -90,6 +90,7 @@ Plotter output of accelerometer
 
 ## BTModuleProgrammer
 Simple helper program to configure your HC-05 or JDY-31 modules name and default baudrate with a serial monitor.
+It can also be used to enter AT commands directly to the BT module for extended manual programming.
 
 ## RcCarControl
 Example of controlling a RC-car by smartphone accelerometer sensor.
@@ -110,7 +111,7 @@ Not for STM32.
 ## US_Distance
 Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a parking assistance.
 
-## Random delays
+## Random delays on some smartphones
 Depending on the device you use, you can observe some random **"delays"** up to 500 ms in the timing of the display refresh. 
 The **delays does not occur if you use a USB connection** instead of the Bluetooth one.<br/>
 The reason is, that the Bluetooth driver does not return its received bytes for a longer time.<br/>
@@ -123,7 +124,7 @@ Known devices **without** these "delays" are:<br/>
 Samsung Note 3 running 5.0, Lifetab P9702 running 7.1.2, Lifetab E10310 running 4.2.2, XORO PAD 721 running 4.2.2, Samsung Galaxy S3 GT-I9300 running Lineage 7.1.2, LUX10 running 5.0, iRULU X11 running 5.1.1, Time2 TC1050G running 5.1, Pixel 4 XL running 10, 
 
 ## Extras
-The extras folder (in the Arduino IDE use "Sketch/Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
+The extras folder (in the Arduino IDE use "Sketch > Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
 contains more schematics, breadboard layouts and pictures which may help you building the example projects.
 
 ## Hints
@@ -160,6 +161,7 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 - New function `setBarThresholdDefaultColor`. Requires BlueDisplay app version 4.3.
 - New function `setPositiveNegativeSliders(..., aValue, aSliderDeadBand)`.
 - Renamed `setPrintf*` functions to `setWriteString*`.
+- Switched last 2 parameters in `initCommunication(`) and the 3. parameter is now optional.
 
 ### Version 2.1.1
 - New function `setCaptionFromStringArrayPGM()`.
@@ -170,7 +172,7 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 - New command `FUNCTION_CLEAR_DISPLAY_OPTIONAL` to enable resynchronization of slow displays. Used by SimpleTouchScreenDSO.
 
 ### Version 2.0.0
-- ESP32 and ESP8266 support added. External BT module needed for ESP8266.
+- ESP32 and ESP8266 support added. External BT module required for ESP8266.
 
 ### Version 1.3.0
 - Added `sMillisOfLastReceivedBDEvent` for user timeout detection.

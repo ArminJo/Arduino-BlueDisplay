@@ -61,24 +61,18 @@ void BlueDisplay::resetLocal(void) {
     BDSlider::resetAllSliders();
 }
 
-/*
- * Simple version. Reorientation callback function is only required if we have a responsive layout,
- * since reorientation event also calls the redraw callback.
- */
-void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aRedrawCallback)(void)) {
-    initCommunication(aConnectCallback, NULL, aRedrawCallback);
-}
-
 /**
  * Sets callback handler and calls host for requestMaxCanvasSize().
  * This results in a EVENT_REQUESTED_DATA_CANVAS_SIZE callback event, which sends display size and local timestamp.
  * This event calls the ConnectCallback as well as the RedrawCallback.
  *
  * Waits for 300 ms for connection to be established -> bool BlueDisplay1.mConnectionEstablished
+ *
+ * Reorientation callback function is only required if we have a responsive layout,
+ * since connect and reorientation event also calls the redraw callback.
  */
-// TODO switch last 2 parameters and make one function with 3. parameter optional
-void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aReorientationCallback)(void),
-        void (*aRedrawCallback)(void)) {
+void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aRedrawCallback)(void),
+        void (*aReorientationCallback)(void)) {
     registerConnectCallback(aConnectCallback);
     registerReorientationCallback(aReorientationCallback);
     registerRedrawCallback(aRedrawCallback);
@@ -187,7 +181,7 @@ void BlueDisplay::playTone(uint8_t aToneIndex) {
 
 /*
  * aToneDuration -1 means forever
- * but except the value -1 aToneDuration is taken as unsigned so -2 will give 65534 millis
+ * but except the value -1 aToneDuration is taken as unsigned so -2 will give 65534 micros
  */
 void BlueDisplay::playTone(uint8_t aToneIndex, int16_t aToneDuration) {
     if (USART_isBluetoothPaired()) {
@@ -197,7 +191,7 @@ void BlueDisplay::playTone(uint8_t aToneIndex, int16_t aToneDuration) {
 
 /*
  * aToneDuration -1 means forever
- * but except the value -1 aToneDuration is taken as unsigned so -2 will give 65534 millis
+ * but except the value -1 aToneDuration is taken as unsigned so -2 will give 65534 micros
  */
 void BlueDisplay::playTone(uint8_t aToneIndex, int16_t aToneDuration, uint8_t aToneVolume) {
     if (USART_isBluetoothPaired()) {
@@ -543,7 +537,7 @@ uint16_t BlueDisplay::drawLong(uint16_t aPosX, uint16_t aPosY, int32_t aLong, ui
  * for writeString implementation
  */
 void BlueDisplay::setWriteStringSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
-        bool aClearOnNewScreen) {
+bool aClearOnNewScreen) {
 #ifdef LOCAL_DISPLAY_EXISTS
     printSetOptions(getLocalTextSize(aPrintSize), aPrintColor, aPrintBackgroundColor, aClearOnNewScreen);
 #endif
@@ -854,7 +848,7 @@ void BlueDisplay::drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, colo
     }
 }
 
-struct XYSize *BlueDisplay::getMaxDisplaySize(void) {
+struct XYSize* BlueDisplay::getMaxDisplaySize(void) {
     return &mMaxDisplaySize;
 }
 
@@ -866,7 +860,7 @@ uint16_t BlueDisplay::getMaxDisplayHeight(void) {
     return mMaxDisplaySize.YHeight;
 }
 
-struct XYSize *BlueDisplay::getCurrentDisplaySize(void) {
+struct XYSize* BlueDisplay::getCurrentDisplaySize(void) {
     return &mCurrentDisplaySize;
 }
 
@@ -878,7 +872,7 @@ uint16_t BlueDisplay::getCurrentDisplayHeight(void) {
     return mCurrentDisplaySize.YHeight;
 }
 
-struct XYSize *BlueDisplay::getRequestedDisplaySize(void) {
+struct XYSize* BlueDisplay::getRequestedDisplaySize(void) {
     return &mRequestedDisplaySize;
 }
 
@@ -938,7 +932,7 @@ extern "C" uint16_t drawTextC(uint16_t aXStart, uint16_t aYStart, const char *aS
         uint16_t aBGColor) {
     uint16_t tRetValue = 0;
     if (USART_isBluetoothPaired()) {
-        tRetValue = BlueDisplay1.drawText(aXStart, aYStart, (char *) aStringPtr, aFontSize, aFGColor, aBGColor);
+        tRetValue = BlueDisplay1.drawText(aXStart, aYStart, (char*) aStringPtr, aFontSize, aFGColor, aBGColor);
     }
     return tRetValue;
 }
@@ -1230,7 +1224,7 @@ void BlueDisplay::setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSens
 
 BDButtonHandle_t BlueDisplay::createButton(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY,
         color16_t aButtonColor, const char *aCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-        void (*aOnTouchHandler)(BDButton *, int16_t)) {
+        void (*aOnTouchHandler)(BDButton*, int16_t)) {
     BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
 
     if (USART_isBluetoothPaired()) {
@@ -1409,7 +1403,7 @@ void BlueDisplay::setButtonCaptionPGM(BDButtonHandle_t aButtonNumber, const char
  */
 BDSliderHandle_t BlueDisplay::createSlider(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, int16_t aBarLength,
         int16_t aThresholdValue, int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
-        void (*aOnChangeHandler)(BDSliderHandle_t *, int16_t)) {
+        void (*aOnChangeHandler)(BDSliderHandle_t*, int16_t)) {
     BDSliderHandle_t tSliderNumber = sLocalSliderIndex++;
 
     if (USART_isBluetoothPaired()) {
@@ -1511,8 +1505,8 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
     BDSlider::deactivateAllSliders();
 }
 
-#ifdef AVR
 #include <Arduino.h>
+#if defined(AVR) && defined(ADCSRA) && defined(ADATE)
 
 /*
  * The next definitions and weak functions are copied from ADCUtils to avoid delivering two additional files
@@ -1634,7 +1628,7 @@ float __attribute__((weak)) getTemperature(void) {
  * Show temperature and VCC voltage
  */
 void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis) {
-    static uint32_t sMillisOfLastVCCInfo = 0;
+    static unsigned long sMillisOfLastVCCInfo = 0;
     uint32_t tMillis = millis();
 
     if ((tMillis - sMillisOfLastVCCInfo) >= aPeriodMillis) {
@@ -1654,7 +1648,23 @@ void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aY
         drawText(aXPos, aYPos, tDataBuffer, aTextSize, COLOR_BLACK, COLOR_WHITE);
     }
 }
-#endif
+#else
+// dummy functions for examples
+uint16_t __attribute__((weak)) readADCChannelWithReferenceOversample(uint8_t aChannelNumber, uint8_t aReference,
+        uint8_t aOversampleExponent) {
+    return 0;
+}
+float __attribute__((weak)) getTemperature(void) {
+    return 0.0;
+}
+float __attribute__((weak)) getVCCVoltage(void) {
+    return 0.0;
+}
+#  ifdef AVR
+void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis) {
+}
+#  endif
+#endif // defined(AVR) && defined(ADCSRA) && defined(ADATE)
 
 /***************************************************************************************************************************************************
  *

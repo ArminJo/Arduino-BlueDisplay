@@ -105,14 +105,24 @@ void (*sSensorChangeCallback)(uint8_t aEventType, struct SensorCallback *aSensor
 
 void copyDisplaySizeAndTimestamp(struct BluetoothEvent *aEvent);
 
-void registerConnectCallback(void (*aConnectCallback)(void)) {
-    sConnectCallback = aConnectCallback;
-}
 
+/*
+ * Is also called on Connect and Reorientation events
+ */
 void registerRedrawCallback(void (*aRedrawCallback)(void)) {
     sRedrawCallback = aRedrawCallback;
 }
 
+/*
+ * Connect event also calls redraw event
+ */
+void registerConnectCallback(void (*aConnectCallback)(void)) {
+    sConnectCallback = aConnectCallback;
+}
+
+/*
+ * Reorientation event also calls redraw event
+ */
 void registerReorientationCallback(void (*aReorientationCallback)(void)) {
     sReorientationCallback = aReorientationCallback;
 }

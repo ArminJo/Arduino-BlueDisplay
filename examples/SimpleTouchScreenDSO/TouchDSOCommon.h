@@ -380,7 +380,7 @@ void startSystemInfoPage(void);
 #endif
 
 // Text output section
-void printfTriggerDelay(char * aDataBufferPtr, uint16_t aTriggerDelayMillisOrMicros);
+void printfTriggerDelay(char *aDataBufferPtr, uint16_t aTriggerDelayMillisOrMicros);
 void printVCCAndTemperature(void);
 void clearInfo(uint8_t aOldMode);
 void printInfo(bool aRecomputeValues = true);
@@ -424,8 +424,8 @@ void doDrawMode(BDButton * aTheTouchedButton, int16_t aValue);
 #endif
 
 // Slider handler section
-void doTriggerLevel(BDSlider * aTheTouchedSlider, uint16_t aValue);
-void doVoltagePicker(BDSlider * aTheTouchedSlider, uint16_t aValue);
+void doTriggerLevel(BDSlider *aTheTouchedSlider, uint16_t aValue);
+void doVoltagePicker(BDSlider *aTheTouchedSlider, uint16_t aValue);
 
 // Button caption section
 #ifdef AVR

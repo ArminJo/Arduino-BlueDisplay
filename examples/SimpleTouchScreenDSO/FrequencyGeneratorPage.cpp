@@ -134,7 +134,7 @@ BDSlider TouchSliderFrequency;
 
 void initFrequencyGeneratorPageGui(void);
 
-void doFrequencySlider(BDSlider * aTheTouchedSlider, uint16_t aValue);
+void doFrequencySlider(BDSlider *aTheTouchedSlider, uint16_t aValue);
 
 void doWaveformMode(BDButton * aTheTouchedButton, int16_t aValue);
 void doSetFixedFrequency(BDButton * aTheTouchedButton, int16_t aValue);
@@ -238,7 +238,7 @@ void initFrequencyGeneratorPageGui() {
     uint16_t tFrequency;
 #ifdef AVR
     // captions are in PGMSPACE
-    const uint16_t * tFrequencyCaptionPtr = &FixedFrequencyButtonCaptions[0];
+    const uint16_t *tFrequencyCaptionPtr = &FixedFrequencyButtonCaptions[0];
     for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS; ++i) {
         tFrequency = pgm_read_word(tFrequencyCaptionPtr);
         sprintf_P(sStringBuffer, PSTR("%u"), tFrequency);
@@ -377,10 +377,10 @@ void setFrequencyNormalizedForGUI(float aGUIFrequencyValue) {
 /*
  * Slider handlers
  */
-void doFrequencySlider(BDSlider * aTheTouchedSlider, uint16_t aValue) {
+void doFrequencySlider(BDSlider *aTheTouchedSlider, uint16_t aValue) {
     float tValueFloat = aValue;
     tValueFloat = tValueFloat / (FREQ_SLIDER_MAX_VALUE / 3); // gives 0-3
-    // 950 byte program space needed for pow() and log10f()
+    // 950 byte program space required for pow() and log10f()
     tValueFloat = (pow(10, tValueFloat)); // normalize value to 1-1000
     setFrequencyNormalizedForGUI(tValueFloat);
     setWaveformFrequencyAndPrintValues();
@@ -535,7 +535,7 @@ void printFrequencyAndPeriod() {
     BlueDisplay1.drawText(FREQ_SLIDER_X, TEXT_SIZE_22_HEIGHT + 4 + TEXT_SIZE_22_ASCEND, sStringBuffer, TEXT_SIZE_22,
     COLOR_BLUE, COLOR_BACKGROUND_FREQ);
 
-// 950 byte program space needed for pow() and log10f()
+// 950 byte program space required for pow() and log10f()
     uint16_t tSliderValue;
     tSliderValue = log10f(sFrequencyInfo.FrequencyNormalized) * (FREQ_SLIDER_MAX_VALUE / 3);
     if (is10HzRange) {

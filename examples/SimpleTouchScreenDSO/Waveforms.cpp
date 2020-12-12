@@ -119,7 +119,7 @@ const char * cycleWaveformModePGMString() {
 }
 
 const char * getWaveformModePGMString() {
-    const char * tResultString;
+    const char *tResultString;
     tResultString = PSTR("Square");
     if (sFrequencyInfo.Waveform == WAVEFORM_SINE) {
         tResultString = PSTR("Sine");

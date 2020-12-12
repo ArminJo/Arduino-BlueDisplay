@@ -313,9 +313,8 @@ class BlueDisplay {
 public:
     BlueDisplay();
     void resetLocal(void);
-    void initCommunication(void (*aConnectCallback)(void), void (*aReorientationCallback)(void), void (*aRedrawCallback)(void));
-    // With combined callbacks
-    void initCommunication(void (*aConnectAndReorientationCallback)(void), void (*aRedrawCallback)(void));
+    void initCommunication(void (*aConnectCallback)(void), void (*aRedrawCallback)(void),
+            void (*aReorientationCallback)(void) = NULL);
     // The result of initCommunication
     bool isConnectionEstablished();
     void sendSync(void);

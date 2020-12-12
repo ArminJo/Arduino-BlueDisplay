@@ -103,7 +103,7 @@ BDSlider SliderLaserPower;
 // storage for laser analogWrite and laser slider value for next start if we stop laser
 uint8_t sLaserPowerValue;
 uint16_t sLastLaserSliderValue;
-void doLaserPowerSlider(BDSlider * aTheTouchedSlider, uint16_t aValue);
+void doLaserPowerSlider(BDSlider *aTheTouchedSlider, uint16_t aValue);
 
 /*
  * Vertical
@@ -148,8 +148,8 @@ char sStringBuffer[128];
 void initDisplay(void);
 void drawGui(void);
 
-void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallbackInfo);
-uint8_t getRandomValue(ServoControlStruct * aServoControlStruct, ServoEasing * aServoEasing);
+void doSensorChange(uint8_t aSensorType, struct SensorCallback *aSensorCallbackInfo);
+uint8_t getRandomValue(ServoControlStruct *aServoControlStruct, ServoEasing *aServoEasing);
 
 /*******************************************************************************************
  * Program code starts here
@@ -390,7 +390,7 @@ void drawGui(void) {
     TouchButtonServosStartStop.drawButton();
 }
 
-uint8_t getRandomValue(ServoControlStruct * aServoControlStruct, ServoEasing * aServoEasing) {
+uint8_t getRandomValue(ServoControlStruct *aServoControlStruct, ServoEasing *aServoEasing) {
     /*
      * get new different value
      */
@@ -406,11 +406,11 @@ uint8_t getRandomValue(ServoControlStruct * aServoControlStruct, ServoEasing * a
 /*
  * Use logarithmic scale: 0 -> 0, (sCurrentDisplayHeight / 2) -> 255
  */
-void doLaserPowerSlider(BDSlider * aTheTouchedSlider, uint16_t aValue) {
+void doLaserPowerSlider(BDSlider *aTheTouchedSlider, uint16_t aValue) {
     sLastLaserSliderValue = aValue;
     float tValue = aValue;
     tValue = (tValue * 5) / sCurrentDisplayHeight; // gives 0-2.5 for 0 - sCurrentDisplayHeight/2
-// 950 byte program space needed for pow() and log10f()
+// 950 byte program space required for pow() and log10f()
     tValue = pow(10, tValue);
     if (tValue > 255) {
         tValue = 255;

@@ -50,7 +50,7 @@ uint8_t sLastPickerValue;
 void computeMinMax(void) {
     uint16_t tMax, tMin;
 
-    uint16_t * tDataBufferPointer = DataBufferControl.DataBufferDisplayStart
+    uint16_t *tDataBufferPointer = DataBufferControl.DataBufferDisplayStart
     + adjustIntWithScaleFactor(DisplayControl.DatabufferPreTriggerDisplaySize, DisplayControl.XScale);
     if (DataBufferControl.DataBufferEndPointer <= tDataBufferPointer) {
         return;
@@ -138,7 +138,7 @@ void computePeriodFrequency(void) {
          * Use databuffer and only post trigger area!
          * For frequency use only max values!
          */
-        uint16_t * tDataBufferPointer = DataBufferControl.DataBufferDisplayStart
+        uint16_t *tDataBufferPointer = DataBufferControl.DataBufferDisplayStart
         + adjustIntWithScaleFactor(DisplayControl.DatabufferPreTriggerDisplaySize, DisplayControl.XScale);
         if (DataBufferControl.DataBufferEndPointer <= tDataBufferPointer) {
             return;
@@ -1046,7 +1046,7 @@ void clearTriggerLine(uint8_t aTriggerLevelDisplayValue) {
 #ifndef AVR
     if (!MeasurementControl.isRunning) {
         // in analysis mode restore graph at old y position
-        uint8_t* ScreenBufferPointer = &DisplayBuffer[0];
+        uint8_t *ScreenBufferPointer = &DisplayBuffer[0];
         for (unsigned int i = 0; i < REMOTE_DISPLAY_WIDTH; ++i) {
             int tValueByte = *ScreenBufferPointer++;
             if (tValueByte == aTriggerLevelDisplayValue) {
@@ -1247,7 +1247,7 @@ void setTriggerModeButtonCaption(void) {
 
 void setAutoRangeModeAndButtonCaption(bool aNewAutoRangeMode) {
     MeasurementControl.RangeAutomatic = aNewAutoRangeMode;
-    const char * tCaption;
+    const char *tCaption;
     if (MeasurementControl.RangeAutomatic) {
         tCaption = AutoRangeButtonStringAuto;
     } else {
@@ -1278,7 +1278,7 @@ void setTriggerDelayCaption(void) {
 }
 
 void setReferenceButtonCaption(void) {
-    const char * tCaption;
+    const char *tCaption;
     if (MeasurementControl.ADCReference == DEFAULT) {
         tCaption = ReferenceButtonVCC;
     } else {
@@ -1637,7 +1637,7 @@ void doStartSingleshot(BDButton * aTheTouchedButton, int16_t aValue) {
 /*
  * Slider is only activated if trigger mode == TRIGGER_MODE_MANUAL_TIMEOUT or TRIGGER_MODE_MANUAL
  */
-void doTriggerLevel(BDSlider * aTheTouchedSlider, uint16_t aValue) {
+void doTriggerLevel(BDSlider *aTheTouchedSlider, uint16_t aValue) {
 // to get display value take DISPLAY_VALUE_FOR_ZERO - aValue and vice versa
     aValue = DISPLAY_VALUE_FOR_ZERO - aValue;
     if (DisplayControl.TriggerLevelDisplayValue == aValue) {
@@ -1663,7 +1663,7 @@ void doTriggerLevel(BDSlider * aTheTouchedSlider, uint16_t aValue) {
 /*
  * The value printed has a resolution of 0,00488 * scale factor
  */
-void doVoltagePicker(BDSlider * aTheTouchedSlider, uint16_t aValue) {
+void doVoltagePicker(BDSlider *aTheTouchedSlider, uint16_t aValue) {
     if (sLastPickerValue == aValue) {
         return;
     }
@@ -1674,8 +1674,8 @@ void doVoltagePicker(BDSlider * aTheTouchedSlider, uint16_t aValue) {
 #ifndef AVR
     if (!MeasurementControl.isRunning) {
         // restore graph
-        uint8_t* ScreenBufferPointer = &DisplayBuffer[0];
-        uint8_t* ScreenBufferMinPointer = &DisplayBufferMin[0];
+        uint8_t *ScreenBufferPointer = &DisplayBuffer[0];
+        uint8_t *ScreenBufferMinPointer = &DisplayBufferMin[0];
         for (unsigned int i = 0; i < REMOTE_DISPLAY_WIDTH; ++i) {
             int tValueByte = *ScreenBufferPointer++;
             if (tValueByte == tYpos) {

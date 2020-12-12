@@ -336,7 +336,7 @@ void activateChartGui(void);
 // BUTTON handler section
 
 // Graphical output section
-void clearDisplayedChart(uint8_t * aDisplayBufferPtr);
+void clearDisplayedChart(uint8_t *aDisplayBufferPtr);
 void drawRemainingDataBufferValues(void);
 
 //Hardware support section
@@ -360,7 +360,7 @@ void initDisplay(void) {
     BlueDisplay1.setCharacterMapping(0xD2, 0x21D3); // Descending in UTF16 - for printInfo()
     BlueDisplay1.setCharacterMapping(0xD4, 0x2227); // UP (logical AND) in UTF16
     BlueDisplay1.setCharacterMapping(0xD5, 0x2228); // Down (logical OR) in UTF16
-    //    BlueDisplay1.setCharacterMapping(0xF8, 0x2103); // Degree Celsius in UTF16
+    //\xB0 is degree character
     //BlueDisplay1.setButtonsTouchTone(TONE_PROP_BEEP_OK, 80);
     initDSOGUI();
 #if !defined(__AVR_ATmega32U4__)
@@ -720,7 +720,7 @@ void __attribute__((noreturn)) loop(void) {
                     DisplayControl.DisplayPage = DISPLAY_PAGE_SETTINGS;
                     redrawDisplay();
                 } else {
-                    //not needed here, because is contains only checkAndHandleEvents()
+                    //not required here, because is contains only checkAndHandleEvents()
                     // loopFrequencyGeneratorPage();
                 }
             }
@@ -1272,7 +1272,7 @@ ISR(ADC_vect) {
             // start new conversion
             ADCSRA = _BV(ADEN) | _BV(ADATE) | _BV(ADSC) | _BV(ADIF) | MeasurementControl.TimebaseHWValue | _BV(ADIE);
         } else {
-            // delay of greater (160 - (10 to 17)) was needed so just ignore this ADC value and take next value as first one
+            // delay of greater (160 - (10 to 17)) was required so just ignore this ADC value and take next value as first one
             ADCSRA = _BV(ADEN) | _BV(ADATE) | _BV(ADSC) | _BV(ADIF) | MeasurementControl.TimebaseHWValue | _BV(ADIE);
 #ifdef DEBUG_ISR_TIMING
             digitalWriteFast(DEBUG_PIN, LOW);
@@ -1298,7 +1298,7 @@ ISR(ADC_vect) {
         MeasurementControl.ValueMinForISR = tUValue.Word;
     }
 
-    uint8_t * tDataBufferPointer = DataBufferControl.DataBufferNextInPointer;
+    uint8_t *tDataBufferPointer = DataBufferControl.DataBufferNextInPointer;
     /*
      * c code (see line below) needs 5 register more (to push and pop)#
      * so do it with assembler and 1 additional register (for high byte :-()
@@ -1696,7 +1696,7 @@ void doStartStopDSO(__attribute__((unused))    BDButton * aTheTouchedButton, __a
             /*
              * Stop requested 2 times -> stop immediately
              */
-            uint8_t* tEndPointer = DataBufferControl.DataBufferNextInPointer;
+            uint8_t *tEndPointer = DataBufferControl.DataBufferNextInPointer;
             DataBufferControl.DataBufferEndPointer = tEndPointer;
             // clear trailing buffer space not used
             memset(tEndPointer, 0xFF, ((uint8_t*) &DataBufferControl.DataBuffer[DATABUFFER_SIZE]) - ((uint8_t*) tEndPointer));
@@ -1742,7 +1742,7 @@ uint8_t scrollChart(int aScrollAmount) {
         DataBufferControl.DataBufferDisplayStart = &DataBufferControl.DataBuffer[0];
         isError = true;
     } else {
-        uint8_t * tMaxAddress = &DataBufferControl.DataBuffer[DATABUFFER_SIZE];
+        uint8_t *tMaxAddress = &DataBufferControl.DataBuffer[DATABUFFER_SIZE];
         if (MeasurementControl.TimebaseIndex < TIMEBASE_NUMBER_OF_FAST_MODES) {
             // Only half of data buffer is filled
             tMaxAddress = &DataBufferControl.DataBuffer[DATABUFFER_SIZE / 2];
@@ -1760,10 +1760,10 @@ uint8_t scrollChart(int aScrollAmount) {
 
 void drawDataBuffer(uint8_t *aByteBuffer, uint16_t aColor, uint16_t aClearBeforeColor) {
     uint8_t tXScale = DisplayControl.XScale;
-    uint8_t * tBufferPtr = aByteBuffer;
+    uint8_t *tBufferPtr = aByteBuffer;
     if (tXScale > 1) {
         // expand - show value several times
-        uint8_t * tDisplayBufferPtr = &DataBufferControl.DisplayBuffer[0];
+        uint8_t *tDisplayBufferPtr = &DataBufferControl.DisplayBuffer[0];
         uint8_t tXScaleCounter = tXScale;
         uint8_t tValue = *tBufferPtr++;
         for (uint16_t i = 0; i < sizeof(DataBufferControl.DisplayBuffer); ++i) {
@@ -1779,7 +1779,7 @@ void drawDataBuffer(uint8_t *aByteBuffer, uint16_t aColor, uint16_t aClearBefore
     BlueDisplay1.drawChartByteBuffer(0, 0, aColor, aClearBeforeColor, tBufferPtr, sizeof(DataBufferControl.DisplayBuffer));
 }
 
-void clearDisplayedChart(uint8_t * aDisplayBufferPtr) {
+void clearDisplayedChart(uint8_t *aDisplayBufferPtr) {
     BlueDisplay1.drawChartByteBuffer(0, 0, COLOR_BACKGROUND_DSO, COLOR_NO_BACKGROUND, aDisplayBufferPtr,
             sizeof(DataBufferControl.DisplayBuffer));
 }
@@ -1791,7 +1791,7 @@ void clearDataBuffer() {
  * Draws only one chart value - used for drawing while sampling
  */
 void drawRemainingDataBufferValues(void) {
-// check if end of display buffer reached - needed for last acquisition which uses the whole data buffer
+// check if end of display buffer reached - required for last acquisition which uses the whole data buffer
     uint8_t tLastValueByte;
     uint8_t tNextValueByte;
     uint8_t tValueByte;
@@ -1831,7 +1831,7 @@ void drawRemainingDataBufferValues(void) {
 /*
  * Move 2 digits to front and set thousand separator
  */
-void formatThousandSeparator(char * aThousandPosition) {
+void formatThousandSeparator(char *aThousandPosition) {
     char tNewChar;
     char tOldChar = *aThousandPosition;
 //set separator for thousands
@@ -1846,7 +1846,7 @@ void formatThousandSeparator(char * aThousandPosition) {
 /*
  * prints a period to a 9 character string and sets the thousand separator
  */
-void printfMicrosPeriod(char * aDataBufferPtr, uint32_t aPeriod) {
+void printfMicrosPeriod(char *aDataBufferPtr, uint32_t aPeriod) {
     char tPeriodUnitChar;
     uint16_t tPeriod;
     if (aPeriod >= 50000l) {
@@ -1865,7 +1865,7 @@ void printfMicrosPeriod(char * aDataBufferPtr, uint32_t aPeriod) {
 /*
  * prints TriggerDelayMillisOrMicros with right unit according to TriggerDelayMode to a character string and sets the thousand separator
  */
-void printfTriggerDelay(char * aDataBufferPtr, uint16_t aTriggerDelayMillisOrMicros) {
+void printfTriggerDelay(char *aDataBufferPtr, uint16_t aTriggerDelayMillisOrMicros) {
     char tPeriodUnitChar;
     if (MeasurementControl.TriggerDelayMode == TRIGGER_DELAY_MILLIS) {
         tPeriodUnitChar = 'm'; // milli
@@ -2119,7 +2119,7 @@ void initStackFreeMeasurement(void) {
     extern void * __brkval;
     uint8_t v;
 
-    uint8_t * tHeapPtr = (uint8_t *) __brkval;
+    uint8_t *tHeapPtr = (uint8_t *) __brkval;
     if (tHeapPtr == 0) {
         tHeapPtr = (uint8_t *) &__heap_start;
     }
@@ -2138,7 +2138,7 @@ uint16_t getStackFreeMinimumBytes(void) {
     extern void * __brkval;
     uint8_t tDummyVariableOnStack;
 
-    uint8_t * tHeapPtr = (uint8_t *) __brkval;
+    uint8_t *tHeapPtr = (uint8_t *) __brkval;
     if (tHeapPtr == 0) {
         tHeapPtr = (uint8_t *) &__heap_start;
     }
@@ -2383,7 +2383,7 @@ void setChannel(uint8_t aChannel) {
     MeasurementControl.ChannelHasAC_DCSwitch = tHasAC_DC;
     MeasurementControl.ADCReference = tReference;
 
-//the second parameter for active attenuator is only needed if ChannelHasActiveAttenuator == true
+//the second parameter for active attenuator is only required if ChannelHasActiveAttenuator == true
     setInputRange(2, 2);
 }
 

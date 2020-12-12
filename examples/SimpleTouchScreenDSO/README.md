@@ -17,7 +17,7 @@ You can load the library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. 
 
 
 ## Features
-- 150 kSamples per second with good quality.
+- 150 kSamples per second with [good quality](#linearity-of-adc-converter).
 - 300 kSamples per second with acceptable quality because of internal ADC limitations.
 - Full touch screen control of all parameters.
 - AC Measurement supported by using (passive) external attenuator circuit (see below).
@@ -35,7 +35,6 @@ You can load the library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. 
 - Using 1.1 volt internal reference. 5 volt (VCC) is also selectable and is useful if no attenuator is attached.
 
 - Integrated frequency generator using 16 bit Timer1. Frequency from 119 mHz (8.388 second) to 8 MHz
-
 - Integrated PWM Waveform generator for sinus, triangle and sawtooth using 16 bit Timer1. Frequency from 1.9 mHz to 7.8 kHz
 
 ## Bill of material
@@ -52,7 +51,6 @@ You can load the library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. 
 Optional for Bluetooth connection
 6. HC-05 Bluetooth module
 7. Shottky diode e.g. BAT42
-
 
 # INSTRUCTIONS FOR USE
 The DSO software has 4 pages.
@@ -81,11 +79,11 @@ If switching info mode, the chart content will be restored.
 ## SETTINGS PAGE GUI
 On this page you have all buttons to modify the **DSO acquisition mode**, to select the different **ADC channels** and for **page navigation**
 above the last button row the minimum stack size, the supply voltage and the internal chip temperature is shown.
-The stack size is needed for testing different buffer size values during development and the temperature may be quite inaccurate.
+The stack size is required for testing different buffer size values during development and the temperature may be quite inaccurate.
 - **History** -> **red** history off, **green** history on, i.e. old chart data is not deleted, it stays as a light green trace. This button is also available (invisible) at the chart page.
 - Slope - **Slope A** -> trigger on ascending slope, **Slope D** -> trigger on descending slope.
 - **Back** -> Back to chart page.
-- **Trigger delay** -> Trigger delay can be numerical specified from 4 us to 64.000.000 us (64 seconds, if you really want). Microseconds resolution is used for values below 64.000.
+- **Trigger delay** -> Trigger delay can be numerical specified from 4 탎 to 64.000.000 탎 (64 seconds, if you really want). Microseconds resolution is used for values below 64.000.
 - Trigger - the trigger value can be set on the chart page by touching the light violet vertical bar in the 4. left grid.
   - **Trigger auto** -> let the DSO compute the trigger value using the average of the last measurement.
   - **Trigger man timeout** -> use manual trigger value, but with timeout, i.e. if trigger condition not met, new data is shown after timeout.
@@ -142,9 +140,9 @@ Short touch switches info output, long touch shows active GUI elements.
 
 |Maximum values                                                      | Minimum values|
 | :--- | :--- |
-|SINE: clip to minimum 8 samples per period => 128 us / 7812.5 Hz       |7,421 mHz|
-|SAWTOOTH: clip to minimum 16 samples per period => 256 us / 3906.25 Hz |3.725 mHz|
-|TRIANGLE: clip to minimum 32 samples per period => 512 us / 1953.125 Hz|1.866 mHz|
+|SINE: clip to minimum 8 samples per period => 128 탎 / 7812.5 Hz       |7,421 mHz|
+|SAWTOOTH: clip to minimum 16 samples per period => 256 탎 / 3906.25 Hz |3.725 mHz|
+|TRIANGLE: clip to minimum 32 samples per period => 512 탎 / 1953.125 Hz|1.866 mHz|
 
 ### RC-Filter suggestions
 - Simple: 2k2 Ohm and 100 nF
@@ -163,13 +161,24 @@ DSO start screen
 | :-: | :-: |
 | ![DSO chart screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart.jpg) | ![DSO chart screen with long info](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart_Long_Info.jpg) |
 | DSO settings menu | DSO frequency / waveform generator menu |
-| ![DSO settings menu](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Settings_Passive_Attenuator.jpg) | ![Frequency / waveform generator menu](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Frequency.jpg) |
-| ![DSO at work](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/DSO+Tablet.jpg) |  |
+| ![DSO settings menu](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Settings_Passive_Attenuator.jpg) | ![Frequency / waveform generator menu](pictures/Frequency.jpg) |
+| ![DSO at work](pictures/DSO+Tablet.jpg) |  |
+
+## Linearity of ADC converter
+The captured signal was generated with a STM32F303 DAC.
+
+All ranges including the 1 ms range (up to 30 kSamples per second) have almost perfect linearity.
+![26 탎 conversion](pictures/Linearity_26us_conversion_time.jpg)
+First small linearity issues can be seen at in the 496 탎 to 101 탎 ranges with 60 and 150 kSamples per second.
+![13 탎 conversion](pictures/Linearity_13us_conversion_time.jpg)
+![6.5 탎 conversion](pictures/Linearity_6us5_conversion_time.jpg)
+In the 50 탎 to 10 탎 ranges with 300 kSamples per second the linearity is only acceptable.
+![5 탎 conversion](pictures/Linearity_3us_conversion_time.jpg)
 
 # SCHEMATICS
 | SIMPLE 1 RANGE VERSION | 3 RANGE VERSION |
 | :-: | :-: |
-| ![Fritzing schematic](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_simple_Schaltplan.png) | ![Fritzing schematic](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_BT_full_Schaltplan.png) |
+| ![Fritzing schematic](fritzing/Arduino_Nano_DSO_simple_Schaltplan.png) | ![Fritzing schematic](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_BT_full_Schaltplan.png) |
 | ![Fritzing breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_simple_Steckplatine.png) | ![Fritzing breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_BT_full_Steckplatine.png) |
 | ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/ArduinoDSO_simple.jpg) | ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/ArduinoDSO.jpg) |
 

@@ -12,6 +12,9 @@
  *  For handling time, the Arduino "time" library is used. You can install it also with "Tools -> Manage Libraries..." or "Ctrl+Shift+I" -> use "timekeeping" as filter string.
  *  The sources can also be found here: https://github.com/PaulStoffregen/Time
  *
+ *  With 9600 baud, the minimal blink delay we observe is 200 ms because of the communication delay
+ *  of 8 * printDemoString(), which requires 8*24 ms -> 192 ms
+ *
  *  Copyright (C) 2014-2020  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
@@ -53,6 +56,10 @@
  ***************************************************************************/
 #ifndef BLUETOOTH_BAUD_RATE
 //#define BLUETOOTH_BAUD_RATE BAUD_115200
+/*
+ * With 9600 baud, the minimal blink delay we observe is 200 ms because of the communication delay
+ * of 8 * printDemoString(), which requires 8*24 ms -> 192 ms
+ */
 #define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
@@ -68,12 +75,12 @@
 #define COLOR_CAPTION COLOR_RED
 
 #if defined(USE_C_TIME)
-struct tm * sTimeInfo;
+struct tm *sTimeInfo;
 #endif
 
 bool sConnected = false;
 bool doBlink = true;
-volatile int16_t sDelay = DELAY_START_VALUE; // 600
+int16_t sDelay = DELAY_START_VALUE; // 600
 
 // a string buffer for any purpose...
 char sStringBuffer[128];
@@ -97,7 +104,7 @@ void doGetDelay(BDButton * aTheTouchedButton, int16_t aValue);
  */
 BDSlider TouchSliderDelay;
 // handler for value change
-void doDelay(BDSlider * aTheTochedSlider, uint16_t aSliderValue);
+void doDelay(BDSlider *aTheTochedSlider, uint16_t aSliderValue);
 
 /*
  * Time functions
@@ -363,7 +370,7 @@ void doGetDelay(BDButton * aTheTouchedButton, int16_t aValue) {
 /*
  * Is called by touch or move on slider and sets the new delay according to the passed slider value
  */
-void doDelay(BDSlider * aTheTouchedSlider __attribute__((unused)), uint16_t aSliderValue) {
+void doDelay(BDSlider *aTheTouchedSlider __attribute__((unused)), uint16_t aSliderValue) {
     sDelay = aSliderValue;
 }
 

@@ -90,7 +90,7 @@ void registerConnectCallback(void (*aConnectCallback)(void));
 void registerReorientationCallback(void (*aReorientationCallback)(void));
 
 /*
- * Connect always include a redraw
+ * Connect and reorientation always include a redraw
  */
 void registerRedrawCallback(void (*aRedrawCallback)(void));
 void (* getRedrawCallback(void))(void);

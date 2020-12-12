@@ -96,7 +96,7 @@ volatile bool sInterruptsAreActive = false; // true if interrupts are still acti
  * Cannot use "static servo_t servos[MAX_SERVOS];" from Servo library since it is static :-(
  */
 uint_fast8_t sServoArrayMaxIndex = 0; // maximum index of an attached servo in sServoArray[]
-ServoEasing * sServoArray[MAX_EASING_SERVOS];
+ServoEasing *sServoArray[MAX_EASING_SERVOS];
 // used to move all servos
 int sServoNextPositionArray[MAX_EASING_SERVOS];
 
@@ -145,14 +145,14 @@ void ServoEasing::PCA9685Reset() {
 
 /*
  * Set expander to 20 ms period for 4096-part cycle and wait 2 milliseconds
- * This results in a resolution of 4.88 us per step.
+ * This results in a resolution of 4.88 탎 per step.
  */
 void ServoEasing::PCA9685Init() {
     // Set expander to 20 ms period
     I2CWriteByte(PCA9685_MODE1_REGISTER, _BV(PCA9685_MODE_1_SLEEP)); // go to sleep
     I2CWriteByte(PCA9685_PRESCALE_REGISTER, PCA9685_PRESCALER_FOR_20_MS); // set the prescaler
     I2CWriteByte(PCA9685_MODE1_REGISTER, _BV(PCA9685_MODE_1_AUTOINCREMENT)); // reset sleep and enable auto increment
-    delay(2); // > 500 us according to datasheet
+    delay(2); // > 500 탎 according to datasheet
 }
 
 void ServoEasing::I2CWriteByte(uint8_t aAddress, uint8_t aData) {
@@ -172,7 +172,7 @@ void ServoEasing::I2CWriteByte(uint8_t aAddress, uint8_t aData) {
 
 /**
  * @param aPWMValueAsUnits - The point in the 4096-part cycle, where the output goes OFF (LOW). On is fixed at 0.
- * Useful values are from 111 (111.411 = 544 us) to 491 (491.52 = 2400 us)
+ * Useful values are from 111 (111.411 = 544 탎) to 491 (491.52 = 2400 탎)
  * This results in an resolution of approximately 0.5 degree.
  * 4096 means output is signal fully off
  */
@@ -198,7 +198,7 @@ void ServoEasing::setPWM(uint16_t aPWMOffValueAsUnits) {
 /**
  * Here you can specify an on/start value for the pulse in order not to start all pulses at the same time.
  * Is used by writeMicrosecondsOrUnits() with onValue as mServoPin * 235
- * Requires 550 us to send data => 8.8 ms for 16 Servos, 17.6 ms for 32 servos. => more than 2 expander boards
+ * Requires 550 탎 to send data => 8.8 ms for 16 Servos, 17.6 ms for 32 servos. => more than 2 expander boards
  * cannot be connected to one I2C bus, if all servos must be able to move simultaneously.
  */
 void ServoEasing::setPWM(uint16_t aPWMOnStartValueAsUnits, uint16_t aPWMPulseDurationAsUnits) {
@@ -400,7 +400,7 @@ void ServoEasing::detach() {
         setPWM(0); // set signal fully off
 #  endif
 #elif defined(USE_LEIGHTWEIGHT_SERVO_LIB)
-        deinitLightweightServoPin9_10(mServoPin == 9); // disable output and change to input
+        deinitLightweightServoPin9_10(mServoPin == 9, mServoPin == 10); // disable output and change to input
 #else
         Servo::detach();
 #endif
@@ -478,8 +478,10 @@ void ServoEasing::write(int aValue) {
 #endif
         return;
     }
-    if (aValue < 400) { // treat values less than 400 as angles in degrees (valid values in microseconds are handled as microseconds)
-        sServoNextPositionArray[mServoIndex] = aValue;
+    sServoNextPositionArray[mServoIndex] = aValue;
+
+    if (aValue < THRESHOLD_VALUE_FOR_INTERPRETING_VALUE_AS_MICROSECONDS) {
+        // treat values less than 400 as angles in degrees, others are handled as microseconds
         aValue = DegreeToMicrosecondsOrUnits(aValue);
     }
     writeMicrosecondsOrUnits(aValue);
@@ -542,18 +544,18 @@ void ServoEasing::writeMicrosecondsOrUnits(int aValue) {
     if (mServoIsConnectedToExpander) {
         setPWM(mServoPin * ((4096 - (DEFAULT_PCA9685_UNITS_FOR_180_DEGREE + 100)) / 15), aValue); // mServoPin * 233
     } else {
-        Servo::writeMicroseconds(aValue); // requires 7 us
+        Servo::writeMicroseconds(aValue); // requires 7 탎
     }
 #  else
     /*
      * Distribute the servo start time over the 20 ms period.
-     * Unexpectedly this even saves 20 bytes Flash for an ATMega328P
+     * Unexpectedly this even saves 20 bytes Flash for an ATmega328P
      */
     setPWM(mServoPin * ((4096 - (DEFAULT_PCA9685_UNITS_FOR_180_DEGREE + 100)) / 15), aValue); // mServoPin * 233
 #  endif
 
 #else
-    Servo::writeMicroseconds(aValue); // requires 7 us
+    Servo::writeMicroseconds(aValue); // requires 7 탎
 #endif
 
 #if defined(TRACE)
@@ -591,11 +593,21 @@ int ServoEasing::MicrosecondsOrUnitsToDegree(int aMicrosecondsOrUnits) {
 }
 
 /**
- * We have around 10 us per degree
+ * We have around 10 탎 per degree
+ * We do not convert values >= 400.
+ * This allows it to use Microseconds instead of degrees as function arguments for all functions using degree as argument.
  */
 int ServoEasing::DegreeToMicrosecondsOrUnits(int aDegree) {
 // For microseconds and PCA9685 units:
+#if defined ENABLE_MICROS_AS_DEGREE_PARAMETER
+    if (aDegree < 400) {
+#endif
     return map(aDegree, 0, 180, mServo0DegreeMicrosecondsOrUnits, mServo180DegreeMicrosecondsOrUnits);
+#if defined ENABLE_MICROS_AS_DEGREE_PARAMETER
+    } else {
+        return aDegree;
+    }
+#endif
 }
 
 /**
@@ -677,7 +689,17 @@ bool ServoEasing::startEaseTo(int aDegree, uint_fast16_t aDegreesPerSecond, bool
 #endif
         aDegreesPerSecond = 1;
     }
+
+#if defined ENABLE_MICROS_AS_DEGREE_PARAMETER
+    uint_fast16_t tMillisForCompleteMove;
+    int tDegree = aDegree;
+    if (aDegree >= THRESHOLD_VALUE_FOR_INTERPRETING_VALUE_AS_MICROSECONDS) {
+        tDegree = MicrosecondsOrUnitsToDegree(tDegree);
+    }
+    tMillisForCompleteMove = abs(tDegree - tCurrentAngle) * 1000L / aDegreesPerSecond;
+#else
     uint_fast16_t tMillisForCompleteMove = abs(aDegree - tCurrentAngle) * 1000L / aDegreesPerSecond;
+#endif
 
 #ifndef PROVIDE_ONLY_LINEAR_MOVEMENT
     if ((mEasingType & CALL_STYLE_MASK) == CALL_STYLE_BOUNCING_OUT_IN) {
@@ -783,7 +805,7 @@ bool ServoEasing::update() {
     /*
      * Use faster non float arithmetic
      * Linear movement: new position is: start position + total delta * (millis_done / millis_total aka "percentage of completion")
-     * 40 us to compute
+     * 40 탎 to compute
      */
     uint_fast16_t tNewMicrosecondsOrUnits = mStartMicrosecondsOrUnits
     + ((mDeltaMicrosecondsOrUnits * (int32_t) tMillisSinceStart) / mMillisForCompleteMove);
@@ -820,7 +842,7 @@ bool ServoEasing::update() {
         /*
          * Use faster non float arithmetic
          * Linear movement: new position is: start position + total delta * (millis_done / millis_total aka "percentage of completion")
-         * 40 us to compute
+         * 40 탎 to compute
          * Cast to int32 required for mMillisForCompleteMove for 32 bit platforms, otherwise we divide signed by unsigned. Thanks to drifkind.
          */
         tNewMicrosecondsOrUnits = mStartMicrosecondsOrUnits
@@ -967,7 +989,7 @@ int ServoEasing::getMillisForCompleteMove() {
     return mMillisForCompleteMove;
 }
 
-void ServoEasing::print(Print * aSerial, bool doExtendedOutput) {
+void ServoEasing::print(Print *aSerial, bool doExtendedOutput) {
     printDynamic(aSerial, doExtendedOutput);
     printStatic(aSerial);
 }
@@ -975,7 +997,7 @@ void ServoEasing::print(Print * aSerial, bool doExtendedOutput) {
 /*
  * Prints values which may change from move to move.
  */
-void ServoEasing::printDynamic(Print * aSerial, bool doExtendedOutput) {
+void ServoEasing::printDynamic(Print *aSerial, bool doExtendedOutput) {
 // pin is static but it is required for identifying the servo
     aSerial->print(mServoIndex);
     aSerial->print('/');
@@ -1027,7 +1049,7 @@ void ServoEasing::printDynamic(Print * aSerial, bool doExtendedOutput) {
  * Prints values which normally does NOT change from move to move.
  * call with
  */
-void ServoEasing::printStatic(Print * aSerial) {
+void ServoEasing::printStatic(Print *aSerial) {
 
     aSerial->print(F("0="));
     aSerial->print(mServo0DegreeMicrosecondsOrUnits);
@@ -1102,7 +1124,7 @@ bool areInterruptsActive() {
  * Defined weak in order to be able to overwrite it.
  */
 #if defined(STM32F1xx) && STM32_CORE_VERSION_MAJOR == 1 &&  STM32_CORE_VERSION_MINOR <= 8 // for "Generic STM32F1 series" from STM32 Boards from STM32 cores of Arduino Board manager
-__attribute__((weak)) void handleServoTimerInterrupt(HardwareTimer * aDummy __attribute__((unused))) // changed in stm32duino 1.9 - 5/2020
+__attribute__((weak)) void handleServoTimerInterrupt(HardwareTimer *aDummy __attribute__((unused))) // changed in stm32duino 1.9 - 5/2020
 #else
 __attribute__((weak)) void handleServoTimerInterrupt()
 #endif
@@ -1119,7 +1141,7 @@ __attribute__((weak)) void handleServoTimerInterrupt()
 
 /*
  * Timer1 is used for the Arduino Servo library.
- * To have non blocking easing functions its unused channel B is used to generate an interrupt 100 us before the end of the 20 ms Arduino Servo refresh period.
+ * To have non blocking easing functions its unused channel B is used to generate an interrupt 100 탎 before the end of the 20 ms Arduino Servo refresh period.
  * This interrupt then updates all servo values for the next refresh period.
  * First interrupt is triggered not directly, but after 20 ms, since we are often called here at the time of the last interrupt of the preceding servo move.
  */
@@ -1135,7 +1157,7 @@ void enableServoEasingInterrupt() {
 
     TIFR5 |= _BV(OCF5B);     // clear any pending interrupts;
     TIMSK5 |= _BV(OCIE5B);// enable the output compare B interrupt
-    OCR5B = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL_MICROS) / 8) - 100;// update values 100 us before the new servo period starts
+    OCR5B = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL_MICROS) / 8) - 100;// update values 100 탎 before the new servo period starts
 
 #  elif defined(__AVR_ATmega4809__) // Uno WiFi Rev 2, Nano Every
     // TCB1 is used by Tone()
@@ -1168,7 +1190,7 @@ void enableServoEasingInterrupt() {
      */
     TCCR1B |= _BV(ICNC1);
 #    ifndef USE_LEIGHTWEIGHT_SERVO_LIB
-// update values 100 us before the new servo period starts
+// update values 100 탎 before the new servo period starts
     OCR1B = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL_MICROS) / 8) - 100;
 #    endif
 #  endif
@@ -1314,8 +1336,8 @@ void disableServoEasingInterrupt() {
 }
 
 /*
- * 60 us for single servo + 160 us per servo if using I2C e.g.for PCA9685 expander at 400000 Hz or + 100 at 800000 Hz
- * 20 us for last interrupt
+ * 60 탎 for single servo + 160 탎 per servo if using I2C e.g.for PCA9685 expander at 400000 Hz or + 100 at 800000 Hz
+ * 20 탎 for last interrupt
  * The first servo pulse starts just after this interrupt routine has finished
  */
 #if defined(__AVR__)
@@ -1412,7 +1434,7 @@ void synchronizeAndEaseToArrayPositions(uint_fast16_t aDegreesPerSecond) {
     synchronizeAllServosStartAndWaitForAllServosToStop();
 }
 
-void printArrayPositions(Print * aSerial) {
+void printArrayPositions(Print *aSerial) {
 //    uint_fast8_t tServoIndex = 0;
     aSerial->print(F("ServoNextPositionArray="));
 // AJ 22.05.2019 This does not work with GCC 7.3.0 atmel6.3.1 and -Os
@@ -1459,7 +1481,7 @@ void setSpeedForAllServos(uint_fast16_t aDegreesPerSecond) {
 /*
  * Sets the sServoNextPositionArray[] of the first aNumberOfServos to the specified values
  */
-void setDegreeForAllServos(uint_fast8_t aNumberOfServos, va_list * aDegreeValues) {
+void setDegreeForAllServos(uint_fast8_t aNumberOfServos, va_list *aDegreeValues) {
     for (uint_fast8_t tServoIndex = 0; tServoIndex < aNumberOfServos; ++tServoIndex) {
         sServoNextPositionArray[tServoIndex] = va_arg(*aDegreeValues, int);
     }
