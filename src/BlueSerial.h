@@ -53,12 +53,12 @@
 /*
  * Determine which serial to use.
  * - Use standard Serial if USE_USB_SERIAL is requested.
- * - Prefer the use of second USART, to have the standard Serial available for application (debug) use,
- *   except for direct connection to your smartphone / tablet by USB cable.
+ * - Prefer the use of second USART, to have the standard Serial available for application (debug) use except for ATmega328P and PB.
  * - Use Serial1 on stm32 if SERIAL_USB and USART1 is existent. If no SERIAL_USB existent, it requires USART2 to have Serial1 available.
  * - Use Serial1 on AVR if second USART is existent, as on the ATmega Boards.
  */
-#if ! defined(USE_USB_SERIAL) && ((defined(BOARD_HAVE_USART1) && defined(SERIAL_USB)) \
+// In some cores for ATmega328PB only ATmega328P is defined
+#if ! defined(USE_USB_SERIAL) && ! defined(__AVR_ATmega328P__) && ! defined(__AVR_ATmega328PB__) && ((defined(BOARD_HAVE_USART1) && defined(SERIAL_USB)) \
     || (defined(BOARD_HAVE_USART2) && ! defined(SERIAL_USB)) \
     || defined(UBRR1H))
 #define USE_SERIAL1

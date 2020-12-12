@@ -77,56 +77,7 @@
 #define VERSION_BLUE_DISPLAY "2.2.0"
 #define VERSION_BLUE_DISPLAY_MAJOR 2
 #define VERSION_BLUE_DISPLAY_MINOR 2
-/*
- * Version 2.2.0
- * - Changed default serial for AVR from `USE_SIMPLE_SERIAL` to standard Arduino Serial.
- * - Added ShowSensorValues example.
- * - Renamed mReferenceDisplaySize to mRequestedDisplaySize and renamed related function to getRequestedDisplaySize().
- * - New function `setBarThresholdDefaultColor`. Requires BlueDisplay app version 4.3.
- * - New function `setPositiveNegativeSliders(..., aValue,  aSliderDeadBand)`.
- * - Renamed setPrintf* functions to setWriteString*.
- *
- * Version 2.1.1
- * - New function `setCaptionFromStringArrayPGM()`.
- * - Added flag `sBDEventJustReceived`.
- *
- * Version 2.1.0
- * - Improved initCommunication and late connection handling.
- * - Arduino Due support added.
- *
- * Version 2.0.0
- * - ESP32 and ESP8266 support added. External BT module required for ESP8266.
- *
- * Version 1.3.0
- * - Added `sMillisOfLastReceivedBDEvent` for user timeout detection.
- * - Fixed bug in `debug(const char *aMessage, float aFloat)`.
- * - Added `*LOCK_SENSOR_LANDSCAPE` and `*LOCK_SENSOR_LANDSCAPE` in function `setScreenOrientationLock()`. Requires BD app version 4.2.
- * - Removed unused `mCurrentDisplayHeight` and `mCurrentDisplayWidth` member variables.
- * - Fixed bug in draw function from `drawByte` to `drawLong`.
- * - Added short `drawText` functions. Requires BD app version 4.2.
- *
- * Version 1.2.0
- * - Use type `Print *` instead of `Stream *`.
- * - New function `initSerial()`
- * - Changed parameter aTextSize to uint16_t also for AVR specific functions.
- *
- * This old version numbers corresponds to the version of the BlueDisplay app
- * Version 3.7
- * - Handling of no input for getNumber.
- * - Slider setScaleFactor() does not scale the current value, mostly delivered as initial value at init().
- * Version 3.6 connect, reconnect and autoconnect improved/added. Improved debug() command. Simplified Red/Green button handling.
- * Version 3.5 Slider scaling changed and unit value added.
- * Version 3.4
- *  - Timeout for data messages. Get number initial value fixed.
- *  - Bug autorepeat button in conjunction with UseUpEventForButtons fixed.
- * Version 3.3
- *  - Fixed silent tone bug for Android Lollipop and other bugs. Multiline text /r /n handling.
- *  - Android time accessible on Arduino. Debug messages as toasts. Changed create button.
- *  - Slider values scalable. GUI multi touch.Hex and ASCII output of received Bluetooth data at log level verbose.
- * Version 3.2 Improved tone and fullscreen handling. Internal refactoring. Bugfixes and minor improvements.
- * Version 3.1 Local display of received and sent commands for debug purposes.
- * Version 3.0 Android sensor accessible by Arduino.
- */
+// The change log is at the bottom of the file
 
 /***************************
  * Origin 0.0 is upper left
@@ -397,20 +348,20 @@ public:
     void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
             uint8_t aChartIndex, bool aDoDrawDirect, uint8_t *aByteBuffer, size_t aByteBufferLength);
 
-    struct XYSize *getMaxDisplaySize(void);
+    struct XYSize* getMaxDisplaySize(void);
     uint16_t getMaxDisplayWidth(void);
     uint16_t getMaxDisplayHeight(void);
-    struct XYSize *getCurrentDisplaySize(void);
+    struct XYSize* getCurrentDisplaySize(void);
     uint16_t getCurrentDisplayWidth(void);
     uint16_t getCurrentDisplayHeight(void);
     // returns requested size
-    struct XYSize *getRequestedDisplaySize(void);
+    struct XYSize* getRequestedDisplaySize(void);
     uint16_t getDisplayWidth(void);
     uint16_t getDisplayHeight(void);
     // Implemented by event handler
     bool isDisplayOrientationLandscape(void);
 
-    void refreshVector(struct ThickLine * aLine, int16_t aNewRelEndX, int16_t aNewRelEndY);
+    void refreshVector(struct ThickLine *aLine, int16_t aNewRelEndX, int16_t aNewRelEndY);
 
     void getNumber(void (*aNumberHandler)(float));
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const char *aShortPromptString);
@@ -452,7 +403,7 @@ public:
      */
     BDButtonHandle_t createButton(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY,
             color16_t aButtonColor, const char *aCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-            void (*aOnTouchHandler)(BDButton *, int16_t));
+            void (*aOnTouchHandler)(BDButton*, int16_t));
     void drawButton(BDButtonHandle_t aButtonNumber);
     void removeButton(BDButtonHandle_t aButtonNumber, color16_t aBackgroundColor);
     void drawButtonCaption(BDButtonHandle_t aButtonNumber);
@@ -475,7 +426,7 @@ public:
 #ifdef AVR
     BDButtonHandle_t createButtonPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY,
             color16_t aButtonColor, const char *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-            void (*aOnTouchHandler)(BDButton *, int16_t));
+            void (*aOnTouchHandler)(BDButton*, int16_t));
     void setButtonCaptionPGM(BDButtonHandle_t aButtonNumber, const char *aPGMCaption, bool doDrawButton);
 #endif
 
@@ -484,7 +435,7 @@ public:
      */
     BDSliderHandle_t createSlider(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, int16_t aBarLength,
             int16_t aThresholdValue, int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
-            void (*aOnChangeHandler)(BDSliderHandle_t *, int16_t));
+            void (*aOnChangeHandler)(BDSliderHandle_t*, int16_t));
     void drawSlider(BDSliderHandle_t aSliderNumber);
     void drawSliderBorder(BDSliderHandle_t aSliderNumber);
     void setSliderValueAndDrawBar(BDSliderHandle_t aSliderNumber, int16_t aCurrentValue);
@@ -564,6 +515,59 @@ float getTemperature(void);
 // For convenience also included here
 #include "BlueSerial.h"
 #include "EventHandler.h"
+
+/*
+ * Version 2.2.0
+ * - Changed default serial for AVR from `USE_SIMPLE_SERIAL` to standard Arduino Serial.
+ * - Added ShowSensorValues example.
+ * - Renamed mReferenceDisplaySize to mRequestedDisplaySize and renamed related function to getRequestedDisplaySize().
+ * - New function `setBarThresholdDefaultColor`. Requires BlueDisplay app version 4.3.
+ * - New function `setPositiveNegativeSliders(..., aValue,  aSliderDeadBand)`.
+ * - Renamed setPrintf* functions to setWriteString*.
+ * - Switched last 2 parameters in `initCommunication()` and the 3. parameter is now optional.
+ * - Compatible with MegaCore supported CPU's.
+ *
+ * Version 2.1.1
+ * - New function `setCaptionFromStringArrayPGM()`.
+ * - Added flag `sBDEventJustReceived`.
+ *
+ * Version 2.1.0
+ * - Improved initCommunication and late connection handling.
+ * - Arduino Due support added.
+ *
+ * Version 2.0.0
+ * - ESP32 and ESP8266 support added. External BT module required for ESP8266.
+ *
+ * Version 1.3.0
+ * - Added `sMillisOfLastReceivedBDEvent` for user timeout detection.
+ * - Fixed bug in `debug(const char *aMessage, float aFloat)`.
+ * - Added `*LOCK_SENSOR_LANDSCAPE` and `*LOCK_SENSOR_LANDSCAPE` in function `setScreenOrientationLock()`. Requires BD app version 4.2.
+ * - Removed unused `mCurrentDisplayHeight` and `mCurrentDisplayWidth` member variables.
+ * - Fixed bug in draw function from `drawByte` to `drawLong`.
+ * - Added short `drawText` functions. Requires BD app version 4.2.
+ *
+ * Version 1.2.0
+ * - Use type `Print *` instead of `Stream *`.
+ * - New function `initSerial()`
+ * - Changed parameter aTextSize to uint16_t also for AVR specific functions.
+ *
+ * This old version numbers corresponds to the version of the BlueDisplay app
+ * Version 3.7
+ * - Handling of no input for getNumber.
+ * - Slider setScaleFactor() does not scale the current value, mostly delivered as initial value at init().
+ * Version 3.6 connect, reconnect and autoconnect improved/added. Improved debug() command. Simplified Red/Green button handling.
+ * Version 3.5 Slider scaling changed and unit value added.
+ * Version 3.4
+ *  - Timeout for data messages. Get number initial value fixed.
+ *  - Bug autorepeat button in conjunction with UseUpEventForButtons fixed.
+ * Version 3.3
+ *  - Fixed silent tone bug for Android Lollipop and other bugs. Multiline text /r /n handling.
+ *  - Android time accessible on Arduino. Debug messages as toasts. Changed create button.
+ *  - Slider values scalable. GUI multi touch.Hex and ASCII output of received Bluetooth data at log level verbose.
+ * Version 3.2 Improved tone and fullscreen handling. Internal refactoring. Bugfixes and minor improvements.
+ * Version 3.1 Local display of received and sent commands for debug purposes.
+ * Version 3.0 Android sensor accessible by Arduino.
+ */
 
 #endif /* BLUEDISPLAY_H_ */
 

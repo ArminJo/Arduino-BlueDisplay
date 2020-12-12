@@ -161,7 +161,8 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 - New function `setBarThresholdDefaultColor`. Requires BlueDisplay app version 4.3.
 - New function `setPositiveNegativeSliders(..., aValue, aSliderDeadBand)`.
 - Renamed `setPrintf*` functions to `setWriteString*`.
-- Switched last 2 parameters in `initCommunication(`) and the 3. parameter is now optional.
+- Switched last 2 parameters in `initCommunication()` and the 3. parameter is now optional.
+- Compatible with MegaCore supported CPU's.
 
 ### Version 2.1.1
 - New function `setCaptionFromStringArrayPGM()`.
