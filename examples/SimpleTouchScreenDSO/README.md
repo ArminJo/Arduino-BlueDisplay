@@ -1,4 +1,4 @@
-# Arduino-Simple-DSO
+# [Arduino-Simple-DSO](https://github.com/ArminJo/Arduino-Simple-DSO)
 ### [Version 3.2](https://github.com/ArminJo/Arduino-Simple-DSO/releases)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Build Status](https://github.com/ArminJo/Arduino-Simple-DSO/workflows/TestCompile/badge.svg)](https://github.com/ArminJo/Arduino-Simple-DSO/actions)
@@ -17,7 +17,7 @@ You can load the library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. 
 
 
 ## Features
-- 150 kSamples per second with [good quality](#linearity-of-adc-converter).
+- 150 kSamples per second with [good quality](#linearity-of-the-atmega328pb-adc-converter).
 - 300 kSamples per second with acceptable quality because of internal ADC limitations.
 - Full touch screen control of all parameters.
 - AC Measurement supported by using (passive) external attenuator circuit (see below).
@@ -80,6 +80,26 @@ On this page you can:
 - If enabled, trigger value can be set by touching the **light violet vertical bar** in the 4. left grid.
 If switching info mode, the chart content will be restored.
 
+### SHORT INFO LINE REFERENCE
+- Arithmetic-average and peak to peak voltage of actual chart (In analyze mode, chart is longer than the display!)
+- Frequency
+- Timebase for div (31 pixel)
+
+### LONG INFO LINE REFERENCE
+First line
+- Timebase for div (31 pixel)
+- Slope of trigger
+- Input channel: (0-5), T->AVR-temperature, R->1.1 volt-internal-reference G->internal-ground
+- Minimum, arithmetic-average, max and peak to peak voltage of actual chart (In hold mode, chart is longer than display!)
+- Trigger level
+- Reference used: 5=5 volt,  1=1.1 volt-internal-reference
+
+Second line
+- Frequency
+- Period
+- first interval  (pulse for slope ascending)
+- second interval (pause for slope ascending)
+
 ## SETTINGS PAGE GUI
 | DSO settings menu | DSO frequency / waveform generator menu |
 | :-: | :-: |
@@ -120,27 +140,6 @@ The stack size is required for testing different buffer size values during devel
   - **Ref 1.1V** (recommended if having attenuators) -> uses the internal 1.1 volt reference for the ADC.
   - **Ref VCC** -> uses VCC (5 volt supply) as reference for the ADC.
 
-## INFO LINE REFERENCE
-### SHORT INFO
-- Arithmetic-average and peak to peak voltage of actual chart (In analyze mode, chart is longer than the display!)
-- Frequency
-- Timebase for div (31 pixel)
-
-## LONG INFO OUTPUT
-First line
-- Timebase for div (31 pixel)
-- Slope of trigger
-- Input channel: (0-5), T->AVR-temperature, R->1.1 volt-internal-reference G->internal-ground
-- Minimum, arithmetic-average, max and peak to peak voltage of actual chart (In hold mode, chart is longer than display!)
-- Trigger level
-- Reference used: 5=5 volt,  1=1.1 volt-internal-reference
-
-Second line
-- Frequency
-- Period
-- first interval  (pulse for slope ascending)
-- second interval (pause for slope ascending)
-
 ## TOUCH
 Short touch switches info output, long touch shows active GUI elements.
 
@@ -170,16 +169,14 @@ DSO start screen
 | ![DSO chart screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart.jpg) | ![DSO chart screen with long info](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart_Long_Info.jpg) |
 | ![DSO at work](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/DSO+Tablet.jpg) |  |
 
-## Linearity of ADC converter
-The captured signal was generated with a STM32F303 DAC.
+## Linearity of the ATmega328P(B) ADC converter
+The captured signal was generated with a STM32F303 DAC and the DSO input range was chosen to see the LSB of the 10 bit ADC conversion.
 
-All ranges including the 1 ms range (up to 30 kSamples per second) have almost perfect linearity.
-![26 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_26us_conversion_time.jpg)
-First small linearity issues can be seen at in the 496 탎 to 101 탎 ranges with 60 and 150 kSamples per second.
-![13 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_13us_conversion_time.jpg)
-![6.5 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_6us5_conversion_time.jpg)
-In the 50 탎 to 10 탎 ranges with 300 kSamples per second the linearity is only acceptable.
-![5 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_3us_conversion_time.jpg)
+| All ranges including the 1 ms range (up to 30 kSamples per second / 26 탎 conversion time) have almost perfect linearity. | In the 50 탎 to 10 탎 ranges with 300 kSamples per second (3 탎 conversion time) the linearity is only acceptable. |
+| :-: | :-: |
+| ![26 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_26us_conversion_time.jpg) | ![3 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_3us_conversion_time.jpg) |
+| First small linearity issues can be seen in the 496 탎 range with 60 kSamples per second (13 탎 conversion time). | And in the 101 탎 range with 150 kSamples per second (6.5 탎 conversion time). |
+| ![13 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_13us_conversion_time.jpg) | ![6.5 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_6us5_conversion_time.jpg) |
 
 # SCHEMATICS
 | SIMPLE 1 RANGE VERSION | 3 RANGE VERSION |
