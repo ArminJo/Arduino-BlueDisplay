@@ -94,10 +94,10 @@ BDButton TouchButtonMinus;
 BDButton TouchButtonValueDirect;
 
 // Touch handler for buttons
-void doBDExampleBlinkStartStop(BDButton * aTheTochedButton, int16_t aValue);
-void doPlusMinus(BDButton * aTheTochedButton, int16_t aValue);
+void doBDExampleBlinkStartStop(BDButton *aTheTochedButton, int16_t aValue);
+void doPlusMinus(BDButton *aTheTochedButton, int16_t aValue);
 void doSetDelay(float aValue);
-void doGetDelay(BDButton * aTheTouchedButton, int16_t aValue);
+void doGetDelay(BDButton *aTheTouchedButton, int16_t aValue);
 
 /*
  * The horizontal slider
@@ -231,22 +231,24 @@ void loop() {
 }
 
 void initDisplay(void) {
+
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, DISPLAY_WIDTH,
     DISPLAY_HEIGHT);
 
-    TouchButtonPlus.init(270, 80, 40, 40, COLOR_YELLOW, "+", 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
+    TouchButtonPlus.init(270, 80, 40, 40, COLOR_YELLOW, F("+"), 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
     DELAY_CHANGE_VALUE, &doPlusMinus);
     TouchButtonPlus.setButtonAutorepeatTiming(600, 100, 10, 30);
 
-    TouchButtonMinus.init(10, 80, 40, 40, COLOR_YELLOW, "-", 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
+    TouchButtonMinus.init(10, 80, 40, 40, COLOR_YELLOW, F("-"), 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
             -DELAY_CHANGE_VALUE, &doPlusMinus);
     TouchButtonMinus.setButtonAutorepeatTiming(600, 100, 10, 30);
 
-    TouchButtonBDExampleBlinkStartStop.init(30, 150, 140, 55, COLOR_DEMO_BACKGROUND, "Start", 44,
+//    TouchButtonBDExampleBlinkStartStop.init(&ButtonStartStopInit, F("Start"), doBlink);
+    TouchButtonBDExampleBlinkStartStop.init(30, 150, 140, 55, COLOR_DEMO_BACKGROUND, F("Start"), 44,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doBDExampleBlinkStartStop);
-    TouchButtonBDExampleBlinkStartStop.setCaptionForValueTrue("Stop");
+    TouchButtonBDExampleBlinkStartStop.setCaptionForValueTrue(F("Stop"));
 
-    // F("...") and init saves RAM since string "..." is stored in flash
+//    TouchButtonValueDirect.init(&ButtonValueDirectInit, F("..."));
     TouchButtonValueDirect.init(210, 150, 90, 55, COLOR_YELLOW, F("..."), 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetDelay);
 
     TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE, COLOR_YELLOW, COLOR_GREEN,
@@ -280,7 +282,7 @@ void drawGui(void) {
 /*
  * Change doBlink flag
  */
-void doBDExampleBlinkStartStop(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue) {
+void doBDExampleBlinkStartStop(BDButton *aTheTouchedButton __attribute__((unused)), int16_t aValue) {
     doBlink = aValue;
 }
 
@@ -327,7 +329,7 @@ void printTime() {
  * Is called by touch of both plus and minus buttons.
  * We just take the passed value and do not care which button was touched
  */
-void doPlusMinus(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue) {
+void doPlusMinus(BDButton *aTheTouchedButton __attribute__((unused)), int16_t aValue) {
     sDelay += aValue;
     if (sDelay < DELAY_CHANGE_VALUE) {
         sDelay = DELAY_CHANGE_VALUE;
@@ -363,7 +365,7 @@ void doSetDelay(float aValue) {
 /*
  * Request delay value as number
  */
-void doGetDelay(BDButton * aTheTouchedButton, int16_t aValue) {
+void doGetDelay(BDButton *aTheTouchedButton, int16_t aValue) {
     BlueDisplay1.getNumberWithShortPrompt(&doSetDelay, "delay [ms]");
 }
 

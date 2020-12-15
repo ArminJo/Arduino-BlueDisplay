@@ -278,6 +278,8 @@ public:
     void init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
             const char *aCaption, uint16_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(BDButton*, int16_t));
+//    void init(const struct ButtonInit *aButtonInfo, const __FlashStringHelper *aPGMCaption);
+//    void init(const struct ButtonInit *aButtonInfo, const __FlashStringHelper *aPGMCaption, int16_t aValue);
 
     void drawButton(void);
     void removeButton(color16_t aBackgroundColor);
@@ -303,7 +305,8 @@ public:
 
     void setCaptionPGMForValueTrue(const char *aCaption);
     void setCaptionPGM(const char *aPGMCaption, bool doDrawButton = false);
-    void setCaptionFromStringArrayPGM(const char * const aPGMCaptionStringArrayPtr[], uint8_t aStringIndex, bool doDrawButton = false);
+    void setCaptionFromStringArrayPGM(const char *const aPGMCaptionStringArrayPtr[], uint8_t aStringIndex,
+            bool doDrawButton = false);
 
     void init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
             const __FlashStringHelper *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
@@ -324,6 +327,22 @@ public:
 private:
 };
 
+///**
+// * @brief Button Init Structure definition
+// * This uses around 200 bytes and saves 8 to 24 bytes per button
+// */
+//struct ButtonInit {
+//    uint16_t PositionX;
+//    uint16_t PositionY;
+//    uint16_t WidthX;
+//    uint16_t HeightY;
+//    color16_t ButtonColor;
+//    uint16_t CaptionSize;
+//    uint16_t Flags;
+//    int16_t Value;
+//    void (*aOnTouchHandler)(BDButton*, int16_t);
+////    const __FlashStringHelper *PGMCaption;
+//};
 #endif
 
 #endif /* BLUEDISPLAY_INCLUDE_BDBUTTON_H_ */

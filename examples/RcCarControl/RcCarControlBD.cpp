@@ -64,13 +64,13 @@ BDSlider SliderShowDistance;
 bool sFollowerMode = false;
 // to start follower mode after first distance < DISTANCE_TO_HOLD
 bool sFollowerModeJustStarted = true;
-void doFollowerOnOff(BDButton * aTheTouchedButton, int16_t aValue);
+void doFollowerOnOff(BDButton *aTheTouchedButton, int16_t aValue);
 
 /*
  * Buttons
  */
 BDButton TouchButtonRcCarStartStop;
-void doRcCarStartStop(BDButton * aTheTochedButton, int16_t aValue);
+void doRcCarStartStop(BDButton *aTheTochedButton, int16_t aValue);
 void resetOutputs(void);
 bool sRCCarStarted = true;
 
@@ -139,7 +139,7 @@ int sTextSizeVCC;
 // a string buffer for any purpose...
 char sStringBuffer[128];
 
-void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallbackInfo);
+void doSensorChange(uint8_t aSensorType, struct SensorCallback *aSensorCallbackInfo);
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
 //#define INTERNAL1V1 2
@@ -214,8 +214,7 @@ void initDisplay(void) {
     BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_CURRENT);
 
     SliderSpeed.init(0, sCurrentDisplayHeight / 32, sSliderWidth * 3, sSliderHeightLaser, sSliderHeightLaser,
-            sSliderHeightLaser / 2,
-            SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doLaserPosition);
+            sSliderHeightLaser / 2, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doLaserPosition);
 
     /*
      * 4 Slider
@@ -256,7 +255,7 @@ void initDisplay(void) {
     SliderShowDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR_BLACK, COLOR_WHITE);
 
     BlueDisplay1.debug("XWidth1=", BlueDisplay1.mCurrentDisplaySize.XWidth);
-    BlueDisplay1.debug("BUTTON_WIDTH_3_DYN=", (uint16_t)BUTTON_WIDTH_3_DYN);
+    BlueDisplay1.debug("BUTTON_WIDTH_3_DYN=", (uint16_t) BUTTON_WIDTH_3_DYN);
     /*
      * Buttons
      */
@@ -557,7 +556,7 @@ void processHorizontalSensorValue(float tSensorValue) {
 /*
  * Sensor callback handler
  */
-void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallbackInfo) {
+void doSensorChange(uint8_t aSensorType, struct SensorCallback *aSensorCallbackInfo) {
     if (sSensorChangeCallCountForZeroAdjustment < CALLS_FOR_ZERO_ADJUSTMENT) {
         if (sSensorChangeCallCountForZeroAdjustment == 0) {
             // init values

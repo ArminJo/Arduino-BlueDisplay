@@ -305,7 +305,7 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...
     // add data field header
     *tBufferPointer++ = DATAFIELD_TAG_BYTE << 8 | SYNC_TOKEN; // start new transmission block
     uint16_t tLength = va_arg(argp, int); // length in byte
-    *tBufferPointer++ = tLength;
+    *tBufferPointer = tLength;
     uint8_t *aBufferPtr = (uint8_t *) va_arg(argp, int); // Buffer address
     va_end(argp);
 

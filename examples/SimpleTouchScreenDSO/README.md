@@ -5,7 +5,7 @@
 [![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fgithub.com%2FArminJo%2FArduino-Simple-DSO)](https://github.com/brentvollebregt/hit-counter)
 
 ## SUMMARY
-This DSO needs only a standard Arduino-Uno or Arduino-Nano, a HC-05 Bluetooth module a few resistors and capacitators and this software.
+This DSO needs only a standard Arduino-Uno or Arduino-Nano, a HC-05 Bluetooth module or a micro USB OTG cable / adapter, a few resistors and capacitators and this software.
 
 | Simple DSO with no attenuator on breadboard | DSO Chart screen |
 | :-: | :-: |
@@ -60,6 +60,10 @@ The DSO software has 4 pages.
 4. The frequency generator page.
 
 ## CHART PAGE
+| DSO Chart analyze screen | DSO Chart analyze screen with long info |
+| :-: | :-: |
+| ![DSO chart screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart.jpg) | ![DSO chart screen with long info](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart_Long_Info.jpg) |
+
 Here you see the current data. This page has two modes, the **acquisition** (measurement running) and the **analyze** (data stored) mode.
 The horizontal violet line is the trigger level line and the two light green lines in analyze mode are the maximum and minimum level lines.
 On this page you can:
@@ -77,6 +81,10 @@ On this page you can:
 If switching info mode, the chart content will be restored.
 
 ## SETTINGS PAGE GUI
+| DSO settings menu | DSO frequency / waveform generator menu |
+| :-: | :-: |
+| ![DSO settings menu](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Settings_Passive_Attenuator.jpg) | ![Frequency / waveform generator menu](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Frequency.jpg) |
+
 On this page you have all buttons to modify the **DSO acquisition mode**, to select the different **ADC channels** and for **page navigation**
 above the last button row the minimum stack size, the supply voltage and the internal chip temperature is shown.
 The stack size is required for testing different buffer size values during development and the temperature may be quite inaccurate.
@@ -160,25 +168,23 @@ DSO start screen
 | DSO Chart screen | DSO Chart screen with long info |
 | :-: | :-: |
 | ![DSO chart screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart.jpg) | ![DSO chart screen with long info](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart_Long_Info.jpg) |
-| DSO settings menu | DSO frequency / waveform generator menu |
-| ![DSO settings menu](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Settings_Passive_Attenuator.jpg) | ![Frequency / waveform generator menu](pictures/Frequency.jpg) |
-| ![DSO at work](pictures/DSO+Tablet.jpg) |  |
+| ![DSO at work](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/DSO+Tablet.jpg) |  |
 
 ## Linearity of ADC converter
 The captured signal was generated with a STM32F303 DAC.
 
 All ranges including the 1 ms range (up to 30 kSamples per second) have almost perfect linearity.
-![26 탎 conversion](pictures/Linearity_26us_conversion_time.jpg)
+![26 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_26us_conversion_time.jpg)
 First small linearity issues can be seen at in the 496 탎 to 101 탎 ranges with 60 and 150 kSamples per second.
-![13 탎 conversion](pictures/Linearity_13us_conversion_time.jpg)
-![6.5 탎 conversion](pictures/Linearity_6us5_conversion_time.jpg)
+![13 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_13us_conversion_time.jpg)
+![6.5 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_6us5_conversion_time.jpg)
 In the 50 탎 to 10 탎 ranges with 300 kSamples per second the linearity is only acceptable.
-![5 탎 conversion](pictures/Linearity_3us_conversion_time.jpg)
+![5 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_3us_conversion_time.jpg)
 
 # SCHEMATICS
 | SIMPLE 1 RANGE VERSION | 3 RANGE VERSION |
 | :-: | :-: |
-| ![Fritzing schematic](fritzing/Arduino_Nano_DSO_simple_Schaltplan.png) | ![Fritzing schematic](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_BT_full_Schaltplan.png) |
+| ![Fritzing schematic](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_simple_Schaltplan.png) | ![Fritzing schematic](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_BT_full_Schaltplan.png) |
 | ![Fritzing breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_simple_Steckplatine.png) | ![Fritzing breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/fritzing/Arduino_Nano_DSO_BT_full_Steckplatine.png) |
 | ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/ArduinoDSO_simple.jpg) | ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/ArduinoDSO.jpg) |
 
