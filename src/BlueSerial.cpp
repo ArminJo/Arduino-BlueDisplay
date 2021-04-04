@@ -262,7 +262,7 @@ void sendUSART5Args(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, ui
  * @param aFunctionTag
  * @param aNumberOfArgs currently not more than 12 args (SHORT) are supported
  */
-void sendUSARTArgs(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...) {
+void sendUSARTArgs(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs, ...) {
     if (aNumberOfArgs > MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS) {
         return;
     }
@@ -274,7 +274,7 @@ void sendUSARTArgs(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...) {
     va_start(argp, aNumberOfArgs);
 
     *tBufferPointer++ = aNumberOfArgs * 2;
-    for (uint8_t i = 0; i < aNumberOfArgs; ++i) {
+    for (uint_fast8_t i = 0; i < aNumberOfArgs; ++i) {
         *tBufferPointer++ = va_arg(argp, int);
     }
     va_end(argp);
@@ -287,7 +287,7 @@ void sendUSARTArgs(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...) {
  * @param aNumberOfArgs currently not more than 12 args (SHORT) are supported
  * Last two arguments are length of buffer and buffer pointer (..., size_t aDataLength, uint8_t *aDataBufferPtr)
  */
-void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...) {
+void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs, ...) {
     if (aNumberOfArgs > MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS) {
         return;
     }
@@ -299,7 +299,7 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...
     va_start(argp, aNumberOfArgs);
 
     *tBufferPointer++ = aNumberOfArgs * 2;
-    for (uint8_t i = 0; i < aNumberOfArgs; ++i) {
+    for (uint_fast8_t i = 0; i < aNumberOfArgs; ++i) {
         *tBufferPointer++ = va_arg(argp, int);
     }
     // add data field header

@@ -47,7 +47,8 @@
 #define BOARD_HAVE_USART2 // they start counting with 0
 #endif
 
-// If Serial1 is available, but you want to use direct connection by USB to your smartphone / tablet, then you have to comment out the next line
+// If Serial1 is available, but you want to use direct connection by USB to your smartphone / tablet,
+// then you have to activate the next line
 //#define USE_USB_SERIAL
 
 /*
@@ -89,8 +90,8 @@
 /*
  * common functions
  */
-void sendUSARTArgs(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...);
-void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint8_t aNumberOfArgs, ...);
+void sendUSARTArgs(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs, ...);
+void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs, ...);
 void sendUSART5Args(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, uint16_t aColor);
 void sendUSART5ArgsAndByteBuffer(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd,
         uint16_t aColor, uint8_t *aBufferPtr, size_t aBufferLength);

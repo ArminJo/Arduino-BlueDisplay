@@ -115,8 +115,8 @@ void setup() {
     // initialize the digital pin as an output.
     pinMode(LED_BUILTIN, OUTPUT);
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL) || defined(ARDUINO_attiny3217)
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
 #endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
@@ -289,8 +289,8 @@ bool setupHC_05() {
         Serial.println(F("Timeout is 60 seconds."));
         Serial.println();
         waitAndEmptySerialReceiveBuffer(3); // 3 ms is sufficient for reading 3 character at 9600
-        uint8_t tLenght = readStringWithTimeoutFromSerial(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER], 60);
-        if (tLenght > 0) {
+        uint8_t tLength = readStringWithTimeoutFromSerial(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER], 60);
+        if (tLength > 0) {
             Serial.println();
             Serial.print(F("Confirm setting to factory reset and setting name of the module to \""));
             Serial.print(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER]);
@@ -361,8 +361,8 @@ bool setupJDY_31() {
         Serial.println(F("Timeout is 60 seconds."));
         Serial.println();
         waitAndEmptySerialReceiveBuffer(3); // 3 ms is sufficient for reading 3 character at 9600
-        uint8_t tLenght = readStringWithTimeoutFromSerial(&StringBufferForModuleName[INDEX_OF_JDY31_NAME_IN_BUFFER], 60);
-        if (tLenght > 0) {
+        uint8_t tLength = readStringWithTimeoutFromSerial(&StringBufferForModuleName[INDEX_OF_JDY31_NAME_IN_BUFFER], 60);
+        if (tLength > 0) {
             Serial.println();
             Serial.print(F("Enter any character to set name of the module to "));
             Serial.print(&StringBufferForModuleName[INDEX_OF_JDY31_NAME_IN_BUFFER]);
@@ -430,7 +430,7 @@ uint16_t readModuleResponseToBuffer(char *aStringBufferPtr) {
              */
             tDelayCount = 0;
             tReturnedBytes += tReturnedBytesPerRead;
-            for (uint8_t i = 0; i < tReturnedBytesPerRead; ++i) {
+            for (uint_fast8_t i = 0; i < tReturnedBytesPerRead; ++i) {
                 char tChar = BTModuleSerial.read();
                 /*
                  * Convert special character

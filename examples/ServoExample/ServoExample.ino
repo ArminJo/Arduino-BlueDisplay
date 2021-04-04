@@ -93,8 +93,8 @@ bool sDoAutomove;
  * Slider
  */
 #define SLIDER_BACKGROUND_COLOR COLOR_YELLOW
-#define SLIDER_BAR_COLOR COLOR_GREEN
-#define SLIDER_THRESHOLD_COLOR COLOR_BLUE
+#define SLIDER_BAR_COLOR COLOR16_GREEN
+#define SLIDER_THRESHOLD_COLOR COLOR16_BLUE
 
 /*
  * Laser
@@ -169,7 +169,7 @@ void setup() {
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
 #  endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
@@ -185,7 +185,7 @@ void setup() {
     } else {
 #if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
 #  endif
         // Just to know which program is running on my Arduino
         Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
@@ -324,7 +324,7 @@ void initDisplay(void) {
     uint16_t tSliderSize = sCurrentDisplayHeight / 2;
     SliderLaserPower.init(0, sCurrentDisplayHeight / 8, sSliderSize * 4, tSliderSize, (tSliderSize * 2) / 3, tSliderSize / 2,
     SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doLaserPowerSlider);
-    SliderLaserPower.setCaptionProperties(sTextSize, FLAG_SLIDER_CAPTION_ALIGN_LEFT_BELOW, 4, COLOR_RED, COLOR_WHITE);
+    SliderLaserPower.setCaptionProperties(sTextSize, FLAG_SLIDER_CAPTION_ALIGN_LEFT_BELOW, 4, COLOR16_RED, COLOR_WHITE);
     SliderLaserPower.setCaption("Laser");
 
     /*
@@ -357,20 +357,20 @@ void initDisplay(void) {
      */
     TouchButtonServosStartStop.init(0, sCurrentDisplayHeight - sCurrentDisplayHeight / 4, sCurrentDisplayWidth / 4,
             sCurrentDisplayHeight / 4,
-            COLOR_BLUE, "Start", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sExampleIsRunning,
+            COLOR16_BLUE, "Start", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sExampleIsRunning,
             &doServosStartStop);
     TouchButtonServosStartStop.setCaptionForValueTrue(F("Stop"));
 
     TouchButtonSetBias.init(sCurrentDisplayWidth - sCurrentDisplayWidth / 4,
             (sCurrentDisplayHeight - sCurrentDisplayHeight / 2) - sCurrentDisplayHeight / 32, sCurrentDisplayWidth / 4,
-            sCurrentDisplayHeight / 4, COLOR_RED, "Bias", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doSetBias);
+            sCurrentDisplayHeight / 4, COLOR16_RED, "Bias", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doSetBias);
 
     TouchButtonSetZero.init(sCurrentDisplayWidth - sCurrentDisplayWidth / 4, sCurrentDisplayHeight - sCurrentDisplayHeight / 4,
-            sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4, COLOR_RED, "Zero", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0,
+            sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4, COLOR16_RED, "Zero", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0,
             &doSetZero);
 
     TouchButtonAutoMove.init(sCurrentDisplayWidth - sCurrentDisplayWidth / 4,
-            sCurrentDisplayHeight / 4 - sCurrentDisplayHeight / 16, sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4, COLOR_BLUE,
+            sCurrentDisplayHeight / 4 - sCurrentDisplayHeight / 16, sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4, COLOR16_BLUE,
             "Move", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoAutomove, &doEnableAutoMove);
     TouchButtonAutoMove.setCaptionForValueTrue(F("Stop"));
 
@@ -496,7 +496,7 @@ void doSetBias(BDButton * aTheTouchedButton, int16_t aValue) {
     BlueDisplay1.clearDisplay();
     BlueDisplay1.drawText(0, sTextSize + getTextAscend(sTextSize * 3), "old position is taken \rfor horizontal input\r",
             sTextSize * 2,
-            COLOR_BLACK, COLOR_GREEN);
+            COLOR16_BLACK, COLOR16_GREEN);
     delayMillisWithCheckAndHandleEvents(2500);
     drawGui();
 }
@@ -621,7 +621,7 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallback
         #pragma GCC diagnostic ignored "-Wformat-truncation=" // We know, each argument is a string of size 7
             snprintf(sStringBuffer, sizeof sStringBuffer, "X=%s Y=%s Z=%s Zero=%s", &sStringBuffer[50], &sStringBuffer[60],
                     &sStringBuffer[70], &sStringBuffer[80]);
-            BlueDisplay1.drawText(0, sTextSize, sStringBuffer, sTextSize, COLOR_BLACK, COLOR_GREEN);
+            BlueDisplay1.drawText(0, sTextSize, sStringBuffer, sTextSize, COLOR16_BLACK, COLOR16_GREEN);
         }
 #endif
         if (sExampleIsRunning) {

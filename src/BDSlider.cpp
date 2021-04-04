@@ -167,7 +167,7 @@ void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
 }
 
 /*
- * Default threshold color is COLOR_RED initially
+ * Default threshold color is COLOR16_RED initially
  */
 void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) {
 #ifdef LOCAL_DISPLAY_EXISTS
@@ -190,7 +190,7 @@ void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
 
 /*
  * Default values are ((BlueDisplay1.mReferenceDisplaySize.YHeight / 12), (FLAG_SLIDER_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_CAPTION_ABOVE),
- *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR_BLACK, COLOR_WHITE);
+ *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR16_BLACK, COLOR_WHITE);
  */
 void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPosition, uint8_t aCaptionMargin, color16_t aCaptionColor,
         color16_t aCaptionBackgroundColor) {
@@ -236,7 +236,7 @@ void BDSlider::setValueFormatString(const char *aValueFormatString) {
 
 /*
  * Default values are ((BlueDisplay1.mReferenceDisplaySize.YHeight / 20), (FLAG_SLIDER_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_CAPTION_BELOW),
- *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR_BLACK, COLOR_WHITE);
+ *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR16_BLACK, COLOR_WHITE);
  */
 void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPrintValuePosition, uint8_t aPrintValueMargin,
         color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor) {

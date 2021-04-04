@@ -160,7 +160,7 @@ void setup() {
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
 #  endif
 
 #  if !(defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER) || defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER))
@@ -227,7 +227,7 @@ void doAccelerometerChange(struct SensorCallback * aSensorCallbackInfo) {
     uint16_t tYPos = ACCELERATION_SLIDER_CENTER_Y + 2 * TEXT_SIZE_11_HEIGHT;
     dtostrf(aSensorCallbackInfo->ValueX, 4, 1, &sStringBuffer[10]);
     sprintf_P(sStringBuffer, PSTR("Acc.X %s"), &sStringBuffer[10]);
-    BlueDisplay1.drawText(ACCELEROMETER_PRINT_VALUES_X, tYPos, sStringBuffer, TEXT_SIZE_11, COLOR_BLACK, COLOR_WHITE);
+    BlueDisplay1.drawText(ACCELEROMETER_PRINT_VALUES_X, tYPos, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, COLOR_WHITE);
 
     tYPos += TEXT_SIZE_11;
     dtostrf(aSensorCallbackInfo->ValueY, 4, 1, &sStringBuffer[10]);
@@ -279,7 +279,7 @@ void doGyroscopeChange(struct SensorCallback * aSensorCallbackInfo) {
     uint16_t tYPos = ACCELERATION_SLIDER_CENTER_Y + 2 * TEXT_SIZE_11_HEIGHT;
     dtostrf(aSensorCallbackInfo->ValueX, 4, 1, &sStringBuffer[10]);
     sprintf_P(sStringBuffer, PSTR("Roll  %s"), &sStringBuffer[10]);
-    BlueDisplay1.drawText(GYROSCOPE_PRINT_VALUES_X, tYPos, sStringBuffer, TEXT_SIZE_11, COLOR_BLACK, COLOR_WHITE);
+    BlueDisplay1.drawText(GYROSCOPE_PRINT_VALUES_X, tYPos, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, COLOR_WHITE);
 
     tYPos += TEXT_SIZE_11;
     dtostrf(aSensorCallbackInfo->ValueY, 4, 1, &sStringBuffer[10]);
@@ -327,55 +327,55 @@ void initDisplay(void) {
      */
     // Top slider
     SliderAccelerationForward.init(ACCELERATION_SLIDER_LEFT_X, ACCELERATION_SLIDER_CENTER_Y - SLIDER_BAR_LENGTH,
-    SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH, SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_GREEN, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-//    SliderAccelerationForward.setBarThresholdDefaultColor(COLOR_BLUE); // since app version 4.3
-    SliderAccelerationForward.setBarThresholdColor(COLOR_BLUE);
+    SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH, SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR16_GREEN, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+//    SliderAccelerationForward.setBarThresholdDefaultColor(COLOR16_BLUE); // since app version 4.3
+    SliderAccelerationForward.setBarThresholdColor(COLOR16_BLUE);
     sAccelerationForwardBackwardSliders.negativeSliderPtr = &SliderAccelerationForward;
 
     // Bottom inverse slider (length is negative)
     SliderAccelerationBackward.init(ACCELERATION_SLIDER_LEFT_X, ACCELERATION_SLIDER_CENTER_Y,
-    SLIDER_BAR_WIDTH, -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_GREEN, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    SliderAccelerationBackward.setBarThresholdColor(COLOR_BLUE);
+    SLIDER_BAR_WIDTH, -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR16_GREEN, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    SliderAccelerationBackward.setBarThresholdColor(COLOR16_BLUE);
     sAccelerationForwardBackwardSliders.positiveSliderPtr = &SliderAccelerationBackward;
 
     // slider right from forward
     SliderAccelerationRight.init(ACCELERATION_SLIDER_RIGHT_X, ACCELERATION_SLIDER_TOP_Y, SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH,
-    SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    SliderAccelerationRight.setBarThresholdColor(COLOR_BLUE);
+    SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    SliderAccelerationRight.setBarThresholdColor(COLOR16_BLUE);
     sAccelerationLeftRightSliders.negativeSliderPtr = &SliderAccelerationRight;
 
     // Position inverse slider left from forward
     SliderAccelerationLeft.init(ACCELERATION_SLIDER_LEFT_X - SLIDER_BAR_LENGTH, ACCELERATION_SLIDER_TOP_Y, SLIDER_BAR_WIDTH,
-            -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_GREEN,
+            -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR16_GREEN,
             FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    SliderAccelerationLeft.setBarThresholdColor(COLOR_BLUE);
+    SliderAccelerationLeft.setBarThresholdColor(COLOR16_BLUE);
     sAccelerationLeftRightSliders.positiveSliderPtr = &SliderAccelerationLeft;
 
     /*
      * This 4 sliders are thinner and overlay the acceleration sliders
      */
     SliderRollForward.init(ROLL_PITCH_YAW_SLIDER_LEFT_X, ROLL_PITCH_YAW_SLIDER_CENTER_Y - SLIDER_BAR_LENGTH,
-    ROLL_PITCH_YAW_SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH, SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_RED,
+    ROLL_PITCH_YAW_SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH, SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR16_RED,
             FLAG_SLIDER_IS_ONLY_OUTPUT,
             NULL);
-    SliderRollForward.setBarThresholdColor(COLOR_BLUE);
+    SliderRollForward.setBarThresholdColor(COLOR16_BLUE);
     sRollForwardBackwardSliders.negativeSliderPtr = &SliderRollForward;
 
     SliderRollBackward.init(ROLL_PITCH_YAW_SLIDER_LEFT_X, ROLL_PITCH_YAW_SLIDER_CENTER_Y, ROLL_PITCH_YAW_SLIDER_BAR_WIDTH,
-            -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_RED, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    SliderRollBackward.setBarThresholdColor(COLOR_BLUE);
+            -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR16_RED, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    SliderRollBackward.setBarThresholdColor(COLOR16_BLUE);
     sRollForwardBackwardSliders.positiveSliderPtr = &SliderRollBackward;
 
     SliderPitchRight.init(ACCELERATION_SLIDER_RIGHT_X, ROLL_PITCH_YAW_SLIDER_TOP_Y, ROLL_PITCH_YAW_SLIDER_BAR_WIDTH,
     SLIDER_BAR_LENGTH,
-    SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_RED, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    SliderPitchRight.setBarThresholdColor(COLOR_BLUE);
+    SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR16_RED, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    SliderPitchRight.setBarThresholdColor(COLOR16_BLUE);
     sPitchLeftRightSliders.positiveSliderPtr = &SliderPitchRight;
 
     SliderPitchLeft.init(ACCELERATION_SLIDER_LEFT_X - SLIDER_BAR_LENGTH, ROLL_PITCH_YAW_SLIDER_TOP_Y,
-    ROLL_PITCH_YAW_SLIDER_BAR_WIDTH, -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR_RED,
+    ROLL_PITCH_YAW_SLIDER_BAR_WIDTH, -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR_YELLOW, COLOR16_RED,
             FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    SliderPitchLeft.setBarThresholdColor(COLOR_BLUE);
+    SliderPitchLeft.setBarThresholdColor(COLOR16_BLUE);
     sPitchLeftRightSliders.negativeSliderPtr = &SliderPitchLeft;
 
 #endif

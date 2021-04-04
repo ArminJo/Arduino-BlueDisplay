@@ -1780,7 +1780,7 @@ void drawDataBuffer(uint8_t *aByteBuffer, uint16_t aColor, uint16_t aClearBefore
 }
 
 void clearDisplayedChart(uint8_t *aDisplayBufferPtr) {
-    BlueDisplay1.drawChartByteBuffer(0, 0, COLOR_BACKGROUND_DSO, COLOR_NO_BACKGROUND, aDisplayBufferPtr,
+    BlueDisplay1.drawChartByteBuffer(0, 0, COLOR_BACKGROUND_DSO, COLOR16_NO_BACKGROUND, aDisplayBufferPtr,
             sizeof(DataBufferControl.DisplayBuffer));
 }
 
@@ -1880,12 +1880,12 @@ void printfTriggerDelay(char *aDataBufferPtr, uint16_t aTriggerDelayMillisOrMicr
 
 void printSingleshotMarker() {
 // draw an S to indicate running single shot trigger
-    BlueDisplay1.drawChar(SINGLESHOT_PPRINT_VALUE_X, FONT_SIZE_INFO_LONG_ASC, 'S', FONT_SIZE_INFO_LONG, COLOR_BLACK,
+    BlueDisplay1.drawChar(SINGLESHOT_PPRINT_VALUE_X, FONT_SIZE_INFO_LONG_ASC, 'S', FONT_SIZE_INFO_LONG, COLOR16_BLACK,
     COLOR_INFO_BACKGROUND);
 }
 
 void clearSingleshotMarker() {
-    BlueDisplay1.drawChar(SINGLESHOT_PPRINT_VALUE_X, FONT_SIZE_INFO_LONG_ASC, ' ', FONT_SIZE_INFO_LONG, COLOR_BLACK,
+    BlueDisplay1.drawChar(SINGLESHOT_PPRINT_VALUE_X, FONT_SIZE_INFO_LONG_ASC, ' ', FONT_SIZE_INFO_LONG, COLOR16_BLACK,
     COLOR_BACKGROUND_DSO);
 }
 
@@ -1980,7 +1980,7 @@ void printInfo(bool aRecomputeValues) {
                 tSlopeChar, tMinStringBuffer, tAverageStringBuffer, tMaxStringBuffer, tP2PStringBuffer, tTriggerStringBuffer,
                 tReferenceChar);
         memcpy_P(&sStringBuffer[8], ADCInputMUXChannelStrings[MeasurementControl.ADCInputMUXChannelIndex], 4);
-        BlueDisplay1.drawText(INFO_LEFT_MARGIN, FONT_SIZE_INFO_LONG_ASC, sStringBuffer, FONT_SIZE_INFO_LONG, COLOR_BLACK,
+        BlueDisplay1.drawText(INFO_LEFT_MARGIN, FONT_SIZE_INFO_LONG_ASC, sStringBuffer, FONT_SIZE_INFO_LONG, COLOR16_BLACK,
         COLOR_INFO_BACKGROUND);
 
         /*
@@ -2008,7 +2008,7 @@ void printInfo(bool aRecomputeValues) {
         }
 
         BlueDisplay1.drawText(INFO_LEFT_MARGIN, FONT_SIZE_INFO_LONG_ASC + FONT_SIZE_INFO_LONG, sStringBuffer, FONT_SIZE_INFO_LONG,
-        COLOR_BLACK, COLOR_INFO_BACKGROUND);
+        COLOR16_BLACK, COLOR_INFO_BACKGROUND);
 
     } else {
         /*
@@ -2038,7 +2038,7 @@ void printInfo(bool aRecomputeValues) {
         }
 #endif
 #endif
-        BlueDisplay1.drawText(INFO_LEFT_MARGIN, FONT_SIZE_INFO_SHORT_ASC, sStringBuffer, FONT_SIZE_INFO_SHORT, COLOR_BLACK,
+        BlueDisplay1.drawText(INFO_LEFT_MARGIN, FONT_SIZE_INFO_SHORT_ASC, sStringBuffer, FONT_SIZE_INFO_SHORT, COLOR16_BLACK,
         COLOR_INFO_BACKGROUND);
     }
 }
@@ -2086,7 +2086,7 @@ void printTriggerInfo(void) {
         tYPos = TRIGGER_LEVEL_INFO_LONG_Y;
         tFontsize = FONT_SIZE_INFO_LONG;
     }
-    BlueDisplay1.drawText(tXPos, tYPos, sStringBuffer, tFontsize, COLOR_BLACK, COLOR_INFO_BACKGROUND);
+    BlueDisplay1.drawText(tXPos, tYPos, sStringBuffer, tFontsize, COLOR16_BLACK, COLOR_INFO_BACKGROUND);
 }
 
 /*
@@ -2102,7 +2102,7 @@ void printVCCAndTemperature(void) {
 
         sprintf_P(sStringBuffer, PSTR("%s volt %s\xB0" "C"), &sStringBuffer[30], &sStringBuffer[40]); // \xB0 is degree character
         BlueDisplay1.drawText(BUTTON_WIDTH_3_POS_2, SETTINGS_PAGE_INFO_Y, sStringBuffer,
-        TEXT_SIZE_11, COLOR_BLACK, COLOR_BACKGROUND_DSO);
+        TEXT_SIZE_11, COLOR16_BLACK, COLOR_BACKGROUND_DSO);
     }
 }
 
@@ -2165,7 +2165,7 @@ void printFreeStack(void) {
     uint16_t tUntouchesBytesOnStack = getStackFreeMinimumBytes();
     sprintf_P(sStringBuffer, PSTR("%4u Stack[bytes]"), tUntouchesBytesOnStack);
     BlueDisplay1.drawText(0, SETTINGS_PAGE_INFO_Y, sStringBuffer,
-    TEXT_SIZE_11, COLOR_BLACK, COLOR_BACKGROUND_DSO);
+    TEXT_SIZE_11, COLOR16_BLACK, COLOR_BACKGROUND_DSO);
 }
 
 /*
@@ -2442,7 +2442,7 @@ ISR_ALIAS(TIMER3_OVF_vect, TIMER0_OVF_vect);
 #ifdef DEBUG
 void printDebugData(void) {
     sprintf_P(sStringBuffer, PSTR("%5d, 0x%04X, 0x%04X, 0x%04X"), DebugValue1, DebugValue2, DebugValue3, DebugValue4);
-    BlueDisplay1.drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + 2 * TEXT_SIZE_11_HEIGHT, sStringBuffer, 11, COLOR_BLACK,
+    BlueDisplay1.drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + 2 * TEXT_SIZE_11_HEIGHT, sStringBuffer, 11, COLOR16_BLACK,
             COLOR_BACKGROUND_DSO);
 }
 #endif

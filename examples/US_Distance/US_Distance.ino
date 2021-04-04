@@ -41,7 +41,7 @@
 #define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
-//#define USE_US_SENSOR_1_PIN_MODE // Comment it out, if you use modified HC-SR04 modules or HY-SRF05 ones
+//#define USE_US_SENSOR_1_PIN_MODE // Activate it, if you use modified HC-SR04 modules or HY-SRF05 ones
 
 #define MEASUREMENT_INTERVAL_MILLIS 50
 
@@ -103,7 +103,7 @@ void setup(void) {
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
 #  endif
 // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
@@ -118,8 +118,8 @@ void setup(void) {
         delay(100);
     } else {
 #if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1) // print it now if not printed above
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)  || defined(ARDUINO_attiny3217)
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
 #endif
         // Just to know which program is running on my Arduino
         Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
@@ -176,8 +176,8 @@ void loop(void) {
         if (tUSDistanceCentimeter != sCentimeterOld) {
             if (BlueDisplay1.mConnectionEstablished) {
                 uint16_t tCmXPosition = BlueDisplay1.drawUnsignedByte(getTextWidth(sCaptionTextSize * 2), sValueStartY,
-                        tUSDistanceCentimeter, sCaptionTextSize * 2, COLOR_YELLOW, COLOR_BLUE);
-                BlueDisplay1.drawText(tCmXPosition, sValueStartY, "cm", sCaptionTextSize, COLOR_WHITE, COLOR_BLUE);
+                        tUSDistanceCentimeter, sCaptionTextSize * 2, COLOR16_YELLOW, COLOR16_BLUE);
+                BlueDisplay1.drawText(tCmXPosition, sValueStartY, "cm", sCaptionTextSize, COLOR16_WHITE, COLOR16_BLUE);
                 SliderShowDistance.setValueAndDrawBar(tUSDistanceCentimeter);
             }
             if (tUSDistanceCentimeter >= 40 || !doTone) {
@@ -248,16 +248,16 @@ void handleConnectAndReorientation(void) {
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, tCurrentDisplayWidth,
             tCurrentDisplayHeight);
 
-    SliderShowDistance.init(0, sCaptionTextSize * 3, sCaptionTextSize / 4, tCurrentDisplayWidth, 199, 0, COLOR_BLUE,
-    COLOR_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    SliderShowDistance.init(0, sCaptionTextSize * 3, sCaptionTextSize / 4, tCurrentDisplayWidth, 199, 0, COLOR16_BLUE,
+    COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderShowDistance.setScaleFactor(200.0 / tCurrentDisplayWidth);
 
     // Initialize button position, size, colors etc.
-    TouchButtonStartStop.init(0, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR_BLUE, "Start Tone",
+    TouchButtonStartStop.init(0, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR16_BLUE, "Start Tone",
             sCaptionTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doTone, &doStartStop);
     TouchButtonStartStop.setCaptionForValueTrue("Stop Tone");
 
-    TouchButtonOffset.init(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR_RED,
+    TouchButtonOffset.init(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR16_RED,
             "Offset", sCaptionTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetOffset);
 }
 
@@ -265,8 +265,8 @@ void handleConnectAndReorientation(void) {
  * Function used as callback handler for redraw event
  */
 void drawGui(void) {
-    BlueDisplay1.clearDisplay(COLOR_BLUE);
-    BlueDisplay1.drawText(sCaptionStartX, sCaptionTextSize, "Distance", sCaptionTextSize, COLOR_WHITE, COLOR_BLUE);
+    BlueDisplay1.clearDisplay(COLOR16_BLUE);
+    BlueDisplay1.drawText(sCaptionStartX, sCaptionTextSize, "Distance", sCaptionTextSize, COLOR16_WHITE, COLOR16_BLUE);
     SliderShowDistance.drawSlider();
     TouchButtonStartStop.drawButton();
     TouchButtonOffset.drawButton();

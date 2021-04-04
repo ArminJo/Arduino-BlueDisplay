@@ -71,8 +71,8 @@
 
 #define SLIDER_X_POSITION 80
 
-#define COLOR_DEMO_BACKGROUND COLOR_BLUE
-#define COLOR_CAPTION COLOR_RED
+#define COLOR_DEMO_BACKGROUND COLOR16_BLUE
+#define COLOR_CAPTION COLOR16_RED
 
 #if defined(USE_C_TIME)
 struct tm *sTimeInfo;
@@ -148,7 +148,7 @@ void setup() {
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
 #  endif
 // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
@@ -194,7 +194,7 @@ void loop() {
              * LED on
              */
             digitalWrite(LED_BUILTIN, HIGH);
-            BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_RED);
+            BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR16_RED);
             /*
              *  Wait for delay time and update "Demo" string at a rate 16 times the blink rate.
              *  For Arduino serial check touch events 8 times while waiting.
@@ -251,9 +251,9 @@ void initDisplay(void) {
 //    TouchButtonValueDirect.init(&ButtonValueDirectInit, F("..."));
     TouchButtonValueDirect.init(210, 150, 90, 55, COLOR_YELLOW, F("..."), 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetDelay);
 
-    TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE, COLOR_YELLOW, COLOR_GREEN,
+    TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE, COLOR_YELLOW, COLOR16_GREEN,
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_HORIZONTAL, &doDelay);
-    TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_RIGHT, 4, COLOR_RED, COLOR_DEMO_BACKGROUND);
+    TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_RIGHT, 4, COLOR16_RED, COLOR_DEMO_BACKGROUND);
     TouchSliderDelay.setCaption("Delay");
     TouchSliderDelay.setScaleFactor(10); // Slider is virtually 10 times larger
     TouchSliderDelay.setValueUnitString("ms");
@@ -297,7 +297,7 @@ void printTime() {
     sprintf_P(sStringBuffer, PSTR("%02d.%02d.%4d %02d:%02d:%02d"), sTimeInfo->tm_mday, sTimeInfo->tm_mon, sTimeInfo->tm_year + 1900,
     sTimeInfo->tm_hour, sTimeInfo->tm_min, sTimeInfo->tm_sec);
     BlueDisplay1.drawText(DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer, 11,
-    COLOR_BLACK, COLOR_DEMO_BACKGROUND);
+    COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
 }
 
 #else
@@ -321,7 +321,7 @@ void printTime() {
     // 1600 byte code size for time handling plus print
     sprintf_P(sStringBuffer, PSTR("%02d.%02d.%4d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(), second());
     BlueDisplay1.drawText(DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer, 11,
-    COLOR_BLACK, COLOR_DEMO_BACKGROUND);
+    COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
 }
 #endif
 

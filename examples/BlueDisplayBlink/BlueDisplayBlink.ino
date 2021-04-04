@@ -75,7 +75,7 @@ void setup() {
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
 #  endif
 // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
@@ -94,14 +94,14 @@ void loop() {
     if (doBlink) {
         // LED on
         digitalWrite(LED_BUILTIN, HIGH);
-        BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_RED);
+        BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR16_RED);
         delayMillisWithCheckAndHandleEvents(300);
     }
 
     if (doBlink) {
         // LED off
         digitalWrite(LED_BUILTIN, LOW);
-        BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_BLUE);
+        BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR16_BLUE);
         delayMillisWithCheckAndHandleEvents(300);
     }
 
@@ -118,7 +118,7 @@ void initDisplay(void) {
     DISPLAY_HEIGHT);
     // Initialize button position, size, colors etc.
     TouchButtonBlinkStartStop.init((DISPLAY_WIDTH - BUTTON_WIDTH_2) / 2, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_2,
-    BUTTON_HEIGHT_4, COLOR_BLUE, "Start", 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink,
+    BUTTON_HEIGHT_4, COLOR16_BLUE, "Start", 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink,
             &doBlinkStartStop);
     TouchButtonBlinkStartStop.setCaptionForValueTrue("Stop");
 }
@@ -127,7 +127,7 @@ void initDisplay(void) {
  * Function is called for resize + connect too
  */
 void drawGui(void) {
-    BlueDisplay1.clearDisplay(COLOR_BLUE);
+    BlueDisplay1.clearDisplay(COLOR16_BLUE);
     TouchButtonBlinkStartStop.drawButton();
 }
 

@@ -94,9 +94,9 @@ float sYZeroValue = 0;
 /*
  * Slider
  */
-#define SLIDER_BACKGROUND_COLOR COLOR_YELLOW
-#define SLIDER_BAR_COLOR COLOR_GREEN
-#define SLIDER_THRESHOLD_COLOR COLOR_BLUE
+#define SLIDER_BACKGROUND_COLOR COLOR16_YELLOW
+#define SLIDER_BAR_COLOR COLOR16_GREEN
+#define SLIDER_THRESHOLD_COLOR COLOR16_BLUE
 /*
  * Velocity
  */
@@ -168,10 +168,10 @@ void drawGui(void) {
     // y Formula is: mPositionY + tSliderLongWidth + aTextLayoutInfo.mMargin + (int) (0.76 * aTextLayoutInfo.mSize)
     BlueDisplay1.drawText(sCurrentDisplayWidth / 2 + sSliderWidth + 3 * getTextWidth(sTextSize),
     BUTTON_HEIGHT_4_DYN_LINE_2 - BUTTON_VERTICAL_SPACING_DYN + sTextSize / 2 + getTextAscend(sTextSize), "cm", sTextSize,
-    COLOR_BLACK, COLOR_WHITE);
+    COLOR16_BLACK, COLOR16_WHITE);
     // draw Laser Position string
     BlueDisplay1.drawText(0, sCurrentDisplayHeight / 32 + sSliderHeightLaser + sTextSize, "Laser position", sTextSize,
-    COLOR_BLACK, COLOR_WHITE);
+    COLOR16_BLACK, COLOR16_WHITE);
 
     SliderSpeed.drawSlider();
     TouchButtonLaserOnOff.drawButton();
@@ -249,29 +249,29 @@ void initDisplay(void) {
     // US distance Display slider
     uint16_t tUSSliderLength = sCurrentDisplayWidth / 2 - sSliderWidth;
     SliderShowDistance.init(sCurrentDisplayWidth / 2 + sSliderWidth,
-    BUTTON_HEIGHT_4_DYN_LINE_2 - sSliderWidth - BUTTON_VERTICAL_SPACING_DYN, sSliderWidth, tUSSliderLength, 99, 0, COLOR_WHITE,
-    COLOR_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT | FLAG_SLIDER_SHOW_VALUE, NULL);
+    BUTTON_HEIGHT_4_DYN_LINE_2 - sSliderWidth - BUTTON_VERTICAL_SPACING_DYN, sSliderWidth, tUSSliderLength, 99, 0, COLOR16_WHITE,
+    COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT | FLAG_SLIDER_SHOW_VALUE, NULL);
     SliderShowDistance.setScaleFactor(100.0 / tUSSliderLength);
-    SliderShowDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR_BLACK, COLOR_WHITE);
+    SliderShowDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR16_BLACK, COLOR16_WHITE);
 
     BlueDisplay1.debug("XWidth1=", BlueDisplay1.mCurrentDisplaySize.XWidth);
     BlueDisplay1.debug("BUTTON_WIDTH_3_DYN=", (uint16_t) BUTTON_WIDTH_3_DYN);
     /*
      * Buttons
      */
-    TouchButtonRcCarStartStop.init(0, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN, COLOR_BLUE, F("Start"),
+    TouchButtonRcCarStartStop.init(0, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN, COLOR16_BLUE, F("Start"),
             sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sRCCarStarted, &doRcCarStartStop);
     TouchButtonRcCarStartStop.setCaptionForValueTrue(F("Stop"));
 
     TouchButtonFollowerOnOff.init(BUTTON_WIDTH_4_DYN_POS_4, BUTTON_HEIGHT_4_DYN_LINE_2, BUTTON_WIDTH_4_DYN, BUTTON_HEIGHT_4_DYN,
-    COLOR_RED, F("Follow"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sFollowerMode,
+    COLOR16_RED, F("Follow"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sFollowerMode,
             &doFollowerOnOff);
 
     TouchButtonLaserOnOff.init(BUTTON_WIDTH_4_DYN_POS_4, BUTTON_HEIGHT_4_DYN_LINE_3, BUTTON_WIDTH_4_DYN, BUTTON_HEIGHT_4_DYN,
-    COLOR_RED, F("Laser"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, LaserOn, &doLaserOnOff);
+    COLOR16_RED, F("Laser"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, LaserOn, &doLaserOnOff);
 
     TouchButtonSetZero.init(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN,
-    COLOR_RED, F("Zero"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doSetZero);
+    COLOR16_RED, F("Zero"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doSetZero);
 }
 
 void BDsetup() {
@@ -296,7 +296,7 @@ void BDsetup() {
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
 #  endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
@@ -307,7 +307,7 @@ void BDsetup() {
     } else {
 #if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
 #  endif
 // Just to know which program is running on my Arduino
         Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));

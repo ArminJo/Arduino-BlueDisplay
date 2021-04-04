@@ -1,7 +1,7 @@
 /*
  * ServoEasing.h
  *
- *  Copyright (C) 2019-2020  Armin Joachimsmeyer
+ *  Copyright (C) 2019-2021  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of ServoEasing https://github.com/ArminJo/ServoEasing.
@@ -24,9 +24,9 @@
 #ifndef SERVOEASING_H_
 #define SERVOEASING_H_
 
-#define VERSION_SERVO_EASING "2.3.3"
+#define VERSION_SERVO_EASING "2.4.0"
 #define VERSION_SERVO_EASING_MAJOR 2
-#define VERSION_SERVO_EASING_MINOR 3
+#define VERSION_SERVO_EASING_MINOR 4
 // The change log is at the bottom of the file
 
 // @formatter:off
@@ -42,6 +42,7 @@
  * For use with e.g. the Adafruit PCA9685 16-Channel Servo Driver board. It has a resolution of 4096 per 20 ms => 4.88 탎 per step/unit.
  * One PCA9685 has 16 outputs. You must modify MAX_EASING_SERVOS below, if you have more than one PCA9685 attached!
  * Use of PCA9685 normally disables use of regular servo library. You can force using of regular servo library by defining USE_SERVO_LIB
+ * All internal values *MicrosecondsOrUnits now contains no more microseconds but PCA9685 units!!!
  */
 //#define USE_PCA9685_SERVO_EXPANDER
 //#define USE_SERVO_LIB
@@ -102,7 +103,7 @@
 #  if defined(ESP32)
 // The ESP32 I2C interferes with the Ticker / Timer library used.
 // Even with 100 kHz clock we have some dropouts / NAK's because of sending address again instead of first data.
-#    define I2C_CLOCK_FREQUENCY 100000 // 200000 does not work for my ESP32 module together with the timer :-(
+#    define I2C_CLOCK_FREQUENCY 100000 // 200000 does not work for my ESP32 module together with the timer even with external pullups :-(
 #  elif defined(ESP8266)
 #    define I2C_CLOCK_FREQUENCY 400000 // 400000 is the maximum for 80 MHz clocked ESP8266 (I measured real 330000 Hz for this setting)
 #  else
@@ -128,6 +129,9 @@
 #  endif
 #endif // ! defined(MAX_EASING_SERVOS)
 
+#if ! defined(DEFAULT_PULSE_WIDTH)
+#define DEFAULT_PULSE_WIDTH 1500     // default pulse width when servo is attached (from Servo.h)
+#endif
 #if ! defined(REFRESH_INTERVAL)
 #define REFRESH_INTERVAL 20000   // // minimum time to refresh servos in microseconds (from Servo.h)
 #endif
@@ -177,24 +181,15 @@
 #include <stdarg.h>
 #endif
 
-/*
- * Enable this to see information on each call.
- * Since there should be no library which uses Serial, enable it only for development purposes.
- */
-//#define TRACE
-//#define DEBUG
-// Propagate debug level
-#ifdef TRACE
-#define DEBUG
-#endif
-
 // @formatter:on
 
 #define DEFAULT_MICROSECONDS_FOR_0_DEGREE 544
+#define DEFAULT_MICROSECONDS_FOR_90_DEGREE (544 + ((2400 - 544) / 2)) // 1472
 #define DEFAULT_MICROSECONDS_FOR_180_DEGREE 2400
 // Approximately 10 microseconds per degree
 
 #define DEFAULT_PCA9685_UNITS_FOR_0_DEGREE  111 // 111.411 = 544 탎
+#define DEFAULT_PCA9685_UNITS_FOR_90_DEGREE (111 + ((491 - 111) / 2)) // 301 = 1472 us
 #define DEFAULT_PCA9685_UNITS_FOR_180_DEGREE 491 // 491.52 = 2400 탎
 // Approximately 2 units per degree
 
@@ -328,15 +323,20 @@ public:
     void I2CWriteByte(uint8_t aAddress, uint8_t aData);
     void setPWM(uint16_t aPWMOffValueAsUnits);
     void setPWM(uint16_t aPWMOnStartValueAsUnits, uint16_t aPWMPulseDurationAsUnits);
-    // main mapping function for 탎 to PCA9685 Units (20000/4096 = 4.88 탎)
+    // main mapping functions for 탎 to PCA9685 Units (20000/4096 = 4.88 탎) and back
     int MicrosecondsToPCA9685Units(int aMicroseconds);
+    int PCA9685UnitsToMicroseconds(int aPCA9685Units);
 #endif
     ServoEasing();
 
     uint8_t attach(int aPin);
+    uint8_t attach(int aPin, int aInitialDegree);
     // Here no units accepted, only microseconds!
     uint8_t attach(int aPin, int aMicrosecondsForServo0Degree, int aMicrosecondsForServo180Degree);
+    uint8_t attach(int aPin, int aInitialDegree, int aMicrosecondsForServo0Degree, int aMicrosecondsForServo180Degree);
     uint8_t attach(int aPin, int aMicrosecondsForServoLowDegree, int aMicrosecondsForServoHighDegree, int aServoLowDegree,
+            int aServoHighDegree);
+    uint8_t attach(int aPin, int aInitialDegree, int aMicrosecondsForServoLowDegree, int aMicrosecondsForServoHighDegree, int aServoLowDegree,
             int aServoHighDegree);
 
     void detach();
@@ -383,6 +383,7 @@ public:
     bool isMovingAndCallYield() __attribute__ ((deprecated ("Most times better use areInterruptsActive()")));
 
     int MicrosecondsOrUnitsToDegree(int aMicrosecondsOrUnits);
+    int MicrosecondsToDegree(int aMicroseconds);
     int DegreeToMicrosecondsOrUnits(int aDegree);
     int DegreeToMicrosecondsOrUnitsWithTrimAndReverse(int aDegree);
 
@@ -391,6 +392,11 @@ public:
     void print(Print *aSerial, bool doExtendedOutput = true); // Print dynamic and static info
     void printDynamic(Print *aSerial, bool doExtendedOutput = true);
     void printStatic(Print *aSerial);
+
+    /*
+     * Static functions
+     */
+    static bool areInterruptsActive(); // The recommended test if at least one servo is moving yet.
 
     /*
      * Internally only microseconds (or units (= 4.88 탎) if using PCA9685 expander) and not degree are used to speed up things.
@@ -438,26 +444,31 @@ public:
 
     int mServo0DegreeMicrosecondsOrUnits;
     int mServo180DegreeMicrosecondsOrUnits;
+
+    /*
+     * It is required for ESP32, where the timer interrupt routine does not block the loop. Maybe it runs on another CPU?
+     * The interrupt routine sets first the mServoMoves flag to false and then disables the timer,
+     * but on a ESP32 polling the flag and then starting next movement and enabling timer happens BEFORE the timer is disabled.
+     * And this crashes the kernel in esp_timer_delete, which will lead to a reboot.
+     */
+    static volatile bool sInterruptsAreActive; // true if interrupts are still active, i.e. at least one Servo is moving with interrupts.
+    /*
+     * Array of all servos to enable synchronized movings
+     * Servos are inserted in the order, in which they are attached
+     * I use an fixed array and not a list, since accessing an array is much easier and faster.
+     * Using an dynamic array may be possible, but in this case we must first malloc(), then memcpy() and then free(), which leads to heap fragmentation.
+     */
+    static uint_fast8_t sServoArrayMaxIndex; // maximum index of an attached servo in sServoArray[]
+    static ServoEasing *ServoEasingArray[MAX_EASING_SERVOS];
+    static int ServoEasingNextPositionArray[MAX_EASING_SERVOS]; // use int since we want to support negative values
+    /*
+     * Macros for backward compatibility
+     */
+#define areInterruptsActive() ServoEasing::areInterruptsActive()
+#define sServoArray ServoEasing::ServoEasingArray
+#define sServoNextPositionArray ServoEasing::ServoEasingNextPositionArray
+
 };
-
-/*
- * It is required for ESP32, where the timer interrupt routine does not block the loop. Maybe it runs on another CPU?
- * The interrupt routine sets first the mServoMoves flag to false and then disables the timer,
- * but on a ESP32 polling the flag and then starting next movement and enabling timer happens BEFORE the timer is disabled.
- * And this crashes the kernel in esp_timer_delete, which will lead to a reboot.
- */
-extern volatile bool sInterruptsAreActive; // true if interrupts are still active, i.e. at least one Servo is moving with interrupts.
-bool areInterruptsActive(); // The recommended test if at least one servo is moving yet.
-
-/*
- * Array of all servos to enable synchronized movings
- * Servos are inserted in the order, in which they are attached
- * I use an fixed array and not a list, since accessing an array is much easier and faster.
- * Using an dynamic array may be possible, but in this case we must first malloc(), then memcpy() and then free(), which leads to heap fragmentation.
- */
-extern uint_fast8_t sServoArrayMaxIndex; // maximum index of an attached servo in sServoArray[]
-extern ServoEasing *sServoArray[MAX_EASING_SERVOS];
-extern int sServoNextPositionArray[MAX_EASING_SERVOS]; // use int since we want to support negative values
 
 /*
  * Functions working on all servos in the list
@@ -517,10 +528,24 @@ float EaseOutBounce(float aPercentageOfCompletion);
 
 extern float (*sEaseFunctionArray[])(float aPercentageOfCompletion);
 
+// convenience function
+#if defined(__AVR__)
+bool checkI2CConnection(uint8_t aI2CAddress, Print *aSerial); // saves 95 bytes flash
+#else
+bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial); // Print has no flush()
+#endif
+
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
 /*
+ * Version 2.4.0 - 02/2021
+ * - New `attach()` functions with initial degree parameter to be written immediately. This replaces the `attach()` and `write()` combination at setup.
+ *
+ * Version 2.3.4 - 02/2021
+ * - ENABLE_MICROS_AS_DEGREE_PARAMETER also available for PCA9685 expander.
+ * - Moved `sServoArrayMaxIndex`, `sServoNextPositionArray` and `sServoArray` to `ServoEasing::sServoArrayMaxIndex`, `ServoEasing::ServoEasingNextPositionArray` and `ServoEasing::ServoEasingArray`.
+ *
  * Version 2.3.3 - 11/2020
  * - Added compile option `ENABLE_MICROS_AS_DEGREE_PARAMETER` to allow usage of microseconds instead of degree as function arguments for all functions using degrees as argument.
  * - Improved LightweightServo API.

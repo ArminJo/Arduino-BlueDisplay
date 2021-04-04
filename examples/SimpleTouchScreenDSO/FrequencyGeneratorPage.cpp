@@ -57,7 +57,7 @@
 
 static void (*sLastRedrawCallback)(void);
 
-#define COLOR_BACKGROUND_FREQ COLOR_WHITE
+#define COLOR_BACKGROUND_FREQ COLOR16_WHITE
 
 #ifdef AVR
 #define TIMER_PRESCALER_64 0x03
@@ -229,7 +229,7 @@ void stopFrequencyGeneratorPage(void) {
 void initFrequencyGeneratorPageGui() {
     // Frequency slider for 1 to 1000 at top of screen
     TouchSliderFrequency.init(FREQ_SLIDER_X, FREQ_SLIDER_Y, FREQ_SLIDER_SIZE, FREQ_SLIDER_MAX_VALUE,
-    FREQ_SLIDER_MAX_VALUE, 0, COLOR_BLUE, COLOR_GREEN, FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_IS_HORIZONTAL, &doFrequencySlider);
+    FREQ_SLIDER_MAX_VALUE, 0, COLOR16_BLUE, COLOR16_GREEN, FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_IS_HORIZONTAL, &doFrequencySlider);
 
     /*
      * Fixed frequency buttons next. Example of button handling without button objects
@@ -251,11 +251,11 @@ void initFrequencyGeneratorPageGui() {
 #ifdef LOCAL_DISPLAY_EXISTS
         TouchButtonFixedFrequency[i]->init(tXPos,
                 REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4 - BUTTON_HEIGHT_5 - BUTTON_HEIGHT_6 - 2 * BUTTON_DEFAULT_SPACING,
-                BUTTON_WIDTH_10, BUTTON_HEIGHT_6, COLOR_BLUE, sStringBuffer, TEXT_SIZE_11, 0, tFrequency, &doSetFixedFrequency);
+                BUTTON_WIDTH_10, BUTTON_HEIGHT_6, COLOR16_BLUE, sStringBuffer, TEXT_SIZE_11, 0, tFrequency, &doSetFixedFrequency);
 #else
         TouchButtonFirstFixedFrequency.init(tXPos,
                 REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4 - BUTTON_HEIGHT_5 - BUTTON_HEIGHT_6 - 2 * BUTTON_DEFAULT_SPACING,
-                BUTTON_WIDTH_10, BUTTON_HEIGHT_6, COLOR_BLUE, sStringBuffer, TEXT_SIZE_11, 0, tFrequency, &doSetFixedFrequency);
+                BUTTON_WIDTH_10, BUTTON_HEIGHT_6, COLOR16_BLUE, sStringBuffer, TEXT_SIZE_11, 0, tFrequency, &doSetFixedFrequency);
 #endif
 
         tXPos += BUTTON_WIDTH_10 + BUTTON_DEFAULT_SPACING_QUARTER;
@@ -289,11 +289,11 @@ void initFrequencyGeneratorPageGui() {
     TouchButtonFrequencyStartStop.setCaptionForValueTrue(F("Stop"));
 
     TouchButtonGetFrequency.init(BUTTON_WIDTH_3_POS_2, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
-    BUTTON_HEIGHT_4, COLOR_BLUE, F("Hz..."), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetFrequency);
+    BUTTON_HEIGHT_4, COLOR16_BLUE, F("Hz..."), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetFrequency);
 
 #ifdef AVR
     TouchButtonWaveform.init(BUTTON_WIDTH_3_POS_3, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
-            BUTTON_HEIGHT_4, COLOR_BLUE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, sFrequencyInfo.Waveform, &doWaveformMode);
+            BUTTON_HEIGHT_4, COLOR16_BLUE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, sFrequencyInfo.Waveform, &doWaveformMode);
     setWaveformButtonCaption();
 #endif
 }
@@ -311,14 +311,14 @@ void drawFrequencyGeneratorPage(void) {
 
 
     BlueDisplay1.drawText(TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1"),
-            TEXT_SIZE_11, COLOR_BLUE, COLOR_BACKGROUND_FREQ);
+            TEXT_SIZE_11, COLOR16_BLUE, COLOR_BACKGROUND_FREQ);
 #ifdef AVR
     BlueDisplay1.drawText(REMOTE_DISPLAY_WIDTH - 5 * TEXT_SIZE_11_WIDTH,
-            FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1000"), TEXT_SIZE_11, COLOR_BLUE,
+            FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1000"), TEXT_SIZE_11, COLOR16_BLUE,
             COLOR_BACKGROUND_FREQ);
 #else
     BlueDisplay1.drawText(BlueDisplay1.getDisplayWidth() - 5 * TEXT_SIZE_11_WIDTH,
-    FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, ("1000"), TEXT_SIZE_11, COLOR_BLUE,
+    FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, ("1000"), TEXT_SIZE_11, COLOR16_BLUE,
     COLOR_BACKGROUND_FREQ);
 #endif
 
@@ -453,7 +453,7 @@ void doSetFrequencyRange(BDButton * aTheTouchedButton, int16_t aValue) {
  */
 void doGetFrequency(BDButton * aTheTouchedButton, int16_t aValue) {
     TouchSliderFrequency.deactivate();
-    float tNumber = getNumberFromNumberPad(NUMBERPAD_DEFAULT_X, 0, COLOR_BLUE);
+    float tNumber = getNumberFromNumberPad(NUMBERPAD_DEFAULT_X, 0, COLOR16_BLUE);
 // check for cancel
     if (!isnan(tNumber)) {
         sFrequencyInfo.Frequency = tNumber;
@@ -515,7 +515,7 @@ void printFrequencyAndPeriod() {
 
 // print frequency
     BlueDisplay1.drawText(FREQ_SLIDER_X + 2 * TEXT_SIZE_22_WIDTH, TEXT_SIZE_22_HEIGHT, sStringBuffer, TEXT_SIZE_22,
-    COLOR_RED, COLOR_BACKGROUND_FREQ);
+    COLOR16_RED, COLOR_BACKGROUND_FREQ);
 
 // output period use float, since we have 1/8 us for square wave
     tPeriodMicros = getPeriodMicros();
@@ -533,7 +533,7 @@ void printFrequencyAndPeriod() {
     snprintf(sStringBuffer, sizeof sStringBuffer, "%10.3f%cs", tPeriodMicros, tUnitChar);
 #endif
     BlueDisplay1.drawText(FREQ_SLIDER_X, TEXT_SIZE_22_HEIGHT + 4 + TEXT_SIZE_22_ASCEND, sStringBuffer, TEXT_SIZE_22,
-    COLOR_BLUE, COLOR_BACKGROUND_FREQ);
+    COLOR16_BLUE, COLOR_BACKGROUND_FREQ);
 
 // 950 byte program space required for pow() and log10f()
     uint16_t tSliderValue;

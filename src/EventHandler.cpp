@@ -358,7 +358,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 #ifndef DO_NOT_NEED_BASIC_TOUCH_EVENTS
 #ifdef  LOCAL_DISPLAY_EXISTS
     if (tEventType <= EVENT_TOUCH_ACTION_MOVE && sDisplayXYValuesEnabled) {
-        printTPData(30, 2 + TEXT_SIZE_11_ASCEND, COLOR_BLACK, COLOR_WHITE);
+        printTPData(30, 2 + TEXT_SIZE_11_ASCEND, COLOR16_BLACK, COLOR_WHITE);
     }
 #endif
 #endif

@@ -84,7 +84,7 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aRedr
 // This results in a data event, which sends size and timestamp
     requestMaxCanvasSize();
 
-    for (uint8_t i = 0; i < 30; ++i) {
+    for (uint_fast8_t i = 0; i < 30; ++i) {
         /*
          * Wait 300 ms for size to be sent back by a canvas size event.
          * Time measured is between 50 and 150 ms (or 80 and 120) for Bluetooth.
@@ -420,7 +420,7 @@ uint16_t BlueDisplay::drawChar(uint16_t aPosX, uint16_t aPosY, char aChar, uint1
  * @param aStringPtr  If /r is used as newline character, rest of line will be cleared, if /n is used, rest of line will not be cleared.
  * @param aTextSize FontSize of text
  * @param aFGColor Foreground/text color
- * @param aBGColor if COLOR_NO_BACKGROUND, then the background will not filled
+ * @param aBGColor if COLOR16_NO_BACKGROUND, then the background will not filled
  * @return uint16_t start x for next character - next x Parameter
  */
 uint16_t BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor,
@@ -939,7 +939,7 @@ extern "C" uint16_t drawTextC(uint16_t aXStart, uint16_t aYStart, const char *aS
 
 #ifdef LOCAL_DISPLAY_EXISTS
 /**
- * @param aBGColor if COLOR_NO_BACKGROUND, then do not clear rest of line
+ * @param aBGColor if COLOR16_NO_BACKGROUND, then do not clear rest of line
  */
 void BlueDisplay::drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor,
         color16_t aBGColor) {
@@ -1645,7 +1645,7 @@ void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aY
         dtostrf(tVCCvoltage, 4, 2, tVCCString);
 
         sprintf_P(tDataBuffer, PSTR("%s volt %s\xB0" "C"), tVCCString, tTempString); // \xB0 is degree character
-        drawText(aXPos, aYPos, tDataBuffer, aTextSize, COLOR_BLACK, COLOR_WHITE);
+        drawText(aXPos, aYPos, tDataBuffer, aTextSize, COLOR16_BLACK, COLOR16_WHITE);
     }
 }
 #else
@@ -1826,7 +1826,7 @@ void BlueDisplay::drawStar(int aXPos, int aYPos, int tOffsetCenter, int tLength,
         tLength = -tLength;
     }
 
-    drawPixel(aXPos, aYPos, COLOR_BLUE);
+    drawPixel(aXPos, aYPos, COLOR16_BLUE);
 }
 
 /**
@@ -1836,16 +1836,16 @@ void BlueDisplay::drawGreyscale(uint16_t aXPos, uint16_t tYPos, uint16_t aHeight
     uint16_t tY;
     for (int i = 0; i < 256; ++i) {
         tY = tYPos;
-        drawLineRel(aXPos, tY, 0, aHeight, RGB(i, i, i));
+        drawLineRel(aXPos, tY, 0, aHeight, COLOR16(i, i, i));
         tY += aHeight;
-        drawLineRel(aXPos, tY, 0, aHeight, RGB((0xFF - i), (0xFF - i), (0xFF - i)));
+        drawLineRel(aXPos, tY, 0, aHeight, COLOR16((0xFF - i), (0xFF - i), (0xFF - i)));
         tY += aHeight;
-        drawLineRel(aXPos, tY, 0, aHeight, RGB(i, 0, 0));
+        drawLineRel(aXPos, tY, 0, aHeight, COLOR16(i, 0, 0));
         tY += aHeight;
-        drawLineRel(aXPos, tY, 0, aHeight, RGB(0, i, 0));
+        drawLineRel(aXPos, tY, 0, aHeight, COLOR16(0, i, 0));
         tY += aHeight;
         // For Test purposes: fillRectRel instead of drawLineRel gives missing pixel on different scale factors
-        fillRectRel(aXPos, tY, 1, aHeight, RGB(0, 0, i));
+        fillRectRel(aXPos, tY, 1, aHeight, COLOR16(0, 0, i));
         aXPos++;
     }
 }
@@ -1856,77 +1856,77 @@ void BlueDisplay::drawGreyscale(uint16_t aXPos, uint16_t tYPos, uint16_t aHeight
 void BlueDisplay::testDisplay(void) {
     clearDisplay();
 
-    fillRectRel(0, 0, 2, 2, COLOR_RED);
-    fillRectRel(mRequestedDisplaySize.XWidth - 3, 0, 3, 3, COLOR_GREEN);
-    fillRectRel(0, mRequestedDisplaySize.YHeight - 4, 4, 4, COLOR_BLUE);
-    fillRectRel(mRequestedDisplaySize.XWidth - 3, mRequestedDisplaySize.YHeight - 3, 3, 3, COLOR_BLACK);
+    fillRectRel(0, 0, 2, 2, COLOR16_RED);
+    fillRectRel(mRequestedDisplaySize.XWidth - 3, 0, 3, 3, COLOR16_GREEN);
+    fillRectRel(0, mRequestedDisplaySize.YHeight - 4, 4, 4, COLOR16_BLUE);
+    fillRectRel(mRequestedDisplaySize.XWidth - 3, mRequestedDisplaySize.YHeight - 3, 3, 3, COLOR16_BLACK);
 
-    fillRectRel(2, 2, 4, 4, COLOR_RED);
-    fillRectRel(10, 20, 10, 20, COLOR_RED);
-    drawRectRel(8, 18, 14, 24, COLOR_BLUE, 1);
-    drawCircle(15, 30, 5, COLOR_BLUE, 1);
-    fillCircle(20, 10, 10, COLOR_BLUE);
+    fillRectRel(2, 2, 4, 4, COLOR16_RED);
+    fillRectRel(10, 20, 10, 20, COLOR16_RED);
+    drawRectRel(8, 18, 14, 24, COLOR16_BLUE, 1);
+    drawCircle(15, 30, 5, COLOR16_BLUE, 1);
+    fillCircle(20, 10, 10, COLOR16_BLUE);
 
     drawLineRel(0, mRequestedDisplaySize.YHeight - 1, mRequestedDisplaySize.XWidth, -mRequestedDisplaySize.YHeight,
-    COLOR_GREEN);
-    drawLineRel(6, 6, mRequestedDisplaySize.XWidth - 9, mRequestedDisplaySize.YHeight - 9, COLOR_BLUE);
-    drawChar(50, TEXT_SIZE_11_ASCEND, 'y', TEXT_SIZE_11, COLOR_GREEN, COLOR_YELLOW);
-    drawText(0, 50 + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR_BLACK, COLOR_WHITE);
-    drawText(0, 50 + TEXT_SIZE_11_HEIGHT + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR_WHITE,
-    COLOR_BLACK);
+    COLOR16_GREEN);
+    drawLineRel(6, 6, mRequestedDisplaySize.XWidth - 9, mRequestedDisplaySize.YHeight - 9, COLOR16_BLUE);
+    drawChar(50, TEXT_SIZE_11_ASCEND, 'y', TEXT_SIZE_11, COLOR16_GREEN, COLOR16_YELLOW);
+    drawText(0, 50 + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR16_BLACK, COLOR16_WHITE);
+    drawText(0, 50 + TEXT_SIZE_11_HEIGHT + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR16_WHITE,
+    COLOR16_BLACK);
 
 #ifdef LOCAL_DISPLAY_EXISTS
-    drawLineOverlap(120, 140, 180, 125, LINE_OVERLAP_MAJOR, COLOR_RED);
-    drawLineOverlap(120, 143, 180, 128, LINE_OVERLAP_MINOR, COLOR_RED);
-    drawLineOverlap(120, 146, 180, 131, LINE_OVERLAP_BOTH, COLOR_RED);
+    drawLineOverlap(120, 140, 180, 125, LINE_OVERLAP_MAJOR, COLOR16_RED);
+    drawLineOverlap(120, 143, 180, 128, LINE_OVERLAP_MINOR, COLOR16_RED);
+    drawLineOverlap(120, 146, 180, 131, LINE_OVERLAP_BOTH, COLOR16_RED);
 #endif
 
-    fillRectRel(100, 100, 10, 5, COLOR_RED);
-    fillRectRel(90, 95, 10, 5, COLOR_RED);
-    fillRectRel(100, 90, 10, 10, COLOR_BLACK);
-    fillRectRel(95, 100, 5, 5, COLOR_BLACK);
+    fillRectRel(100, 100, 10, 5, COLOR16_RED);
+    fillRectRel(90, 95, 10, 5, COLOR16_RED);
+    fillRectRel(100, 90, 10, 10, COLOR16_BLACK);
+    fillRectRel(95, 100, 5, 5, COLOR16_BLACK);
 
-    drawStar(200, 120, 4, 6, 2, 2, COLOR_BLACK);
-    drawStar(250, 120, 8, 12, 4, 4, COLOR_BLACK);
+    drawStar(200, 120, 4, 6, 2, 2, COLOR16_BLACK);
+    drawStar(250, 120, 8, 12, 4, 4, COLOR16_BLACK);
 
     uint16_t DeltaSmall = 20;
     uint16_t DeltaBig = 100;
     uint16_t tYPos = 30;
 
     tYPos += 45;
-    drawLineWithThickness(10, tYPos, 10 + DeltaSmall, tYPos + DeltaBig, 4, COLOR_GREEN);
-    drawPixel(10, tYPos, COLOR_BLUE);
+    drawLineWithThickness(10, tYPos, 10 + DeltaSmall, tYPos + DeltaBig, 4, COLOR16_GREEN);
+    drawPixel(10, tYPos, COLOR16_BLUE);
 
-    drawLineWithThickness(70, tYPos, 70 - DeltaSmall, tYPos + DeltaBig, 4, COLOR_GREEN);
-    drawPixel(70, tYPos, COLOR_BLUE);
+    drawLineWithThickness(70, tYPos, 70 - DeltaSmall, tYPos + DeltaBig, 4, COLOR16_GREEN);
+    drawPixel(70, tYPos, COLOR16_BLUE);
 
     tYPos += 10;
-    drawLineWithThickness(140, tYPos, 140 - DeltaSmall, tYPos - DeltaSmall, 3, COLOR_GREEN);
-    drawPixel(140, tYPos, COLOR_BLUE);
+    drawLineWithThickness(140, tYPos, 140 - DeltaSmall, tYPos - DeltaSmall, 3, COLOR16_GREEN);
+    drawPixel(140, tYPos, COLOR16_BLUE);
 
-    drawLineWithThickness(150, tYPos, 150 + DeltaSmall, tYPos - DeltaSmall, 3, COLOR_GREEN);
-    drawPixel(150, tYPos, COLOR_BLUE);
+    drawLineWithThickness(150, tYPos, 150 + DeltaSmall, tYPos - DeltaSmall, 3, COLOR16_GREEN);
+    drawPixel(150, tYPos, COLOR16_BLUE);
 
 #ifdef LOCAL_DISPLAY_EXISTS
-    drawThickLine(190, tYPos, 190 - DeltaSmall, tYPos - DeltaSmall, 3, LINE_THICKNESS_DRAW_CLOCKWISE, COLOR_GREEN);
-    drawPixel(190, tYPos, COLOR_BLUE);
+    drawThickLine(190, tYPos, 190 - DeltaSmall, tYPos - DeltaSmall, 3, LINE_THICKNESS_DRAW_CLOCKWISE, COLOR16_GREEN);
+    drawPixel(190, tYPos, COLOR16_BLUE);
 
-    drawThickLine(200, tYPos, 200 + DeltaSmall, tYPos - DeltaSmall, 3, LINE_THICKNESS_DRAW_CLOCKWISE, COLOR_GREEN);
-    drawPixel(200, tYPos, COLOR_BLUE);
+    drawThickLine(200, tYPos, 200 + DeltaSmall, tYPos - DeltaSmall, 3, LINE_THICKNESS_DRAW_CLOCKWISE, COLOR16_GREEN);
+    drawPixel(200, tYPos, COLOR16_BLUE);
 
     tYPos -= 55;
-    drawThickLine(140, tYPos, 140 + DeltaBig, tYPos - DeltaSmall, 9, LINE_THICKNESS_DRAW_CLOCKWISE, COLOR_GREEN);
-    drawPixel(140, tYPos, COLOR_BLUE);
+    drawThickLine(140, tYPos, 140 + DeltaBig, tYPos - DeltaSmall, 9, LINE_THICKNESS_DRAW_CLOCKWISE, COLOR16_GREEN);
+    drawPixel(140, tYPos, COLOR16_BLUE);
 
     tYPos += 5;
-    drawThickLine(60, tYPos, 60 + DeltaBig, tYPos + DeltaSmall, 9, LINE_THICKNESS_DRAW_CLOCKWISE, COLOR_GREEN);
-    drawPixel(100, tYPos + 5, COLOR_BLUE);
+    drawThickLine(60, tYPos, 60 + DeltaBig, tYPos + DeltaSmall, 9, LINE_THICKNESS_DRAW_CLOCKWISE, COLOR16_GREEN);
+    drawPixel(100, tYPos + 5, COLOR16_BLUE);
 #endif
     drawGreyscale(5, 180, 10);
 }
 
 #define COLOR_SPECTRUM_SEGMENTS 6 // red->yellow, yellow-> green, green-> cyan, cyan-> blue, blue-> magent, magenta-> red
-#define COLOR_RESOLUTION 32 // 5 bit for 16 bit color (green really has 6 bit, but don't use it)
+#define COLOR_RESOLUTION 32 // 32 (5 bit) different red colors for 16 bit color (green really has 6 bit, but we don't use 6 bit)
 const uint16_t colorIncrement[COLOR_SPECTRUM_SEGMENTS] = { 1 << 6, 0x1FU << 11, 1, 0x3FFU << 6, 1 << 11, 0xFFFFU };
 
 /**

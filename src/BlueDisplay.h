@@ -179,7 +179,7 @@ uint16_t getTextMiddle(uint16_t aTextSize);
 /**********************
  * Constants used in protocol
  *********************/
-//#define COLOR_NO_BACKGROUND   ((color16_t)0XFFFE)
+//#define COLOR16_NO_BACKGROUND   ((color16_t)0XFFFE)
 static const float NUMBER_INITIAL_VALUE_DO_NOT_SHOW = 1e-40f;
 
 /**********************
@@ -280,8 +280,8 @@ public:
     void playFeedbackTone(uint8_t isError);
     void setLongTouchDownTimeout(uint16_t aLongTouchDownTimeoutMillis);
 
-    void clearDisplay(color16_t aColor = COLOR_WHITE);
-    void clearDisplayOptional(color16_t aColor = COLOR_WHITE);
+    void clearDisplay(color16_t aColor = COLOR16_WHITE);
+    void clearDisplayOptional(color16_t aColor = COLOR16_WHITE);
     void drawDisplayDirect(void);
     void setScreenOrientationLock(uint8_t aLockMode);
 
@@ -299,13 +299,13 @@ public:
     void drawText(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr);
 
     uint16_t drawByte(uint16_t aPosX, uint16_t aPosY, int8_t aByte, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
-    COLOR_BLACK, color16_t aBGColor = COLOR_WHITE);
+    COLOR16_BLACK, color16_t aBGColor = COLOR16_WHITE);
     uint16_t drawUnsignedByte(uint16_t aPosX, uint16_t aPosY, uint8_t aUnsignedByte, uint16_t aTextSize = TEXT_SIZE_11,
-            color16_t aFGColor = COLOR_BLACK, color16_t aBGColor = COLOR_WHITE);
+            color16_t aFGColor = COLOR16_BLACK, color16_t aBGColor = COLOR16_WHITE);
     uint16_t drawShort(uint16_t aPosX, uint16_t aPosY, int16_t aShort, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
-    COLOR_BLACK, color16_t aBGColor = COLOR_WHITE);
+    COLOR16_BLACK, color16_t aBGColor = COLOR16_WHITE);
     uint16_t drawLong(uint16_t aPosX, uint16_t aPosY, int32_t aLong, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
-    COLOR_BLACK, color16_t aBGColor = COLOR_WHITE);
+    COLOR16_BLACK, color16_t aBGColor = COLOR16_WHITE);
 
     void setWriteStringSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
             bool aClearOnNewScreen);

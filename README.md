@@ -1,7 +1,7 @@
 # [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
 Available as Arduino library "BlueDisplay"
 
-### [Version 2.1.1](https://github.com/ArminJo/Arduino-BlueDisplay/releases)
+### [Version 2.1.1](https://github.com/ArminJo/Arduino-BlueDisplay/archive/master.zip) - work in progress
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
@@ -39,7 +39,7 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 
 ## Which Serial interface?
 For boards which have more than one serial interface, the library tries to use **Serial1** for the connection to leave Serial, which is mostly connected to the USB, for other purposes as logging etc..
-If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must open the library file *BlueSerial.h* and comment out the line [`#define USE_USB_SERIAL`](src/BlueSerial.h#L51).<br/>
+If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must open the library file *BlueSerial.h* and activate the line [`#define USE_USB_SERIAL`](src/BlueSerial.h#L51).<br/>
 Another way is to define/enable `USE_SIMPLE_SERIAL` in *BlueSerial.h* and **modify the central serial interface function**. You only have to change the [first 2 lines](src/BlueSerial.cpp#L192) of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
 
 # Sensor axis for an Arduino application
@@ -53,14 +53,14 @@ For detaild information to sensors see [ShowSensorValues example](https://github
 
 # Compile options / macros for this library
 To customize the library to different requirements, there are some compile options / makros available.<br/>
-Modify it by commenting them out or in, or change the values if applicable. Or define the macro with the -D compiler option for gobal compile (the latter is not possible with the Arduino IDE, so consider to use [Sloeber](https://eclipse.baeyens.it).
+Modify it by commenting them out or in, or change the values if applicable. Or define the macro with the -D compiler option for global compile (the latter is not possible with the Arduino IDE, so consider using [Sloeber](https://eclipse.baeyens.it).
 | Macro | Default | File | Description |
 |-|-|-|-|
 | `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | EventHandler.h | Saves up to 620 bytes FLASH and 36 bytes RAM. |
 | `USE_SIMPLE_SERIAL` | disabled | BlueSerial.h | Saves up to 1250 bytes FLASH and 185 bytes RAM. |
 
 ### Modifying compile options with Arduino IDE
-First use *Sketch > Show Sketch Folder (Ctrl+K)*.<br/>
+First, use *Sketch > Show Sketch Folder (Ctrl+K)*.<br/>
 If you did not yet stored the example as your own sketch, then you are instantly in the right library folder.<br/>
 Otherwise you have to navigate to the parallel `libraries` folder and select the library you want to access.<br/>
 In both cases the library files itself are located in the `src` directory.<br/>
@@ -112,7 +112,7 @@ Not for STM32.
 Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a parking assistance.
 
 ## Random delays on some smartphones
-Depending on the device you use, you can observe some random **"delays"** up to 500 ms in the timing of the display refresh. 
+Depending on the device you use, you can observe some random **"delays"** up to 500 ms in the timing of the display refresh.
 The **delays does not occur if you use a USB connection** instead of the Bluetooth one.<br/>
 The reason is, that the Bluetooth driver does not return its received bytes for a longer time.<br/>
 If you send to much data during this delay the **driver may hang**, as you can observe for the SimpleDSO Application, which runs **smooth with a USB** connection. Hanging may be avoided if using flow control, but the HC05 firmware and breakout boards do not support it. On the ESP32, the BluetoothSerial library supports it and there you can observe that the client program also delays, when the smartphone driver takes its delay.<br/>
@@ -121,7 +121,7 @@ In my opinion some Bluetooth SPP (Serial Port Profile) drivers are not really sp
 Known devices **with** these "delays" are:<br/>
 Lenovo K3 Note 6.0, Nexus7 with AW-NH665 BT-Chip running 6.0.1, Nexus 6P with ?8.x?, Kindle Fire HD 8 with Broadcom BCM2076 running 6.3.1.5.<br/>
 Known devices **without** these "delays" are:<br/>
-Samsung Note 3 running 5.0, Lifetab P9702 running 7.1.2, Lifetab E10310 running 4.2.2, XORO PAD 721 running 4.2.2, Samsung Galaxy S3 GT-I9300 running Lineage 7.1.2, LUX10 running 5.0, iRULU X11 running 5.1.1, Time2 TC1050G running 5.1, Pixel 4 XL running 10, 
+Samsung Note 3 running 5.0, Lifetab P9702 running 7.1.2, Lifetab E10310 running 4.2.2, XORO PAD 721 running 4.2.2, Samsung Galaxy S3 GT-I9300 running Lineage 7.1.2, LUX10 running 5.0, iRULU X11 running 5.1.1, Time2 TC1050G running 5.1, Pixel 4 XL running 10,
 
 ## Extras
 The extras folder (in the Arduino IDE use "Sketch > Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
