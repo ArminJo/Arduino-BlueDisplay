@@ -149,7 +149,7 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 
 | Fritzing schematic for BlueDisplay example | BlueDisplay example breadboard picture |
 | :-: | :-: |
-| ![Fritzing schematics](extras/BlueDisplayBlink_Steckplatine.png) | ![Breadboard picture](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/Blink1.jpg) |
+| ![Fritzing board](extras/BlueDisplayBlink_Steckplatine.png) | ![Breadboard picture](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/Blink1.jpg) |
 | RC car control display | Hacked RC car |
 | ![RC car control display](extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
 

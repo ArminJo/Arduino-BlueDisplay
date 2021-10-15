@@ -537,7 +537,7 @@ uint16_t BlueDisplay::drawLong(uint16_t aPosX, uint16_t aPosY, int32_t aLong, ui
  * for writeString implementation
  */
 void BlueDisplay::setWriteStringSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
-bool aClearOnNewScreen) {
+        bool aClearOnNewScreen) {
 #ifdef LOCAL_DISPLAY_EXISTS
     printSetOptions(getLocalTextSize(aPrintSize), aPrintColor, aPrintBackgroundColor, aClearOnNewScreen);
 #endif
@@ -953,7 +953,6 @@ void BlueDisplay::drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aString
 }
 #endif
 
-#ifdef AVR
 uint16_t BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char *aPGMString, uint16_t aTextSize, color16_t aFGColor,
         color16_t aBGColor) {
     uint16_t tRetValue = 0;
@@ -1023,7 +1022,6 @@ void BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStringHe
         sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPosX, aPosY, tTextLength, (uint8_t*) tStringBuffer);
     }
 }
-#endif
 
 /***************************************************************************************************************************************************
  *
@@ -1172,7 +1170,7 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
         union {
             float floatValue;
             uint16_t shortArray[2];
-        }floatToShortArray;
+        } floatToShortArray;
         floatToShortArray.floatValue = aInitialValue;
         sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 3, aNumberHandler, floatToShortArray.shortArray[0],
                 floatToShortArray.shortArray[1], tShortPromptLength, (uint8_t*) tStringBuffer);
@@ -1348,7 +1346,7 @@ void BlueDisplay::deactivateAllButtons(void) {
 #ifdef AVR
 BDButtonHandle_t BlueDisplay::createButtonPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY,
         color16_t aButtonColor, const char *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-        void (*aOnTouchHandler)(BDButton *, int16_t)) {
+        void (*aOnTouchHandler)(BDButton*, int16_t)) {
     BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
     if (USART_isBluetoothPaired()) {
         uint8_t tCaptionLength = strlen_P(aPGMCaption);
@@ -1505,7 +1503,9 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
     BDSlider::deactivateAllSliders();
 }
 
+#if defined(ARDUINO)
 #include <Arduino.h>
+#endif
 #if defined(AVR) && defined(ADCSRA) && defined(ADATE)
 
 /*
@@ -1526,7 +1526,7 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
 #define ADC_PRESCALE ADC_PRESCALE8
 #elif (F_CPU == 8000000)
 #define ADC_PRESCALE ADC_PRESCALE64
-#elif (F_CPU == 16000000)
+#elif (F_CPU >= 16000000)
 #define ADC_PRESCALE ADC_PRESCALE128
 #endif
 
@@ -1648,8 +1648,8 @@ void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aY
         drawText(aXPos, aYPos, tDataBuffer, aTextSize, COLOR16_BLACK, COLOR16_WHITE);
     }
 }
-#else
-// dummy functions for examples
+#else // defined(AVR) && defined(ADCSRA) && defined(ADATE)
+// dummy functions to compile examples without errors
 uint16_t __attribute__((weak)) readADCChannelWithReferenceOversample(uint8_t aChannelNumber, uint8_t aReference,
         uint8_t aOversampleExponent) {
     return 0;

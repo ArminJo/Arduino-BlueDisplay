@@ -193,6 +193,10 @@ void BDButton::setCaption(const char *aCaption, bool doDrawButton) {
     }
 }
 
+void BDButton::setCaptionFromStringArray(const char *const aCaptionStringArrayPtr[], uint8_t aStringIndex, bool doDrawButton) {
+    setCaption(aCaptionStringArrayPtr[aStringIndex], doDrawButton);
+}
+
 void BDButton::setValue(int16_t aValue, bool doDrawButton) {
 #ifdef LOCAL_DISPLAY_EXISTS
     mLocalButtonPtr->setValue(aValue);
@@ -355,7 +359,6 @@ void BDButton::deactivateAllButtons(void) {
 //    mButtonHandle = tButtonNumber;
 //}
 
-
 uint8_t StringClipAndCopy(char *aStringBuffer, const __FlashStringHelper *aPGMCaption) {
     PGM_P tPGMCaption = reinterpret_cast<PGM_P>(aPGMCaption);
     /*
@@ -446,12 +449,16 @@ void BDButton::setCaptionPGMForValueTrue(const char *aPGMCaption) {
 
 void BDButton::setCaptionFromStringArrayPGM(const char *const aPGMCaptionStringArrayPtr[], uint8_t aStringIndex,
         bool doDrawButton) {
+#ifdef AVR
     __FlashStringHelper *tPGMCaption = (__FlashStringHelper*) pgm_read_word(&aPGMCaptionStringArrayPtr[aStringIndex]);
+#else
+    const char *tPGMCaption = aPGMCaptionStringArrayPtr[aStringIndex];
+#endif
     setCaption(tPGMCaption, doDrawButton);
 }
 
 void BDButton::setCaptionPGM(const char *aPGMCaption, bool doDrawButton) {
-    setCaption(reinterpret_cast<const __FlashStringHelper *>(aPGMCaption), doDrawButton);
+    setCaption(reinterpret_cast<const __FlashStringHelper*>(aPGMCaption), doDrawButton);
 
 }
 

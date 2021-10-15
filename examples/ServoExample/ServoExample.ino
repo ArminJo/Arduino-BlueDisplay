@@ -35,7 +35,7 @@
 
 #include <Arduino.h>
 
-#include "ServoEasing.h" // for smooth auto moving
+#include "ServoEasing.hpp" // for smooth auto moving
 
 #include <BlueDisplay.h>
 
@@ -169,7 +169,7 @@ void setup() {
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
-    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
@@ -185,7 +185,7 @@ void setup() {
     } else {
 #if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
-    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
         // Just to know which program is running on my Arduino
         Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));

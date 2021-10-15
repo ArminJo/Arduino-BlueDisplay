@@ -171,7 +171,7 @@ void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
  */
 void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) {
 #ifdef LOCAL_DISPLAY_EXISTS
-    mLocalSliderPointer->setBarThresholdColor(aBarThresholdColor);
+    mLocalSliderPointer->setBarThresholdColor(aBarThresholdDefaultColor);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_GLOBAL_SETTINGS, 2, SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD,

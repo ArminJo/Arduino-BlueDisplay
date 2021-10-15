@@ -1526,7 +1526,7 @@ void doOffsetMode(BDButton * aTheTouchedButton, int16_t aValue) {
 
     } else if (MeasurementControl.OffsetMode == OFFSET_MODE_MANUAL) {
 // Offset mode manual implies range mode manual
-        aTheTouchedButton->setCaptionAndDraw(AutoOffsetButtonStringMan);
+        aTheTouchedButton->setCaption(AutoOffsetButtonStringMan,true);
         setAutoRangeModeAndButtonCaption(false);
         TouchButtonAutoRangeOnOff.deactivate();
 #endif
@@ -1799,9 +1799,9 @@ void doDrawMode(BDButton * aTheTouchedButton, int16_t aValue) {
             MeasurementControl.isEffectiveMinMaxMode);
 // switch mode
     if (!DisplayControl.drawPixelMode) {
-        aTheTouchedButton->setCaptionAndDraw(DrawModeButtonStringPixel);
+        aTheTouchedButton->setCaption(DrawModeButtonStringPixel,true);
     } else {
-        aTheTouchedButton->setCaptionAndDraw(DrawModeButtonStringLine);
+        aTheTouchedButton->setCaption(DrawModeButtonStringLine,true);
     }
     DisplayControl.drawPixelMode = !DisplayControl.drawPixelMode;
 }

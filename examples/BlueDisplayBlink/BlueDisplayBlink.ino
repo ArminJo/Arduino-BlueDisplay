@@ -61,7 +61,7 @@ void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
 
 #if defined(ESP32)
-    Serial.begin(115299);
+    Serial.begin(115200);
     Serial.println("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
@@ -75,7 +75,7 @@ void setup() {
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
-    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));

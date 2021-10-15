@@ -21,6 +21,7 @@
 #define PROGMEM
 #define __FlashStringHelper char
 #define setCaptionPGM setCaption
+#define setCaptionFromStringArrayPGM setCaptionFromStringArray
 #define drawTextPGM drawText
 #  ifndef F
 #define F(a) a

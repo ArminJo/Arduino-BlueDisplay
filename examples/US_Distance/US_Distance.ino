@@ -86,7 +86,7 @@ void setup(void) {
 #endif
 
 #if defined(ESP32)
-    Serial.begin(115299);
+    Serial.begin(115200);
     Serial.println("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
@@ -103,7 +103,7 @@ void setup(void) {
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(SERIAL_USB)
-    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
@@ -119,7 +119,7 @@ void setup(void) {
     } else {
 #if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1) // print it now if not printed above
 #if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)  || defined(ARDUINO_attiny3217)
-    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
         // Just to know which program is running on my Arduino
         Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));

@@ -285,8 +285,8 @@ public:
     void removeButton(color16_t aBackgroundColor);
     void drawCaption(void);
     void setCaption(const char *aCaption, bool doDrawButton = false);
+    void setCaptionFromStringArray(const char *const aCaptionStringArrayPtr[], uint8_t aStringIndex, bool doDrawButton);
     void setCaptionForValueTrue(const char *aCaption);
-    void setCaptionAndDraw(const char *aCaption);
     void setValue(int16_t aValue, bool doDrawButton = false);
     void setValueAndDraw(int16_t aValue);
     void setButtonColor(color16_t aButtonColor);
