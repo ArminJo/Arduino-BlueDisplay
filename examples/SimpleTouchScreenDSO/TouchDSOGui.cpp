@@ -1092,7 +1092,7 @@ void drawMinMaxLines(void) {
 void clearHorizontalLineAndRestoreGrid(int aYposition) {
     // clear line
     BlueDisplay1.drawLineRel(0, aYposition, REMOTE_DISPLAY_WIDTH, 0, COLOR_BACKGROUND_DSO);
-    for (uint16_t tXPos = TIMING_GRID_WIDTH - 1; tXPos < REMOTE_DISPLAY_WIDTH - 1; tXPos += TIMING_GRID_WIDTH) {
+    for (unsigned int tXPos = TIMING_GRID_WIDTH - 1; tXPos < REMOTE_DISPLAY_WIDTH - 1; tXPos += TIMING_GRID_WIDTH) {
         BlueDisplay1.drawPixel(tXPos, aYposition, COLOR_GRID_LINES);
     }
 }
@@ -1217,7 +1217,7 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
  * Button caption section
  ************************************************************************/
 void setChannelButtonsCaption(void) {
-    for (uint8_t i = 0; i < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR; ++i) {
+    for (uint_fast8_t i = 0; i < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR; ++i) {
         if (MeasurementControl.AttenuatorType == ATTENUATOR_TYPE_FIXED_ATTENUATOR) {
 //            TouchButtonAutoOffsetMode.setCaptionFromStringArrayPGM(ChannelDivByButtonStrings, i); // requires 16 butes more
             TouchButtonChannels[i].setCaptionPGM(ChannelDivByButtonStrings[i]);

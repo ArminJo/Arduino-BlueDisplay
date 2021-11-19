@@ -1766,7 +1766,7 @@ void drawDataBuffer(uint8_t *aByteBuffer, uint16_t aColor, uint16_t aClearBefore
         uint8_t *tDisplayBufferPtr = &DataBufferControl.DisplayBuffer[0];
         uint8_t tXScaleCounter = tXScale;
         uint8_t tValue = *tBufferPtr++;
-        for (uint16_t i = 0; i < sizeof(DataBufferControl.DisplayBuffer); ++i) {
+        for (unsigned int i = 0; i < sizeof(DataBufferControl.DisplayBuffer); ++i) {
             if (tXScaleCounter == 0) {
                 tValue = *tBufferPtr++;
                 tXScaleCounter = tXScale;
@@ -1836,7 +1836,7 @@ void formatThousandSeparator(char *aThousandPosition) {
     char tOldChar = *aThousandPosition;
 //set separator for thousands
     *aThousandPosition-- = THOUSANDS_SEPARATOR;
-    for (uint8_t i = 2; i > 0; i--) {
+    for (uint_fast8_t i = 2; i > 0; i--) {
         tNewChar = *aThousandPosition;
         *aThousandPosition-- = tOldChar;
         tOldChar = tNewChar;

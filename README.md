@@ -7,7 +7,7 @@ Available as Arduino library "BlueDisplay"
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
 [![Commits since latest](https://img.shields.io/github/commits-since/ArminJo/Arduino-BlueDisplay/latest)](https://github.com/ArminJo/Arduino-BlueDisplay/commits/master)
 [![Build Status](https://github.com/ArminJo/Arduino-BlueDisplay/workflows/LibraryBuild/badge.svg)](https://github.com/ArminJo/Arduino-BlueDisplay/actions)
-[![Hit Counter](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https://github.com/ArminJo/Arduino-BlueDisplay)](https://github.com/brentvollebregt/hit-counter)
+![Hit Counter](https://visitor-badge.laobi.icu/badge?page_id=ArminJo_Arduino-BlueDisplay)
 
 This library enables an Android smartphone / tablet to act as a graphical display for your Arduino or ESP32.
 
@@ -68,6 +68,21 @@ In both cases the library files itself are located in the `src` directory.<br/>
 ### Modifying compile options with Sloeber IDE
 If you are using Sloeber as your IDE, you can easily define global symbols with *Properties > Arduino > CompileOptions*.<br/>
 ![Sloeber settings](https://github.com/ArminJo/ServoEasing/blob/master/pictures/SloeberDefineSymbols.png)
+
+# Display Unicode characters with `setCharacterMapping()`
+if we want to use special characters to display, we face the problem, that we can only send ASCII codes to be displayed. But fortunally the ASCII code table has at least 128 "unused" entries between 0x80 and 0xFF, normally used for the local codepage.<br/>
+But with `setCharacterMapping(<ASCII_value>, <UTF16_value>)` you can modify this codepage, i.e display the character <UTF16_value> if you send <ASCII_value>, which has to be between 0x80 and 0xFF.
+
+### Example
+
+``` c++
+    BlueDisplay1.setCharacterMapping(0x87, 0x2227); // mapping for unicode AND used as Forward symbol
+    BlueDisplay1.setCharacterMapping(0x88, 0x2228); // mapping for unicode OR used as Backwards symbol
+```
+
+# Using another Codepage with `setCodePage()`
+By default, the local codepage of the Android system is used for display special characters above 0x7F.<br/>
+But if you have a [codepage](https://en.wikipedia.org/wiki/Windows_code_page) which better fits your needs and you want to use as your default code page, you can change it with `setCodePage(<ISO_8859_Number>)`. Internally it is done on Android with `Charset.forName("ISO_8859_" + <ISO_8859_Number>)`.
 
 # [Examples](examples)
 Before using the examples, take care that the Bluetooth-module (e.g. the the HC-05 module) or ESP32 program is connected to your Android device and is visible in the Bluetooth Settings.
@@ -131,7 +146,7 @@ contains more schematics, breadboard layouts and pictures which may help you bui
 ### Debugging
 If you need debugging, you must use the `debug()` functions since using `Serial.print()` etc. gives errors (we have only one serial port on the Arduino).
 
-```
+```c++
 BlueDisplay1.debug("DoBlink=", doBlink);
 ```
 The debug content will then show up as **toast** on your Android device and is stored in the log.

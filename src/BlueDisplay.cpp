@@ -1944,7 +1944,7 @@ void BlueDisplay::generateColorSpectrum(void) {
     uint16_t tColorChangeAmount;
     uint16_t tYpos = mRequestedDisplaySize.YHeight;
     uint16_t tColorLine;
-    for (uint16_t line = 4; line < mRequestedDisplaySize.YHeight + 4; ++line) {
+    for (unsigned int line = 4; line < mRequestedDisplaySize.YHeight + 4; ++line) {
         tColorLine = line / 4;
         // colors for line 31 and 32 are identical
         if (tColorLine >= COLOR_RESOLUTION) {
@@ -1958,7 +1958,7 @@ void BlueDisplay::generateColorSpectrum(void) {
         }
         tXPos = 0;
         tYpos--;
-        for (int i = 0; i < COLOR_SPECTRUM_SEGMENTS; ++i) {
+        for (unsigned int i = 0; i < COLOR_SPECTRUM_SEGMENTS; ++i) {
             tDelta = colorIncrement[i];
 //          tError = COLOR_RESOLUTION / 2;
 //          for (int j = 0; j < COLOR_RESOLUTION; ++j) {
@@ -1971,7 +1971,7 @@ void BlueDisplay::generateColorSpectrum(void) {
 //              }
 //          }
             tError = ((mRequestedDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1) / 2;
-            for (uint16_t j = 0; j < (mRequestedDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1; ++j) {
+            for (unsigned int j = 0; j < (mRequestedDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1; ++j) {
                 drawPixel(tXPos++, tYpos, tColor);
                 tError += tColorChangeAmount;
                 if (tError > ((mRequestedDisplaySize.XWidth / COLOR_SPECTRUM_SEGMENTS) - 1)) {
