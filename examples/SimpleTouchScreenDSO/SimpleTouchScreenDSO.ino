@@ -30,7 +30,7 @@
  *        - active attenuator (pin 9 connected to ground).
  *      Automatic trigger, range and offset value selection.
  *      External trigger as well as delayed trigger possible.
- *      1120 Byte data buffer - 3 * display width.
+ *      1120 byte data buffer - 3 * display width.
  *      Min, max, average and peak to peak display.
  *      Period and frequency display.
  *      All settings can be changed during measurement.
@@ -1035,7 +1035,7 @@ void acquireDataFast(void) {
             tUValue.Word -= tValueOffset;
         }
         tUValue.Word = tUValue.Word >> MeasurementControl.ShiftValue;
-        // Byte overflow? This can happen if autorange is disabled.
+        // byte overflow? This can happen if autorange is disabled.
         if (tUValue.Word >= 0X100) {
             tUValue.Word = 0xFF;
         }
@@ -1335,7 +1335,7 @@ ISR(ADC_vect) {
         tUValue.Word = tUValue.Word - MeasurementControl.OffsetValue;
     }
     tUValue.Word = tUValue.Word >> MeasurementControl.ShiftValue;
-    // Byte overflow? This can happen if autorange is disabled.
+    // byte overflow? This can happen if autorange is disabled.
     if (tUValue.byte.HighByte > 0) {
         tUValue.byte.LowByte = 0xFF;
     }
@@ -2131,30 +2131,31 @@ void initStackFreeMeasurement(void) {
 }
 
 /*
- * Check for untouched patterns
+ * Returns the amount of stack not touched since the last call to initStackFreeMeasurement()
+ * by check for first touched pattern on the stack, starting the search at heap start.
  */
-uint16_t getStackFreeMinimumBytes(void) {
+uint16_t getStackUnusedBytes() {
     extern unsigned int __heap_start;
-    extern void * __brkval;
+    extern void *__brkval;
     uint8_t tDummyVariableOnStack;
 
-    uint8_t *tHeapPtr = (uint8_t *) __brkval;
+    uint8_t *tHeapPtr = (uint8_t*) __brkval;
     if (tHeapPtr == 0) {
-        tHeapPtr = (uint8_t *) &__heap_start;
+        tHeapPtr = (uint8_t*) &__heap_start;
     }
 
-// first search for first match, because malloc() and free() may be happened in between
-    while (*tHeapPtr != 0x5A && tHeapPtr < &tDummyVariableOnStack) {
+// first search for first match after current begin of heap, because malloc() and free() may be happened in between and overwrite low memory
+    while (*tHeapPtr != HEAP_STACK_UNTOUCHED_VALUE && tHeapPtr < &tDummyVariableOnStack) {
         tHeapPtr++;
     }
 // then count untouched patterns
-    uint16_t tStackFree = 0;
+    uint16_t tStackUnused = 0;
     while (*tHeapPtr == HEAP_STACK_UNTOUCHED_VALUE && tHeapPtr < &tDummyVariableOnStack) {
         tHeapPtr++;
-        tStackFree++;
+        tStackUnused++;
     }
 // word -> bytes
-    return (tStackFree);
+    return tStackUnused;
 }
 
 /*
@@ -2162,7 +2163,7 @@ uint16_t getStackFreeMinimumBytes(void) {
  * Needs 260 byte of FLASH
  */
 void printFreeStack(void) {
-    uint16_t tUntouchesBytesOnStack = getStackFreeMinimumBytes();
+    uint16_t tUntouchesBytesOnStack = getStackUnusedBytes();
     sprintf_P(sStringBuffer, PSTR("%4u Stack[bytes]"), tUntouchesBytesOnStack);
     BlueDisplay1.drawText(0, SETTINGS_PAGE_INFO_Y, sStringBuffer,
     TEXT_SIZE_11, COLOR16_BLACK, COLOR_BACKGROUND_DSO);

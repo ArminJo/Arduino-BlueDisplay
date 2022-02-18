@@ -143,7 +143,7 @@ unsigned int getUSDistance(unsigned int aTimeoutMicros) {
 }
 
 unsigned int getCentimeterFromUSMicroSeconds(unsigned int aDistanceMicros) {
-    // The reciprocal of formula in getUSDistanceAsCentiMeterWithCentimeterTimeout()
+    // The reciprocal of formula in getUSDistanceAsCentimeterWithCentimeterTimeout()
     return (aDistanceMicros * 100L) / 5825;
 }
 
@@ -154,15 +154,15 @@ unsigned int getCentimeterFromUSMicroSeconds(unsigned int aDistanceMicros) {
  *          timeout of 5825 micros is equivalent to 1 meter
  *          Default timeout of 20000 micro seconds is 3.43 meter
  */
-unsigned int getUSDistanceAsCentiMeter(unsigned int aTimeoutMicros) {
+unsigned int getUSDistanceAsCentimeter(unsigned int aTimeoutMicros) {
     return (getCentimeterFromUSMicroSeconds(getUSDistance(aTimeoutMicros)));
 }
 
 // 58,23 us per centimeter (forth and back)
-unsigned int getUSDistanceAsCentiMeterWithCentimeterTimeout(unsigned int aTimeoutCentimeter) {
+unsigned int getUSDistanceAsCentimeterWithCentimeterTimeout(unsigned int aTimeoutCentimeter) {
 // The reciprocal of formula in getCentimeterFromUSMicroSeconds()
     unsigned int tTimeoutMicros = ((aTimeoutCentimeter * 233L) + 2) / 4; // = * 58.25 (rounded by using +1)
-    return getUSDistanceAsCentiMeter(tTimeoutMicros);
+    return getUSDistanceAsCentimeter(tTimeoutMicros);
 }
 
 /*
@@ -256,7 +256,7 @@ ISR (PCINT1_vect) {
 
 #if (defined(USE_PIN_CHANGE_INTERRUPT_D0_TO_D7) | defined(USE_PIN_CHANGE_INTERRUPT_D8_TO_D13) | defined(USE_PIN_CHANGE_INTERRUPT_A0_TO_A5))
 
-void startUSDistanceAsCentiMeterWithCentimeterTimeoutNonBlocking(unsigned int aTimeoutCentimeter) {
+void startUSDistanceAsCentimeterWithCentimeterTimeoutNonBlocking(unsigned int aTimeoutCentimeter) {
 // need minimum 10 usec Trigger Pulse
     digitalWrite(sTriggerOutPin, HIGH);
     sUSValueIsValid = false;

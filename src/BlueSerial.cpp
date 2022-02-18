@@ -237,8 +237,8 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
 
 /**
  * send:
- * 1. Sync Byte A5
- * 2. Byte Function token
+ * 1. Sync byte A5
+ * 2. byte Function token
  * 3. Short length of parameters (here 5*2)
  * 4. Short n parameters
  */

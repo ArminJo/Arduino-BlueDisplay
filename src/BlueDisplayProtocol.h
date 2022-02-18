@@ -32,13 +32,13 @@
  * SEND PROTOCOL USED:
  * Message:
  * 1. Sync byte A5
- * 2. Byte function token
+ * 2. byte function token
  * 3. Short length (in bytes units -> always multiple of 2) of parameters
  * 4. Short n parameters
  *
  * Data (expected for messages with function code >= 0x60):
- * 1. Sync Byte A5
- * 2. Byte Data_Size_Type token (byte, short etc.) - only byte used now
+ * 1. Sync byte A5
+ * 2. byte Data_Size_Type token (byte, short etc.) - only byte used now
  * 3. Short length of data in byte units
  * 4. (Length) items of data values
  *

@@ -25,7 +25,7 @@ You can load the library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. 
 - Manual trigger level and range select.
 - Trigger delay.
 - External trigger.
-- 1120 Byte data buffer - 3.5 times display size.
+- 1120 byte data buffer - 3.5 times display size.
 - Display of min, max, average and peak to peak values.
 - Display of period and frequency.
 - 3 different types of external attenuator, detected by software.

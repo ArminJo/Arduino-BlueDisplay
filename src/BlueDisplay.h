@@ -477,7 +477,7 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor);
 #ifdef LOCAL_DISPLAY_EXISTS
 /*
  * MI0283QT2 TFTDisplay - must provided by main program
- * external declaration saves ROM (210 Bytes) and RAM ( 20 Bytes)
+ * external declaration saves ROM (210 bytes) and RAM ( 20 bytes)
  * and avoids missing initialization :-)
  */
 #if defined(USE_HY32D)

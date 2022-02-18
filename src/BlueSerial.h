@@ -38,7 +38,7 @@
 
 #if defined(__AVR__)
 // Simple serial is a simple blocking serial version without receive buffer and other overhead.
-// Using it saves up to 1250 byte FLASH and 185 byte RAM since USART is used directly
+// Using it saves up to 1250 byte program space and 185 byte RAM since USART is used directly
 // Simple serial on the MEGA2560 uses USART1
 //#define USE_SIMPLE_SERIAL // only for AVR
 #endif

@@ -9,7 +9,7 @@
  *
  *  The AVR Servo library supports only one timer, which means not more than 12 servos are supported using this library.
  *
- *  Copyright (C) 2019-2021  Armin Joachimsmeyer
+ *  Copyright (C) 2019-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of ServoEasing https://github.com/ArminJo/ServoEasing.
@@ -26,6 +26,20 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ */
+
+/*
+ * This library can be configured at compile time by the following options / macros:
+ * For more details see: https://github.com/ArminJo/ServoEasing#compile-options--macros-for-this-library
+ *
+ * - USE_PCA9685_SERVO_EXPANDER         Enables the use of the PCA9685 I2C expander chip/board.
+ * - USE_SERVO_LIB                      Use of PCA9685 normally disables use of regular servo library. You can force additional using of regular servo library by defining USE_SERVO_LIB.
+ * - PROVIDE_ONLY_LINEAR_MOVEMENT       Disables all but LINEAR movement. Saves up to 1540 bytes program space.
+ * - DISABLE_COMPLEX_FUNCTIONS          Disables the SINE, CIRCULAR, BACK, ELASTIC and BOUNCE easings.
+ * - MAX_EASING_SERVOS                  Saves 4 byte RAM per servo.
+ * - ENABLE_MICROS_AS_DEGREE_PARAMETER  Enables passing also microsecond values as (target angle) parameter. Requires additional 128 bytes program space.
+ * - PRINT_FOR_SERIAL_PLOTTER           Generate serial output for Arduino Plotter (Ctrl-Shift-L).
+ * - USE_LEIGHTWEIGHT_SERVO_LIB         Makes the servo pulse generating immune to other libraries blocking interrupts for a longer time like SoftwareSerial, Adafruit_NeoPixel and DmxSimple.
  */
 
 #ifndef SERVOEASING_HPP
@@ -80,6 +94,22 @@ HardwareTimer Timer20ms(3);  // 4 timers and 4. timer is used for tone()
 
 #elif defined(ARDUINO_ARCH_MBED) // Arduino Nano 33 BLE + Sparkfun Apollo3
 mbed::Ticker Timer20ms;
+
+/*************************************************************************************************************************************
+ * RP2040 based boards for pico core
+ * https://github.com/earlephilhower/arduino-pico
+ * https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
+ * Can use any pin for PWM, no timer restrictions
+ *************************************************************************************************************************************/
+#elif defined(ARDUINO_ARCH_RP2040) // Raspberry Pi Pico, Adafruit Feather RP2040, etc.
+#include "pico/time.h"
+repeating_timer_t Timer20ms;
+void handleServoTimerInterrupt();
+// The timer callback has a parameter and a return value
+bool handleServoTimerInterruptHelper(repeating_timer_t*) {
+    handleServoTimerInterrupt();
+    return true;
+}
 
 #elif defined(TEENSYDUINO)
 // common for all Teensy
@@ -1213,7 +1243,9 @@ bool ServoEasing::areInterruptsActive() {
 
 /*
  * Update all servos from list and check if all servos have stopped.
- * Defined weak in order to be able to overwrite it.
+ * Defined weak in order to be able to overwrite it, e.g. for synchronizing with NeoPixel updates,
+ * which otherwise leads to servo jitter. See QuadrupedNeoPixel.cpp of QuadrupedControl example.
+ * We have 100 us before the next servo period starts.
  */
 #if defined(STM32F1xx) && STM32_CORE_VERSION_MAJOR == 1 &&  STM32_CORE_VERSION_MINOR <= 8 // for "Generic STM32F1 series" from STM32 Boards from STM32 cores of Arduino Board manager
 __attribute__((weak)) void handleServoTimerInterrupt(HardwareTimer *aDummy __attribute__((unused))) // changed in stm32duino 1.9 - 5/2020
@@ -1256,21 +1288,24 @@ void enableServoEasingInterrupt() {
     TIMSK5 |= _BV(OCIE5B);// enable the output compare B interrupt
     OCR5B = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL_MICROS) / 8) - 100;// update values 100 탎 before the new servo period starts
 
-#  elif defined(__AVR_ATmega4809__) // Uno WiFi Rev 2, Nano Every
+#  elif defined(__AVR_ATmega4809__) || defined(__AVR_ATtiny3217__) // Uno WiFi Rev 2, Nano Every, Tiny Core 32 Dev Board
+    // For MegaTinyCore:
     // TCB1 is used by Tone()
     // TCB2 is used by Servo, but we cannot hijack the ISR, so we must use a dedicated timer for the 20 ms interrupt
     // TCB3 is used by millis()
-    // Must use TCA0, since TCBx have only prescaler %2. Use single mode, because it seems to be easier :-)
-    TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_NORMAL_gc;                        // Frequency mode, top = PER
-    TCA0.SINGLE.PER = (((F_CPU / 1000000) * REFRESH_INTERVAL_MICROS) / 8); // (F_CPU / 1000000) = clockCyclesPerMicrosecond()
-//    TCA0.SINGLE.PER = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL_MICROS) / 8); // clockCyclesPerMicrosecond() is no macro here!
-    TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;                               // reset interrupt flags
-    TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm;                                // Overflow interrupt
-    TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV8_gc | TCA_SINGLE_ENABLE_bm;   // set prescaler to 8
+    // Must use TCA0, since TCBx have only prescaler %2. Use single (16bit) mode, because it seems to be easier :-)
+    TCA0.SINGLE.CTRLD = 0; // Single mode - required at least for MegaTinyCore
+    TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_NORMAL_gc;                        // Normal mode, top = PER
+    TCA0.SINGLE.PER =  (((F_CPU / 1000000) * REFRESH_INTERVAL_MICROS) / 8); // 40000 at 16 MHz
+    TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV8_gc | TCA_SINGLE_ENABLE_bm;   // set prescaler to 8 and enable timer
+    TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm;                                // Enable overflow interrupt
 
-#  elif defined(TCCR1B) && defined(TIFR1) // defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#  elif defined(TCCR1B) && defined(TIFR1) // Uno, Nano etc.
     /*
-     * Standard AVR use timer 1
+     * Standard AVR
+     * Use timer 1, together with the servo library, which uses the output compare A interrupt.
+     * Therefore we use the output compare B interrupt and generate an interrupt 100 microseconds,
+     * before a new servo period starts. This leaves the first servo signals undisturbed.
      */
 #    if defined(USE_PCA9685_SERVO_EXPANDER) && !defined(USE_SERVO_LIB)
 //    // set timer 1 to 20 ms, since the servo library does not do this for us
@@ -1282,13 +1317,13 @@ void enableServoEasingInterrupt() {
     TIFR1 |= _BV(OCF1B);    // clear any pending interrupts;
     TIMSK1 |= _BV(OCIE1B);    // enable the output compare B interrupt
     /*
-     * Misuse the Input Capture Noise Canceler Bit as a flag, that signals that interrupts are enabled again.
+     * Misuse the Input Capture Noise Canceler Bit as a flag, that signals that interrupts for ServoEasing are enabled again.
      * It is required if disableServoEasingInterrupt() is suppressed e.g. by an overwritten handleServoTimerInterrupt() function
      * because the servo interrupt is used to synchronize e.g. NeoPixel updates.
      */
     TCCR1B |= _BV(ICNC1);
 #    ifndef USE_LEIGHTWEIGHT_SERVO_LIB
-// update values 100 탎 before the new servo period starts
+    // Generate interrupt 100 탎 before a new servo period starts
     OCR1B = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL_MICROS) / 8) - 100;
 #    endif
 
@@ -1388,6 +1423,9 @@ void enableServoEasingInterrupt() {
 #elif defined(ARDUINO_ARCH_MBED)
     Timer20ms.attach(handleServoTimerInterrupt, std::chrono::microseconds(REFRESH_INTERVAL_MICROS));
 
+#elif defined(ARDUINO_ARCH_RP2040)
+    add_repeating_timer_us(REFRESH_INTERVAL_MICROS, handleServoTimerInterruptHelper, NULL, &Timer20ms);
+
 #elif defined(TEENSYDUINO)
     // common for all Teensy
     Timer20ms.begin(handleServoTimerInterrupt, REFRESH_INTERVAL_MICROS);
@@ -1398,12 +1436,22 @@ void enableServoEasingInterrupt() {
     ServoEasing::sInterruptsAreActive = true;
 }
 
+#if defined(__AVR_ATmega328P__)
+/*
+ * To have more time for overwritten interrupt routine to handle its task.
+ */
+void setTimer1InterruptMarginMicros(uint16_t aInterruptMarginMicros){
+    // Generate interrupt aInterruptMarginMicros 탎 before a new servo period starts
+    OCR1B = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL_MICROS) / 8) - aInterruptMarginMicros;
+}
+#endif
+
 void disableServoEasingInterrupt() {
 #if defined(__AVR__)
 #  if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
     TIMSK5 &= ~(_BV(OCIE5B)); // disable the output compare B interrupt
 
-#elif defined(__AVR_ATmega4809__) // Uno WiFi Rev 2, Nano Every
+#  elif defined(__AVR_ATmega4809__) || defined(__AVR_ATtiny3217__) // Uno WiFi Rev 2, Nano Every, Tiny Core 32 Dev Board
     TCA0.SINGLE.INTCTRL &= ~(TCA_SINGLE_OVF_bm); // disable the overflow interrupt
 
 #  elif defined(TIMSK1)// defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
@@ -1436,6 +1484,9 @@ void disableServoEasingInterrupt() {
 #elif defined(ARDUINO_ARCH_MBED) // Arduino Nano 33 BLE + Sparkfun Apollo3
     Timer20ms.detach();
 
+#elif defined(ARDUINO_ARCH_RP2040)
+    cancel_repeating_timer(&Timer20ms);
+
 //#elif defined(ARDUINO_ARCH_APOLLO3)
 //    am_hal_ctimer_int_disable(AM_HAL_CTIMER_INT_TIMERA3);
 
@@ -1457,10 +1508,9 @@ ISR(TIMER5_COMPB_vect) {
     handleServoTimerInterrupt();
 }
 
-#elif defined(__AVR_ATmega4809__) // Uno WiFi Rev 2, Nano Every
+#  elif defined(__AVR_ATmega4809__) || defined(__AVR_ATtiny3217__) // Uno WiFi Rev 2, Nano Every, Tiny Core 32 Dev Board
 ISR(TCA0_OVF_vect) {
-    // Not tested, but with the experience, I made with the ATtiny3217, I guess it is required
-    TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm; // reset interrupt flags
+    TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm; // Reset interrupt flags.
     handleServoTimerInterrupt();
 }
 
@@ -1685,7 +1735,7 @@ bool updateAllServos() {
     }
 #if defined(PRINT_FOR_SERIAL_PLOTTER)
 // End of one data set
-    Serial.println();
+        Serial.println();
 #endif
     return tAllServosStopped;
 }
@@ -1745,12 +1795,12 @@ void synchronizeAllServosAndStartInterrupt(bool aStartUpdateByInterrupt) {
     }
 
 #if defined(TRACE)
-    Serial.print(F("Number of servos="));
-    Serial.print(ServoEasing::sServoArrayMaxIndex);
-    Serial.print(F(" MillisAtStartMove="));
-    Serial.print(tMillisAtStartMove);
-    Serial.print(F(" MaxMillisForCompleteMove="));
-    Serial.println(tMaxMillisForCompleteMove);
+        Serial.print(F("Number of servos="));
+        Serial.print(ServoEasing::sServoArrayMaxIndex);
+        Serial.print(F(" MillisAtStartMove="));
+        Serial.print(tMillisAtStartMove);
+        Serial.print(F(" MaxMillisForCompleteMove="));
+        Serial.println(tMaxMillisForCompleteMove);
 #endif
 
     /*

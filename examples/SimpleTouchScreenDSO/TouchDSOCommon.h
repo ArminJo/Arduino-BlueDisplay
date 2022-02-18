@@ -330,7 +330,7 @@ void clearDataBuffer();
 
 // Stack info
 void initStackFreeMeasurement(void);
-uint16_t getStackFreeMinimumBytes(void);
+uint16_t getStackUnusedBytes(void);
 void printFreeStack(void);
 
 // Data analysis section

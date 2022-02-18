@@ -42,18 +42,34 @@
 #define TRIGGER_OUT_PIN  15 // labeled D8
 
 #elif defined(ESP32)
-#define tone(a,b,c) void() // no tone() available on ESP32
-#define noTone(a) void()
 #define ANALOG_INPUT_PIN A0 // 36/VP
 #define ECHO_IN_PIN      26
 #define TRIGGER_OUT_PIN  27
+#include <Arduino.h>
+#define TONE_LEDC_CHANNEL        1  // Using channel 1 makes tone() independent of receiving timer -> No need to stop receiving timer.
+void tone(uint8_t _pin, unsigned int frequency){
+    ledcAttachPin(_pin, TONE_LEDC_CHANNEL);
+    ledcWriteTone(TONE_LEDC_CHANNEL, frequency);
+}
+void tone(uint8_t _pin, unsigned int frequency, unsigned long duration){
+    ledcAttachPin(_pin, TONE_LEDC_CHANNEL);
+    ledcWriteTone(TONE_LEDC_CHANNEL, frequency);
+    delay(duration);
+    ledcWriteTone(TONE_LEDC_CHANNEL, 0);
+}
+void noTone(uint8_t _pin){
+    ledcWriteTone(TONE_LEDC_CHANNEL, 0);
+}
+#define TONE_PIN          15
 
 #elif defined(ARDUINO_ARCH_SAM)
-#define tone(a,b,c) void() // no tone() available on ESP32
-#define noTone(a) void()
 #define ANALOG_INPUT_PIN A0
 #define ECHO_IN_PIN      4
 #define TRIGGER_OUT_PIN  5
+
+#define tone(...) void()    // no tone() available
+#define noTone(a) void()
+#define TONE_PIN           42 // Dummy for examples using it
 
 #elif defined(STM32F1xx) || defined(__STM32F1__)
 // BluePill in 2 flavors

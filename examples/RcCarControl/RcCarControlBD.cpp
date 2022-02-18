@@ -51,9 +51,9 @@ const int ECHO_PIN = 8;
 /*
  * Distance / Follower mode
  */
-#define DISTANCE_MINIMUM_CENTIMETER         20 // If measured distance is less than this value, go backwards
-#define DISTANCE_MAXIMUM_CENTIMETER         30 // If measured distance is greater than this value, go forward
-#define DISTANCE_DELTA_CENTIMETER           (DISTANCE_MAXIMUM_CENTIMETER - DISTANCE_MINIMUM_CENTIMETER)
+#define FOLLOWER_DISTANCE_MINIMUM_CENTIMETER         20 // If measured distance is less than this value, go backwards
+#define FOLLOWER_DISTANCE_MAXIMUM_CENTIMETER         30 // If measured distance is greater than this value, go forward
+#define FOLLOWER_DISTANCE_DELTA_CENTIMETER           (FOLLOWER_DISTANCE_MAXIMUM_CENTIMETER - FOLLOWER_DISTANCE_MINIMUM_CENTIMETER)
 const int FOLLOWER_MAX_SPEED = 150; // empirical value
 
 #define FILTER_WEIGHT 4 // must be 2^n
@@ -295,7 +295,7 @@ void BDsetup() {
 
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.
-#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
     // Just to know which program is running on my Arduino
@@ -306,7 +306,7 @@ void BDsetup() {
         BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
     } else {
 #if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
-#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 // Just to know which program is running on my Arduino
@@ -343,12 +343,12 @@ void BDloop() {
     /*
      * Measure distance
      */
-    unsigned int tCentimeterNew = getUSDistanceAsCentiMeter(US_DISTANCE_TIMEOUT_MICROS_FOR_1_METER); // timeout at 1m
+    unsigned int tCentimeterNew = getUSDistanceAsCentimeter(US_DISTANCE_TIMEOUT_MICROS_FOR_1_METER); // timeout at 1m
     if (tCentimeterNew == 0) {
         // Stop on timeout
         resetOutputs();
         // set filtered value to "in range"
-        sDistanceCmFiltered = (DISTANCE_MINIMUM_CENTIMETER + (DISTANCE_DELTA_CENTIMETER / 2)) << FILTER_WEIGHT_EXPONENT;
+        sDistanceCmFiltered = (FOLLOWER_DISTANCE_MINIMUM_CENTIMETER + (FOLLOWER_DISTANCE_DELTA_CENTIMETER / 2)) << FILTER_WEIGHT_EXPONENT;
     } else {
         /*
          * Filter distance value and show
@@ -370,12 +370,12 @@ void BDloop() {
          * Only follower mode handled in loop
          */
         if (sFollowerMode) {
-            if (sDistanceCmFiltered > DISTANCE_MAXIMUM_CENTIMETER) {
+            if (sDistanceCmFiltered > FOLLOWER_DISTANCE_MAXIMUM_CENTIMETER) {
                 sForwardStopByDistance = false;
                 if (!sFollowerModeJustStarted) {
                     analogWrite(BACKWARD_MOTOR_PWM_PIN, 0);
                     // go forward
-                    unsigned int tSpeed = MOTOR_DEAD_BAND_VALUE + (sDistanceCmFiltered - DISTANCE_MAXIMUM_CENTIMETER) * 4;
+                    unsigned int tSpeed = MOTOR_DEAD_BAND_VALUE + (sDistanceCmFiltered - FOLLOWER_DISTANCE_MAXIMUM_CENTIMETER) * 4;
                     if (tSpeed > FOLLOWER_MAX_SPEED) {
                         tSpeed = FOLLOWER_MAX_SPEED;
                     }
@@ -384,13 +384,13 @@ void BDloop() {
                     SliderVelocityBackward.printValue(sStringBuffer);
                 }
 
-            } else if (sDistanceCmFiltered < DISTANCE_MINIMUM_CENTIMETER) {
+            } else if (sDistanceCmFiltered < FOLLOWER_DISTANCE_MINIMUM_CENTIMETER) {
                 // enable follower mode
                 sFollowerModeJustStarted = false;
                 analogWrite(FORWARD_MOTOR_PWM_PIN, 0);
                 // go backward
                 sForwardStopByDistance = true;
-                unsigned int tSpeed = MOTOR_DEAD_BAND_VALUE + (DISTANCE_MINIMUM_CENTIMETER - sDistanceCmFiltered) * 4;
+                unsigned int tSpeed = MOTOR_DEAD_BAND_VALUE + (FOLLOWER_DISTANCE_MINIMUM_CENTIMETER - sDistanceCmFiltered) * 4;
                 if (tSpeed > FOLLOWER_MAX_SPEED) {
                     tSpeed = FOLLOWER_MAX_SPEED;
                 }
