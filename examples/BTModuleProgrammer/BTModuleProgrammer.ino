@@ -13,16 +13,19 @@
  * 1. Load this sketch onto your Arduino.
  * 2. Disconnect Arduino from power.
  * 3. Connect Arduino rx/tx with HC-05 module tx/rx (crossover!) and do not forget to attach 5 volt to the module.
- * 4. If you have a HC-05 module, connect key pin with 3.3 volt output of Arduino.
+ * 4. If you have a HC-05 module, connect key pin with 3.3 volt output of Arduino to enter program mode.
  *    On my kind of board (a single sided one) it is sufficient to press the tiny button while powering up.
- *    If the module is in programming state, it blinks 4 seconds on and 4 seconds off.
+ *    If the module is in program mode, it blinks 4 seconds on and 4 seconds off.
  * 5. Apply power to Arduino and module.
  * 6. Open the Serial Monitor and follow the instructions.
  *
- * If you see " ... stk500_getsync(): not in sync .." while reprogramming the Arduino
- * it may help to disconnect the Arduino RX from the Hc-05 module TX pin temporarily.
+ * Sample Serial Monitor outputs can be found at https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples/BTModuleProgrammer.
  *
- *  Copyright (C) 2014-2020  Armin Joachimsmeyer
+ * If you see " ... stk500_getsync(): not in sync .." while reprogramming the Arduino with this program
+ * it may help to disconnect the Arduino RX from the HC-05 module TX pin temporarily.
+ *
+ *
+ *  Copyright (C) 2014-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay.
@@ -48,8 +51,8 @@ SoftwareSerial BTModuleSerial(2, 3); // RX, TX - RX data is not reliable at 1152
 
 #define VERSION_EXAMPLE "3.1"
 
-// To enable JDY-31 programming, connect pin D5 to ground
-#define JDY_31_SELECT_PIN 4
+// To enable JDY-31 programming, connect pin D4 to ground (or to pin D5)
+#define JDY_31_SELECT_PIN   4
 /*
  * Baud rates supported by the HC-05 module
  */
@@ -115,22 +118,32 @@ void setup() {
     // initialize the digital pin as an output.
     pinMode(LED_BUILTIN, OUTPUT);
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ "\r\nVersion " VERSION_EXAMPLE " from " __DATE__));
 
     pinMode(JDY_31_SELECT_PIN, INPUT_PULLUP);
+    pinMode((JDY_31_SELECT_PIN + 1), OUTPUT); // to be able to connect pin 4 to pin 5 on a breadboard
+    digitalWrite((JDY_31_SELECT_PIN + 1), LOW);
 
-    if (digitalRead(JDY_31_SELECT_PIN) != LOW) {
-        // Time to release key button for HC-05
-        Serial.println(F("HC-05 programming mode detected. Switch to JDY-31 mode by connecting pin 4 to ground."));
-        Serial.println();
-        Serial.println(F("Now you have 5 seconds for releasing HC-05 module key, which should be pressed at power up to enter program mode."));
-        delay(5000);
+    Serial.println();
+    if (digitalRead(JDY_31_SELECT_PIN) == LOW) {
+        Serial.println(F("*********************************"));
+        Serial.println(F("JDY-31 programming mode detected."));
+        Serial.println(F("*********************************"));
+        Serial.println(F("Switch to HC-05 mode by disconnecting pin 4 from ground or from pin 5."));
     } else {
-        Serial.println(F("JDY-31 programming mode detected. Switch to HC-05 mode by disconnecting pin 4 from ground."));
+        // Time to release key button for HC-05
+        Serial.println(F("********************************"));
+        Serial.println(F("HC-05 programming mode detected."));
+        Serial.println(F("********************************"));
+        Serial.println(F("Switch to JDY-31 mode by connecting pin 4 to ground or to pin 5."));
+        Serial.println();
+        Serial.println(F("Now you have 5 seconds for releasing HC-05 module key, "
+                "which should be pressed at power up to enter program mode."));
+        delay(5000);
     }
     Serial.println();
     Serial.println(F("Now we try to connect to module, read version and baud and wait for new name to be entered."));
@@ -158,7 +171,7 @@ void setup() {
  */
 void loop() {
     if (Serial.available()) {
-#ifdef TIMSK0
+#if defined(TIMSK0)
         // enable millis interrupt
         _SFR_BYTE(TIMSK0) |= _BV(TOIE0);
 #endif
@@ -250,6 +263,10 @@ void delayMilliseconds(unsigned int aMillis) {
     }
 }
 
+bool checkForOK(uint8_t aReturnedBytes) {
+    return (aReturnedBytes == 4 && StringBuffer[0] == 'O' && StringBuffer[1] == 'K');
+}
+
 bool setupHC_05() {
     Serial.println(F("Setup HC-05 module."));
     int tReturnedBytes = sendWaitAndReceive("AT");
@@ -257,14 +274,22 @@ bool setupHC_05() {
     /*
      * Check if "OK\n\r" returned
      */
-    if (tReturnedBytes == 4 && StringBuffer[0] == 'O' && StringBuffer[1] == 'K') {
+    if (checkForOK(tReturnedBytes)) {
 
-        Serial.println(F("Module attached OK, first get version"));
+        Serial.println(F("Module attached OK."));
+        Serial.println();
+        Serial.println(F("Get version"));
         sendWaitAndReceive("AT+VERSION");
 
+        Serial.println();
         Serial.println(F("Get current baud"));
         sendWaitAndReceive("AT+UART");
 
+        Serial.println();
+        Serial.println(F("Get current name"));
+        sendWaitAndReceive("AT+NAME");
+
+        Serial.println();
         Serial.println(F("Get current PIN"));
         sendWaitAndReceive("AT+PSWD");
 
@@ -272,20 +297,24 @@ bool setupHC_05() {
         Serial.println(F("Get current Role (0->Slave, 1->Master, 2->Slave-Loop)"));
         sendWaitAndReceive("AT+ROLE");
 
+        Serial.println();
         Serial.println(F("Get current Cmode (0->connect to fixed bind address, 1->connect to all)"));
         sendWaitAndReceive("AT+CMODE");
 
+        Serial.println();
         Serial.println(F("Get Bind address"));
         sendWaitAndReceive("AT+BIND");
 
+        Serial.println();
         Serial.println(F("Get own Address"));
         sendWaitAndReceive("AT+ADDR");
         Serial.println();
 
         Serial.println(
                 F(
-                        "Enter new module name to factory reset and set name and set baudrate to " MY_JDY31_BAUDRATE_STRING " - you will be asked for confirmation."));
+                        "Enter new module name to set this name and to set baudrate to " MY_HC05_BAUDRATE_STRING " - you will be asked for confirmation."));
         Serial.println(F("Or enter empty string to skip (and enter direct AT mode)."));
+        Serial.println(F("Factory reset command is \"AT+ORGL\"."));
         Serial.println(F("Timeout is 60 seconds."));
         Serial.println();
         waitAndEmptySerialReceiveBuffer(3); // 3 ms is sufficient for reading 3 character at 9600
@@ -294,8 +323,9 @@ bool setupHC_05() {
             Serial.println();
             Serial.print(F("Confirm setting to factory reset and setting name of the module to \""));
             Serial.print(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER]);
-            Serial.println(F("\" and baudrate to " MY_JDY31_BAUDRATE_STRING ));
-            Serial.println(F("by entering any character or press reset or remove power."));
+            Serial.println(F("\" and baudrate to " MY_HC05_BAUDRATE_STRING));
+            Serial.println(F("by entering any character or press reset or remove power to cancel."));
+            Serial.println();
             waitAndEmptySerialReceiveBuffer(3); // read 3 character at 9600
 
             while (!Serial.available()) {
@@ -305,27 +335,41 @@ bool setupHC_05() {
             /**
              * program HC05 Module
              */
-            // reset to original state
-            Serial.println(F("Reset to default"));
-            sendWaitAndReceive("AT+ORGL");
+//            // reset to original state. This leaves programming mode for Version 3.0-20170601
+//            Serial.println(F("Reset to default"));
+//            sendWaitAndReceive("AT+ORGL");
+//            Serial.println();
+            // Test comminication
+            int tReturnedBytes = sendWaitAndReceive("AT");
+            if (!checkForOK(tReturnedBytes)) {
+                return false;
+            }
 
             // Set name
             Serial.print(F("Set name to \""));
             Serial.print(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER]);
             Serial.println('"');
-
-            sendWaitAndReceive(StringBufferForModuleName);
+            tReturnedBytes = sendWaitAndReceive(StringBufferForModuleName);
+            Serial.println();
+            if (!checkForOK(tReturnedBytes)) {
+                return false;
+            }
 
             // Set baud / 1 stop bit / no parity
             Serial.println(F("Set baud to " MY_HC05_BAUDRATE_STRING));
-            sendWaitAndReceive("AT+UART=" MY_HC05_BAUDRATE_STRING ",0,0");
+            tReturnedBytes = sendWaitAndReceive("AT+UART=" MY_HC05_BAUDRATE_STRING ",0,0");
+            if (!checkForOK(tReturnedBytes)) {
+                return false;
+            }
 
-            Serial.println(F("Successful programmed module."));
+            Serial.println();
+            Serial.println(F("Successful programmed HC-05 module."));
             waitAndEmptySerialReceiveBuffer(1);
+
             return true;
         }
     } else {
-        Serial.println(F("No valid response to AT command."));
+        Serial.println(F("No valid response to AT command. Program mode must be enabled to get a response!"));
     }
     return false;
 }
@@ -405,7 +449,7 @@ bool setupJDY_31() {
             Serial.println(F("Get new name"));
             sendWaitAndReceive("AT+NAME");
 
-            Serial.println(F("Successful programmed module."));
+            Serial.println(F("Successful programmed JDY module."));
             return true;
         }
     } else {
@@ -466,7 +510,7 @@ uint16_t sendWaitAndReceive(const char *aATString) {
     Serial.println(F("\\r\\n\""));
     Serial.flush(); // required in order not to disturb SoftwareSerial
 
-#ifdef TIMSK0
+#if defined(TIMSK0)
     // disable millis interrupt
     _SFR_BYTE(TIMSK0) &= ~_BV(TOIE0);
 #endif
@@ -476,7 +520,7 @@ uint16_t sendWaitAndReceive(const char *aATString) {
      * For JDY-31 at115200 I measured 1 ms delay between end of the command and start of the answer
      */
     uint16_t tReturnedBytes = readModuleResponseToBuffer(StringBuffer);
-#ifdef TIMSK0
+#if defined(TIMSK0)
 // enable millis interrupt
     _SFR_BYTE(TIMSK0) |= _BV(TOIE0);
 #endif

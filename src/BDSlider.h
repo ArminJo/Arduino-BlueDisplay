@@ -27,8 +27,8 @@
  *
  */
 
-#ifndef BLUEDISPLAY_INCLUDE_BDSLIDER_H_
-#define BLUEDISPLAY_INCLUDE_BDSLIDER_H_
+#ifndef _BLUEDISPLAY_INCLUDE_BDSLIDER_H
+#define _BLUEDISPLAY_INCLUDE_BDSLIDER_H
 
 #include <stdint.h>
 /*
@@ -61,12 +61,12 @@ static const int FLAG_SLIDER_CAPTION_ALIGN_MIDDLE = 0x02;
 static const int FLAG_SLIDER_CAPTION_BELOW = 0x00;
 static const int FLAG_SLIDER_CAPTION_ABOVE = 0x04;
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 #include "TouchSlider.h"
 // assume we have only a restricted amount of local sliders
 typedef uint8_t BDSliderHandle_t;
 #else
-#ifdef AVR
+#if defined(AVR)
 typedef uint8_t BDSliderHandle_t;
 #else
 typedef uint16_t BDSliderHandle_t;
@@ -87,7 +87,7 @@ public:
 
     // Constructors
     BDSlider();
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPointer);
 #endif
 
@@ -138,7 +138,7 @@ public:
 
     BDSliderHandle_t mSliderHandle;
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     int printValue();
     void setXOffsetValue(int16_t aXOffsetValue);
 
@@ -166,6 +166,6 @@ void initPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr
         BDSlider *aNegativeSliderPtr);
 int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, int aValue, uint8_t aSliderDeadBand = 0);
 
-#endif /* BLUEDISPLAY_INCLUDE_BDSLIDER_H_ */
+#endif /* BLUEDISPLAY_INCLUDE_BDSLIDER_H */
 
 #pragma once

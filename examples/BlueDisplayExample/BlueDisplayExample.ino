@@ -54,7 +54,7 @@
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
  ***************************************************************************/
-#ifndef BLUETOOTH_BAUD_RATE
+#if !defined(BLUETOOTH_BAUD_RATE)
 //#define BLUETOOTH_BAUD_RATE BAUD_115200
 /*
  * With 9600 baud, the minimal blink delay we observe is 200 ms because of the communication delay
@@ -147,7 +147,7 @@ void setup() {
 
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 // Just to know which program is running on my Arduino

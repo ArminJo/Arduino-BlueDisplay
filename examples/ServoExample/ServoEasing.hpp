@@ -34,16 +34,16 @@
  *
  * - USE_PCA9685_SERVO_EXPANDER         Enables the use of the PCA9685 I2C expander chip/board.
  * - USE_SERVO_LIB                      Use of PCA9685 normally disables use of regular servo library. You can force additional using of regular servo library by defining USE_SERVO_LIB.
- * - PROVIDE_ONLY_LINEAR_MOVEMENT       Disables all but LINEAR movement. Saves up to 1540 bytes program space.
+ * - PROVIDE_ONLY_LINEAR_MOVEMENT       Disables all but LINEAR movement. Saves up to 1540 bytes program memory.
  * - DISABLE_COMPLEX_FUNCTIONS          Disables the SINE, CIRCULAR, BACK, ELASTIC and BOUNCE easings.
  * - MAX_EASING_SERVOS                  Saves 4 byte RAM per servo.
- * - ENABLE_MICROS_AS_DEGREE_PARAMETER  Enables passing also microsecond values as (target angle) parameter. Requires additional 128 bytes program space.
+ * - ENABLE_MICROS_AS_DEGREE_PARAMETER  Enables passing also microsecond values as (target angle) parameter. Requires additional 128 bytes program memory.
  * - PRINT_FOR_SERIAL_PLOTTER           Generate serial output for Arduino Plotter (Ctrl-Shift-L).
  * - USE_LEIGHTWEIGHT_SERVO_LIB         Makes the servo pulse generating immune to other libraries blocking interrupts for a longer time like SoftwareSerial, Adafruit_NeoPixel and DmxSimple.
  */
 
-#ifndef SERVOEASING_HPP
-#define SERVOEASING_HPP
+#ifndef _SERVO_EASING_HPP
+#define _SERVO_EASING_HPP
 
 #include <Arduino.h>
 
@@ -123,7 +123,7 @@ IntervalTimer Timer20ms;
 //#define TRACE
 //#define DEBUG
 // Propagate debug level
-#ifdef TRACE
+#if defined(TRACE)
 #define DEBUG
 #endif
 
@@ -156,7 +156,7 @@ ServoEasing::ServoEasing(uint8_t aPCA9685I2CAddress, TwoWire *aI2CClass) { // @s
 #if defined(USE_SERVO_LIB)
     mServoIsConnectedToExpander = true;
 #endif
-#ifndef PROVIDE_ONLY_LINEAR_MOVEMENT
+#if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
     mEasingType = EASE_LINEAR;
     mUserEaseInFunction = NULL;
 #endif
@@ -292,7 +292,7 @@ ServoEasing::ServoEasing() // @suppress("Class members should be properly initia
 #if defined(USE_SERVO_LIB)
     mServoIsConnectedToExpander = false;
 #endif
-#ifndef PROVIDE_ONLY_LINEAR_MOVEMENT
+#if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
     mEasingType = EASE_LINEAR;
     mUserEaseInFunction = NULL;
 #endif
@@ -532,7 +532,7 @@ void ServoEasing::setTrimMicrosecondsOrUnits(int aTrimMicrosecondsOrUnits, bool 
     }
 }
 
-#ifndef PROVIDE_ONLY_LINEAR_MOVEMENT
+#if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
 void ServoEasing::setEasingType(uint_fast8_t aEasingType) {
     mEasingType = aEasingType;
 }
@@ -813,7 +813,7 @@ bool ServoEasing::startEaseTo(int aDegree, uint_fast16_t aDegreesPerSecond, bool
     tMillisForCompleteMove = abs(aDegree - tCurrentAngle) * MILLIS_IN_ONE_SECOND / aDegreesPerSecond;
 #endif
 
-#ifndef PROVIDE_ONLY_LINEAR_MOVEMENT
+#if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
     if ((mEasingType & CALL_STYLE_MASK) == CALL_STYLE_BOUNCING_OUT_IN) {
         // bouncing has double movement, so take double time
         tMillisForCompleteMove *= 2;
@@ -853,7 +853,7 @@ bool ServoEasing::startEaseToD(int aDegree, uint_fast16_t aMillisForMove, bool a
     mMillisForCompleteMove = aMillisForMove;
     mStartMicrosecondsOrUnits = tCurrentMicrosecondsOrUnits;
 
-#ifndef PROVIDE_ONLY_LINEAR_MOVEMENT
+#if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
     if ((mEasingType & CALL_STYLE_MASK) == CALL_STYLE_BOUNCING_OUT_IN) {
         // bouncing has same end position as start position
         mEndMicrosecondsOrUnits = tCurrentMicrosecondsOrUnits;
@@ -900,7 +900,7 @@ void ServoEasing::continueWithoutInterrupts() {
 /*
  * returns true if endAngle was reached / servo stopped
  */
-#ifdef PROVIDE_ONLY_LINEAR_MOVEMENT
+#if defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
 bool ServoEasing::update() {
 
     if (!mServoMoves) {
@@ -1041,7 +1041,7 @@ float ServoEasing::callEasingFunction(float aPercentageOfCompletion) {
         return CubicEaseIn(aPercentageOfCompletion);
     case EASE_QUARTIC_IN:
         return QuarticEaseIn(aPercentageOfCompletion);
-#  ifndef DISABLE_COMPLEX_FUNCTIONS
+#  if !defined(DISABLE_COMPLEX_FUNCTIONS)
     case EASE_SINE_IN:
         return SineEaseIn(aPercentageOfCompletion);
     case EASE_CIRCULAR_IN:
@@ -1190,7 +1190,7 @@ void ServoEasing::printStatic(Print *aSerial) {
     aSerial->print(F(" reverse="));
     aSerial->print(mOperateServoReverse);
 
-#ifndef PROVIDE_ONLY_LINEAR_MOVEMENT
+#if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
     aSerial->print(F(" easingType=0x"));
     aSerial->print(mEasingType, HEX);
 #endif
@@ -1322,7 +1322,7 @@ void enableServoEasingInterrupt() {
      * because the servo interrupt is used to synchronize e.g. NeoPixel updates.
      */
     TCCR1B |= _BV(ICNC1);
-#    ifndef USE_LEIGHTWEIGHT_SERVO_LIB
+#    if !defined(USE_LEIGHTWEIGHT_SERVO_LIB)
     // Generate interrupt 100 µs before a new servo period starts
     OCR1B = ((clockCyclesPerMicrosecond() * REFRESH_INTERVAL_MICROS) / 8) - 100;
 #    endif
@@ -1567,7 +1567,7 @@ void TC5_Handler(void) {
  * ServoEasing list functions
  ***********************************/
 
-#ifndef PROVIDE_ONLY_LINEAR_MOVEMENT
+#if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
 void setEasingTypeForAllServos(uint_fast8_t aEasingType) {
     for (uint_fast8_t tServoIndex = 0; tServoIndex <= ServoEasing::sServoArrayMaxIndex; ++tServoIndex) {
         if (ServoEasing::ServoEasingArray[tServoIndex] != NULL) {
@@ -1948,4 +1948,5 @@ bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial) // Print has no fl
 }
 # endif // defined(USE_PCA9685_SERVO_EXPANDER)
 
-#endif // #ifndef SERVOEASING_HPP
+#endif // _SERVO_EASING_HPP
+#pragma once

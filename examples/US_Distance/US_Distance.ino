@@ -36,12 +36,12 @@
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
  ***************************************************************************/
-#ifndef BLUETOOTH_BAUD_RATE
+#if !defined(BLUETOOTH_BAUD_RATE)
 //#define BLUETOOTH_BAUD_RATE BAUD_115200
 #define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
-//#define USE_US_SENSOR_1_PIN_MODE // Activate it, if you use modified HC-SR04 modules or HY-SRF05 ones
+//#define US_SENSOR_SUPPORTS_1_PIN_MODE // Activate it, if you use modified HC-SR04 modules or HY-SRF05 ones
 
 #define MEASUREMENT_INTERVAL_MILLIS 50
 
@@ -77,7 +77,7 @@ void doGetOffset(BDButton * aTheTouchedButton __attribute__((unused)), int16_t a
 
 void setup(void) {
 
-#ifdef USE_US_SENSOR_1_PIN_MODE
+#if defined(US_SENSOR_SUPPORTS_1_PIN_MODE)
     pinMode(LED_BUILTIN, OUTPUT);
 
     initUSDistancePin(TRIGGER_OUT_PIN);
@@ -102,7 +102,7 @@ void setup(void) {
 
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 // Just to know which program is running on my Arduino
@@ -118,7 +118,7 @@ void setup(void) {
         delay(100);
     } else {
 #if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1) // print it now if not printed above
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
         // Just to know which program is running on my Arduino

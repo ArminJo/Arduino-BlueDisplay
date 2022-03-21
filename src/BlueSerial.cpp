@@ -37,10 +37,10 @@
 #endif
 
 // definitions from <wiring_private.h>
-#ifndef cbi
+#if !defined(cbi)
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 #endif
-#ifndef sbi
+#if !defined(sbi)
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #endif
 
@@ -85,7 +85,7 @@ void initSerial(String aBTClientName) {
 }
 #else
 void initSerial(uint32_t aBaudRate) {
-#  ifdef USE_SIMPLE_SERIAL
+#  if defined(USE_SIMPLE_SERIAL)
     initSimpleSerial(aBaudRate);
 #  else
     Serial.begin(aBaudRate);
@@ -93,8 +93,8 @@ void initSerial(uint32_t aBaudRate) {
 }
 #endif
 
-#ifdef USE_SIMPLE_SERIAL
-#  ifdef LOCAL_DISPLAY_EXISTS
+#if defined(USE_SIMPLE_SERIAL)
+#  if defined(LOCAL_DISPLAY_EXISTS)
 void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin) {
     if (aUsePairedPin) {
         pinMode(PAIRED_PIN, INPUT);
@@ -142,7 +142,7 @@ void initSimpleSerial(uint32_t aBaudRate) {
  * ultra simple blocking USART send routine - works 100%!
  */
 void sendUSART(char aChar) {
-#ifdef USE_SIMPLE_SERIAL
+#if defined(USE_SIMPLE_SERIAL)
     // wait for buffer to become empty
 #  if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
     // Use TX1 on MEGA and on Leonardo, which has no TX0
@@ -320,7 +320,7 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs
 static uint8_t sReceivedEventType = EVENT_NO_EVENT;
 static uint8_t sReceivedDataSize;
 
-#ifdef USE_SIMPLE_SERIAL
+#if defined(USE_SIMPLE_SERIAL)
 bool allowTouchInterrupts = false; // !!do not enable it, if event handling may take more time than receiving a byte (which results in buffer overflow)!!!
 
 #  if defined(USART1_RX_vect)
@@ -363,7 +363,7 @@ ISR(USART1_RX_vect) {
                         // we have one dedicated touch down event in order not to overwrite it with other events before processing it
                         // Yes it makes no sense if interrupts are allowed!
                         struct BluetoothEvent *tRemoteTouchEventPtr = &remoteEvent;
-#  ifndef DO_NOT_NEED_BASIC_TOUCH
+#  if !defined(DO_NOT_NEED_BASIC_TOUCH)
                         if (sReceivedEventType == EVENT_TOUCH_ACTION_DOWN
                                 || (remoteTouchDownEvent.EventType == EVENT_NO_EVENT && remoteEvent.EventType == EVENT_NO_EVENT)) {
                             tRemoteTouchEventPtr = &remoteTouchDownEvent;

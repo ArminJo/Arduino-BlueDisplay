@@ -6,8 +6,8 @@
  *  License: GPL v3 (http://www.gnu.org/licenses/gpl.html)
  */
 
-#ifndef SIMPLETOUCHSCREENDSO_H_
-#define SIMPLETOUCHSCREENDSO_H_
+#ifndef _SIMPLE_TOUCHSCREEN_DSO_H
+#define _SIMPLE_TOUCHSCREEN_DSO_H
 
 #include "TouchDSOCommon.h"
 
@@ -28,7 +28,7 @@
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
  ***************************************************************************/
-#ifndef BLUETOOTH_BAUD_RATE
+#if !defined(BLUETOOTH_BAUD_RATE)
 //#define BLUETOOTH_BAUD_RATE BAUD_115200
 #define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
@@ -132,7 +132,7 @@ struct MeasurementControlStruct {
 
     uint32_t TriggerDelayMillisEnd; // value of millis() at end of milliseconds trigger delay
     uint16_t TriggerDelayMillisOrMicros;
-    uint8_t TriggerDelayMode; //  TRIGGER_DELAY_NONE 0, TRIGGER_DELAY_MICROS 1, TRIGGER_DELAY_MILLIS 2. Threshold is  __UINT16_MAX__
+    uint8_t TriggerDelayMode; //  TRIGGER_DELAY_NONE 0, TRIGGER_DELAY_MICROS 1, TRIGGER_DELAY_MILLIS 2. Threshold is  UINT16_MAX
 
     // Using type TriggerMode instead of uint8_t increases program size by 76 bytes
     uint8_t TriggerMode; // adjust values automatically
@@ -179,7 +179,7 @@ extern struct MeasurementControlStruct MeasurementControl;
 #define DISPLAY_PAGE_CHART 1    // Chart in analyze and running mode
 #define DISPLAY_PAGE_SETTINGS 2
 #define DISPLAY_PAGE_FREQUENCY 3
-#ifndef AVR
+#if !defined(AVR)
 #define DISPLAY_PAGE_MORE_SETTINGS 4
 #define DISPLAY_PAGE_SYST_INFO 5
 #endif
@@ -229,7 +229,7 @@ void clearSingleshotMarker();
 extern "C" void INT0_vect();
 
 // for printf etc.
-#ifdef AVR
+#if defined(AVR)
 #define SIZEOF_STRINGBUFFER 50
 #else
 #define SIZEOF_STRINGBUFFER 240
@@ -240,4 +240,5 @@ extern BDButton TouchButtonBack;
 // global flag for page control. Is evaluated by calling loop or page and set by buttonBack handler
 extern bool sBackButtonPressed;
 
-#endif //SIMPLETOUCHSCREENDSO_H_
+#endif // _SIMPLE_TOUCHSCREEN_DSO_H
+#pragma once

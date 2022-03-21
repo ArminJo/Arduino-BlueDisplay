@@ -8,11 +8,11 @@
  *  License: GPL v3 (http://www.gnu.org/licenses/gpl.html)
  */
 
-#ifndef TOUCHDSOCOMMON_H_
-#define TOUCHDSOCOMMON_H_
+#ifndef _TOUCH_DSO_COMMON_H
+#define _TOUCH_DSO_COMMON_H
 
 #include "BlueDisplay.h"
-#ifdef AVR
+#if defined(AVR)
 #include "FrequencyGeneratorPage.h"
 #endif
 
@@ -23,19 +23,19 @@
 #define setCaptionPGM setCaption
 #define setCaptionFromStringArrayPGM setCaptionFromStringArray
 #define drawTextPGM drawText
-#  ifndef F
+#  if !defined(F)
 #define F(a) a
 #  endif
-#  ifndef PSTR
+#  if !defined(PSTR)
 #define PSTR(a) a
 #  endif
 #endif
 
-#ifdef AVR
+#if defined(AVR)
 // Data buffer size (must be small enough to leave appr. 7 % (144 Byte) for stack
 #define DATABUFFER_SIZE (3*REMOTE_DISPLAY_WIDTH) //960
 #else
-#ifdef STM32F303xC
+#if defined(STM)32F303xC
 #define DATABUFFER_SIZE_FACTOR 9
 #else
 #define DATABUFFER_SIZE_FACTOR 7
@@ -49,11 +49,11 @@
  * CHANNEL
  */
 #define MAX_ADC_EXTERNAL_CHANNEL 4 // 5 channels 0-4, since ADC5/PC5 is used for AC/DC switching
-#ifdef AVR
+#if defined(AVR)
 #define ADC_CHANNEL_COUNT ((MAX_ADC_EXTERNAL_CHANNEL + 1) + 2) // The number of external and internal ADC channels
 #else
 #define START_ADC_CHANNEL_INDEX 0  // see also ChannelSelectButtonString
-#ifdef STM32F303xC
+#if defined(STM)32F303xC
 #define ADC_CHANNEL_COUNT 6 // The number of ADC channels
 #else
 #define ADC_CHANNEL_COUNT 6 // The number of ADC channels
@@ -75,7 +75,7 @@ extern const char * const ChannelDivByButtonStrings[];
 #define TRIGGER_MODE_EXTERN 4
 #define TRIGGER_HYSTERESIS_FOR_MODE_MANUAL 4
 
-#ifdef AVR
+#if defined(AVR)
 /*****************************
  * Timebase stuff
  *****************************/
@@ -146,7 +146,7 @@ extern const char * const ChannelDivByButtonStrings[];
 #define TIMEBASE_FAST_MODES 7 // first modes are fast DMA modes
 #define TIMEBASE_INDEX_DRAW_WHILE_ACQUIRE 17 // min index where chart is drawn while buffer is filled
 #define TIMEBASE_INDEX_CAN_USE_OVERSAMPLING 11 // min index where Min/Max oversampling is enabled
-#ifdef STM32F303xC
+#if defined(STM)32F303xC
 #define TIMEBASE_NUMBER_START 1  // first reasonable Timebase to display - 0 if interleaving is realized
 #define TIMEBASE_NUMBER_OF_XSCALE_CORRECTION 5  // number of timebase which are simulated by display XSale factor
 #else
@@ -202,7 +202,7 @@ extern const float TimebaseExactDivValuesMicros[] PROGMEM;
 #define INFO_UPPER_MARGIN (1 + TEXT_SIZE_11_ASCEND)
 #define INFO_LEFT_MARGIN 0
 
-#ifdef AVR
+#if defined(AVR)
 #define FONT_SIZE_INFO_SHORT        TEXT_SIZE_18    // for 1 line info
 #define FONT_SIZE_INFO_LONG         TEXT_SIZE_11    // for 2 lines info
 #define FONT_SIZE_INFO_SHORT_ASC    TEXT_SIZE_18_ASCEND
@@ -229,7 +229,7 @@ extern const float TimebaseExactDivValuesMicros[] PROGMEM;
 #define SINGLESHOT_PPRINT_VALUE_X (REMOTE_DISPLAY_WIDTH - TEXT_SIZE_11_WIDTH)
 #define SETTINGS_PAGE_INFO_Y (BUTTON_HEIGHT_5_256_LINE_5 - (TEXT_SIZE_11_DECEND + 1))
 #else
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 #define FONT_SIZE_INFO_SHORT        TEXT_SIZE_11    // for 1 line info
 #define FONT_SIZE_INFO_LONG         TEXT_SIZE_11    // for 3 lines info
 #define FONT_SIZE_INFO_SHORT_ASC    TEXT_SIZE_11_ASCEND    // for 3 lines info
@@ -251,7 +251,7 @@ extern const float TimebaseExactDivValuesMicros[] PROGMEM;
 
 #define SLIDER_TLEVEL_POS_X         (14 * FONT_SIZE_INFO_LONG_WIDTH) // Position of slider
 #define TRIGGER_LEVEL_INFO_SHORT_X  (SLIDER_TLEVEL_POS_X  + SLIDER_BAR_WIDTH)
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 #define TRIGGER_LEVEL_INFO_LONG_X   (11 * FONT_SIZE_INFO_LONG_WIDTH)
 #else
 #define TRIGGER_LEVEL_INFO_LONG_X   (11 * FONT_SIZE_INFO_LONG_WIDTH +1) // +1 since we have a special character in the string before
@@ -268,7 +268,7 @@ extern const float TimebaseExactDivValuesMicros[] PROGMEM;
 
 extern uint8_t sLastPickerValue;
 
-#ifdef AVR
+#if defined(AVR)
 extern BDButton TouchButtonADCReference;
 #else
 extern BDButton TouchButtonFFT;
@@ -278,7 +278,7 @@ extern BDButton TouchButtonCalibrateVoltage;
 extern BDButton TouchButtonMinMaxMode;
 extern BDButton TouchButtonDrawModeTriggerLine;
 #endif
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 extern BDButton TouchButtonDrawModeLinePixel;
 extern BDButton TouchButtonADS7846TestOnOff;
 extern BDSlider TouchSliderBacklight;
@@ -343,7 +343,7 @@ void resetOffset(void);
 void setOffsetAutomatic(bool aNewState);
 void setACMode(bool aNewACMode);
 int changeOffsetGridCount(int aValue);
-#ifdef AVR
+#if defined(AVR)
 uint8_t changeRange(int8_t aChangeAmount);
 uint8_t changeTimeBaseValue(int8_t aChangeValue);
 #else
@@ -368,7 +368,7 @@ void drawMinMaxLines(void);
 void clearTriggerLine(uint8_t aTriggerLevelDisplayValue);
 void drawRunningOnlyPartOfGui(void);
 void activateChartGui(void);
-#ifdef AVR
+#if defined(AVR)
 uint8_t scrollChart(int aValue);
 uint8_t getDisplayFromRawInputValue(uint16_t aRawValue);
 void drawDataBuffer(uint8_t *aByteBuffer, uint16_t aColor, uint16_t aClearBeforeColor);
@@ -394,7 +394,7 @@ void doSwipeEndDSO(struct Swipe * const aSwipeInfo);
 void doSetTriggerDelay(float aValue);
 
 // Button handler section
-#ifdef AVR
+#if defined(AVR)
 void doADCReference(BDButton * aTheTouchedButton, int16_t aValue);
 #else
 void doShowPretriggerValuesOnOff(BDButton * aTheTouchedButton, int16_t aValue);
@@ -418,7 +418,7 @@ void doPromptForTriggerDelay(BDButton * aTheTouchedButton, int16_t aValue);
 void doChannelSelect(BDButton * aTheTouchedButton, int16_t aValue);
 void doOffsetMode(BDButton * aTheTouchedButton, int16_t aValue);
 void doAcDcMode(BDButton * aTheTouchedButton, int16_t aValue);
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 void readADS7846Channels(void);
 void doADS7846TestOnOff(BDButton * aTheTouchedButton, int16_t aValue);
 void doDrawMode(BDButton * aTheTouchedButton, int16_t aValue);
@@ -429,7 +429,7 @@ void doTriggerLevel(BDSlider *aTheTouchedSlider, uint16_t aValue);
 void doVoltagePicker(BDSlider *aTheTouchedSlider, uint16_t aValue);
 
 // Button caption section
-#ifdef AVR
+#if defined(AVR)
 #else
 void setMinMaxModeButtonCaption(void);
 #endif
@@ -445,10 +445,11 @@ void setAutoOffsetButtonCaption(void);
 
 uint32_t getMicrosFromHorizontalDisplayValue(uint16_t aDisplayValueHorizontal, uint8_t aNumberOfPeriods);
 
-#ifdef AVR
+#if defined(AVR)
 #else
 #endif
-#ifndef AVR
+#if !defined(AVR)
 #endif
 
-#endif // TOUCHDSOCOMMON_H_
+#endif // _TOUCH_DSO_COMMON_H
+#pragma once

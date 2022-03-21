@@ -27,10 +27,10 @@
  *
  */
 
-#ifndef BLUEDISPLAY_H_
-#define BLUEDISPLAY_H_
+#ifndef _BLUEDISPLAY_H
+#define _BLUEDISPLAY_H
 
-#ifdef ARDUINO
+#if defined(ARDUINO)
 #  if ! defined(ESP32)
 // For not AVR platforms this contains mapping defines (at least for STM32)
 #include <avr/pgmspace.h>
@@ -42,19 +42,19 @@
 #    endif
 #  endif
 #else
-#  ifndef PROGMEM
+#  if !defined(PROGMEM)
 #  define PROGMEM
 #  endif
 
-#  ifndef PGM_P
+#  if !defined(PGM_P)
 #  define PGM_P const char *
 #  endif
 
-#  ifndef PSTR
+#  if !defined(PSTR)
 #  define PSTR(str) (str)
 #  endif
 
-#  ifndef F
+#  if !defined(F)
 #  define F(str) (str)
 #  endif
 
@@ -111,7 +111,7 @@
 // for factor 4 of 8*12 font
 #define TEXT_SIZE_44 44
 // TextWidth = TextSize * 0.6
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 // 8/16 instead of 7/13 to be compatible with 8*12 font
 #define TEXT_SIZE_11_WIDTH 8
 #define TEXT_SIZE_22_WIDTH 16
@@ -376,7 +376,7 @@ public:
 
     void setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSensorRate, uint8_t aFilterFlag);
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     void drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor, color16_t aBGColor);
 #endif
 
@@ -394,7 +394,7 @@ public:
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
             float aInitialValue);
 
-#ifdef AVR
+#if defined(AVR)
     // Not yet implemented    void getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const __FlashStringHelper *aPGMShortPromptString);
 
     void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis);
@@ -424,7 +424,7 @@ public:
     void setButtonsGlobalFlags(uint16_t aFlags);
     void setButtonsTouchTone(uint8_t aToneIndex, uint8_t aToneVolume);
 
-#ifdef AVR
+#if defined(AVR)
     BDButtonHandle_t createButtonPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY,
             color16_t aButtonColor, const char *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(BDButton*, int16_t));
@@ -474,7 +474,7 @@ extern BlueDisplay BlueDisplay1;
 void clearDisplayAndDisableButtonsAndSliders();
 void clearDisplayAndDisableButtonsAndSliders(color16_t aColor);
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 /*
  * MI0283QT2 TFTDisplay - must provided by main program
  * external declaration saves ROM (210 bytes) and RAM ( 20 bytes)
@@ -510,7 +510,7 @@ void writeStringC(const char *aStringPtr, uint8_t aStringLength);
 /*
  * Utilities used also internal
  */
-#ifdef AVR
+#if defined(AVR)
 uint16_t readADCChannelWithReferenceOversample(uint8_t aChannelNumber, uint8_t aReference, uint8_t aOversampleExponent);
 float getVCCValue(void) __attribute__ ((deprecated ("Renamed to getVCCVoltage()")));
 float getVCCVoltage(void);

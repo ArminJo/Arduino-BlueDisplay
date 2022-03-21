@@ -242,7 +242,7 @@ static timeStatus_t Status = timeNotSet;
 getExternalTime getTimePtr;  // pointer to external sync function
 //setExternalTime setTimePtr; // not used in this version
 
-#ifdef TIME_DRIFT_INFO   // define this to get drift data
+#if defined(TIME_DRIFT_INFO)   // define this to get drift data
 time_t sysUnsyncedTime = 0; // the time sysTime unadjusted by sync
 #endif
 
@@ -253,7 +253,7 @@ time_t now() {
 		// millis() and prevMillis are both unsigned ints thus the subtraction will always be the absolute value of the difference
     sysTime++;
     prevMillis += 1000;
-#ifdef TIME_DRIFT_INFO
+#if defined(TIME_DRIFT_INFO)
     sysUnsyncedTime++; // this can be compared to the synced time to measure long term drift
 #endif
   }
@@ -272,7 +272,7 @@ time_t now() {
 }
 
 void setTime(time_t t) {
-#ifdef TIME_DRIFT_INFO
+#if defined(TIME_DRIFT_INFO)
  if(sysUnsyncedTime == 0)
    sysUnsyncedTime = t;   // store the time of the first call to set a valid Time
 #endif

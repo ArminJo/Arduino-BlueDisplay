@@ -6,8 +6,8 @@
  *  License: GPL v3 (http://www.gnu.org/licenses/gpl.html)
  */
 
-#ifndef FREQUENCYGENERATORPAGE_H_
-#define FREQUENCYGENERATORPAGE_H_
+#ifndef _FREQUENCY_GENERATOR_PAGE_H
+#define _FREQUENCY_GENERATOR_PAGE_H
 
 #include "BDButton.h"
 
@@ -28,4 +28,5 @@ void stopFrequencyGeneratorPage(void);
 
 extern const char StringStop[] PROGMEM; // "Stop"
 
-#endif //FREQUENCYGENERATORPAGE_H_
+#endif // _FREQUENCY_GENERATOR_PAGE_H
+#pragma once

@@ -33,7 +33,7 @@
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
  ***************************************************************************/
-#ifndef BLUETOOTH_BAUD_RATE
+#if !defined(BLUETOOTH_BAUD_RATE)
 //#define BLUETOOTH_BAUD_RATE BAUD_115200
 #define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
@@ -295,7 +295,7 @@ void BDsetup() {
 
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
     // Just to know which program is running on my Arduino
@@ -306,7 +306,7 @@ void BDsetup() {
         BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
     } else {
 #if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 // Just to know which program is running on my Arduino
@@ -328,7 +328,7 @@ void BDloop() {
         resetOutputs();
     }
 
-#ifdef AVR
+#if defined(AVR)
     /*
      * Print VCC and temperature each second
      */
@@ -467,8 +467,8 @@ void doSetZero(BDButton *aTheTouchedButton, int16_t aValue) {
 
 uint8_t speedOverflowAndDeadBandHandling(unsigned int aSpeed) {
     // overflow handling since analogWrite only accepts byte values
-    if (aSpeed > 0xFF) {
-        aSpeed = 0xFF;
+    if (aSpeed > UINT8_MAX) {
+        aSpeed = UINT8_MAX;
     }
     if (aSpeed <= MOTOR_DEAD_BAND_VALUE) {
         aSpeed = 0;

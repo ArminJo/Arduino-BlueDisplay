@@ -282,17 +282,17 @@ union Myword {
 };
 
 // definitions from <wiring_private.h>
-#ifndef cbi
+#if !defined(cbi)
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 #endif
-#ifndef sbi
+#if !defined(sbi)
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #endif
 
 /***************
  * Debug stuff
  ***************/
-#ifdef DEBUG
+#if defined(DEBUG)
 void printDebugData(void);
 
 uint16_t DebugValue1;
@@ -515,7 +515,7 @@ void setup() {
 /************************************************************************
  * main loop - 32 microseconds
  ************************************************************************/
-// noreturn saves 56 byte program space!
+// noreturn saves 56 byte program memory!
 void __attribute__((noreturn)) loop(void) {
     uint32_t sMillisOfLastInfoOutput;
 
@@ -577,7 +577,7 @@ void __attribute__((noreturn)) loop(void) {
                         } else if (DisplayControl.DisplayPage == DISPLAY_PAGE_FREQUENCY) {
                             // refresh buttons
                             drawFrequencyGeneratorPage();
-#ifndef AVR
+#if !defined(AVR)
                         } else if (DisplayControl.DisplayPage == DISPLAY_PAGE_MORE_SETTINGS) {
                             // refresh buttons
                             drawDSOMoreSettingsPage();
@@ -648,7 +648,7 @@ void __attribute__((noreturn)) loop(void) {
                         }
                     }
                 }
-#ifdef DEBUG
+#if defined(DEBUG)
                 //            DebugValue1 = MeasurementControl.ShiftValue;
                 //            DebugValue2 = MeasurementControl.RawValueMin;
                 //            DebugValue3 = MeasurementControl.RawValueMax;
@@ -895,12 +895,12 @@ void acquireDataFast(void) {
          * if trigger condition not met it will run forever in single shot mode
          */
         for (i = TRIGGER_WAIT_NUMBER_OF_SAMPLES; i != 0 || MeasurementControl.isSingleShotMode; --i) {
-#ifdef DEBUG_ADC_TIMING
+#if defined(DEBUG_ADC_TIMING)
             digitalWriteFast(DEBUG_PIN, HIGH); // debug pulse is 1 us for (ultra fast) PRESSCALER4 and 4 us for (fast) PRESSCALER8
 #endif
             // wait for free running conversion to finish
             loop_until_bit_is_set(ADCSRA, ADIF);
-#ifdef DEBUG_ADC_TIMING
+#if defined(DEBUG_ADC_TIMING)
             digitalWriteFast(DEBUG_PIN, LOW);
 #endif
             // Get value
@@ -988,11 +988,11 @@ void acquireDataFast(void) {
          */
         for (i = tLoopCount; i > 1; --i) {
             uint8_t tLow, tHigh;
-#ifdef DEBUG_ADC_TIMING
+#if defined(DEBUG_ADC_TIMING)
             digitalWriteFast(DEBUG_PIN, HIGH); // debug pulse is 1.6 us
 #endif
             loop_until_bit_is_set(ADCSRA, ADIF);
-#ifdef DEBUG_ADC_TIMING
+#if defined(DEBUG_ADC_TIMING)
             digitalWriteFast(DEBUG_PIN, LOW);
 #endif
             tLow = ADCL;
@@ -1050,11 +1050,11 @@ void acquireDataFast(void) {
             // get values from ADC
             // wait for free running conversion to finish
             // ADCSRA here is E5
-#ifdef DEBUG_ADC_TIMING
+#if defined(DEBUG_ADC_TIMING)
             digitalWriteFast(DEBUG_PIN, HIGH); // debug pulse is 2.2 us
 #endif
             loop_until_bit_is_set(ADCSRA, ADIF);
-#ifdef DEBUG_ADC_TIMING
+#if defined(DEBUG_ADC_TIMING)
             digitalWriteFast(DEBUG_PIN, LOW);
 #endif
             // ADCSRA here is F5
@@ -1104,7 +1104,7 @@ ISR(ADC_vect) {
 // 7++ for jump to ISR
     // 3 + 10 pushes (r18 - r31) + in + eor = 28 cycles
 // 35++ cycles to get here
-#ifdef DEBUG_ISR_TIMING
+#if defined(DEBUG_ISR_TIMING)
     digitalWriteFast(DEBUG_PIN, HIGH);
 #endif
 
@@ -1148,7 +1148,7 @@ ISR(ADC_vect) {
         }
 
         if (!tTriggerFound) {
-#ifdef DEBUG_ISR_TIMING
+#if defined(DEBUG_ISR_TIMING)
             digitalWriteFast(DEBUG_PIN, LOW);
 #endif
             if (MeasurementControl.TriggerMode == TRIGGER_MODE_MANUAL || MeasurementControl.isSingleShotMode
@@ -1274,7 +1274,7 @@ ISR(ADC_vect) {
         } else {
             // delay of greater (160 - (10 to 17)) was required so just ignore this ADC value and take next value as first one
             ADCSRA = _BV(ADEN) | _BV(ADATE) | _BV(ADSC) | _BV(ADIF) | MeasurementControl.TimebaseHWValue | _BV(ADIE);
-#ifdef DEBUG_ISR_TIMING
+#if defined(DEBUG_ISR_TIMING)
             digitalWriteFast(DEBUG_PIN, LOW);
 #endif
             return;
@@ -1357,7 +1357,7 @@ ISR(ADC_vect) {
     }
     DataBufferControl.DataBufferNextInPointer = tDataBufferPointer;
 
-#ifdef DEBUG_ISR_TIMING
+#if defined(DEBUG_ISR_TIMING)
     digitalWriteFast(DEBUG_PIN, LOW);
 #endif
 }
@@ -1631,7 +1631,7 @@ void doSetTriggerDelay(float aValue) {
     if (aValue != NUMBER_INITIAL_VALUE_DO_NOT_SHOW) {
         uint32_t tTriggerDelay = aValue;
         if (tTriggerDelay != 0) {
-            if (tTriggerDelay > __UINT16_MAX__) {
+            if (tTriggerDelay > UINT16_MAX) {
                 tTriggerDelayMode = TRIGGER_DELAY_MILLIS;
                 MeasurementControl.TriggerDelayMillisOrMicros = tTriggerDelay / 1000;
             } else {
@@ -2014,12 +2014,12 @@ void printInfo(bool aRecomputeValues) {
         /*
          * Short version
          */
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
         snprintf(sStringBuffer, sizeof sStringBuffer, "%6.*fV %6.*fV%s%4u%cs", tPrecision,
                 getFloatFromRawValue(MeasurementControl.RawValueAverage), tPrecision,
                 getFloatFromRawValue(tValueDiff), tBufferForPeriodAndFrequency, tUnitsPerGrid, tTimebaseUnitChar);
 #else
-#ifdef AVR
+#if defined(AVR)
 
         sprintf_P(sStringBuffer, PSTR("%sV %sV  %5luHz %3u%cs"), tAverageStringBuffer, tP2PStringBuffer, tHertz,
                 tTimebaseUnitsPerGrid, tTimebaseUnitChar);
@@ -2440,7 +2440,7 @@ ISR_ALIAS(TIMER3_OVF_vect, TIMER0_OVF_vect);
 
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG)
 void printDebugData(void) {
     sprintf_P(sStringBuffer, PSTR("%5d, 0x%04X, 0x%04X, 0x%04X"), DebugValue1, DebugValue2, DebugValue3, DebugValue4);
     BlueDisplay1.drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + 2 * TEXT_SIZE_11_HEIGHT, sStringBuffer, 11, COLOR16_BLACK,

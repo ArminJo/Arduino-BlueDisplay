@@ -1,0 +1,74 @@
+START ../src/BTModuleProgrammer.cpp
+Version 3.1 from Mar 21 2022
+HC-05 programming mode detected. Switch to JDY-31 mode by connecting pin 4 to ground or to pin 5.
+
+Now you have 5 seconds for releasing HC-05 module key, which should be pressed at power up to enter program mode.
+
+Now we try to connect to module, read version and baud and wait for new name to be entered.
+
+HC-05 module selected.
+
+Start with baudrate 38400 for HC-05 - factory default for AT command mode
+Setup HC-05 module.
+Sent: "AT\r\n"
+Received: "OK\r\n"
+Module attached OK.
+
+Get version
+Sent: "AT+VERSION\r\n"
+Received: "VERSION:3.0-20170601\r\nOK\r\n"
+
+Get current baud
+Sent: "AT+UART\r\n"
+Received: "+UART:9600,0,0\r\nOK\r\n"
+
+Get current name
+Sent: "AT+NAME\r\n"
+Received: "+NAME:H-C-2010-06-01\r\nOK\r\n"
+
+Get current PIN
+Sent: "AT+PSWD\r\n"
+Received: "+PIN:"1234"\r\nOK\r\n"
+
+Get current Role (0->Slave, 1->Master, 2->Slave-Loop)
+Sent: "AT+ROLE\r\n"
+Received: "+ROLE:0\r\nOK\r\n"
+
+Get current Cmode (0->connect to fixed bind address, 1->connect to all)
+Sent: "AT+CMODE\r\n"
+Received: "+CMODE:1\r\nOK\r\n"
+
+Get Bind address
+Sent: "AT+BIND\r\n"
+Received: "+BIND:0:0:0\r\nOK\r\n"
+
+Get own Address
+Sent: "AT+ADDR\r\n"
+Received: "+ADDR:21:13:66F9\r\nOK\r\n"
+
+Enter new module name to set this name and to set baudrate to 115200 - you will be asked for confirmation.
+Or enter empty string to skip (and enter direct AT mode).
+Factory reset command is "AT+ORGL".
+Timeout is 60 seconds.
+
+
+Confirm setting to factory reset and setting name of the module to "4WD-CAR-MECANUM" and baudrate to 115200
+by entering any character or press reset or remove power.
+
+Sent: "AT\r\n"
+Received: "OK\r\n"
+Set name to "4WD-CAR-MECANUM"
+Sent: "AT+NAME=4WD-CAR-MECANUM\r\n"
+Received: "OK\r\n"
+
+Set baud to 115200
+Sent: "AT+UART=115200,0,0\r\n"
+Received: "OK\r\n"
+
+Successful programmed HC-05 module.
+
+
+Programming  successful. You may now:
+- Press reset for a new try.
+- Enter "AT+<Command>".
+

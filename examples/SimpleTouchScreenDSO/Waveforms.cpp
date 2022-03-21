@@ -75,8 +75,8 @@ void initTimer1For8BitPWM() {
     //    TCCR1A = _BV(COM1A1) | _BV(COM1B1) | _BV(WGM11) | _BV(WGM10); // With WGM12 Waveform Generation Mode 7 - Fast PWM, 10-bit
     TCCR1B = _BV(WGM12); // set OC1A/OC1B at BOTTOM (non-inverting mode) - no clock (prescaler) -> timer disabled now
 
-    OCR1A = 0xFF;   // output DC - HIGH
-    OCR1B = 0xFF;   // output DC - HIGH
+    OCR1A = UINT8_MAX;   // output DC - HIGH
+    OCR1B = UINT8_MAX;   // output DC - HIGH
     TCNT1 = 0;      // init counter
     TIMSK1 = _BV(TOIE1); // Enable Overflow Interrupt
 }
@@ -412,7 +412,7 @@ ISR(TIMER1_OVF_vect) {
                 // Value from 1 to FF
                 // increasing value
                 sNextOcrbValue += tIndexDelta;
-                // detect overflow (value > 0xFF)
+                // detect overflow (value > UINT8_MAX)
                 if (sNextOcrbValue < tOldOcrbValue) {
                     tNumberOfQuadrant = 1;
                     // 0->FE, 1->FD

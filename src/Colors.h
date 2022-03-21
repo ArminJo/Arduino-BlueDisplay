@@ -27,8 +27,8 @@
  *
  */
 
-#ifndef COLORS_H_
-#define COLORS_H_
+#ifndef _COLORS_H
+#define _COLORS_H
 
 #include <stdint.h>
 
@@ -89,7 +89,7 @@ typedef uint32_t color32_t;
 #define COLOR32_GET_RED(color)   ((color >> 16) & 0xFF)
 #define COLOR32_GET_GREEN(color) ((color >> 8) & 0xFF)
 #define COLOR32_GET_BLUE(color)  (color 0xFF)
-// Eases constant color declarations but should only be used for constant colors. Otherwise better use Adafruit_NeoPixel::Color() to save program space
+// Eases constant color declarations but should only be used for constant colors. Otherwise better use Adafruit_NeoPixel::Color() to save program memory
 #define COLOR32(r,g,b)  ((color32_t)(((uint32_t)r<<16)|((uint16_t)g<<8)|b)) // return ((uint32_t)r << 16) | ((uint32_t)g <<  8) | b;
 #define COLOR32_W(r,g,b,w)   ((color32_t)(((uint32_t)w<<24)|((uint32_t)r<<16)|((uint16_t)g<<8)|b)) // return ((uint32_t)w << 24) |(uint32_t)r << 16) | ((uint32_t)g <<  8) | b;
 

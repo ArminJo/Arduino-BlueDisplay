@@ -32,18 +32,18 @@
 #include "EventHandler.h"
 #include "BlueDisplay.h"
 
-#ifdef ARDUINO
+#if defined(ARDUINO)
 #include <Arduino.h> // for millis()
 #else
 #include "timing.h" // for getMillisSinceBoot()
-#  ifdef USE_STM32F3_DISCO
+#  if defined(USE_STM32F3_DISCO)
 #  include "stm32f3_discovery.h"  // For LEDx
 #  endif
 #include "stm32fx0xPeripherals.h" // For Watchdog_reload()
 #include <stdio.h> // for printf
 #endif // ARDUINO
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 #include "ADS7846.h"
 #endif
 
@@ -52,13 +52,13 @@
 bool sBDEventJustReceived = false;
 unsigned long sMillisOfLastReceivedBDEvent;
 
-#ifndef DO_NOT_NEED_BASIC_TOUCH_EVENTS
+#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
 struct TouchEvent sDownPosition;
 struct TouchEvent sCurrentPosition;
 struct TouchEvent sUpPosition;
 #endif
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 /*
  * helper variables
  */
@@ -82,7 +82,7 @@ bool sDisableTouchUpOnce = false;
 bool sDisableUntilTouchUpIsDone = false;
 
 struct BluetoothEvent remoteEvent;
-#ifdef USE_SIMPLE_SERIAL
+#if defined(USE_SIMPLE_SERIAL)
 // Serves also as second buffer for regular events to avoid overwriting of touch down events if CPU is busy and interrupt in not enabled
 struct BluetoothEvent remoteTouchDownEvent;
 #endif
@@ -127,7 +127,7 @@ void registerReorientationCallback(void (*aReorientationCallback)(void)) {
     sReorientationCallback = aReorientationCallback;
 }
 
-#ifndef DO_NOT_NEED_BASIC_TOUCH_EVENTS
+#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
 void registerTouchDownCallback(void (*aTouchDownCallback)(struct TouchEvent *aCurrentPositionPtr)) {
     sTouchDownCallback = aTouchDownCallback;
 }
@@ -168,7 +168,7 @@ void setTouchUpCallbackEnabled(bool aTouchUpCallbackEnabled) {
  */
 void registerLongTouchDownCallback(void (*aLongTouchDownCallback)(struct TouchEvent *), uint16_t aLongTouchDownTimeoutMillis) {
     sLongTouchDownCallback = aLongTouchDownCallback;
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     sLongTouchDownTimeoutMillis = aLongTouchDownTimeoutMillis;
     if (aLongTouchDownCallback == NULL) {
         changeDelayCallback(&callbackLongTouchDownTimeout, DISABLE_TIMER_DELAY_VALUE); // housekeeping - disable timeout
@@ -222,7 +222,7 @@ void registerSensorChangeCallback(uint8_t aSensorType, uint8_t aSensorRate, uint
  * AVR - Is not affected by overflow of millis()!
  */
 void delayMillisWithCheckAndHandleEvents(unsigned long aTimeMillis) {
-#ifdef ARDUINO
+#if defined(ARDUINO)
     unsigned long tStartMillis = millis();
     while (millis() - tStartMillis < aTimeMillis) {
 #  if !defined(USE_SIMPLE_SERIAL) && defined(__AVR__)
@@ -242,7 +242,7 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aTimeMillis) {
     }
 }
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 bool sDisplayXYValuesEnabled = false;  // displays touch values on screen
 
 /**
@@ -304,19 +304,19 @@ void callbackLongTouchDownTimeout(void) {
  * Is called by thread main loops
  */
 void checkAndHandleEvents(void) {
-#ifdef HAL_WWDG_MODULE_ENABLED
+#if defined(HAL_WWDG_MODULE_ENABLED)
     Watchdog_reload();
 #endif
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     resetTouchFlags();
     if (localTouchEvent.EventType != EVENT_NO_EVENT) {
         handleEvent(&localTouchEvent);
     }
 #endif
 
-#ifdef ARDUINO
-#ifndef USE_SIMPLE_SERIAL
+#if defined(ARDUINO)
+#if !defined(USE_SIMPLE_SERIAL)
     // get Arduino Serial data first
     serialEvent();
 #else
@@ -355,7 +355,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     // avoid using event twice
     aEvent->EventType = EVENT_NO_EVENT;
 
-#ifndef DO_NOT_NEED_BASIC_TOUCH_EVENTS
+#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
 #ifdef  LOCAL_DISPLAY_EXISTS
     if (tEventType <= EVENT_TOUCH_ACTION_MOVE && sDisplayXYValuesEnabled) {
         printTPData(30, 2 + TEXT_SIZE_11_ASCEND, COLOR16_BLACK, COLOR_WHITE);
@@ -370,17 +370,17 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 
     switch (tEventType) { // switch requires 36 bytes more code but is clearer to understand :-(
 
-#ifndef DO_NOT_NEED_BASIC_TOUCH_EVENTS
+#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
     case EVENT_TOUCH_ACTION_DOWN:
 //    if (tEventType == EVENT_TOUCH_ACTION_DOWN) {
         // must initialize all positions here!
         sDownPosition = tEvent.EventData.TouchEventInfo;
         sCurrentPosition = tEvent.EventData.TouchEventInfo;
-#ifdef USE_STM32F3_DISCO
+#if defined(USE_STM32F3_DISCO)
         BSP_LED_On(LED_BLUE_2); // BLUE Front
 #endif
         sTouchIsStillDown = true;
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
         // start timeout for long touch if it is local event
         if (sLongTouchDownCallback != NULL && aEvent != &remoteEvent) {
             changeDelayCallback(&callbackLongTouchDownTimeout, sLongTouchDownTimeoutMillis); // enable timeout
@@ -405,11 +405,11 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     case EVENT_TOUCH_ACTION_UP:
 //    } else if (tEventType == EVENT_TOUCH_ACTION_UP) {
         sUpPosition = tEvent.EventData.TouchEventInfo;
-#ifdef USE_STM32F3_DISCO
+#if defined(USE_STM32F3_DISCO)
         BSP_LED_Off(LED_BLUE_2); // BLUE Front
 #endif
         sTouchIsStillDown = false;
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
         // may set sDisableTouchUpOnce
         handleLocalTouchUp();
 #endif
@@ -426,7 +426,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     case EVENT_TOUCH_ACTION_ERROR:
 //    } else if (tEventType == EVENT_TOUCH_ACTION_ERROR) {
         // try to reset touch state
-#ifdef USE_STM32F3_DISCO
+#if defined(USE_STM32F3_DISCO)
         BSP_LED_Off(LED_BLUE_2); // BLUE Front
 #endif
         sUpPosition = tEvent.EventData.TouchEventInfo;
@@ -438,7 +438,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     case EVENT_BUTTON_CALLBACK:
 //    if (tEventType == EVENT_BUTTON_CALLBACK) {
         sTouchIsStillDown = false; // to disable local touch up detection
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
                 tButtonCallback = (void (*)(BDButtonHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;; // 2 ;; for pretty print :-(
                 {
                     BDButton tTempButton = BDButton(tEvent.EventData.GuiCallbackInfo.ObjectIndex,
@@ -456,7 +456,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         case EVENT_SLIDER_CALLBACK:
 //    } else if (tEventType == EVENT_SLIDER_CALLBACK) {
         sTouchIsStillDown = false;// to disable local touch up detection
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
         tSliderCallback = (void (*)(BDSliderHandle_t *, int16_t))tEvent.EventData.GuiCallbackInfo.Handler; {
             TouchSlider *tLocalSlider = TouchSlider::getLocalSliderFromBDSliderHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
             BDSlider tTempSlider = BDSlider(tEvent.EventData.GuiCallbackInfo.ObjectIndex, tLocalSlider);
@@ -570,7 +570,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         // Since with simpleSerial we have only buffer for 1 event, we must also call redraw here
         tEventType = EVENT_REDRAW;
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
         // do it after sConnectCallback() since the upper tends to send a reset all command
         TouchButton::reinitAllLocalButtonsForRemote();
         TouchSlider::reinitAllLocalSlidersForRemote();
@@ -604,7 +604,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         }
     }
     sBDEventJustReceived = true;
-#ifdef ARDUINO
+#if defined(ARDUINO)
     sMillisOfLastReceivedBDEvent = millis(); // set time of (last) event
 #else
     sMillisOfLastReceivedBDEvent = getMillisSinceBoot(); // set time of (last) event
@@ -619,7 +619,7 @@ void copyDisplaySizeAndTimestamp(struct BluetoothEvent *aEvent) {
     BlueDisplay1.mHostUnixTimestamp = aEvent->EventData.DisplaySizeAndTimestamp.UnixTimestamp;
 }
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 void resetTouchFlags(void) {
     sNothingTouched = false;
 }

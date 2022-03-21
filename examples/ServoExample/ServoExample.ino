@@ -42,7 +42,7 @@
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
  ***************************************************************************/
-#ifndef BLUETOOTH_BAUD_RATE
+#if !defined(BLUETOOTH_BAUD_RATE)
 //#define BLUETOOTH_BAUD_RATE BAUD_115200
 #define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
@@ -168,7 +168,7 @@ void setup() {
 
 #if defined(USE_SERIAL1) // defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
     // Just to know which program is running on my Arduino
@@ -184,7 +184,7 @@ void setup() {
         doServosStartStop(NULL, true);
     } else {
 #if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
         // Just to know which program is running on my Arduino
@@ -277,7 +277,7 @@ void loop() {
         }
     }
 
-#ifdef AVR
+#if defined(AVR)
     if (BlueDisplay1.isConnectionEstablished()) {
         /*
          * Print VCC and temperature each second
@@ -410,7 +410,7 @@ void doLaserPowerSlider(BDSlider *aTheTouchedSlider, uint16_t aValue) {
     sLastLaserSliderValue = aValue;
     float tValue = aValue;
     tValue = (tValue * 5) / sCurrentDisplayHeight; // gives 0-2.5 for 0 - sCurrentDisplayHeight/2
-// 950 byte program space required for pow() and log10f()
+// 950 byte program memory required for pow() and log10f()
     tValue = pow(10, tValue);
     if (tValue > 255) {
         tValue = 255;
@@ -612,7 +612,7 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallback
          * regular operation here!
          */
         tSensorChangeCallCount = CALLS_FOR_ZERO_ADJUSTMENT + 1; // to prevent overflow
-#ifdef DEBUG
+#if defined(DEBUG)
         void printSensorInfo(struct SensorCallback* aSensorCallbackInfo) {
             dtostrf(aSensorCallbackInfo->ValueX, 7, 4, &sStringBuffer[50]);
             dtostrf(aSensorCallbackInfo->ValueY, 7, 4, &sStringBuffer[60]);

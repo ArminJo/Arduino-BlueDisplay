@@ -206,7 +206,7 @@ setTouchUpCallbackEnabled	KEYWORD2
 getTouchUpCallback	KEYWORD2
 handleEvent	KEYWORD2
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined LOCAL_DISPLAY_EXISTS
 simpleTouchDownHandler	KEYWORD2
 simpleTouchHandlerOnlyForButtons	KEYWORD2
 simpleTouchDownHandlerOnlyForSlider	KEYWORD2

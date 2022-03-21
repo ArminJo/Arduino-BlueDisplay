@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef WAVEFORMS_H_
-#define WAVEFORMS_H_
+#ifndef _WAVEFORMS_H
+#define _WAVEFORMS_H
 
 #define WAVEFORM_SQUARE 0
 #define WAVEFORM_SINE 1
@@ -71,4 +71,5 @@ void startWaveform();
 // utility Function
 void computeSineTableValues(uint8_t aSineTable[], unsigned int aNumber);
 
-#endif /* WAVEFORMS_H_ */
+#endif // _WAVEFORMS_H
+#pragma once

@@ -1,0 +1,20 @@
+START ../src/BTModuleProgrammer.cpp
+Version 3.1 from Mar 21 2022
+HC-05 programming mode detected. Switch to JDY-31 mode by connecting pin 4 to ground or to pin 5.
+
+Now you have 5 seconds for releasing HC-05 module key, which should be pressed at power up to enter program mode.
+
+Now we try to connect to module, read version and baud and wait for new name to be entered.
+
+HC-05 module selected.
+
+Start with baudrate 38400 for HC-05 - factory default for AT command mode
+Setup HC-05 module.
+Sent: "AT\r\n"
+Received: ""
+No valid response to AT command. Program mode must be enabled to get a response!
+
+Programming skipped or not successful. You may now:
+- Press reset for a new try.
+- Enter "AT+<Command>".
+

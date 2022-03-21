@@ -27,14 +27,14 @@
  *
  */
 
-#ifndef EVENTHANDLER_H_
-#define EVENTHANDLER_H_
+#ifndef _EVENTHANDLER_H
+#define _EVENTHANDLER_H
 
-#ifndef DO_NOT_NEED_BASIC_TOUCH_EVENTS
-//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // commenting out or better defining for the compiler with -DDO_NOT_NEED_BASIC_TOUCH_EVENTS saves 620 bytes program space and 36 bytes RAM
+#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // commenting out or better defining for the compiler with -DDO_NOT_NEED_BASIC_TOUCH_EVENTS saves 620 bytes program memory and 36 bytes RAM
 #endif
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 #include "BlueDisplay.h" // for
 //#include "ADS7846.h"
 //extern ADS7846 TouchPanel;
@@ -51,7 +51,7 @@ extern unsigned long sMillisOfLastReceivedBDEvent; // is updated with millis() a
 #define TOUCH_SWIPE_THRESHOLD 10  // threshold for swipe detection to suppress long touch handler calling
 #define TOUCH_SWIPE_RESOLUTION_MILLIS 20
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 extern struct BluetoothEvent localTouchEvent;
 /*
  * helper variables
@@ -65,12 +65,12 @@ void resetTouchFlags(void);
 #endif
 
 extern struct BluetoothEvent remoteEvent;
-#ifdef AVR
+#if defined(AVR)
 // Serves also as second buffer for regular events to avoid overwriting of touch down events if CPU is busy and interrupt in not enabled
 extern struct BluetoothEvent remoteTouchDownEvent;
 #endif
 
-#ifndef DO_NOT_NEED_BASIC_TOUCH_EVENTS
+#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
 extern bool sTouchIsStillDown;
 extern struct TouchEvent sDownPosition;
 extern struct TouchEvent sActualPosition;
@@ -105,7 +105,7 @@ void registerSensorChangeCallback(uint8_t aSensorType, uint8_t aSensorRate, uint
 #define registerSimpleResizeCallback(aRedrawCallback) registerRedrawCallback(aRedrawCallback)
 #define getSimpleResizeAndConnectCallback() getRedrawCallback()
 
-#ifndef DO_NOT_NEED_BASIC_TOUCH_EVENTS
+#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
 void registerTouchDownCallback(void (*aTouchDownCallback)(struct TouchEvent *aActualPositionPtr));
 void registerTouchMoveCallback(void (*aTouchMoveCallback)(struct TouchEvent *aActualPositionPtr));
 void registerTouchUpCallback(void (*aTouchUpCallback)(struct TouchEvent *aActualPositionPtr));
@@ -113,7 +113,7 @@ void setTouchUpCallbackEnabled(bool aTouchUpCallbackEnabled);
 void (* getTouchUpCallback(void))(struct TouchEvent * );
 #endif
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 void handleLocalTouchUp(void);
 void callbackLongTouchDownTimeout(void);
 void simpleTouchDownHandler(struct TouchEvent *aActualPositionPtr);

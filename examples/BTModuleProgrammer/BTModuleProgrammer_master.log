@@ -1,0 +1,57 @@
+START ../src/BTModuleProgrammer.cpp
+Version 3.1 from Mar 21 2022
+HC-05 programming mode detected. Switch to JDY-31 mode by connecting pin 4 to ground or to pin 5.
+
+Now you have 5 seconds for releasing HC-05 module key, which should be pressed at power up to enter program mode.
+
+Now we try to connect to module, read version and baud and wait for new name to be entered.
+
+HC-05 module selected.
+
+Start with baudrate 38400 for HC-05 - factory default for AT command mode
+Setup HC-05 module.
+Sent: "AT\r\n"
+Received: "OK\r\n"
+Module attached OK.
+
+Get version
+Sent: "AT+VERSION\r\n"
+Received: "+VERSION:2.0-20100601\r\nOK\r\n"
+
+Get current baud
+Sent: "AT+UART\r\n"
+Received: "+UART:115200,0,0\r\nOK\r\n"
+
+Get current name
+Sent: "AT+NAME\r\n"
+Received: ""
+
+Get current PIN
+Sent: "AT+PSWD\r\n"
+Received: "+PSWD:1234\r\nOK\r\n"
+
+Get current Role (0->Slave, 1->Master, 2->Slave-Loop)
+Sent: "AT+ROLE\r\n"
+Received: "+ROLE:1\r\nOK\r\n"
+
+Get current Cmode (0->connect to fixed bind address, 1->connect to all)
+Sent: "AT+CMODE\r\n"
+Received: "+CMOD:1\r\nOK\r\n"
+
+Get Bind address
+Sent: "AT+BIND\r\n"
+Received: "+BIND:98d3:31:fb2f4f\r\nOK\r\n"
+
+Get own Address
+Sent: "AT+ADDR\r\n"
+Received: "+ADDR:98d3:31:fb2c82\r\nOK\r\n"
+
+Enter new module name to set this name and to set baudrate to 115200 - you will be asked for confirmation.
+Or enter empty string to skip (and enter direct AT mode).
+Timeout is 60 seconds.
+
+
+Programming skipped or not successful. You may now:
+- Press reset for a new try.
+- Enter "AT+<Command>".
+

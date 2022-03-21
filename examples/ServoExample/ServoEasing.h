@@ -21,8 +21,8 @@
  *
  */
 
-#ifndef SERVOEASING_H_
-#define SERVOEASING_H_
+#ifndef _SERVO_EASING_H
+#define _SERVO_EASING_H
 
 #define VERSION_SERVO_EASING "2.4.1"
 #define VERSION_SERVO_EASING_MAJOR 2
@@ -48,8 +48,8 @@
 #endif
 
 /*
- * If you have only one or two servos and an ATmega328, then you can save program space by defining symbol `USE_LEIGHTWEIGHT_SERVO_LIB`.
- * This saves 742 bytes program space and 42 bytes RAM.
+ * If you have only one or two servos and an ATmega328, then you can save program memory by defining symbol `USE_LEIGHTWEIGHT_SERVO_LIB`.
+ * This saves 742 bytes program memory and 42 bytes RAM.
  * Using Lightweight Servo library (or PCA9685 servo expander) makes the servo pulse generating immune
  * to other libraries blocking interrupts for a longer time like SoftwareSerial, Adafruit_NeoPixel and DmxSimple.
  * If not using the Arduino IDE take care that Arduino Servo library sources are not compiled / included in the project.
@@ -160,7 +160,7 @@
 #endif
 
 /*
- * If you need only the linear movement you may define `PROVIDE_ONLY_LINEAR_MOVEMENT`. This saves additional 1540 bytes program space.
+ * If you need only the linear movement you may define `PROVIDE_ONLY_LINEAR_MOVEMENT`. This saves additional 1540 bytes program memory.
  */
 #if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
 //#define PROVIDE_ONLY_LINEAR_MOVEMENT
@@ -174,7 +174,7 @@
 #endif
 
 /*
- * If you require passing microsecond values as parameter instead of degree values. This requires additional 128 bytes program space.
+ * If you require passing microsecond values as parameter instead of degree values. This requires additional 128 bytes program memory.
  */
 #if !defined(ENABLE_MICROS_AS_DEGREE_PARAMETER)
 //#define ENABLE_MICROS_AS_DEGREE_PARAMETER
@@ -265,7 +265,7 @@
 #define EASE_QUARTIC_IN_OUT     0x43
 #define EASE_QUARTIC_BOUNCING   0x63
 
-#ifndef DISABLE_COMPLEX_FUNCTIONS
+#if !defined(DISABLE_COMPLEX_FUNCTIONS)
 #define EASE_SINE_IN            0x08
 #define EASE_SINE_OUT           0x28
 #define EASE_SINE_IN_OUT        0x48
@@ -353,7 +353,7 @@ public:
     void setTrim(int aTrimDegrees, bool aDoWrite = false);
     void setTrimMicrosecondsOrUnits(int aTrimMicrosecondsOrUnits, bool aDoWrite = false);
 
-#ifndef PROVIDE_ONLY_LINEAR_MOVEMENT
+#if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
     void setEasingType(uint_fast8_t aEasingType);
     uint_fast8_t getEasingType();
 
@@ -420,7 +420,7 @@ public:
      */
     uint_fast16_t mSpeed; // in DegreesPerSecond only set by setSpeed(int16_t aSpeed);
 
-#ifndef PROVIDE_ONLY_LINEAR_MOVEMENT
+#if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
     uint8_t mEasingType; // EASE_LINEAR, EASE_QUADRATIC_IN_OUT, EASE_CUBIC_IN_OUT, EASE_QUARTIC_IN_OUT
 
     float (*mUserEaseInFunction)(float aPercentageOfCompletion);
@@ -504,7 +504,7 @@ void stopAllServos();
 bool updateAllServos();
 void synchronizeAllServosAndStartInterrupt(bool aStartUpdateByInterrupt = true);
 
-#ifndef PROVIDE_ONLY_LINEAR_MOVEMENT
+#if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
 void setEasingTypeForAllServos(uint_fast8_t aEasingType);
 #endif
 
@@ -662,14 +662,13 @@ bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial); // Print has no f
  * - added setEaseToForAllServos(), setEaseToForAllServosSynchronizeAndStartInterrupt(), synchronizeAndEaseToArrayPositions().
  * - added getEndMicrosecondsOrUnits(), getDeltaMicrosecondsOrUnits().
  * - added setDegreeForAllServos(uint8_t aNumberOfValues, va_list * aDegreeValues),setDegreeForAllServos(uint8_t aNumberOfValues, ...).
- * - added compile switch PROVIDE_ONLY_LINEAR_MOVEMENT to save additional 1500 bytes program space if enabled.
+ * - added compile switch PROVIDE_ONLY_LINEAR_MOVEMENT to save additional 1500 bytes program memory if enabled.
  * - added convenience function clipDegreeSpecial().
  */
 
-#if !defined(SERVOEASING_HPP) && !defined(SUPPRESS_HPP_WARNING)
+#if !defined(_SERVO_EASING_HPP) && !defined(SUPPRESS_HPP_WARNING)
 #warning You probably must change the line #include "ServoEasing.h" to #include "ServoEasing.hpp" in your ino file or define SUPPRESS_HPP_WARNING before the include to suppress this warning.
 #endif
 
-#endif// #ifndef SERVOEASING_H_
-
+#endif // _SERVO_EASING_H
 #pragma once

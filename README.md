@@ -1,7 +1,7 @@
 # [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
 Available as Arduino library "BlueDisplay"
 
-### [Version 2.1.1](https://github.com/ArminJo/Arduino-BlueDisplay/archive/master.zip) - work in progress
+### [Version 2.2.1](https://github.com/ArminJo/Arduino-BlueDisplay/archive/master.zip) - work in progress
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
@@ -57,8 +57,8 @@ Modify them by enabling / disabling them, or change the values if applicable.
 
 | Macro | Default | File | Description |
 |-|-|-|-|
-| `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | EventHandler.h | Saves up to 620 bytes program space and 36 bytes RAM. |
-| `USE_SIMPLE_SERIAL` | disabled | BlueSerial.h | Saves up to 1250 bytes program space and 185 bytes RAM. |
+| `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | EventHandler.h | Saves up to 620 bytes program memory and 36 bytes RAM. |
+| `USE_SIMPLE_SERIAL` | disabled | BlueSerial.h | Saves up to 1250 bytes program memory and 185 bytes RAM. |
 
 ### Changing include (*.h) files with Arduino IDE
 First, use *Sketch > Show Sketch Folder (Ctrl+K)*.<br/>
@@ -103,18 +103,30 @@ Simple example to check your installation.
 
 ## BlueDisplayExample
 More elaborated example to show more features of the BlueDisplay library.
+![Screenshot](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayExample.png)
+
+| Fritzing schematic for BlueDisplay example | BlueDisplay example breadboard picture |
+| :-: | :-: |
+| ![Fritzing board](extras/BlueDisplayBlink_Steckplatine.png) | ![Breadboard picture](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/Blink1.jpg) |
 
 ## ShowSensorValues
 Shows the accelerometer and gyroscope values received from the smartphone both graphical and numerical.
-Plotter output of accelerometer
+
 ![Plotter output of accelerometer](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/AccelerometerOnPlotter.png)
 
 ## BTModuleProgrammer
 Simple helper program to configure your HC-05 or JDY-31 modules name and default baudrate with a serial monitor.
-It can also be used to enter AT commands directly to the BT module for extended manual programming.
+It can also be used to enter AT commands directly to the BT module for extended manual programming.<br/>
+![Breadboard picture](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BTModuleProgrammer.jpg)
+
+Sample outputs can be found [here](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples/BTModuleProgrammer).
 
 ## RcCarControl
 Example of controlling a RC-car by smartphone accelerometer sensor.
+
+| RC car control display | Hacked RC car |
+| - | - |
+| ![RC car control display](pictures/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
 
 ## ServoExample
 The accelerometer sensor of the android display is used to control two servos in a frame which holds a laser.
@@ -128,6 +140,7 @@ If no BD connection available, the servo first marks the border and then moves r
 300 kSamples DSO without external hardware (except the HC-05 module). For AC input, only a capacitor and 4 resistors are needed.
 More information at [Arduino-Simple-DSO](examples/SimpleTouchScreenDSO).<br/>
 Not for STM32.
+![Screenshot](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/ArduinoDSO_Simple.png)
 
 ## US_Distance
 Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a parking assistance.
@@ -135,14 +148,16 @@ Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a pa
 ## Random delays on some smartphones
 Depending on the device you use, you can observe some random **"delays"** up to 500 ms in the timing of the display refresh.
 The **delays does not occur if you use a USB connection** instead of the Bluetooth one.<br/>
-The reason is, that the Bluetooth driver does not return its received bytes for a longer time.<br/>
-If you send to much data during this delay the **driver may hang**, as you can observe for the SimpleDSO Application, which runs **smooth with a USB** connection. Hanging may be avoided if using flow control, but the HC05 firmware and breakout boards do not support it. On the ESP32, the BluetoothSerial library supports it and there you can observe that the client program also delays, when the smartphone driver takes its delay.<br/>
-This Bluetooth driver is usually delivered by the hardware vendor, so it may depend on the chips used in your smartphone.<br/>
-In my opinion some Bluetooth SPP (Serial Port Profile) drivers are not really specified/tested/optimized for real time behavior.<br/>
+The reason is, that the Android Bluetooth driver does not return its received bytes for a longer time.<br/>
+If you send to much data during this delay the **driver may hang**, as you can observe for the SimpleDSO Application, which runs **smooth with a USB** connection.<br/>
+Hanging may be avoided if using flow control, but the HC05 firmware and HC05 breakout boards do not support it.
+On the ESP32, the BluetoothSerial library supports flow control and there you can observe that the client program also delays, when the smartphone driver takes its break.<br/>
+This Bluetooth driver is usually delivered by the hardware vendor, so it may depend on the chips used in your smartphone.
+It seems, that some Bluetooth SPP (Serial Port Profile) drivers are not really specified/tested/optimized for real time behavior.<br/>
 Known devices **with** these "delays" are:<br/>
 Lenovo K3 Note 6.0, Nexus7 with AW-NH665 BT-Chip running 6.0.1, Nexus 6P with ?8.x?, Kindle Fire HD 8 with Broadcom BCM2076 running 6.3.1.5.<br/>
 Known devices **without** these "delays" are:<br/>
-Samsung Note 3 running 5.0, Lifetab P9702 running 7.1.2, Lifetab E10310 running 4.2.2, XORO PAD 721 running 4.2.2, Samsung Galaxy S3 GT-I9300 running Lineage 7.1.2, LUX10 running 5.0, iRULU X11 running 5.1.1, Time2 TC1050G running 5.1, Pixel 4 XL running 10,
+Samsung Note 3 running 5.0, Lifetab P9702 running 7.1.2, Lifetab E10310 running 4.2.2, XORO PAD 721 running 4.2.2, Samsung Galaxy S3 GT-I9300 running Lineage 7.1.2, LUX10 running 5.0, iRULU X11 running 5.1.1, Time2 TC1050G running 5.1, Pixel 4 XL running 10.
 
 ## Extras
 The extras folder (in the Arduino IDE use "Sketch > Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
@@ -168,14 +183,11 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
                  |/ |
 ```
 
-| Fritzing schematic for BlueDisplay example | BlueDisplay example breadboard picture |
-| :-: | :-: |
-| ![Fritzing board](extras/BlueDisplayBlink_Steckplatine.png) | ![Breadboard picture](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/Blink1.jpg) |
-| RC car control display | Hacked RC car |
-| ![RC car control display](extras/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
-
 # Revision History
-### Version 2.2.0 - work in progress
+### Version 2.2.1 - work in progress
+- Improved BTModuleProgrammer program.
+
+### Version 2.2.0
 - Changed default serial for AVR from `USE_SIMPLE_SERIAL` to standard Arduino Serial.
 - Added ShowSensorValues example.
 - Renamed mReferenceDisplaySize to mRequestedDisplaySize and renamed related function to getRequestedDisplaySize().

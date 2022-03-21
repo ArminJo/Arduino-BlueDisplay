@@ -40,7 +40,7 @@ BDSliderHandle_t sLocalSliderIndex = 0;
 BDSlider::BDSlider(void) { // @suppress("Class members should be properly initialized")
 }
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPointer) {
     mSliderHandle = aSliderHandle;
     mLocalSliderPointer = aLocalSliderPointer;
@@ -79,7 +79,7 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
     }
     mSliderHandle = tSliderNumber;
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer = new TouchSlider();
     // Cast required here. At runtime the right pointer is returned because of FLAG_USE_INDEX_FOR_CALLBACK
     mLocalSliderPointer->initSlider(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue,
@@ -90,15 +90,18 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
 #endif
 }
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 void BDSlider::deinit(void) {
     sLocalSliderIndex--;
     delete mLocalSliderPointer;
 }
 #endif
 
+/*
+ * Sets slider to active, draws border, bar, caption and value
+ */
 void BDSlider::drawSlider(void) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->drawSlider();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -107,7 +110,7 @@ void BDSlider::drawSlider(void) {
 }
 
 void BDSlider::drawBorder(void) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->drawBorder();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -116,7 +119,7 @@ void BDSlider::drawBorder(void) {
 }
 
 void BDSlider::setValue(int16_t aCurrentValue) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -128,7 +131,7 @@ void BDSlider::setValue(int16_t aCurrentValue) {
  * Deprecated
  */
 void BDSlider::setActualValue(int16_t aCurrentValue) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -136,8 +139,11 @@ void BDSlider::setActualValue(int16_t aCurrentValue) {
     }
 }
 
+/*
+ * Draw bar and set and print current value
+ */
 void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -149,7 +155,7 @@ void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
  * Deprecated
  */
 void BDSlider::setActualValueAndDrawBar(int16_t aCurrentValue) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -158,7 +164,7 @@ void BDSlider::setActualValueAndDrawBar(int16_t aCurrentValue) {
 }
 
 void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->setBarThresholdColor(aBarThresholdColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -170,7 +176,7 @@ void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
  * Default threshold color is COLOR16_RED initially
  */
 void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->setBarThresholdColor(aBarThresholdDefaultColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -180,7 +186,7 @@ void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) 
 }
 
 void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->setBarBackgroundColor(aBarBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -194,7 +200,7 @@ void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
  */
 void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPosition, uint8_t aCaptionMargin, color16_t aCaptionColor,
         color16_t aCaptionBackgroundColor) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->setCaptionColors(aCaptionColor, aCaptionBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -204,7 +210,7 @@ void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositi
 }
 
 void BDSlider::setCaption(const char *aCaption) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->setCaption(aCaption);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -240,7 +246,7 @@ void BDSlider::setValueFormatString(const char *aValueFormatString) {
  */
 void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPrintValuePosition, uint8_t aPrintValueMargin,
         color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->setValueStringColors(aPrintValueColor, aPrintValueBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -276,7 +282,7 @@ void BDSlider::setValueScaleFactor(float aScaleFactorValue) {
 #pragma GCC diagnostic pop
 
 void BDSlider::printValue(const char *aValueString) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->printValue(aValueString);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -285,7 +291,7 @@ void BDSlider::printValue(const char *aValueString) {
 }
 
 void BDSlider::activate(void) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->activate();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -294,7 +300,7 @@ void BDSlider::activate(void) {
 }
 
 void BDSlider::deactivate(void) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     mLocalSliderPointer->deactivate();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -302,7 +308,7 @@ void BDSlider::deactivate(void) {
     }
 }
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 
 int BDSlider::printValue(void) {
     return mLocalSliderPointer->printValue();
@@ -333,7 +339,7 @@ void BDSlider::resetAllSliders(void) {
 }
 
 void BDSlider::activateAllSliders(void) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     TouchSlider::activateAllSliders();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -342,7 +348,7 @@ void BDSlider::activateAllSliders(void) {
 }
 
 void BDSlider::deactivateAllSliders(void) {
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     TouchSlider::deactivateAllSliders();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -361,7 +367,9 @@ void initPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr
 }
 
 /*
- * @return aValue with aSliderDeadBand applied
+ * @param aValue positive for bar in *positiveSliderPtr
+ * @return aValue with aSliderDeadBand applied, i.e. subtract dead band from value but clip at zero
+ *                              for negative values, add dead band to value and clip at zero
  */
 int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, int aValue, uint8_t aSliderDeadBand) {
     BDSlider *tValueSlider = aSliderStructPtr->positiveSliderPtr;

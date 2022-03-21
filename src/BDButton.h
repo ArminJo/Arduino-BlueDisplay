@@ -27,12 +27,12 @@
  *
  */
 
-#ifndef BLUEDISPLAY_INCLUDE_BDBUTTON_H_
-#define BLUEDISPLAY_INCLUDE_BDBUTTON_H_
+#ifndef _BLUEDISPLAY_INCLUDE_BDBUTTON_H
+#define _BLUEDISPLAY_INCLUDE_BDBUTTON_H
 
 #include <stdint.h>
 
-#ifdef ARDUINO
+#if defined(ARDUINO)
 #  if ! defined(ESP32)
 // For not AVR platforms this contains mapping defines (at least for STM32)
 #include <avr/pgmspace.h>
@@ -55,7 +55,7 @@ static const int FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN = 0x02; // Value true -> gree
 static const int FLAG_BUTTON_TYPE_AUTOREPEAT = 0x04;
 static const int FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH = 0x0A; // Button must be manually drawn after event to show new caption/color
 
-#ifdef USE_BUTTON_POOL
+#if defined(USE_BUTTON_POOL)
 #define INTERNAL_FLAG_MASK 0x80
 #define FLAG_IS_ALLOCATED 0x80 // For use with get and releaseButton
 #endif
@@ -236,12 +236,12 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 
 #define BUTTON_HEIGHT_10 20
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
 #include "TouchButton.h"
 // since we have only a restricted pool of local buttons
 typedef uint8_t BDButtonHandle_t;
 #else
-#ifdef AVR
+#if defined(AVR)
 typedef uint8_t BDButtonHandle_t;
 #else
 typedef uint16_t BDButtonHandle_t;
@@ -266,7 +266,7 @@ public:
     // Constructors
     BDButton();
     BDButton(BDButtonHandle_t aButtonHandle);
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     BDButton(BDButtonHandle_t aButtonHandle, TouchButton *aLocalButtonPtr);
 #endif
     BDButton(const BDButton &aButton);
@@ -298,7 +298,7 @@ public:
     void activate(void);
     void deactivate(void);
 
-#ifdef ARDUINO
+#if defined(ARDUINO)
     void initPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
             const char *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(BDButton*, int16_t));
@@ -319,7 +319,7 @@ public:
 
     BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions
 
-#ifdef LOCAL_DISPLAY_EXISTS
+#if defined(LOCAL_DISPLAY_EXISTS)
     void deinit(void);
     TouchButton *mLocalButtonPtr;
 #endif

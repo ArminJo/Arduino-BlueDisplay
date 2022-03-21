@@ -66,8 +66,8 @@
  *
  */
 
-#ifndef BLUEDISPLAYPROTOCOL_H_
-#define BLUEDISPLAYPROTOCOL_H_
+#ifndef _BLUEDISPLAYPROTOCOL_H
+#define _BLUEDISPLAYPROTOCOL_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -170,7 +170,7 @@ union ByteShortLongFloatUnion {
 struct GuiCallback {
     uint16_t ObjectIndex;
     uint16_t Free;
-#ifdef AVR
+#if defined(AVR)
     void * Handler;
     void * Handler_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
 #else
@@ -192,7 +192,7 @@ struct IntegerInfoCallback {
     uint8_t SubFunction;
     uint8_t ByteInfo;
     uint16_t ShortInfo;
-#ifdef AVR
+#if defined(AVR)
     void * Handler;
     void * Handler_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
 #else
@@ -381,4 +381,4 @@ const int FUNCTION_SLIDER_PRINT_VALUE = 0x79;
 const int FUNCTION_SLIDER_SET_VALUE_UNIT_STRING = 0x7A;
 const int FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING = 0x7B;
 
-#endif /* BLUEDISPLAYPROTOCOL_H_ */
+#endif /* _BLUEDISPLAYPROTOCOL_H */
