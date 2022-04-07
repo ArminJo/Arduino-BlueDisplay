@@ -1,7 +1,7 @@
 # [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
 Available as Arduino library "BlueDisplay"
 
-### [Version 2.2.1](https://github.com/ArminJo/Arduino-BlueDisplay/archive/master.zip) - work in progress
+### [Version 3.0.0](https://github.com/ArminJo/Arduino-BlueDisplay/archive/master.zip) - work in progress
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
@@ -53,12 +53,14 @@ For detaild information to sensors see [ShowSensorValues example](https://github
 
 # Compile options / macros for this library
 To customize the library to different requirements, there are some compile options / makros available.<br/>
+These macros must be defined in your program before the line `#include <BlueDisplay.hpp>` to take effect.<br/>
 Modify them by enabling / disabling them, or change the values if applicable.
 
-| Macro | Default | File | Description |
-|-|-|-|-|
-| `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | EventHandler.h | Saves up to 620 bytes program memory and 36 bytes RAM. |
-| `USE_SIMPLE_SERIAL` | disabled | BlueSerial.h | Saves up to 1250 bytes program memory and 185 bytes RAM. |
+| Name | Default value | Description |
+|-|-|-|
+| `BLUETOOTH_BAUD_RATE` | 9600 | Change this, if you have reprogrammed the HC05 module for another baud rate e.g.115200. |
+| `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | Disables basic touch events like down, move and up. Saves up to 620 bytes program memory and 36 bytes RAM. |
+| `USE_SIMPLE_SERIAL` | disabled | Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise. |
 
 ### Changing include (*.h) files with Arduino IDE
 First, use *Sketch > Show Sketch Folder (Ctrl+K)*.<br/>
@@ -184,8 +186,9 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
 
 # Revision History
-### Version 2.2.1 - work in progress
+### Version 3.0.0 - work in progress
 - Improved BTModuleProgrammer program.
+- Renamed *.cpp to *.hpp.
 
 ### Version 2.2.0
 - Changed default serial for AVR from `USE_SIMPLE_SERIAL` to standard Arduino Serial.

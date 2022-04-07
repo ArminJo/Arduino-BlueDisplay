@@ -21,13 +21,18 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
 #include <Arduino.h>
 
-#include "BlueDisplay.h"
+/*
+ * Settings to configure the BlueDisplay library and to reduce its size
+ */
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+//#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+#include "BlueDisplay.hpp"
 
 #include "PinDefinitionsAndMore.h"
 
@@ -112,7 +117,7 @@ void setup(void) {
     /*
      * on double tone, we received max canvas size. Otherwise no connection is available.
      */
-    if (BlueDisplay1.mConnectionEstablished) {
+    if (BlueDisplay1.mBlueDisplayConnectionEstablished) {
         BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
         tone(TONE_PIN, 3000, 50);
         delay(100);
@@ -174,7 +179,7 @@ void loop(void) {
         }
         tUSDistanceCentimeter -= sOffset;
         if (tUSDistanceCentimeter != sCentimeterOld) {
-            if (BlueDisplay1.mConnectionEstablished) {
+            if (BlueDisplay1.mBlueDisplayConnectionEstablished) {
                 uint16_t tCmXPosition = BlueDisplay1.drawUnsignedByte(getTextWidth(sCaptionTextSize * 2), sValueStartY,
                         tUSDistanceCentimeter, sCaptionTextSize * 2, COLOR16_YELLOW, COLOR16_BLUE);
                 BlueDisplay1.drawText(tCmXPosition, sValueStartY, "cm", sCaptionTextSize, COLOR16_WHITE, COLOR16_BLUE);
@@ -186,7 +191,7 @@ void loop(void) {
                  */
                 if (!sToneIsOff) {
                     sToneIsOff = true;
-                    if (BlueDisplay1.mConnectionEstablished) {
+                    if (BlueDisplay1.mBlueDisplayConnectionEstablished) {
                         // Stop tone
                         BlueDisplay1.playTone(TONE_SILENCE);
                     }
@@ -196,7 +201,7 @@ void loop(void) {
                 /*
                  * Switch tones only if range changes
                  */
-                if (BlueDisplay1.mConnectionEstablished) {
+                if (BlueDisplay1.mBlueDisplayConnectionEstablished) {
                     if (tUSDistanceCentimeter < 40 && tUSDistanceCentimeter > 30
                             && (sCentimeterOld >= 40 || sCentimeterOld <= 30)) {
                         BlueDisplay1.playTone(22);

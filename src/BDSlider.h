@@ -7,7 +7,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2015  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -23,12 +23,12 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
-#ifndef _BLUEDISPLAY_INCLUDE_BDSLIDER_H
-#define _BLUEDISPLAY_INCLUDE_BDSLIDER_H
+#ifndef _BDSLIDER_H
+#define _BDSLIDER_H
 
 #include <stdint.h>
 /*
@@ -61,7 +61,7 @@ static const int FLAG_SLIDER_CAPTION_ALIGN_MIDDLE = 0x02;
 static const int FLAG_SLIDER_CAPTION_BELOW = 0x00;
 static const int FLAG_SLIDER_CAPTION_ABOVE = 0x04;
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 #include "TouchSlider.h"
 // assume we have only a restricted amount of local sliders
 typedef uint8_t BDSliderHandle_t;
@@ -87,7 +87,7 @@ public:
 
     // Constructors
     BDSlider();
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPointer);
 #endif
 
@@ -138,7 +138,7 @@ public:
 
     BDSliderHandle_t mSliderHandle;
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     int printValue();
     void setXOffsetValue(int16_t aXOffsetValue);
 
@@ -166,6 +166,5 @@ void initPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr
         BDSlider *aNegativeSliderPtr);
 int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, int aValue, uint8_t aSliderDeadBand = 0);
 
-#endif /* BLUEDISPLAY_INCLUDE_BDSLIDER_H */
-
+#endif //_BDSLIDER_H
 #pragma once

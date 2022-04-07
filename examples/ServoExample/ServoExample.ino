@@ -29,7 +29,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
@@ -37,15 +37,13 @@
 
 #include "ServoEasing.hpp" // for smooth auto moving
 
-#include <BlueDisplay.h>
-
-/****************************************************************************
- * Change this if you have reprogrammed the hc05 module for other baud rate
- ***************************************************************************/
-#if !defined(BLUETOOTH_BAUD_RATE)
-//#define BLUETOOTH_BAUD_RATE BAUD_115200
-#define BLUETOOTH_BAUD_RATE BAUD_9600
-#endif
+/*
+ * Settings to configure the BlueDisplay library and to reduce its size
+ */
+//#define BLUETOOTH_BAUD_RATE BAUD_115200  // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+//#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+#include "BlueDisplay.hpp"
 
 const int LASER_POWER_PIN = 5; // uses timer0
 
@@ -161,7 +159,7 @@ void setup() {
     pinMode(LASER_POWER_PIN, OUTPUT);
     analogWrite(LASER_POWER_PIN, 0);
 
-    initSerial(BLUETOOTH_BAUD_RATE);
+    initSerial();
 
     // Register callback handler and check for connection
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);

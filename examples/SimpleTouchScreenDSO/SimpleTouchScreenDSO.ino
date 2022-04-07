@@ -17,7 +17,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  *      Features:
  *      No dedicated hardware, just a plain arduino, a HC-05 Bluetooth module and this software.
@@ -159,10 +159,17 @@
 //#define DEBUG
 #include <Arduino.h>
 
+/*
+ * Settings to configure the BlueDisplay library and to reduce its size
+ */
+//#define BLUETOOTH_BAUD_RATE BAUD_115200  // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+#include "BlueDisplay.hpp"
+
 #include "SimpleTouchScreenDSO.h"
 #include "FrequencyGeneratorPage.h"
 
-#include "BlueDisplay.h"
 #include "digitalWriteFast.h"
 
 #if ! defined(USE_SIMPLE_SERIAL)
@@ -278,7 +285,7 @@ union Myword {
         uint8_t HighByte;
     } byte;
     uint16_t Word;
-    uint8_t * BytePointer;
+    uint8_t *BytePointer;
 };
 
 // definitions from <wiring_private.h>
@@ -402,7 +409,7 @@ void setup() {
     DIDR0 = ADC0D | ADC1D | ADC2D | ADC3D | ADC4D | ADC5D;
 
     // Must be simple serial for the DSO!
-    initSimpleSerial(BLUETOOTH_BAUD_RATE);
+    initSerial();
 
     // initialize values
     MeasurementControl.isRunning = false;
@@ -523,7 +530,7 @@ void __attribute__((noreturn)) loop(void) {
 
     for (;;) {
         checkAndHandleEvents();
-        if (BlueDisplay1.mConnectionEstablished) {
+        if (BlueDisplay1.mBlueDisplayConnectionEstablished) {
 
             /*
              * Check for cyclic info output
@@ -724,7 +731,7 @@ void __attribute__((noreturn)) loop(void) {
                     // loopFrequencyGeneratorPage();
                 }
             }
-        } // BlueDisplay1.mConnectionEstablished
+        } // BlueDisplay1.mBlueDisplayConnectionEstablished
 
     } // for(;;)
 }
@@ -1619,7 +1626,7 @@ uint16_t getAttenuatorFactor(void) {
 /*
  * toggle between DC and AC mode
  */
-void doAcDcMode(__attribute__((unused))    BDButton * aTheTouchedButton, __attribute__((unused))    int16_t aValue) {
+void doAcDcMode(__attribute__((unused))     BDButton *aTheTouchedButton, __attribute__((unused))     int16_t aValue) {
     setACMode(!MeasurementControl.ChannelIsACMode);
 }
 
@@ -1653,7 +1660,7 @@ void doSetTriggerDelay(float aValue) {
 /*
  * toggle between 5 and 1.1 volt reference
  */
-void doADCReference(__attribute__((unused))    BDButton * aTheTouchedButton, __attribute__((unused))    int16_t aValue) {
+void doADCReference(__attribute__((unused))     BDButton *aTheTouchedButton, __attribute__((unused))     int16_t aValue) {
     uint8_t tNewReference = MeasurementControl.ADCReference;
     if (MeasurementControl.ADCReference == DEFAULT) {
         tNewReference = INTERNAL;
@@ -1668,7 +1675,7 @@ void doADCReference(__attribute__((unused))    BDButton * aTheTouchedButton, __a
     }
 }
 
-void doStartStopDSO(__attribute__((unused))    BDButton * aTheTouchedButton, __attribute__((unused))    int16_t aValue) {
+void doStartStopDSO(__attribute__((unused))     BDButton *aTheTouchedButton, __attribute__((unused))     int16_t aValue) {
     if (MeasurementControl.isRunning) {
         /*
          * Stop here
@@ -2116,12 +2123,12 @@ void printVCCAndTemperature(void) {
 #define HEAP_STACK_UNTOUCHED_VALUE 0x5A
 void initStackFreeMeasurement(void) {
     extern unsigned int __heap_start;
-    extern void * __brkval;
+    extern void *__brkval;
     uint8_t v;
 
-    uint8_t *tHeapPtr = (uint8_t *) __brkval;
+    uint8_t *tHeapPtr = (uint8_t*) __brkval;
     if (tHeapPtr == 0) {
-        tHeapPtr = (uint8_t *) &__heap_start;
+        tHeapPtr = (uint8_t*) &__heap_start;
     }
 
 // Fill memory

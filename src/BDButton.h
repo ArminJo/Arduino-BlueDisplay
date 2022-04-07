@@ -7,7 +7,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2015  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -23,12 +23,12 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
-#ifndef _BLUEDISPLAY_INCLUDE_BDBUTTON_H
-#define _BLUEDISPLAY_INCLUDE_BDBUTTON_H
+#ifndef _BDBUTTON_H
+#define _BDBUTTON_H
 
 #include <stdint.h>
 
@@ -236,7 +236,7 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 
 #define BUTTON_HEIGHT_10 20
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 #include "TouchButton.h"
 // since we have only a restricted pool of local buttons
 typedef uint8_t BDButtonHandle_t;
@@ -266,7 +266,7 @@ public:
     // Constructors
     BDButton();
     BDButton(BDButtonHandle_t aButtonHandle);
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     BDButton(BDButtonHandle_t aButtonHandle, TouchButton *aLocalButtonPtr);
 #endif
     BDButton(const BDButton &aButton);
@@ -315,11 +315,11 @@ public:
             void (*aOnTouchHandler)(BDButton*, int16_t));
     void setCaptionForValueTrue(const __FlashStringHelper *aCaption);
     void setCaption(const __FlashStringHelper *aPGMCaption, bool doDrawButton = false);
-#endif
+#endif // defined(ARDUINO)
 
     BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     void deinit(void);
     TouchButton *mLocalButtonPtr;
 #endif
@@ -343,8 +343,7 @@ private:
 //    void (*aOnTouchHandler)(BDButton*, int16_t);
 ////    const __FlashStringHelper *PGMCaption;
 //};
-#endif
+#endif // #ifdef __cplusplus
 
-#endif /* BLUEDISPLAY_INCLUDE_BDBUTTON_H_ */
-
+#endif //_BDBUTTON_H
 #pragma once

@@ -51,13 +51,18 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
 #include <Arduino.h>
 
-#include "BlueDisplay.h"
+/*
+ * Settings to configure the BlueDisplay library and to reduce its size
+ */
+//#define BLUETOOTH_BAUD_RATE BAUD_115200  // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#include "BlueDisplay.hpp"
 
 // only one macro can be activated
 //#define SHOW_ACCELEROMETER_VALUES_ON_PLOTTER
@@ -65,14 +70,6 @@
 #if defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER) && defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER)
 #warning We can only plot one sensor, but both are enabled -> plot only accelerometer.
 #undef SHOW_GYROSCOPE_VALUES_ON_PLOTTER
-#endif
-
-/****************************************************************************
- * Change this if you have reprogrammed the hc05 module for other baud rate
- ***************************************************************************/
-#if !defined(BLUETOOTH_BAUD_RATE)
-//#define BLUETOOTH_BAUD_RATE BAUD_115200
-#define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
 #define DISPLAY_WIDTH  DISPLAY_HALF_VGA_WIDTH  // 320
@@ -151,7 +148,7 @@ void setup() {
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
 #else
-    initSerial(BLUETOOTH_BAUD_RATE);
+    initSerial();
 #endif
 
     // Register callback handler and check for connection

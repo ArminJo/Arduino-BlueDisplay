@@ -32,14 +32,14 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
 #if defined(AVR)
 #include "FrequencyGeneratorPage.h"
+#define SUPPRESS_HPP_WARNING
 #include "BlueDisplay.h"
-
 #include "SimpleTouchScreenDSO.h"
 
 #include <stdlib.h> // for dtostrf

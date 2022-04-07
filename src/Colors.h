@@ -23,7 +23,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
@@ -133,6 +133,6 @@ typedef uint32_t color32_t;
 #define GREEN(color) ((color >> 8) & 0xFF)
 #define BLUE(color)  (color 0xFF)
 // end deprecated
-#endif /* COLORS_H_ */
 
+#endif // _COLORS_H
 #pragma once

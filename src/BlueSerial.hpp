@@ -1,5 +1,5 @@
 /*
- * BlueSerial.cpp
+ * BlueSerial.hpp
  *
  * Implements the "simpleSerial" low level serial functions for communication with the Android BlueDisplay app.
  *
@@ -9,7 +9,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014-2020  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -25,9 +25,12 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
+
+#ifndef _BLUESERIAL_HPP
+#define _BLUESERIAL_HPP
 
 #include <Arduino.h>
 #include "BlueDisplay.h"
@@ -44,16 +47,23 @@
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #endif
 
-#undef USART_isBluetoothPaired
-
-#if defined(LOCAL_DISPLAY_EXISTS) && defined(REMOTE_DISPLAY_SUPPORTED)
-bool usePairedPin = false;
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+bool usePairedPin = false; // Use pin of BT module to decide if BT is paired, this cannot be done by using software managed mBlueDisplayConnectionEstablished value
+#endif
 
 void setUsePairedPin(bool aUsePairedPin) {
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
     usePairedPin = aUsePairedPin;
+#else
+    (void) aUsePairedPin;
+#endif
 }
 
+/*
+ * Checks if additional remote display is paired to avoid program slow down by UART sending to a not paired connection
+ */
 bool USART_isBluetoothPaired(void) {
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
     if (!usePairedPin) {
         return true;
     }
@@ -63,8 +73,12 @@ bool USART_isBluetoothPaired(void) {
         return true;
     }
     return false;
+#elif defined(SUPPORT_LOCAL_DISPLAY)
+    return false;
+#else
+    return true; // is paired by default
+#endif // defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
 }
-#endif // defined(LOCAL_DISPLAY_EXISTS) && defined(REMOTE_DISPLAY_SUPPORTED)
 
 #if ! defined(USE_SIMPLE_SERIAL) && defined(USE_SERIAL1)
 #define Serial Serial1
@@ -89,19 +103,38 @@ void initSerial(uint32_t aBaudRate) {
     initSimpleSerial(aBaudRate);
 #  else
     Serial.begin(aBaudRate);
-#  endif
+#  endif // defined(USE_SIMPLE_SERIAL)
 }
-#endif
+
+/*
+ * Take BLUETOOTH_BAUD_RATE for initialization, otherwise use 9600
+ */
+void initSerial() {
+#  if defined(USE_SIMPLE_SERIAL)
+#    if defined BLUETOOTH_BAUD_RATE
+    initSimpleSerial(BLUETOOTH_BAUD_RATE);
+#    else
+    initSimpleSerial(9600);
+#    endif
+#  else
+#    if defined BLUETOOTH_BAUD_RATE
+    Serial.begin(BLUETOOTH_BAUD_RATE);
+#    else
+    Serial.begin(9600);
+#    endif
+#  endif // defined(USE_SIMPLE_SERIAL)
+}
+#endif // defined(ESP32)
 
 #if defined(USE_SIMPLE_SERIAL)
-#  if defined(LOCAL_DISPLAY_EXISTS)
+#  if defined(SUPPORT_LOCAL_DISPLAY)
 void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin) {
     if (aUsePairedPin) {
         pinMode(PAIRED_PIN, INPUT);
     }
 #  else
 void initSimpleSerial(uint32_t aBaudRate) {
-#  endif // LOCAL_DISPLAY_EXISTS
+#  endif // SUPPORT_LOCAL_DISPLAY
     uint16_t baud_setting;
 #  if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
     // Use TX1 on MEGA and on Leonardo, which has no TX0
@@ -302,11 +335,11 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs
     for (uint_fast8_t i = 0; i < aNumberOfArgs; ++i) {
         *tBufferPointer++ = va_arg(argp, int);
     }
-    // add data field header
+// add data field header
     *tBufferPointer++ = DATAFIELD_TAG_BYTE << 8 | SYNC_TOKEN; // start new transmission block
     uint16_t tLength = va_arg(argp, int); // length in byte
     *tBufferPointer = tLength;
-    uint8_t *aBufferPtr = (uint8_t *) va_arg(argp, int); // Buffer address
+    uint8_t *aBufferPtr = (uint8_t*) va_arg(argp, int); // Buffer address
     va_end(argp);
 
     sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], aNumberOfArgs * 2 + 8, aBufferPtr, tLength);
@@ -420,7 +453,7 @@ void serialEvent(void) {
                 /*
                  * read message length and event tag first
                  */
-                Serial.readBytes((char *) sReceiveBuffer, 2);
+                Serial.readBytes((char*) sReceiveBuffer, 2);
                 // First byte is raw length so subtract 3 for sync+eventType+length bytes
                 sReceivedDataSize = sReceiveBuffer[0] - 3;
                 if (sReceivedDataSize > RECEIVE_MAX_DATA_SIZE) {
@@ -435,7 +468,7 @@ void serialEvent(void) {
         if (sReceivedEventType != EVENT_NO_EVENT) {
             if (tBytesAvailable > sReceivedDataSize) {
                 // Event complete received, now read data and sync token
-                Serial.readBytes((char *) sReceiveBuffer, sReceivedDataSize);
+                Serial.readBytes((char*) sReceiveBuffer, sReceivedDataSize);
                 if (Serial.read() == SYNC_TOKEN) {
                     remoteEvent.EventType = sReceivedEventType;
                     // copy buffer to structure
@@ -450,3 +483,6 @@ void serialEvent(void) {
     }
 }
 #endif // USE_SIMPLE_SERIAL
+
+#endif // _BLUESERIAL_H
+#pragma once

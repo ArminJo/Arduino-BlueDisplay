@@ -31,15 +31,23 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
 #include <Arduino.h>
 
-#include "BlueDisplay.h"
-
 #include "PinDefinitionsAndMore.h"
+
+/*
+ * Settings to configure the BlueDisplay library and to reduce its size
+ * With 9600 baud, the minimal blink delay we observe is 200 ms because of the communication delay
+ * of 8 * printDemoString(), which requires 8*24 ms -> 192 ms
+ */
+//#define BLUETOOTH_BAUD_RATE BAUD_115200  // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+//#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+#include "BlueDisplay.hpp"
 
 #if defined(ESP32) || defined(ESP8266)
 #define USE_C_TIME
@@ -49,18 +57,6 @@
 #include "time.h"
 #else
 #include "TimeLib.h"
-#endif
-
-/****************************************************************************
- * Change this if you have reprogrammed the hc05 module for other baud rate
- ***************************************************************************/
-#if !defined(BLUETOOTH_BAUD_RATE)
-//#define BLUETOOTH_BAUD_RATE BAUD_115200
-/*
- * With 9600 baud, the minimal blink delay we observe is 200 ms because of the communication delay
- * of 8 * printDemoString(), which requires 8*24 ms -> 192 ms
- */
-#define BLUETOOTH_BAUD_RATE BAUD_9600
 #endif
 
 #define DISPLAY_WIDTH  DISPLAY_HALF_VGA_WIDTH  // 320
@@ -139,7 +135,7 @@ void setup() {
 #  if defined(TONE_PIN)
     pinMode(TONE_PIN, OUTPUT);
 #  endif
-    initSerial(BLUETOOTH_BAUD_RATE);
+    initSerial();
 #endif
 
     // Register callback handler and check for connection

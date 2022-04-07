@@ -18,14 +18,19 @@
  *  GNU General Public License for more details.
 
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
 #include <Arduino.h>
 #include "RcCarControlBD.h"
 
-#include "BlueDisplay.h"
+/*
+ * Settings to configure the BlueDisplay library and to reduce its size
+ */
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+//#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+#include "BlueDisplay.hpp"
 
 #include "HCSR04.h"
 #include "Servo.h"

@@ -23,7 +23,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
@@ -37,10 +37,11 @@
 #endif
 
 #if defined(__AVR__)
-// Simple serial is a simple blocking serial version without receive buffer and other overhead.
-// Using it saves up to 1250 byte program memory and 185 byte RAM since USART is used directly
-// Simple serial on the MEGA2560 uses USART1
-//#define USE_SIMPLE_SERIAL // only for AVR
+/*
+ * Simple serial is a simple blocking serial version without receive buffer and other overhead.
+ * Simple serial on the MEGA2560 uses USART1
+ */
+//#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 #endif
 
 #if defined(SERIAL_PORT_HARDWARE1) // is defined for Arduino Due
@@ -100,23 +101,19 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
         int16_t aDataBufferLength);
 
 #define PAIRED_PIN 5
+bool USART_isBluetoothPaired(void); // is reduced to return true; if not defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
 
-#if defined(LOCAL_DISPLAY_EXISTS) && defined(REMOTE_DISPLAY_SUPPORTED)
-bool USART_isBluetoothPaired(void);
-#else
-#if defined(LOCAL_DISPLAY_EXISTS)
+#  if defined(SUPPORT_LOCAL_DISPLAY) && !defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
 void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
-#define USART_isBluetoothPaired() (false)
-#else
-#  if defined(ESP32)
-void initSerial(String aBTClientName);
 #  else
+#    if defined(ESP32)
+void initSerial(String aBTClientName);
+#    else
 void initSerial(uint32_t aBaudRate);
+void initSerial();
 void initSimpleSerial(uint32_t aBaudRate);
-# endif
-#define USART_isBluetoothPaired() (true)
-#endif
-#endif
+#   endif
+#  endif // defined(SUPPORT_LOCAL_DISPLAY)
 
 extern bool allowTouchInterrupts;
 void sendUSART(char aChar);
@@ -125,6 +122,5 @@ void sendUSART(const char *aChar);
 
 void serialEvent();
 
-#endif /* BLUESERIAL_H_ */
-
+#endif // _BLUESERIAL_H
 #pragma once

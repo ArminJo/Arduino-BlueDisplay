@@ -19,24 +19,21 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
 #include <Arduino.h>
 
-#include "BlueDisplay.h"
-
-/****************************************************************************
- * Change this if you have reprogrammed the hc05 module for other baud rate
- ***************************************************************************/
-#if !defined(BLUETOOTH_BAUD_RATE)
-//#define BLUETOOTH_BAUD_RATE BAUD_115200
-#define BLUETOOTH_BAUD_RATE BAUD_9600
-#endif
-
 #define DISPLAY_WIDTH  DISPLAY_HALF_VGA_WIDTH  // 320
 #define DISPLAY_HEIGHT DISPLAY_HALF_VGA_HEIGHT // 240
+
+/*
+ * Settings to configure the BlueDisplay library and to reduce its size
+ */
+//#define BLUETOOTH_BAUD_RATE BAUD_115200  // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#include "BlueDisplay.hpp"
 
 bool doBlink = true;
 
@@ -46,7 +43,7 @@ bool doBlink = true;
 BDButton TouchButtonBlinkStartStop;
 
 // Touch handler for buttons
-void doBlinkStartStop(BDButton * aTheTochedButton, int16_t aValue);
+void doBlinkStartStop(BDButton *aTheTochedButton, int16_t aValue);
 
 // Callback handler for (re)connect and resize
 void initDisplay(void);
@@ -66,7 +63,7 @@ void setup() {
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
 #else
-    initSerial(BLUETOOTH_BAUD_RATE);
+    initSerial();
 #endif
 
     // Register callback handler and check for connection
@@ -134,7 +131,7 @@ void drawGui(void) {
 /*
  * Change doBlink flag as well as color and caption of the button.
  */
-void doBlinkStartStop(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue) {
+void doBlinkStartStop(BDButton *aTheTouchedButton __attribute__((unused)), int16_t aValue) {
     doBlink = aValue;
     /*
      * This debug output can also be recognized at the Arduino Serial Monitor

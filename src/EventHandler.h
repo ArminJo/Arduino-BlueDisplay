@@ -23,7 +23,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
@@ -31,10 +31,10 @@
 #define _EVENTHANDLER_H
 
 #if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
-//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // commenting out or better defining for the compiler with -DDO_NOT_NEED_BASIC_TOUCH_EVENTS saves 620 bytes program memory and 36 bytes RAM
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 #endif
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 #include "BlueDisplay.h" // for
 //#include "ADS7846.h"
 //extern ADS7846 TouchPanel;
@@ -51,7 +51,7 @@ extern unsigned long sMillisOfLastReceivedBDEvent; // is updated with millis() a
 #define TOUCH_SWIPE_THRESHOLD 10  // threshold for swipe detection to suppress long touch handler calling
 #define TOUCH_SWIPE_RESOLUTION_MILLIS 20
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 extern struct BluetoothEvent localTouchEvent;
 /*
  * helper variables
@@ -73,7 +73,7 @@ extern struct BluetoothEvent remoteTouchDownEvent;
 #if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
 extern bool sTouchIsStillDown;
 extern struct TouchEvent sDownPosition;
-extern struct TouchEvent sActualPosition;
+extern struct TouchEvent sCurrentPosition;
 extern struct TouchEvent sUpPosition;
 #endif
 
@@ -113,7 +113,7 @@ void setTouchUpCallbackEnabled(bool aTouchUpCallbackEnabled);
 void (* getTouchUpCallback(void))(struct TouchEvent * );
 #endif
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 void handleLocalTouchUp(void);
 void callbackLongTouchDownTimeout(void);
 void simpleTouchDownHandler(struct TouchEvent *aActualPositionPtr);
@@ -139,6 +139,5 @@ void handleEvent(struct BluetoothEvent *aEvent);
 }
 #endif
 
-#endif /* EVENTHANDLER_H_ */
-
+#endif // _EVENTHANDLER_H
 #pragma once

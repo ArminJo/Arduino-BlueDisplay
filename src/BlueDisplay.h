@@ -7,7 +7,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014-2020  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -23,12 +23,21 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
 
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
+
+#define VERSION_BLUE_DISPLAY "3.0.0"
+#define VERSION_BLUE_DISPLAY_MAJOR 3
+#define VERSION_BLUE_DISPLAY_MINOR 0
+// The change log is at the bottom of the file
+
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY) && ! defined(SUPPORT_LOCAL_DISPLAY)
+#define SUPPORT_LOCAL_DISPLAY
+#endif
 
 #if defined(ARDUINO)
 #  if ! defined(ESP32)
@@ -74,11 +83,6 @@
 #include "BDSlider.h" // for BDSliderHandle_t
 #endif
 
-#define VERSION_BLUE_DISPLAY "2.2.0"
-#define VERSION_BLUE_DISPLAY_MAJOR 2
-#define VERSION_BLUE_DISPLAY_MINOR 2
-// The change log is at the bottom of the file
-
 /***************************
  * Origin 0.0 is upper left
  **************************/
@@ -111,7 +115,7 @@
 // for factor 4 of 8*12 font
 #define TEXT_SIZE_44 44
 // TextWidth = TextSize * 0.6
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 // 8/16 instead of 7/13 to be compatible with 8*12 font
 #define TEXT_SIZE_11_WIDTH 8
 #define TEXT_SIZE_22_WIDTH 16
@@ -376,10 +380,9 @@ public:
 
     void setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSensorRate, uint8_t aFilterFlag);
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     void drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor, color16_t aBGColor);
 #endif
-
 
     uint16_t drawTextPGM(uint16_t aXStart, uint16_t aYStart, const char *aPGMString, uint16_t aTextSize, color16_t aFGColor,
             color16_t aBGColor);
@@ -457,7 +460,7 @@ public:
     struct XYSize mMaxDisplaySize; // contains max display size.  Is initialized at connection build up and updated at reorientation event.
     uint32_t mHostUnixTimestamp;
 
-    bool mConnectionEstablished;
+    bool mBlueDisplayConnectionEstablished; // true if BlueDisplayApps responded to requestMaxCanvasSize()
     bool mOrientationIsLandscape;
 
     /* For tests */
@@ -474,7 +477,7 @@ extern BlueDisplay BlueDisplay1;
 void clearDisplayAndDisableButtonsAndSliders();
 void clearDisplayAndDisableButtonsAndSliders(color16_t aColor);
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 /*
  * MI0283QT2 TFTDisplay - must provided by main program
  * external declaration saves ROM (210 bytes) and RAM ( 20 bytes)
@@ -521,7 +524,14 @@ float getTemperature(void);
 #include "BlueSerial.h"
 #include "EventHandler.h"
 
+#if !defined(_BLUEDISPLAY_HPP) && !defined(SUPPRESS_HPP_WARNING)
+#warning You probably must change the line #include "BlueDisplay.h" to #include "BlueDisplay.hpp" in your ino file or define SUPPRESS_HPP_WARNING before the include to suppress this warning.
+#endif
+
 /*
+ * Version 3.0.0
+ * - Renamed *.cpp to *.hpp.
+ *
  * Version 2.2.0
  * - Changed default serial for AVR from `USE_SIMPLE_SERIAL` to standard Arduino Serial.
  * - Added ShowSensorValues example.
@@ -574,6 +584,5 @@ float getTemperature(void);
  * Version 3.0 Android sensor accessible by Arduino.
  */
 
-#endif /* BLUEDISPLAY_H_ */
-
+#endif // _BLUEDISPLAY_H
 #pragma once
