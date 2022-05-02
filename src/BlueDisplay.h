@@ -33,7 +33,15 @@
 #define VERSION_BLUE_DISPLAY "3.0.0"
 #define VERSION_BLUE_DISPLAY_MAJOR 3
 #define VERSION_BLUE_DISPLAY_MINOR 0
+#define VERSION_BLUE_DISPLAY_PATCH 0
 // The change log is at the bottom of the file
+
+/*
+ * Macro to convert 3 version parts into an integer
+ * To be used in preprocessor comparisons, such as #if VERSION_BLUE_DISPLAY_HEX >= VERSION_HEX_VALUE(3, 7, 0)
+ */
+#define VERSION_HEX_VALUE(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
+#define VERSION_BLUE_DISPLAY_HEX  VERSION_HEX_VALUE(VERSION_BLUE_DISPLAY_MAJOR, VERSION_BLUE_DISPLAY_MINOR, VERSION_BLUE_DISPLAY_PATCH)
 
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY) && ! defined(SUPPORT_LOCAL_DISPLAY)
 #define SUPPORT_LOCAL_DISPLAY

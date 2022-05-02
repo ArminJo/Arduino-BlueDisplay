@@ -166,7 +166,7 @@ void BlueDisplay::setLongTouchDownTimeout(uint16_t aLongTouchDownTimeoutMillis) 
  */
 void BlueDisplay::setScreenOrientationLock(uint8_t aLockMode) {
     if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 2, SUBFUNCTION_GLOBAL_SET_SCREEN_ORIENTATION_LOCKATION_LOCK, aLockMode);
+        sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 2, SUBFUNCTION_GLOBAL_SET_SCREEN_ORIENTATION_LOCK, aLockMode);
     }
 }
 
@@ -1515,124 +1515,12 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
 #if defined(ARDUINO)
 #include <Arduino.h>
 #endif
+
 #if defined(AVR) && defined(ADCSRA) && defined(ADATE)
-
 /*
- * The next definitions and weak functions are copied from ADCUtils to avoid delivering two additional files
- * for just one BlueDisplay function printVCCAndTemperaturePeriodically().
+ * The next include is for just one BlueDisplay function printVCCAndTemperaturePeriodically().
  */
-//#include "ADCUtils.h"
-/***************************************
- * ADC Section for VCC and temperature
- ***************************************/
-#define ADC_PRESCALE8    3 // 104 microseconds per ADC conversion at 1 MHz
-#define ADC_PRESCALE16   4 // 208 microseconds per ADC conversion at 1 MHz
-#define ADC_PRESCALE32   5 // 416 microseconds per ADC conversion at 1 MHz
-#define ADC_PRESCALE64   6 // 52 microseconds per ADC conversion at 16 MHz
-#define ADC_PRESCALE128  7 // 104 microseconds per ADC conversion at 16 MHz
-// definitions for 0.1 ms conversion time
-#if (F_CPU == 1000000)
-#define ADC_PRESCALE ADC_PRESCALE8
-#elif (F_CPU == 8000000)
-#define ADC_PRESCALE ADC_PRESCALE64
-#elif (F_CPU >= 16000000)
-#define ADC_PRESCALE ADC_PRESCALE128
-#endif
-
-#define ADC_TEMPERATURE_CHANNEL_MUX 8
-#define ADC_1_1_VOLT_CHANNEL_MUX 14
-
-#define SHIFT_VALUE_FOR_REFERENCE REFS0
-
-uint16_t __attribute__((weak)) readADCChannelWithReferenceOversample(uint8_t aChannelNumber, uint8_t aReference,
-        uint8_t aOversampleExponent) {
-    uint16_t tSumValue = 0;
-    ADMUX = aChannelNumber | (aReference << SHIFT_VALUE_FOR_REFERENCE);
-
-// ADCSRB = 0; // free running mode if ADATE is 1 - is default
-// ADSC-StartConversion ADATE-AutoTriggerEnable ADIF-Reset Interrupt Flag
-    ADCSRA = (_BV(ADEN) | _BV(ADSC) | _BV(ADATE) | _BV(ADIF) | ADC_PRESCALE);
-
-    for (uint8_t i = 0; i < _BV(aOversampleExponent); i++) {
-        /*
-         * wait for free running conversion to finish.
-         * Do not wait for ADSC here, since ADSC is only low for 1 ADC Clock cycle on free running conversion.
-         */
-        loop_until_bit_is_set(ADCSRA, ADIF);
-
-        ADCSRA |= _BV(ADIF); // clear bit to recognize next conversion has finished
-        // Add value
-        tSumValue += ADCL | (ADCH << 8);        // using myWord does not save space here
-        // tSumValue += (ADCH << 8) | ADCL; // this does NOT work!
-    }
-    ADCSRA &= ~_BV(ADATE); // Disable auto-triggering (free running mode)
-    return (tSumValue >> aOversampleExponent);
-}
-
-// old name
-float getVCCValue(void) {
-    return getVCCVoltage();
-}
-
-#if defined(INTERNAL1V1)
-// workaround for MEGA 2560
-#define INTERNAL INTERNAL1V1
-#endif
-
-/*
- * New name
- * Version which restore the ADC Channel and handle reference switching.
- */
-float __attribute__((weak)) getVCCVoltage(void) {
-// use AVCC with external capacitor at AREF pin as reference
-    uint8_t tOldADMUX = ADMUX;
-    /*
-     * Must wait >= 200 us if reference has to be switched to VSS
-     * Must wait >= 400 us if channel has to be switched to 1.1 volt internal channel from channel with 5 volt input
-     */
-    if ((ADMUX & (INTERNAL << SHIFT_VALUE_FOR_REFERENCE)) || ((ADMUX & 0x0F) != ADC_1_1_VOLT_CHANNEL_MUX)) {
-        // Switch to 1.1 volt channel and AREF to VCC
-        ADMUX = ADC_1_1_VOLT_CHANNEL_MUX | (DEFAULT << SHIFT_VALUE_FOR_REFERENCE);
-        // and wait for settling
-        delayMicroseconds(400); // experimental value is >= 400 us
-    }
-    uint16_t tVCC = readADCChannelWithReferenceOversample(ADC_1_1_VOLT_CHANNEL_MUX, DEFAULT, 2);
-    ADMUX = tOldADMUX;
-    /*
-     * Do not wait for reference to settle here, since it may not be necessary
-     */
-    return ((1023 * 1.1) / tVCC);
-}
-
-/*
- * Version which restore the ADC Channel and handle reference switching.
- */
-float __attribute__((weak)) getTemperature(void) {
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-    return 0.0;
-#else
-// use internal 1.1 volt as reference
-    uint8_t tOldADMUX;
-
-    bool tReferenceMustBeChanged = (ADMUX & (DEFAULT << SHIFT_VALUE_FOR_REFERENCE));
-    if (tReferenceMustBeChanged) {
-        tOldADMUX = ADMUX;
-        // set AREF  to 1.1 volt and wait for settling
-        ADMUX = ADC_TEMPERATURE_CHANNEL_MUX | (INTERNAL << SHIFT_VALUE_FOR_REFERENCE);
-        delayMicroseconds(4000); // measured value is 3500 us
-    }
-
-    float tTemp = (readADCChannelWithReferenceOversample(ADC_TEMPERATURE_CHANNEL_MUX, INTERNAL, 2) - 317);
-
-    if (tReferenceMustBeChanged) {
-        ADMUX = tOldADMUX;
-        // wait for settling back to VCC
-        delayMicroseconds(400); // experimental value is > 200 us
-    }
-    return (tTemp / 1.22);
-#endif
-}
-
+#include "ADCUtils.hpp"
 /*
  * Show temperature and VCC voltage
  */
@@ -1999,4 +1887,3 @@ void BlueDisplay::generateColorSpectrum(void) {
 }
 
 #endif // _BLUEDISPLAY_HPP
-#pragma once

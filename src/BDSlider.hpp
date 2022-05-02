@@ -416,4 +416,3 @@ int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, 
 }
 
 #endif //_BDSLIDER_HPP
-#pragma once

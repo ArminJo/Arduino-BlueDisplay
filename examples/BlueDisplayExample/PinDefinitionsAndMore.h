@@ -47,19 +47,26 @@
 #define TRIGGER_OUT_PIN  27
 #include <Arduino.h>
 #define TONE_LEDC_CHANNEL        1  // Using channel 1 makes tone() independent of receiving timer -> No need to stop receiving timer.
-void tone(uint8_t _pin, unsigned int frequency){
-    ledcAttachPin(_pin, TONE_LEDC_CHANNEL);
-    ledcWriteTone(TONE_LEDC_CHANNEL, frequency);
+// tone() is included in ESP32 core since 2.0.2
+#if !defined(ESP_ARDUINO_VERSION_VAL)
+#define ESP_ARDUINO_VERSION_VAL(major, minor, patch) 12345678
+#endif
+#if ESP_ARDUINO_VERSION  <= ESP_ARDUINO_VERSION_VAL(2, 0, 2)
+#define TONE_LEDC_CHANNEL        1  // Using channel 1 makes tone() independent of receiving timer -> No need to stop receiving timer.
+void tone(uint8_t aPinNumber, unsigned int aFrequency){
+    ledcAttachPin(aPinNumber, TONE_LEDC_CHANNEL);
+    ledcWriteTone(TONE_LEDC_CHANNEL, aFrequency);
 }
-void tone(uint8_t _pin, unsigned int frequency, unsigned long duration){
-    ledcAttachPin(_pin, TONE_LEDC_CHANNEL);
-    ledcWriteTone(TONE_LEDC_CHANNEL, frequency);
-    delay(duration);
+void tone(uint8_t aPinNumber, unsigned int aFrequency, unsigned long aDuration){
+    ledcAttachPin(aPinNumber, TONE_LEDC_CHANNEL);
+    ledcWriteTone(TONE_LEDC_CHANNEL, aFrequency);
+    delay(aDuration);
     ledcWriteTone(TONE_LEDC_CHANNEL, 0);
 }
-void noTone(uint8_t _pin){
+void noTone(uint8_t aPinNumber){
     ledcWriteTone(TONE_LEDC_CHANNEL, 0);
 }
+#endif // ESP_ARDUINO_VERSION  <= ESP_ARDUINO_VERSION_VAL(2, 0, 2)
 #define TONE_PIN          15
 
 #elif defined(ARDUINO_ARCH_SAM)
@@ -95,7 +102,7 @@ void noTone(uint8_t _pin){
 #if defined(ARDUINO_ARCH_SAMD)
 #define Serial SerialUSB
 // The Chinese SAMD21 M0-Mini clone has no led connected, if you connect it, it is on pin 24 like on the original board.
-// Attention! D2 and D4 are reversed on these boards
+// Attention! D2 and D4 are swapped on these boards
 //#undef LED_BUILTIN
 //#define LED_BUILTIN 25 // Or choose pin 25, it is the RX pin, but active low.
 #endif

@@ -738,4 +738,3 @@ void printTPData(int x, int y, color16_t aColor, color16_t aBackColor) {
 #endif //SUPPORT_LOCAL_DISPLAY
 
 #endif // _EVENTHANDLER_HPP
-#pragma once

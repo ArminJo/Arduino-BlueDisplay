@@ -484,5 +484,4 @@ void serialEvent(void) {
 }
 #endif // USE_SIMPLE_SERIAL
 
-#endif // _BLUESERIAL_H
-#pragma once
+#endif // _BLUESERIAL_HPP

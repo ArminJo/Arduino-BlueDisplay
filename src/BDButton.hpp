@@ -483,4 +483,3 @@ void BDButton::setCaption(const __FlashStringHelper *aPGMCaption, bool doDrawBut
 #endif // defined(ARDUINO)
 
 #endif //_BDBUTTON_H
-#pragma once

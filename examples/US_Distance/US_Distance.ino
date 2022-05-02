@@ -148,7 +148,7 @@ void loop(void) {
     // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.
     if (!BlueDisplay1.isConnectionEstablished()) {
 #  endif
-        if (tUSDistanceCentimeter == 0) {
+        if (tUSDistanceCentimeter == DISTANCE_TIMEOUT_RESULT) {
             Serial.println("timeout");
         } else {
             Serial.print(tUSDistanceCentimeter);
@@ -161,7 +161,7 @@ void loop(void) {
 #  endif
 #endif
 
-    if (tUSDistanceCentimeter == 0) {
+    if (tUSDistanceCentimeter == DISTANCE_TIMEOUT_RESULT) {
         /*
          * timeout happened here
          */
