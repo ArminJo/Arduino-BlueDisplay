@@ -52,8 +52,8 @@ const int HORIZONTAL_SERVO_PIN = 10;
 const int VERTICAL_SERVO_PIN = 9;
 
 struct ServoControlStruct {
-    uint16_t minDegree;
-    uint16_t maxDegree;
+    int16_t minDegree;
+    int16_t maxDegree;
 };
 ServoControlStruct ServoHorizontalControl;
 ServoControlStruct ServoVerticalControl;

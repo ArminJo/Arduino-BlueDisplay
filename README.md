@@ -1,7 +1,7 @@
 # [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
 Available as Arduino library "BlueDisplay"
 
-### [Version 3.0.0](https://github.com/ArminJo/Arduino-BlueDisplay/archive/master.zip) - work in progress
+### [Version 3.0.2](https://github.com/ArminJo/Arduino-BlueDisplay/archive/master.zip) - work in progress
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
@@ -186,7 +186,12 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
 
 # Revision History
-### Version 3.0.0 - work in progress
+### Version 3.0.2 - work in progress
+
+### Version 3.0.1
+- ADCUtils now external sources.
+
+### Version 3.0.0
 - Improved BTModuleProgrammer program.
 - Renamed *.cpp to *.hpp.
 

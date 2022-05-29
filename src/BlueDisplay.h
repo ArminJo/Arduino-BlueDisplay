@@ -30,10 +30,10 @@
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
-#define VERSION_BLUE_DISPLAY "3.0.0"
+#define VERSION_BLUE_DISPLAY "3.0.1"
 #define VERSION_BLUE_DISPLAY_MAJOR 3
 #define VERSION_BLUE_DISPLAY_MINOR 0
-#define VERSION_BLUE_DISPLAY_PATCH 0
+#define VERSION_BLUE_DISPLAY_PATCH 1
 // The change log is at the bottom of the file
 
 /*
@@ -537,6 +537,9 @@ float getTemperature(void);
 #endif
 
 /*
+ * Version 3.0.1
+ * - ADCUtils now external sources.
+ *
  * Version 3.0.0
  * - Renamed *.cpp to *.hpp.
  *
