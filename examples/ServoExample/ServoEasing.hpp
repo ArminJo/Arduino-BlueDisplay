@@ -1786,7 +1786,7 @@ bool ServoEasing::areInterruptsActive() {
 /*
  * Update all servos from list and check if all servos have stopped.
  * Defined weak in order to be able to overwrite it, e.g. for synchronizing with NeoPixel updates,
- * which otherwise leads to servo jitter. See QuadrupedNeoPixel.cpp of QuadrupedControl example.
+ * which otherwise leads to servo twitching. See QuadrupedNeoPixel.cpp of QuadrupedControl example.
  * We have 100 us before the next servo period starts.
  */
 #if defined(STM32F1xx) && STM32_CORE_VERSION_MAJOR == 1 &&  STM32_CORE_VERSION_MINOR <= 8 // for "Generic STM32F1 series" from STM32 Boards from STM32 cores of Arduino Board manager

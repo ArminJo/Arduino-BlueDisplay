@@ -32,7 +32,6 @@
 #ifndef _BLUESERIAL_HPP
 #define _BLUESERIAL_HPP
 
-#include <Arduino.h>
 #include "BlueDisplay.h"
 
 #if !defined(va_start)

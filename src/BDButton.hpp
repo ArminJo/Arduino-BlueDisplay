@@ -211,7 +211,9 @@ void BDButton::setValue(int16_t aValue, bool doDrawButton) {
     if (doDrawButton) {
         tSubFunctionCode = SUBFUNCTION_BUTTON_SET_VALUE_AND_DRAW;
     }
-    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonHandle, tSubFunctionCode, aValue);
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonHandle, tSubFunctionCode, aValue);
+    }
 }
 
 void BDButton::setValueAndDraw(int16_t aValue) {

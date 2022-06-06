@@ -30,10 +30,10 @@
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
-#define VERSION_BLUE_DISPLAY "3.0.1"
+#define VERSION_BLUE_DISPLAY "3.0.2"
 #define VERSION_BLUE_DISPLAY_MAJOR 3
 #define VERSION_BLUE_DISPLAY_MINOR 0
-#define VERSION_BLUE_DISPLAY_PATCH 1
+#define VERSION_BLUE_DISPLAY_PATCH 2
 // The change log is at the bottom of the file
 
 /*
@@ -537,6 +537,10 @@ float getTemperature(void);
 #endif
 
 /*
+ * Version 3.0.2
+ * - Added function setPosition() for sliders.
+ * - Fixed bug in macros `BLUE ` and `COLOR32_GET_BLUE`.
+ *
  * Version 3.0.1
  * - ADCUtils now external sources.
  *
@@ -596,4 +600,3 @@ float getTemperature(void);
  */
 
 #endif // _BLUEDISPLAY_H
-#pragma once

@@ -452,4 +452,3 @@ uint32_t getMicrosFromHorizontalDisplayValue(uint16_t aDisplayValueHorizontal, u
 #endif
 
 #endif // _TOUCH_DSO_COMMON_H
-#pragma once

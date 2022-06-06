@@ -35,16 +35,14 @@
 #include "EventHandler.h"
 #include "BlueDisplay.h"
 
-#if defined(ARDUINO)
-#include <Arduino.h> // for millis()
-#else
+#if !defined(ARDUINO)
 #include "timing.h" // for getMillisSinceBoot()
 #  if defined(USE_STM32F3_DISCO)
 #  include "stm32f3_discovery.h"  // For LEDx
 #  endif
 #include "stm32fx0xPeripherals.h" // For Watchdog_reload()
 #include <stdio.h> // for printf
-#endif // ARDUINO
+#endif // ! ARDUINO
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
 #include "ADS7846.h"

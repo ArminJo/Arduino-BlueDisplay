@@ -123,4 +123,3 @@ void sendUSART(const char *aChar);
 void serialEvent();
 
 #endif // _BLUESERIAL_H
-#pragma once

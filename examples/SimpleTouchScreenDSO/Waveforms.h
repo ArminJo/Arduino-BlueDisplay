@@ -72,4 +72,3 @@ void startWaveform();
 void computeSineTableValues(uint8_t aSineTable[], unsigned int aNumber);
 
 #endif // _WAVEFORMS_H
-#pragma once

@@ -1512,10 +1512,6 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
     BDSlider::deactivateAllSliders();
 }
 
-#if defined(ARDUINO)
-#include <Arduino.h>
-#endif
-
 #if defined(AVR) && defined(ADCSRA) && defined(ADATE)
 /*
  * The next include is for just one BlueDisplay function printVCCAndTemperaturePeriodically().

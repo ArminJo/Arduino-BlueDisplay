@@ -241,4 +241,3 @@ extern BDButton TouchButtonBack;
 extern bool sBackButtonPressed;
 
 #endif // _SIMPLE_TOUCHSCREEN_DSO_H
-#pragma once

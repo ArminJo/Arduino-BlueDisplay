@@ -140,4 +140,3 @@ void handleEvent(struct BluetoothEvent *aEvent);
 #endif
 
 #endif // _EVENTHANDLER_H
-#pragma once

@@ -108,10 +108,13 @@ public:
             int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
             void (*aOnChangeHandler)(BDSlider *, uint16_t));
 
+    void setPosition(int16_t aPositionX, int16_t aPositionY);
+
     void drawSlider(void);
     void drawBorder(void);
     void setValue(int16_t aCurrentValue);
     void setValueAndDrawBar(int16_t aCurrentValue);
+    void setValue(int16_t aCurrentValue, bool doDrawBar);
     void setActualValue(int16_t aCurrentValue) __attribute__ ((deprecated ("Renamed to setValue()"))); // deprecated
     void setActualValueAndDrawBar(int16_t aCurrentValue) __attribute__ ((deprecated ("Renamed to setValueAndDrawBar()"))); // deprecated
     void setBarColor(color16_t aBarColor);
@@ -167,4 +170,3 @@ void initPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr
 int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, int aValue, uint8_t aSliderDeadBand = 0);
 
 #endif //_BDSLIDER_H
-#pragma once

@@ -67,7 +67,7 @@ BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPoin
  */
 void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth, int16_t aBarLength, int16_t aThresholdValue,
         int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
-        void (*aOnChangeHandler)(BDSlider *, uint16_t)) {
+        void (*aOnChangeHandler)(BDSlider*, uint16_t)) {
     BDSliderHandle_t tSliderNumber = sLocalSliderIndex++;
 
     if (USART_isBluetoothPaired()) {
@@ -100,6 +100,19 @@ void BDSlider::deinit(void) {
 }
 #endif
 
+/**
+ * @param aPositionX - Determines upper left corner
+ * @param aPositionY - Determines upper left corner
+ */
+void BDSlider::setPosition(int16_t aPositionX, int16_t aPositionY) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalSliderPointer->setPosition(aPositionX, aPositionY);
+#endif
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderHandle, SUBFUNCTION_SLIDER_SET_POSITION, aPositionX, aPositionY);
+    }
+}
+
 /*
  * Sets slider to active, draws border, bar, caption and value
  */
@@ -131,18 +144,6 @@ void BDSlider::setValue(int16_t aCurrentValue) {
 }
 
 /*
- * Deprecated
- */
-void BDSlider::setActualValue(int16_t aCurrentValue) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
-#endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
-    }
-}
-
-/*
  * Draw bar and set and print current value
  */
 void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
@@ -151,6 +152,34 @@ void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);
+    }
+}
+
+/*
+ * Draw bar and set and print current value
+ */
+void BDSlider::setValue(int16_t aCurrentValue, bool doDrawBar) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
+#endif
+    uint8_t tSubFunctionCode = SUBFUNCTION_SLIDER_SET_VALUE;
+    if (doDrawBar) {
+        tSubFunctionCode = SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR;
+    }
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, tSubFunctionCode, aCurrentValue);
+    }
+}
+
+/*
+ * Deprecated
+ */
+void BDSlider::setActualValue(int16_t aCurrentValue) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
+#endif
+    if (USART_isBluetoothPaired()) {
+        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
     }
 }
 

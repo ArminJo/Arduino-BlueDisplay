@@ -29,4 +29,3 @@ void stopFrequencyGeneratorPage(void);
 extern const char StringStop[] PROGMEM; // "Stop"
 
 #endif // _FREQUENCY_GENERATOR_PAGE_H
-#pragma once

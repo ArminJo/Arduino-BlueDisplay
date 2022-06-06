@@ -281,6 +281,8 @@ public:
 //    void init(const struct ButtonInit *aButtonInfo, const __FlashStringHelper *aPGMCaption);
 //    void init(const struct ButtonInit *aButtonInfo, const __FlashStringHelper *aPGMCaption, int16_t aValue);
 
+    void setPosition(int16_t aPositionX, int16_t aPositionY);
+
     void drawButton(void);
     void removeButton(color16_t aBackgroundColor);
     void drawCaption(void);
@@ -291,7 +293,6 @@ public:
     void setValueAndDraw(int16_t aValue);
     void setButtonColor(color16_t aButtonColor);
     void setButtonColorAndDraw(color16_t aButtonColor);
-    void setPosition(int16_t aPositionX, int16_t aPositionY);
     void setButtonAutorepeatTiming(uint16_t aMillisFirstDelay, uint16_t aMillisFirstRate, uint16_t aFirstCount,
             uint16_t aMillisSecondRate);
 
@@ -346,4 +347,3 @@ private:
 #endif // #ifdef __cplusplus
 
 #endif //_BDBUTTON_H
-#pragma once

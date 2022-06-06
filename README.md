@@ -186,7 +186,11 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
 
 # Revision History
-### Version 3.0.2 - work in progress
+### Version 3.0.3 - work in progress
+
+### Version 3.0.2
+- Added function setPosition() for sliders.
+- Fixed bug in macros `BLUE ` and `COLOR32_GET_BLUE`.
 
 ### Version 3.0.1
 - ADCUtils now external sources.
