@@ -43,8 +43,8 @@
 #define VERSION_HEX_VALUE(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
 #define VERSION_BLUE_DISPLAY_HEX  VERSION_HEX_VALUE(VERSION_BLUE_DISPLAY_MAJOR, VERSION_BLUE_DISPLAY_MINOR, VERSION_BLUE_DISPLAY_PATCH)
 
-#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY) && ! defined(SUPPORT_LOCAL_DISPLAY)
-#define SUPPORT_LOCAL_DISPLAY
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY) && ! defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#define BD_DRAW_TO_LOCAL_DISPLAY_TOO
 #endif
 
 #if defined(ARDUINO)
@@ -123,7 +123,7 @@
 // for factor 4 of 8*12 font
 #define TEXT_SIZE_44 44
 // TextWidth = TextSize * 0.6
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
 // 8/16 instead of 7/13 to be compatible with 8*12 font
 #define TEXT_SIZE_11_WIDTH 8
 #define TEXT_SIZE_22_WIDTH 16
@@ -320,7 +320,7 @@ public:
     COLOR16_BLACK, color16_t aBGColor = COLOR16_WHITE);
 
     void setWriteStringSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
-            bool aClearOnNewScreen);
+    bool aClearOnNewScreen);
     void setWriteStringPosition(uint16_t aPosX, uint16_t aPosY);
     void setWriteStringPositionColumnLine(uint16_t aColumnNumber, uint16_t aLineNumber);
     void writeString(const char *aStringPtr, uint8_t aStringLength);
@@ -350,10 +350,10 @@ public:
             int16_t aThickness = 1);
     void drawVectorRadian(uint16_t aXStart, uint16_t aYStart, uint16_t aLength, float aRadian, color16_t aColor,
             int16_t aThickness = 1);
-    void drawLineWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, int16_t aThickness,
-            color16_t aColor);
-    void drawLineRelWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXDelta, uint16_t aYDelta, int16_t aThickness,
-            color16_t aColor);
+    void drawLineWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd,
+            color16_t aColor, int16_t aThickness);
+    void drawLineRelWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXDelta, uint16_t aYDelta,
+            color16_t aColor, int16_t aThickness);
 
     void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
             uint8_t *aByteBuffer, size_t aByteBufferLength);
@@ -388,16 +388,20 @@ public:
 
     void setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSensorRate, uint8_t aFilterFlag);
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
-    void drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor, color16_t aBGColor);
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+    void drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor,
+            color16_t aBGColor);
 #endif
 
+#if defined(AVR)
+    // On non AVR platforms PGM functions are reduced to plain functions
     uint16_t drawTextPGM(uint16_t aXStart, uint16_t aYStart, const char *aPGMString, uint16_t aTextSize, color16_t aFGColor,
             color16_t aBGColor);
     void drawTextPGM(uint16_t aXStart, uint16_t aYStart, const char *aPGMString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString, float aInitialValue);
 
+    // On non AVR platforms __FlashStringHelper is reduced to char
     uint16_t drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
             color16_t aFGColor, color16_t aBGColor);
     void drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper *aPGMString);
@@ -405,9 +409,7 @@ public:
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
             float aInitialValue);
 
-#if defined(AVR)
     // Not yet implemented    void getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const __FlashStringHelper *aPGMShortPromptString);
-
     void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis);
 #endif
     /*
@@ -473,7 +475,8 @@ public:
 
     /* For tests */
     void drawGreyscale(uint16_t aXPos, uint16_t tYPos, uint16_t aHeight);
-    void drawStar(int aXPos, int aYPos, int tOffsetCenter, int tLength, int tOffsetDiagonal, int tLengthDiagonal, color16_t aColor);
+    void drawStar(int aXCenter, int aYCenter, int tOffsetCenter, int tLength, int tOffsetDiagonal, int tLengthDiagonal,
+            color16_t aColor, int16_t aThickness);
     void testDisplay(void);
     void generateColorSpectrum(void);
 
@@ -485,22 +488,17 @@ extern BlueDisplay BlueDisplay1;
 void clearDisplayAndDisableButtonsAndSliders();
 void clearDisplayAndDisableButtonsAndSliders(color16_t aColor);
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
 /*
  * MI0283QT2 TFTDisplay - must provided by main program
  * external declaration saves ROM (210 bytes) and RAM ( 20 bytes)
  * and avoids missing initialization :-)
  */
-#if defined(USE_HY32D)
+#  if defined(USE_HY32D)
 #include "SSD1289.h"
-extern SSD1289 LocalDisplay;
-#else
+#  else
 #include "MI0283QT2.h"
-extern MI0283QT2 LocalDisplay;
-#endif
-// to be provided by local display library
-extern const unsigned int LOCAL_DISPLAY_HEIGHT;
-extern const unsigned int LOCAL_DISPLAY_WIDTH;
+#  endif
 #endif
 
 #endif // __cplusplus
@@ -532,14 +530,15 @@ float getTemperature(void);
 #include "BlueSerial.h"
 #include "EventHandler.h"
 
-#if !defined(_BLUEDISPLAY_HPP) && !defined(SUPPRESS_HPP_WARNING)
-#warning You probably must change the line #include "BlueDisplay.h" to #include "BlueDisplay.hpp" in your ino file or define SUPPRESS_HPP_WARNING before the include to suppress this warning.
-#endif
+//#if !defined(_BLUEDISPLAY_HPP) && !defined(SUPPRESS_HPP_WARNING)
+//#warning You probably must change the line #include "BlueDisplay.h" to #include "BlueDisplay.hpp" in your ino file or define SUPPRESS_HPP_WARNING before the include to suppress this warning.
+//#endif
 
 /*
  * Version 3.0.2
  * - Added function setPosition() for sliders.
  * - Fixed bug in macros `BLUE ` and `COLOR32_GET_BLUE`.
+ * - Swapped last 2 parameters in `drawLineWithThickness()` and `drawLineRelWithThickness()`.
  *
  * Version 3.0.1
  * - ADCUtils now external sources.
