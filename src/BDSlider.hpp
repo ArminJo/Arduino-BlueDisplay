@@ -43,7 +43,7 @@ BDSliderHandle_t sLocalSliderIndex = 0;
 BDSlider::BDSlider(void) { // @suppress("Class members should be properly initialized")
 }
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
 BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPointer) {
     mSliderHandle = aSliderHandle;
     mLocalSliderPointer = aLocalSliderPointer;
@@ -82,7 +82,7 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
     }
     mSliderHandle = tSliderNumber;
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer = new TouchSlider();
     // Cast required here. At runtime the right pointer is returned because of FLAG_USE_INDEX_FOR_CALLBACK
     mLocalSliderPointer->initSlider(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue,
@@ -93,7 +93,7 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
 #endif
 }
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
 void BDSlider::deinit(void) {
     sLocalSliderIndex--;
     delete mLocalSliderPointer;
@@ -105,7 +105,7 @@ void BDSlider::deinit(void) {
  * @param aPositionY - Determines upper left corner
  */
 void BDSlider::setPosition(int16_t aPositionX, int16_t aPositionY) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setPosition(aPositionX, aPositionY);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -117,7 +117,7 @@ void BDSlider::setPosition(int16_t aPositionX, int16_t aPositionY) {
  * Sets slider to active, draws border, bar, caption and value
  */
 void BDSlider::drawSlider(void) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->drawSlider();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -126,7 +126,7 @@ void BDSlider::drawSlider(void) {
 }
 
 void BDSlider::drawBorder(void) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->drawBorder();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -135,7 +135,7 @@ void BDSlider::drawBorder(void) {
 }
 
 void BDSlider::setValue(int16_t aCurrentValue) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -147,7 +147,7 @@ void BDSlider::setValue(int16_t aCurrentValue) {
  * Draw bar and set and print current value
  */
 void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -159,7 +159,7 @@ void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
  * Draw bar and set and print current value
  */
 void BDSlider::setValue(int16_t aCurrentValue, bool doDrawBar) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     uint8_t tSubFunctionCode = SUBFUNCTION_SLIDER_SET_VALUE;
@@ -175,7 +175,7 @@ void BDSlider::setValue(int16_t aCurrentValue, bool doDrawBar) {
  * Deprecated
  */
 void BDSlider::setActualValue(int16_t aCurrentValue) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -187,7 +187,7 @@ void BDSlider::setActualValue(int16_t aCurrentValue) {
  * Deprecated
  */
 void BDSlider::setActualValueAndDrawBar(int16_t aCurrentValue) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -196,7 +196,7 @@ void BDSlider::setActualValueAndDrawBar(int16_t aCurrentValue) {
 }
 
 void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setBarThresholdColor(aBarThresholdColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -208,7 +208,7 @@ void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
  * Default threshold color is COLOR16_RED initially
  */
 void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setBarThresholdColor(aBarThresholdDefaultColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -218,7 +218,7 @@ void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) 
 }
 
 void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setBarBackgroundColor(aBarBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -232,7 +232,7 @@ void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
  */
 void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPosition, uint8_t aCaptionMargin, color16_t aCaptionColor,
         color16_t aCaptionBackgroundColor) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setCaptionColors(aCaptionColor, aCaptionBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -242,7 +242,7 @@ void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositi
 }
 
 void BDSlider::setCaption(const char *aCaption) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setCaption(aCaption);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -278,7 +278,7 @@ void BDSlider::setValueFormatString(const char *aValueFormatString) {
  */
 void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPrintValuePosition, uint8_t aPrintValueMargin,
         color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->setValueStringColors(aPrintValueColor, aPrintValueBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -314,7 +314,7 @@ void BDSlider::setValueScaleFactor(float aScaleFactorValue) {
 #pragma GCC diagnostic pop
 
 void BDSlider::printValue(const char *aValueString) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->printValue(aValueString);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -323,7 +323,7 @@ void BDSlider::printValue(const char *aValueString) {
 }
 
 void BDSlider::activate(void) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->activate();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -332,7 +332,7 @@ void BDSlider::activate(void) {
 }
 
 void BDSlider::deactivate(void) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     mLocalSliderPointer->deactivate();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -340,7 +340,7 @@ void BDSlider::deactivate(void) {
     }
 }
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
 
 int BDSlider::printValue(void) {
     return mLocalSliderPointer->printValue();
@@ -371,7 +371,7 @@ void BDSlider::resetAllSliders(void) {
 }
 
 void BDSlider::activateAllSliders(void) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     TouchSlider::activateAllSliders();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -380,7 +380,7 @@ void BDSlider::activateAllSliders(void) {
 }
 
 void BDSlider::deactivateAllSliders(void) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     TouchSlider::deactivateAllSliders();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -406,10 +406,12 @@ void initPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr
 int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, int aValue, uint8_t aSliderDeadBand) {
     BDSlider *tValueSlider = aSliderStructPtr->positiveSliderPtr;
     BDSlider *tZeroSlider = aSliderStructPtr->negativeSliderPtr;
+    bool tSliderValueIsPositive = true;
     if (aValue < 0) {
         aValue = -aValue;
         tValueSlider = tZeroSlider;
         tZeroSlider = aSliderStructPtr->positiveSliderPtr;
+        tSliderValueIsPositive = false;
     }
 
     /*
@@ -425,11 +427,12 @@ int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, 
     /*
      * Draw slider value if values changed
      */
-    if (aSliderStructPtr->lastSliderValue != aValue) {
+    if (aSliderStructPtr->lastSliderValue != (unsigned int) aValue) {
         aSliderStructPtr->lastSliderValue = aValue;
         tValueSlider->setValueAndDrawBar(aValue);
-        if (aSliderStructPtr->lastZeroSlider != tZeroSlider) {
-            aSliderStructPtr->lastZeroSlider = tZeroSlider;
+
+        if (tSliderValueIsPositive != aSliderStructPtr->lastSliderValueWasPositive) {
+            aSliderStructPtr->lastSliderValueWasPositive = tSliderValueIsPositive;
             // the sign has changed, clear old value
             tZeroSlider->setValueAndDrawBar(0);
         }
@@ -444,4 +447,41 @@ int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, 
     return aValue;
 }
 
+unsigned int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, unsigned int aValue, bool aPositiveSider,
+        uint8_t aSliderDeadBand) {
+
+    /*
+     * We have a positive value for dead band and slider length
+     */
+    if (aValue > aSliderDeadBand) {
+        // dead band subtraction -> resulting values start at 0
+        aValue -= aSliderDeadBand;
+    } else {
+        aValue = 0;
+    }
+
+    BDSlider *tValueSlider = aSliderStructPtr->positiveSliderPtr; // the slider which shows the value
+    BDSlider *tZeroSlider = aSliderStructPtr->negativeSliderPtr;  // The slider which is cleared
+    if (!aPositiveSider) {
+        tValueSlider = aSliderStructPtr->negativeSliderPtr;
+        tZeroSlider = aSliderStructPtr->positiveSliderPtr;
+    }
+
+    if (aPositiveSider == aSliderStructPtr->lastSliderValueWasPositive) {
+        // No direction change, only value change possible here
+        if (aSliderStructPtr->lastSliderValue != aValue) {
+            // value changed here
+            tValueSlider->setValueAndDrawBar(aValue);
+        }
+    } else {
+        // direction/slider change
+        tZeroSlider->setValueAndDrawBar(0);
+        tValueSlider->setValueAndDrawBar(aValue);
+    }
+
+    aSliderStructPtr->lastSliderValueWasPositive = aPositiveSider;
+    aSliderStructPtr->lastSliderValue = aValue;
+
+    return aValue;
+}
 #endif //_BDSLIDER_HPP

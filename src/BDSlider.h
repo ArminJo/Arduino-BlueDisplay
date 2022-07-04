@@ -61,17 +61,15 @@ static const int FLAG_SLIDER_CAPTION_ALIGN_MIDDLE = 0x02;
 static const int FLAG_SLIDER_CAPTION_BELOW = 0x00;
 static const int FLAG_SLIDER_CAPTION_ABOVE = 0x04;
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
 #include "TouchSlider.h"
-// assume we have only a restricted amount of local sliders
+#endif
+#  if defined(AVR)
 typedef uint8_t BDSliderHandle_t;
-#else
-#if defined(AVR)
-typedef uint8_t BDSliderHandle_t;
-#else
+#  else
 typedef uint16_t BDSliderHandle_t;
-#endif
-#endif
+#  endif
+
 
 extern BDSliderHandle_t sLocalSliderIndex;
 
@@ -87,7 +85,7 @@ public:
 
     // Constructors
     BDSlider();
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPointer);
 #endif
 
@@ -141,7 +139,7 @@ public:
 
     BDSliderHandle_t mSliderHandle;
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     int printValue();
     void setXOffsetValue(int16_t aXOffsetValue);
 
@@ -162,11 +160,13 @@ private:
 struct positiveNegativeSlider {
     BDSlider *positiveSliderPtr;
     BDSlider *negativeSliderPtr;
-    int lastSliderValue;      // positive value with sensor dead band applied
-    BDSlider *lastZeroSlider; // to decide if we draw new zero slider
+    unsigned int lastSliderValue;       // positive value with sensor dead band applied
+    bool lastSliderValueWasPositive;    // true if positive slider had a value and negative was cleared
 };
 void initPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, BDSlider *aPositiveSliderPtr,
         BDSlider *aNegativeSliderPtr);
 int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, int aValue, uint8_t aSliderDeadBand = 0);
+unsigned int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, unsigned int aValue, bool aPositiveSider,
+        uint8_t aSliderDeadBand);
 
 #endif //_BDSLIDER_H

@@ -5,7 +5,6 @@
  *  Email: armin.joachimsmeyer@gmail.com
  *  License: GPL v3 (http://www.gnu.org/licenses/gpl.html)
  */
-
 #ifndef _FREQUENCY_GENERATOR_PAGE_H
 #define _FREQUENCY_GENERATOR_PAGE_H
 

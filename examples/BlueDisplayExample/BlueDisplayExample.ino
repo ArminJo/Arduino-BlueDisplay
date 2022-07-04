@@ -76,6 +76,8 @@ struct tm *sTimeInfo;
 
 bool sConnected = false;
 bool doBlink = true;
+bool sInTestPage = false;
+
 int16_t sDelay = DELAY_START_VALUE; // 600
 
 // a string buffer for any purpose...
@@ -88,12 +90,16 @@ BDButton TouchButtonBDExampleBlinkStartStop;
 BDButton TouchButtonPlus;
 BDButton TouchButtonMinus;
 BDButton TouchButtonValueDirect;
+BDButton TouchButtonTest;
+BDButton TouchButtonBack;
 
 // Touch handler for buttons
 void doBDExampleBlinkStartStop(BDButton *aTheTochedButton, int16_t aValue);
 void doPlusMinus(BDButton *aTheTochedButton, int16_t aValue);
 void doSetDelay(float aValue);
 void doGetDelay(BDButton *aTheTouchedButton, int16_t aValue);
+void doTest(BDButton *aTheTouchedButton, int16_t aValue);
+void doBack(BDButton *aTheTouchedButton, int16_t aValue);
 
 /*
  * The horizontal slider
@@ -182,7 +188,8 @@ void loop() {
         delayMillisWithCheckAndHandleEvents(tBlinkDuration / 2);
         digitalWrite(LED_BUILTIN, LOW);
         delayMillisWithCheckAndHandleEvents(tBlinkDuration / 2);
-    } else {
+
+    } else if (!sInTestPage) {
         if (doBlink) {
 
             uint8_t i;
@@ -197,24 +204,31 @@ void loop() {
              */
             for (i = 0; i < 8; ++i) {
                 delayMillisWithCheckAndHandleEvents(sDelay / 8);
+                if (sInTestPage) {
+                    break;
+                }
                 printDemoString();
             }
             /*
              * LED off
              */
             digitalWrite(LED_BUILTIN, LOW);
-            BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
+            if (sInTestPage) {
+                BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
+            }
             for (i = 0; i < 8; ++i) {
                 delayMillisWithCheckAndHandleEvents(sDelay / 8);
+                if (sInTestPage) {
+                    break;
+                }
                 printDemoString();
             }
-            printDemoString();
         }
         /*
          * print time every second
          */
         unsigned long tMillis = millis();
-        if (tMillis - sLastMilisOfTimePrinted > 1000) {
+        if (tMillis - sLastMilisOfTimePrinted > 1000 && !sInTestPage) {
             sLastMilisOfTimePrinted = tMillis;
 #if defined(USE_C_TIME)
             BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &infoEventCallback);
@@ -247,6 +261,12 @@ void initDisplay(void) {
 //    TouchButtonValueDirect.init(&ButtonValueDirectInit, F("..."));
     TouchButtonValueDirect.init(210, 150, 90, 55, COLOR_YELLOW, F("..."), 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetDelay);
 
+    TouchButtonTest.init(BUTTON_WIDTH_4_POS_4, 0, BUTTON_WIDTH_4, BUTTON_HEIGHT_6, COLOR16_DARK_BLUE, "Test", TEXT_SIZE_22,
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH, -1, &doTest);
+
+    TouchButtonBack.init(BUTTON_WIDTH_4_POS_4, 0, BUTTON_WIDTH_4, BUTTON_HEIGHT_6, COLOR_RED, "Back", TEXT_SIZE_22,
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH, -1, &doBack);
+
     TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE, COLOR_YELLOW, COLOR16_GREEN,
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_HORIZONTAL, &doDelay);
     TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_RIGHT, 4, COLOR16_RED, COLOR_DEMO_BACKGROUND);
@@ -271,6 +291,7 @@ void drawGui(void) {
     TouchButtonPlus.drawButton();
     TouchButtonMinus.drawButton();
     TouchButtonValueDirect.drawButton();
+    TouchButtonTest.drawButton();
     TouchSliderDelay.drawSlider();
 }
 
@@ -370,6 +391,27 @@ void doGetDelay(BDButton *aTheTouchedButton, int16_t aValue) {
  */
 void doDelay(BDSlider *aTheTouchedSlider __attribute__((unused)), uint16_t aSliderValue) {
     sDelay = aSliderValue;
+}
+
+/*
+ * Request delay value as number
+ */
+void doBack(BDButton *aTheTouchedButton, int16_t aValue) {
+    TouchButtonBack.deactivate();
+    drawGui();
+    sInTestPage = false;
+}
+
+/*
+ * Creates a new page and displays test patterns
+ */
+void doTest(BDButton *aTheTouchedButton, int16_t aValue) {
+    sInTestPage = true;
+    BlueDisplay1.clearDisplay(COLOR16_WHITE);
+    BDButton::deactivateAllButtons();
+    BDSlider::deactivateAllSliders();
+    BlueDisplay1.testDisplay(); // draw test patterns
+    TouchButtonBack.drawButton(); // this also activates the button
 }
 
 #define MILLIS_PER_CHANGE 20 // gives minimal 2 seconds

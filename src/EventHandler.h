@@ -34,7 +34,7 @@
 //#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 #endif
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
 #include "BlueDisplay.h" // for
 //#include "ADS7846.h"
 //extern ADS7846 TouchPanel;
@@ -51,7 +51,7 @@ extern unsigned long sMillisOfLastReceivedBDEvent; // is updated with millis() a
 #define TOUCH_SWIPE_THRESHOLD 10  // threshold for swipe detection to suppress long touch handler calling
 #define TOUCH_SWIPE_RESOLUTION_MILLIS 20
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
 extern struct BluetoothEvent localTouchEvent;
 /*
  * helper variables
@@ -113,7 +113,7 @@ void setTouchUpCallbackEnabled(bool aTouchUpCallbackEnabled);
 void (* getTouchUpCallback(void))(struct TouchEvent * );
 #endif
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
 void handleLocalTouchUp(void);
 void callbackLongTouchDownTimeout(void);
 void simpleTouchDownHandler(struct TouchEvent *aActualPositionPtr);

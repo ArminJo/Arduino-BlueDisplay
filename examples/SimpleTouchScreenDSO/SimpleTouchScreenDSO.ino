@@ -160,15 +160,27 @@
 #include <Arduino.h>
 
 /*
+ * Enabling program features dependent on display configuration
+ */
+//#define LOCAL_DISPLAY_EXISTS    // Activate, if a local display is attached and should be drawn simultaneously
+//#define USE_HY32D               // Activate, if local display is a HY32D / SSD1289 type. Otherwise a MI0283QT2 type is assumed.
+
+/*
  * Settings to configure the BlueDisplay library and to reduce its size
  */
 //#define BLUETOOTH_BAUD_RATE BAUD_115200  // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
 //#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 #define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+//#define SUPPORT_LOCAL_DISPLAY // Supports simultaneously drawing on a locally attached display. Not (yet) implemented for all commands!
 #include "BlueDisplay.hpp"
 
+#if defined(SUPPORT_LOCAL_DISPLAY) && !defined(LOCAL_DISPLAY_EXISTS)
+#error SUPPORT_LOCAL_DISPLAY is defined but no local display seems to be attached since LOCAL_DISPLAY_EXISTS is not defined.
+#endif
+
 #include "SimpleTouchScreenDSO.h"
-#include "FrequencyGeneratorPage.h"
+#include "FrequencyGeneratorPage.hpp" // include sources
+#include "TouchDSOGui.hpp" // include sources
 
 #include "digitalWriteFast.h"
 
@@ -1626,7 +1638,7 @@ uint16_t getAttenuatorFactor(void) {
 /*
  * toggle between DC and AC mode
  */
-void doAcDcMode(__attribute__((unused))     BDButton *aTheTouchedButton, __attribute__((unused))     int16_t aValue) {
+void doAcDcMode(__attribute__((unused))      BDButton *aTheTouchedButton, __attribute__((unused))      int16_t aValue) {
     setACMode(!MeasurementControl.ChannelIsACMode);
 }
 
@@ -1660,7 +1672,7 @@ void doSetTriggerDelay(float aValue) {
 /*
  * toggle between 5 and 1.1 volt reference
  */
-void doADCReference(__attribute__((unused))     BDButton *aTheTouchedButton, __attribute__((unused))     int16_t aValue) {
+void doADCReference(__attribute__((unused))      BDButton *aTheTouchedButton, __attribute__((unused))      int16_t aValue) {
     uint8_t tNewReference = MeasurementControl.ADCReference;
     if (MeasurementControl.ADCReference == DEFAULT) {
         tNewReference = INTERNAL;
@@ -1675,7 +1687,7 @@ void doADCReference(__attribute__((unused))     BDButton *aTheTouchedButton, __a
     }
 }
 
-void doStartStopDSO(__attribute__((unused))     BDButton *aTheTouchedButton, __attribute__((unused))     int16_t aValue) {
+void doStartStopDSO(__attribute__((unused))      BDButton *aTheTouchedButton, __attribute__((unused))      int16_t aValue) {
     if (MeasurementControl.isRunning) {
         /*
          * Stop here
@@ -2023,8 +2035,8 @@ void printInfo(bool aRecomputeValues) {
          */
 #if defined(LOCAL_DISPLAY_EXISTS)
         snprintf(sStringBuffer, sizeof sStringBuffer, "%6.*fV %6.*fV%s%4u%cs", tPrecision,
-                getFloatFromRawValue(MeasurementControl.RawValueAverage), tPrecision,
-                getFloatFromRawValue(tValueDiff), tBufferForPeriodAndFrequency, tUnitsPerGrid, tTimebaseUnitChar);
+                getFloatFromRawValue(MeasurementControl.RawValueAverage), tPrecision, getFloatFromRawValue(tValueDiff),
+                tBufferForPeriodAndFrequency, tUnitsPerGrid, tTimebaseUnitChar);
 #else
 #if defined(AVR)
 

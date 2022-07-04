@@ -1,9 +1,9 @@
 /*
- * TouchDSOGui.cpp
+ * TouchDSOGui.hpp
  *
  * Implements the common (GUI) parts of AVR and ARM development
  *
- *  Copyright (C) 2017  Armin Joachimsmeyer
+ *  Copyright (C) 2017-2022  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
@@ -22,13 +22,13 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
-
-#define SUPPRESS_HPP_WARNING
+#ifndef _TOUCH_DSO_GUI_HPP
+#define _TOUCH_DSO_GUI_HPP
 
 #if defined(AVR)
 #include <Arduino.h>
 
-#include "SimpleTouchScreenDSO.h"
+//#include "SimpleTouchScreenDSO.h"
 #include "digitalWriteFast.h"
 #else
 #include "Pages.h"
@@ -527,7 +527,7 @@ const char StringVBattDiv2[] PROGMEM = "\xBD" "VBatt";
 const char *const ADCInputMUXChannelStrings[] = { StringChannel0, StringChannel1, StringChannel2, StringChannel3, StringChannel4,
         StringTemperature, StringVRefint };
 #else
-#if defined(STM)32F30X
+#if defined(STM32F30X)
 const char * const ADCInputMUXChannelStrings[ADC_CHANNEL_COUNT] = {StringChannel2, StringChannel3, StringChannel4,
     StringTemperature, StringVBattDiv2, StringVRefint};
 uint8_t const ADCInputMUXChannels[] = {ADC_CHANNEL_2, ADC_CHANNEL_3, ADC_CHANNEL_4,
@@ -1837,3 +1837,4 @@ uint32_t getMicrosFromHorizontalDisplayValue(uint16_t aDisplayValueHorizontal, u
 #endif
     return (tMicros / (aNumberOfPeriods * TIMING_GRID_WIDTH));
 }
+#endif // _TOUCH_DSO_GUI_HPP

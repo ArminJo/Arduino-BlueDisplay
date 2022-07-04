@@ -42,6 +42,8 @@
  */
 
 #include <Arduino.h>
+#if defined(AVR) && defined(TCCR1A)
+
 #include "Waveforms.h"
 
 #define TIMER_PRESCALER_MASK 0x07
@@ -451,3 +453,4 @@ void computeSineTableValues(uint8_t aSineTable[], unsigned int aNumber) {
         tRadian += tRadianDelta;
     }
 }
+#endif // defined(AVR) && defined(TCCR1A)

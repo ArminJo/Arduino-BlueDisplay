@@ -1,5 +1,5 @@
 /*
- * FrequencyGeneratorPage.cpp
+ * FrequencyGeneratorPage.hpp
  *
  * Frequency output from 119 mHz (8.388 second) to 8 MHz square wave on Arduino using timer1.
  * Sine waveform output from 7,421 mHz to 7812.5 Hz
@@ -16,7 +16,7 @@
  * 2nd order (better for sawtooth):        1 kOhm and 22 nF  -> 4k7 Ohm and 4.7 nF
  *
  *
- *  Copyright (C) 2015  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2022  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
@@ -35,12 +35,12 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
+#ifndef _FREQUENCY_GENERATOR_PAGE_HPP
+#define _FREQUENCY_GENERATOR_PAGE_HPP
 
 #if defined(AVR)
 #include "FrequencyGeneratorPage.h"
-#define SUPPRESS_HPP_WARNING
-#include "BlueDisplay.h"
-#include "SimpleTouchScreenDSO.h"
+//#include "SimpleTouchScreenDSO.h"
 
 #include <stdlib.h> // for dtostrf
 
@@ -206,7 +206,7 @@ void loopFrequencyGeneratorPage(void) {
 }
 
 void stopFrequencyGeneratorPage(void) {
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     // free buttons
     for (unsigned int i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS; ++i) {
         TouchButtonFixedFrequency[i]->deinit();
@@ -622,9 +622,9 @@ bool setWaveformFrequency(float aValue) {
             tDividerInt = 2;
         }
 
-#if defined(STM)32F30X
+#  if defined(STM32F30X)
         Synth_Timer32_SetReloadValue(tDividerInt);
-#else
+#  else
         uint32_t tPrescalerValue = (tDividerInt >> 16) + 1; // +1 since at least divider by 1
         if (tPrescalerValue > 1) {
             //we have prescaler > 1 -> adjust reload value to be less than 0x10001
@@ -632,7 +632,7 @@ bool setWaveformFrequency(float aValue) {
         }
         Synth_Timer16_SetReloadValue(tDividerInt, tPrescalerValue);
         tDividerInt *= tPrescalerValue;
-#endif
+#  endif
         sFrequencyInfo.ControlValue.DividerInt = tDividerInt;
         // recompute frequency
         sFrequencyInfo.Frequency = 36000000 / tDividerInt;
@@ -651,5 +651,6 @@ bool setWaveformFrequency() {
 float getPeriodMicros() {
     return sFrequencyInfo.ControlValue.DividerInt / 36.0f;
 }
-#endif
+#endif // !defined(AVR)
 
+#endif // _FREQUENCY_GENERATOR_PAGE_HPP

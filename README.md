@@ -61,6 +61,7 @@ Modify them by enabling / disabling them, or change the values if applicable.
 | `BLUETOOTH_BAUD_RATE` | 9600 | Change this, if you have reprogrammed the HC05 module for another baud rate e.g.115200. |
 | `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | Disables basic touch events like down, move and up. Saves up to 620 bytes program memory and 36 bytes RAM. |
 | `USE_SIMPLE_SERIAL` | disabled | Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise. |
+| `BD_DRAW_TO_LOCAL_DISPLAY_TOO` | disabled | Supports simultaneously drawing on a locally attached display. Not (yet) implemented for all commands! |
 
 ### Changing include (*.h) files with Arduino IDE
 First, use *Sketch > Show Sketch Folder (Ctrl+K)*.<br/>
@@ -102,19 +103,22 @@ For ESP32 no baudrate must be specified :-).
 
 ## BlueDisplayBlink
 Simple example to check your installation.
+| Breadboard | With debug output after pressing the "Stop" button  |
+| :-: | :-: |
+| ![BlueDisplayBlink Breadboard](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/Blink.jpg) | ![With debug output](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayBlink_off.jpg) |
 
 ## BlueDisplayExample
 More elaborated example to show more features of the BlueDisplay library.
-![Screenshot](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayExample.png)
-
-| Fritzing schematic for BlueDisplay example | BlueDisplay example breadboard picture |
+| Screenshot | Graphics test page with additional thick red lines |
 | :-: | :-: |
-| ![Fritzing board](extras/BlueDisplayBlink_Steckplatine.png) | ![Breadboard picture](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/Blink1.jpg) |
+| ![Screenshot](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayExample.jpg) | ![Graphics test page](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayExample_Test.jpg) |
+| Fritzing schematic for BlueDisplay example | BlueDisplay example breadboard picture |
+| ![Fritzing board](extras/BlueDisplayBlink_Steckplatine.png) | ![Breadboard picture](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/Blink.jpg) |
 
 ## ShowSensorValues
 Shows the accelerometer and gyroscope values received from the smartphone both graphical and numerical.
 
-![Plotter output of accelerometer](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/extras/AccelerometerOnPlotter.png)
+![Plotter output of accelerometer](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/AccelerometerOnPlotter.png)
 
 ## BTModuleProgrammer
 Simple helper program to configure your HC-05 or JDY-31 modules name and default baudrate with a serial monitor.
@@ -127,8 +131,8 @@ Sample outputs can be found [here](https://github.com/ArminJo/Arduino-BlueDispla
 Example of controlling a RC-car by smartphone accelerometer sensor.
 
 | RC car control display | Hacked RC car |
-| - | - |
-| ![RC car control display](pictures/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/android-blue-display/blob/gh-pages/pictures/RCCar+Tablet.jpg) |
+| :-: | :-: |
+| ![RC car control display](pictures/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/RCCar+Tablet.jpg) |
 
 ## ServoExample
 The accelerometer sensor of the android display is used to control two servos in a frame which holds a laser.
@@ -136,16 +140,23 @@ This is an example for using a fullscreen GUI.<br/>
 If no BD connection available, the servo first marks the border and then moves randomly in this area (Cat Mover).<br/>
 - Zero -> the actual sensor position is taken as the servos 90/90 degree position.
 - Bias (reverse of Zero) -> take actual servos position as position for horizontal sensors position.
-- Move -> moves randomly in the programmed border. Currently horizontal 45 to 135 and vertical 0 to 45.
+- Auto move -> moves randomly in the programmed border. Currently horizontal 45 to 135 and vertical 0 to 45.
+
+| Screenshot | Bias setting |
+| :-: | :-: |
+| ![ServoExample](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/ServoExample.png) | ![Bias setting](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/ServoExample_Bias.png) |
 
 ## **SimpleTouchScreenDSO**
 300 kSamples DSO without external hardware (except the HC-05 module). For AC input, only a capacitor and 4 resistors are needed.
 More information at [Arduino-Simple-DSO](examples/SimpleTouchScreenDSO).<br/>
 Not for STM32.
-![Screenshot](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/ArduinoDSO_Simple.png)
+| DSO start screen | DSO chart screen with long info |
+| :-: | :-: |
+| ![DSO start screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Welcome.jpg) | ![DSO chart screen with long info](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart_Long_Info.jpg) |
 
 ## US_Distance
 Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a parking assistance.
+![Breadboard and smartphone](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/Distance+Smartphone.jpg)
 
 ## Random delays on some smartphones
 Depending on the device you use, you can observe some random **"delays"** up to 500 ms in the timing of the display refresh.

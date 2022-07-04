@@ -13,7 +13,7 @@
  *  Move -> moves randomly in the programmed border. Currently horizontal 45 to 135 and vertical 0 to 45
  *
  *
- *  Copyright (C) 2015-2020  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
@@ -369,7 +369,7 @@ void initDisplay(void) {
 
     TouchButtonAutoMove.init(sCurrentDisplayWidth - sCurrentDisplayWidth / 4,
             sCurrentDisplayHeight / 4 - sCurrentDisplayHeight / 16, sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4, COLOR16_BLUE,
-            "Move", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoAutomove, &doEnableAutoMove);
+            "Auto\nmove", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoAutomove, &doEnableAutoMove);
     TouchButtonAutoMove.setCaptionForValueTrue(F("Stop"));
 
 }

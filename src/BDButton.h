@@ -236,17 +236,16 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 
 #define BUTTON_HEIGHT_10 20
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
 #include "TouchButton.h"
-// since we have only a restricted pool of local buttons
+class TouchButton;
+#endif
+#  if defined(AVR)
 typedef uint8_t BDButtonHandle_t;
-#else
-#if defined(AVR)
-typedef uint8_t BDButtonHandle_t;
-#else
+#  else
 typedef uint16_t BDButtonHandle_t;
-#endif
-#endif
+#  endif
+
 
 extern BDButtonHandle_t sLocalButtonIndex; // local button index counter used by BDButton.init() and BlueDisplay.createButton()
 
@@ -266,7 +265,7 @@ public:
     // Constructors
     BDButton();
     BDButton(BDButtonHandle_t aButtonHandle);
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     BDButton(BDButtonHandle_t aButtonHandle, TouchButton *aLocalButtonPtr);
 #endif
     BDButton(const BDButton &aButton);
@@ -318,9 +317,9 @@ public:
     void setCaption(const __FlashStringHelper *aPGMCaption, bool doDrawButton = false);
 #endif // defined(ARDUINO)
 
-    BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions
+    BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions. Taken in init() from sLocalButtonIndex.
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     void deinit(void);
     TouchButton *mLocalButtonPtr;
 #endif

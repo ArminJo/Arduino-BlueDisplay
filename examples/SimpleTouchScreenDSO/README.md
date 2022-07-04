@@ -161,13 +161,11 @@ Because of the interrupts at 62 kHz rate, DSO is almost not usable during non sq
 and waveform frequency is not stable and decreased, since not all TIMER1 OVERFLOW interrupts are handled.
 
 # SCREENSHOTS
-DSO start screen
-![DSO start screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Welcome.jpg)
-
-| DSO Chart screen | DSO Chart screen with long info |
+| DSO start screen | DSO at work |
 | :-: | :-: |
+| ![DSO start screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Welcome.jpg) | ![DSO at work](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/DSO+Tablet.jpg) |
+| DSO chart screen | DSO chart screen with long info |
 | ![DSO chart screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart.jpg) | ![DSO chart screen with long info](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart_Long_Info.jpg) |
-| ![DSO at work](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/DSO+Tablet.jpg) |  |
 
 ## Linearity of the ATmega328P(B) ADC converter
 The captured signal was generated with a STM32F303 DAC and the DSO input range was chosen to see the LSB of the 10 bit ADC conversion.
