@@ -275,7 +275,7 @@ void BlueDisplay::drawLine(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, u
     }
 }
 
-void BlueDisplay::drawLineRel(uint16_t aXStart, uint16_t aYStart, uint16_t aXDelta, uint16_t aYDelta, color16_t aColor) {
+void BlueDisplay::drawLineRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor) {
 #if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     LocalDisplay.drawLine(aXStart, aYStart, aXStart + aXDelta, aYStart + aYDelta, aColor);
 #endif
@@ -328,8 +328,8 @@ void BlueDisplay::drawVectorRadian(uint16_t aXStart, uint16_t aYStart, uint16_t 
     }
 }
 
-void BlueDisplay::drawLineWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd,
-        color16_t aColor, int16_t aThickness) {
+void BlueDisplay::drawLineWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor,
+        int16_t aThickness) {
 #if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     drawThickLine(aXStart, aYStart, aXEnd, aYEnd, aThickness, LINE_THICKNESS_MIDDLE, aColor);
 #endif
@@ -338,10 +338,10 @@ void BlueDisplay::drawLineWithThickness(uint16_t aXStart, uint16_t aYStart, uint
     }
 }
 
-void BlueDisplay::drawLineRelWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXDelta, uint16_t aYDelta,
-        color16_t aColor, int16_t aThickness) {
+void BlueDisplay::drawLineRelWithThickness(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor,
+        int16_t aThickness) {
 #if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-    drawThickLine(aXStart, aYStart, aXDelta, aYDelta, aThickness, LINE_THICKNESS_MIDDLE, aColor);
+    drawThickLine(aXStart, aYStart, aXStart + aXDelta, aYStart + aYDelta, aThickness, LINE_THICKNESS_MIDDLE, aColor);
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_DRAW_LINE_REL, 6, aXStart, aYStart, aXDelta, aYDelta, aColor, aThickness);
@@ -358,7 +358,7 @@ void BlueDisplay::drawRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, u
     }
 }
 
-void BlueDisplay::drawRectRel(uint16_t aXStart, uint16_t aYStart, uint16_t aWidth, uint16_t aHeight, color16_t aColor,
+void BlueDisplay::drawRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aWidth, int16_t aHeight, color16_t aColor,
         uint16_t aStrokeWidth) {
 #if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     LocalDisplay.drawRect(aXStart, aYStart, aXStart + aWidth - 1, aYStart + aHeight - 1, aColor);
@@ -377,7 +377,7 @@ void BlueDisplay::fillRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, u
     }
 }
 
-void BlueDisplay::fillRectRel(uint16_t aXStart, uint16_t aYStart, uint16_t aWidth, uint16_t aHeight, color16_t aColor) {
+void BlueDisplay::fillRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aWidth, int16_t aHeight, color16_t aColor) {
 #if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
     LocalDisplay.fillRect(aXStart, aYStart, aXStart + aWidth - 1, aYStart + aHeight - 1, aColor);
 #endif
@@ -453,6 +453,24 @@ uint16_t BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const char *aStri
 void BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const char *aStringPtr) {
     if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPosX, aPosY, strlen(aStringPtr), (uint8_t*) aStringPtr);
+    }
+}
+
+/**
+ * @param aBGColor if COLOR16_NO_BACKGROUND, then do not clear rest of line
+ */
+void BlueDisplay::drawMLText(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor,
+        color16_t aBGColor) {
+
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+    // here we have a special (and bigger) function, which handles multiple lines.
+    LocalDisplay.drawMLText(aXStart, aYStart - getTextAscend(aTextSize), (char *) aStringPtr, getLocalTextSize(aTextSize), aFGColor,
+            aBGColor);
+#endif
+    if (USART_isBluetoothPaired()) {
+        // the same as the drawText() function
+        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aXStart, aYStart, aTextSize, aFGColor, aBGColor, strlen(aStringPtr),
+                (uint8_t*) aStringPtr);
     }
 }
 
@@ -946,22 +964,6 @@ extern "C" uint16_t drawTextC(uint16_t aXStart, uint16_t aYStart, const char *aS
     return tRetValue;
 }
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-/**
- * @param aBGColor if COLOR16_NO_BACKGROUND, then do not clear rest of line
- */
-void BlueDisplay::drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor,
-        color16_t aBGColor) {
-
-    LocalDisplay.drawMLText(aPosX, aPosY - getTextAscend(aTextSize), (char *) aStringPtr, getLocalTextSize(aTextSize), aFGColor,
-            aBGColor);
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPosX, aPosY, aTextSize, aFGColor, aBGColor, strlen(aStringPtr),
-                (uint8_t*) aStringPtr);
-    }
-}
-#endif
-
 #if defined(AVR)
 uint16_t BlueDisplay::drawTextPGM(uint16_t aPosX, uint16_t aPosY, const char *aPGMString, uint16_t aTextSize, color16_t aFGColor,
         color16_t aBGColor) {
@@ -1017,6 +1019,20 @@ uint16_t BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStri
                 (uint8_t*) tStringBuffer);
     }
     return tRetValue;
+}
+
+/**
+ * @param aBGColor if COLOR16_NO_BACKGROUND, then do not clear rest of line
+ */
+void BlueDisplay::drawMLText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
+        color16_t aFGColor, color16_t aBGColor) {
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+    PGM_P tPGMString = reinterpret_cast<PGM_P>(aPGMString);
+    // here we have a special (and bigger) function, which handles multiple lines.
+    LocalDisplay.drawMLTextPGM(aXStart, aYStart - getTextAscend(aTextSize), tPGMString, getLocalTextSize(aTextSize), aFGColor,
+            aBGColor);
+#endif
+    drawText(aXStart, aYStart, aPGMString, aTextSize, aFGColor, aBGColor);
 }
 
 void BlueDisplay::drawText(uint16_t aPosX, uint16_t aPosY, const __FlashStringHelper *aPGMString) {
@@ -1670,7 +1686,7 @@ void BlueDisplay::drawStar(int aXCenter, int aYCenter, int tOffsetCenter, int tL
         color16_t aColor, int16_t aThickness) {
 
     int X = aXCenter + tOffsetCenter;
-    // first draw right then left lines
+// first draw right then left lines
     for (int i = 0; i < 2; i++) {
         // horizontal line
         drawLineRelWithThickness(X, aYCenter, tLength, 0, aColor, aThickness);
@@ -1682,7 +1698,7 @@ void BlueDisplay::drawStar(int aXCenter, int aYCenter, int tOffsetCenter, int tL
     }
 
     int Y = aYCenter + tOffsetCenter;
-    // first draw lower then upper lines
+// first draw lower then upper lines
     for (int i = 0; i < 2; i++) {
         // vertical line
         drawLineRelWithThickness(aXCenter, Y, 0, tLength, aColor, aThickness);
@@ -1724,6 +1740,9 @@ void BlueDisplay::drawGreyscale(uint16_t aXPos, uint16_t tYPos, uint16_t aHeight
         // For Test purposes: drawLineRel instead of fillRectRel gives missing lines on e.g. Nexus 7
         fillRectRel(aXPos, tY, 1, aHeight, COLOR16(0, 0, i));
         aXPos++;
+#ifdef HAL_WWDG_MODULE_ENABLED
+        Watchdog_reload();
+#endif
     }
 }
 
@@ -1734,23 +1753,27 @@ void BlueDisplay::testDisplay(void) {
     clearDisplay();
 
     /*
-     * small graphics in the upper left corner
+     * rectangles in all 4 corners
      */
     fillRectRel(0, 0, 2, 2, COLOR16_RED);
-    fillRectRel(mRequestedDisplaySize.XWidth - 3, 0, 3, 3, COLOR16_GREEN);
-    fillRectRel(0, mRequestedDisplaySize.YHeight - 4, 4, 4, COLOR16_BLUE);
-    fillRectRel(mRequestedDisplaySize.XWidth - 3, mRequestedDisplaySize.YHeight - 3, 3, 3, COLOR16_BLACK);
+    fillRectRel(mRequestedDisplaySize.XWidth, 0, 3, -3, COLOR16_GREEN);
+    fillRectRel(0, mRequestedDisplaySize.YHeight, 4, -4, COLOR16_BLUE);
+    fillRectRel(mRequestedDisplaySize.XWidth, mRequestedDisplaySize.YHeight, -3, -3, COLOR16_BLACK);
+    /*
+     * small graphics in the upper left corner
+     */
     fillRectRel(2, 2, 4, 4, COLOR16_RED);
     fillRectRel(10, 20, 10, 20, COLOR16_RED);
     drawRectRel(8, 18, 14, 24, COLOR16_BLUE, 1);
     drawCircle(15, 30, 5, COLOR16_BLUE, 1);
     fillCircle(20, 10, 10, COLOR16_BLUE);
 
-   /*
-    * Bottom green and diagonal blue line
-    */
-    drawLineRel(0, mRequestedDisplaySize.YHeight - 1, mRequestedDisplaySize.XWidth, -mRequestedDisplaySize.YHeight,
+    /*
+     * Diagonal blue and green line
+     */
+    drawLineRel(0, mRequestedDisplaySize.YHeight - 1, mRequestedDisplaySize.XWidth - 1, -(mRequestedDisplaySize.YHeight - 1),
     COLOR16_GREEN);
+// Top left to bottom right
     drawLineRel(6, 6, mRequestedDisplaySize.XWidth - 9, mRequestedDisplaySize.YHeight - 9, COLOR16_BLUE);
 
     /*

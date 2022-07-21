@@ -43,10 +43,6 @@
 #define VERSION_HEX_VALUE(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
 #define VERSION_BLUE_DISPLAY_HEX  VERSION_HEX_VALUE(VERSION_BLUE_DISPLAY_MAJOR, VERSION_BLUE_DISPLAY_MINOR, VERSION_BLUE_DISPLAY_PATCH)
 
-#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY) && ! defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-#define BD_DRAW_TO_LOCAL_DISPLAY_TOO
-#endif
-
 #if defined(ARDUINO)
 #  if ! defined(ESP32)
 // For not AVR platforms this contains mapping defines (at least for STM32)
@@ -98,8 +94,8 @@
 #define DISPLAY_HALF_VGA_WIDTH  320
 #define DISPLAY_VGA_HEIGHT      480
 #define DISPLAY_VGA_WIDTH       640
-#define DISPLAY_DEFAULT_HEIGHT  DISPLAY_HALF_VGA_HEIGHT // value to use if not connected
-#define DISPLAY_DEFAULT_WIDTH   DISPLAY_HALF_VGA_WIDTH
+#define DISPLAY_DEFAULT_HEIGHT  DISPLAY_HALF_VGA_HEIGHT // 240 - value to use if not connected
+#define DISPLAY_DEFAULT_WIDTH   DISPLAY_HALF_VGA_WIDTH  // 320 - value to use if not connected
 #define STRING_BUFFER_STACK_SIZE 32 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE]" for ...PGM() functions.
 #define STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE 34 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG]" for debug(const char *aMessage,...) functions.
 
@@ -301,14 +297,16 @@ public:
     void drawCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor, uint16_t aStrokeWidth);
     void fillCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor);
     void drawRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor, uint16_t aStrokeWidth);
-    void drawRectRel(uint16_t aXStart, uint16_t aYStart, uint16_t aWidth, uint16_t aHeight, color16_t aColor,
+    void drawRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aWidth, int16_t aHeight, color16_t aColor,
             uint16_t aStrokeWidth);
     void fillRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
-    void fillRectRel(uint16_t aXStart, uint16_t aYStart, uint16_t aWidth, uint16_t aHeight, color16_t aColor);
+    void fillRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aWidth, int16_t aHeight, color16_t aColor);
     uint16_t drawChar(uint16_t aPosX, uint16_t aPosY, char aChar, uint16_t aCharSize, color16_t aFGColor, color16_t aBGColor);
+    void drawText(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr);
     uint16_t drawText(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr, uint16_t aFontSize, color16_t aFGColor,
             color16_t aBGColor);
-    void drawText(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr);
+    void drawMLText(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor,
+            color16_t aBGColor);
 
     uint16_t drawByte(uint16_t aPosX, uint16_t aPosY, int8_t aByte, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
     COLOR16_BLACK, color16_t aBGColor = COLOR16_WHITE);
@@ -344,7 +342,7 @@ public:
     void debug(double aDouble);
 
     void drawLine(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
-    void drawLineRel(uint16_t aXStart, uint16_t aYStart, uint16_t aXDelta, uint16_t aYDelta, color16_t aColor);
+    void drawLineRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
     void drawLineFastOneX(uint16_t x0, uint16_t y0, uint16_t y1, color16_t aColor);
     void drawVectorDegrees(uint16_t aXStart, uint16_t aYStart, uint16_t aLength, int aDegrees, color16_t aColor,
             int16_t aThickness = 1);
@@ -352,7 +350,7 @@ public:
             int16_t aThickness = 1);
     void drawLineWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd,
             color16_t aColor, int16_t aThickness);
-    void drawLineRelWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXDelta, uint16_t aYDelta,
+    void drawLineRelWithThickness(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta,
             color16_t aColor, int16_t aThickness);
 
     void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
@@ -388,11 +386,6 @@ public:
 
     void setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSensorRate, uint8_t aFilterFlag);
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-    void drawMLText(uint16_t aPosX, uint16_t aPosY, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor,
-            color16_t aBGColor);
-#endif
-
 #if defined(AVR)
     // On non AVR platforms PGM functions are reduced to plain functions
     uint16_t drawTextPGM(uint16_t aXStart, uint16_t aYStart, const char *aPGMString, uint16_t aTextSize, color16_t aFGColor,
@@ -402,9 +395,11 @@ public:
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString, float aInitialValue);
 
     // On non AVR platforms __FlashStringHelper is reduced to char
+    void drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper *aPGMString);
     uint16_t drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
             color16_t aFGColor, color16_t aBGColor);
-    void drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper *aPGMString);
+    void drawMLText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper *aPGMString, uint16_t aTextSize, color16_t aFGColor,
+            color16_t aBGColor);
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString);
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
             float aInitialValue);
@@ -535,6 +530,10 @@ float getTemperature(void);
 //#endif
 
 /*
+ * Version 3.0.3
+ * - All *Rel*() functions now have signed delta parameters. Fixed bug in drawLineRelWithThickness() for local display.
+ * - Improved handling of local display and fixed bugs in drawLineRelWithThickness() and Button list for local display.
+ *
  * Version 3.0.2
  * - Added function setPosition() for sliders.
  * - Fixed bug in macros `BLUE ` and `COLOR32_GET_BLUE`.

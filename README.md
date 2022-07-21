@@ -1,7 +1,7 @@
 # [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
 Available as Arduino library "BlueDisplay"
 
-### [Version 3.0.2](https://github.com/ArminJo/Arduino-BlueDisplay/archive/master.zip) - work in progress
+### [Version 3.0.3](https://github.com/ArminJo/Arduino-BlueDisplay/archive/master.zip) - work in progress
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
@@ -12,16 +12,16 @@ Available as Arduino library "BlueDisplay"
 This library enables an Android smartphone / tablet to act as a graphical display for your Arduino or ESP32.
 
 ## SUMMARY
-With the BlueDisplay library you create the GUI with **Graphics, Text, Buttons and Sliders** and their callbacks on the Arduino.
-The Arduino is connected via USB-cable or Bluetooth with your smartphone / tablet where the BlueDisplay app renders the GUI.
-GUI callback, touch and sensor events are sent back to the Arduino.<br/>
-**No Android programming needed!**<br/>
-Bluetooth connection can be achieved by using an ESP32 or connecting a HC-05 to the RX/TX pins of your Arduino.
+With the BlueDisplay library you create the GUI for your application, e.g. **Graphics, Text, Buttons and Sliders** on the Arduino itself.<br/>
+**No Android programming required!**<br/>
+The Arduino is connected via USB-cable or Bluetooth with your smartphone / tablet, where the BlueDisplay app renders the GUI.
+GUI callback, touch and sensor **events** are sent back to the Arduino, where they can be handled.<br/>
+The Bluetooth connection can be achieved by using an ESP32 or connecting a HC-05 to the RX/TX pins of your Arduino.
 Connecting the Arduino with an USB cable to your smartphone requires an USB-OTG adapter.<br/>
 
 # Installation
 Install this "BlueDisplay" library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. Use "BlueDisplay" as filter string.<br/>
-On Android you need to install the [BlueDisplay app](https://play.google.com/store/apps/details?id=de.joachimsmeyer.android.bluedisplay).
+On Android, you need to install the [BlueDisplay app](https://play.google.com/store/apps/details?id=de.joachimsmeyer.android.bluedisplay).
 
 ## Features
 - Graphic + text output as well as printf implementation.
@@ -38,9 +38,10 @@ On Android you need to install the [BlueDisplay app](https://play.google.com/sto
 - Debug messages as toasts.
 
 ## Which Serial interface?
-For boards which have more than one serial interface, the library tries to use **Serial1** for the connection to leave Serial, which is mostly connected to the USB, for other purposes as logging etc..
-If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must open the library file *BlueSerial.h* and activate the line [`#define USE_USB_SERIAL`](src/BlueSerial.h#L51).<br/>
-Another way is to define/enable `USE_SIMPLE_SERIAL` in *BlueSerial.h* and **modify the central serial interface function**. You only have to change the [first 2 lines](src/BlueSerial.cpp#L192) of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
+For boards which have more than one serial interface, the library tries to use **Serial1** for the BT connection to leave Serial, which is mostly connected to the USB, for other purposes as logging etc..
+If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must activate the macro [`USE_USB_SERIAL`](https://github.com/ArminJo/Arduino-BlueDisplay#compile-options--macros-for-this-library).<br/>
+Another, but more more complicated way, is to activate `USE_SIMPLE_SERIAL` and **modify the central serial interface function**.
+You only have to change the [first 2 lines](src/BlueSerial.cpp#L192) of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
 
 # Sensor axis for an Arduino application
 Android axis are [defined for **natural screen orientation**](https://source.android.com/devices/sensors/sensor-types), which is portrait for my devices:
@@ -49,18 +50,19 @@ Android axis are [defined for **natural screen orientation**](https://source.and
 - When the device lies flat on a table, the acceleration value along Z is +9.81 (m/s^2).
 
 **The BlueDisplay application converts the axis, so that this definition holds for each screen orientation.**
-For detaild information to sensors see [ShowSensorValues example](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/examples/ShowSensorValues/ShowSensorValues.ino)
+For detailed information to sensors see [ShowSensorValues example](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/examples/ShowSensorValues/ShowSensorValues.ino)
 
 # Compile options / macros for this library
-To customize the library to different requirements, there are some compile options / makros available.<br/>
+To customize the library to different requirements, there are some compile options / macros available.<br/>
 These macros must be defined in your program before the line `#include <BlueDisplay.hpp>` to take effect.<br/>
 Modify them by enabling / disabling them, or change the values if applicable.
 
 | Name | Default value | Description |
 |-|-|-|
-| `BLUETOOTH_BAUD_RATE` | 9600 | Change this, if you have reprogrammed the HC05 module for another baud rate e.g.115200. |
+| `BLUETOOTH_BAUD_RATE` | 9600 | Change this, if you have [reprogrammed](https://github.com/ArminJo/Arduino-BlueDisplay#btmoduleprogrammer) the HC05 module for another baud rate e.g.115200. |
 | `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | Disables basic touch events like down, move and up. Saves up to 620 bytes program memory and 36 bytes RAM. |
 | `USE_SIMPLE_SERIAL` | disabled | Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise. |
+| `USE_USB_SERIAL` | disabled | Activate it, if you want to force using **Serial** instead of **Serial1** for **direct USB cable connection** to your smartphone / tablet. This is only required on platforms, which have Serial1 available. |
 | `BD_DRAW_TO_LOCAL_DISPLAY_TOO` | disabled | Supports simultaneously drawing on a locally attached display. Not (yet) implemented for all commands! |
 
 ### Changing include (*.h) files with Arduino IDE
@@ -78,7 +80,7 @@ If you are using [Sloeber](https://eclipse.baeyens.it) as your IDE, you can easi
 ![Sloeber settings](https://github.com/Arduino-IRremote/Arduino-IRremote/blob/master/pictures/SloeberDefineSymbols.png)
 
 # Display Unicode characters with `setCharacterMapping()`
-if we want to use special characters to display, we face the problem, that we can only send ASCII codes to be displayed. But fortunally the ASCII code table has at least 128 "unused" entries between 0x80 and 0xFF, normally used for the local codepage.<br/>
+if we want to use special characters to display, we face the problem, that we can only send ASCII codes to be displayed. But fortunately the ASCII code table has at least 128 "unused" entries between 0x80 and 0xFF, normally used for the local codepage.<br/>
 But with `setCharacterMapping(<ASCII_value>, <UTF16_value>)` you can modify this codepage, i.e display the character <UTF16_value> if you send <ASCII_value>, which has to be between 0x80 and 0xFF.<br/>
 Since the 2. parameter for setCharacterMapping is 16 bit, you cannot use characters whose Unicode code is higher than 0xFFFF like the electric light bulb (U+1F4A1 from https://www.fileformat.info/info/unicode/char/1f4a1/index.htm).
 
@@ -96,10 +98,10 @@ But if you have a [codepage](https://en.wikipedia.org/wiki/Windows_code_page) wh
 # [Examples](examples)
 Before using the examples, take care that the Bluetooth-module (e.g. the the HC-05 module) or ESP32 program is connected to your Android device and is visible in the Bluetooth Settings.
 
-All examples initially use the baudrate of 9600. Especially the SimpleTouchScreenDSO example will run smoother with a baudrate of 115200.<br/>
-For this, change the example baudrate by deactivating the line `#define BLUETOOTH_BAUD_RATE BAUD_9600` and activating `#define BLUETOOTH_BAUD_RATE BAUD_115200`.<br/>
-**AND** change the Bluetooth-module baudrate e.g. by using the BTModuleProgrammer.ino example.<br/>
-For ESP32 no baudrate must be specified :-).
+All examples initially use the baud rate of 9600. Especially the SimpleTouchScreenDSO example will run smoother with a baud rate of 115200.<br/>
+For this, change the example baud rate by deactivating the line `#define BLUETOOTH_BAUD_RATE BAUD_9600` and activating `#define BLUETOOTH_BAUD_RATE BAUD_115200`.<br/>
+**AND** change the Bluetooth-module baud rate e.g. by using the BTModuleProgrammer.ino example.<br/>
+For ESP32 no baud rate must be specified :-).
 
 ## BlueDisplayBlink
 Simple example to check your installation.
@@ -121,7 +123,7 @@ Shows the accelerometer and gyroscope values received from the smartphone both g
 ![Plotter output of accelerometer](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/AccelerometerOnPlotter.png)
 
 ## BTModuleProgrammer
-Simple helper program to configure your HC-05 or JDY-31 modules name and default baudrate with a serial monitor.
+Simple helper program to configure your HC-05 or JDY-31 modules name and default baud rate with a serial monitor.
 It can also be used to enter AT commands directly to the BT module for extended manual programming.<br/>
 ![Breadboard picture](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BTModuleProgrammer.jpg)
 
@@ -187,7 +189,7 @@ The debug content will then show up as **toast** on your Android device and is s
 Change the **log level** in the app to see more or less information of the BlueDisplay communication.
 
 ### Connecting TX
-To enable programming of the Arduino while the HC-05 module is connected, use a diode (eg. a BAT 42) to connect Arduino rx and HC-05 tx.
+To enable programming of the Arduino while the HC-05 module is connected, use a diode (e.g. a BAT 42) to connect Arduino rx and HC-05 tx.
 On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
                  |\ |
@@ -226,7 +228,7 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 
 ### Version 2.1.0
 - Arduino Due support added.
-- New command `FUNCTION_CLEAR_DISPLAY_OPTIONAL` to enable resynchronization of slow displays. Used by SimpleTouchScreenDSO.
+- New command `FUNCTION_CLEAR_DISPLAY_OPTIONAL` to enable resynchronizations of slow displays. Used by SimpleTouchScreenDSO.
 
 ### Version 2.0.0
 - ESP32 and ESP8266 support added. External BT module required for ESP8266.
@@ -278,7 +280,7 @@ Local display of received and sent commands for debug purposes.
 Android sensor accessible by Arduino.
 
 # CI
-Since Travis CI is unreliable and slow, the library examples are now tested with GitHub Actions for the following boards:
+The library examples are tested with GitHub Actions for the following boards:
 
 - arduino:avr:uno
 - arduino:avr:leonardo

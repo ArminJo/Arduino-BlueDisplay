@@ -71,6 +71,8 @@ jobs:
           - arduino-boards-fqbn: esp32:esp32:featheresp32:FlashFreq=80
             platform-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
             sketches-exclude: SimpleTouchScreenDSO,RcCarControl,BTModuleProgrammer,ServoExample
+            build-properties: # the flags were put in compiler.cpp.extra_flags
+              ShowSensorValues: -Wno-error=format-overflow # https://github.com/espressif/arduino-esp32/issues/7024
 
           - arduino-boards-fqbn: STMicroelectronics:stm32:GenF1:pnum=BLUEPILL_F103C8
             platform-url: https://raw.githubusercontent.com/stm32duino/BoardManagerFiles/main/package_stmicroelectronics_index.json
@@ -95,4 +97,5 @@ jobs:
           platform-url: ${{ matrix.platform-url }}
           required-libraries: ${{ env.REQUIRED_LIBRARIES }}
           sketches-exclude: ${{ matrix.sketches-exclude }}
-          build-properties: '{ "SimpleTouchScreenDSO": "-DUSE_SIMPLE_SERIAL" }'
+          build-properties: ${{ toJson(matrix.build-properties) }}
+#          build-properties: '{ "SimpleTouchScreenDSO": "-DUSE_SIMPLE_SERIAL" }'

@@ -114,14 +114,13 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
     mLocalButtonPtr->initButton(aPositionX, aPositionY, aWidthX, aHeightY, aButtonColor, aCaption, aCaptionSize,
             aFlags | FLAG_USE_BDBUTTON_FOR_CALLBACK, aValue, reinterpret_cast<void (*)(TouchButton*, int16_t)> (aOnTouchHandler));
 
-#  if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
-    mLocalButtonPtr ->mBDButtonPtr = this;
-#  endif
+    mLocalButtonPtr->mBDButtonPtr = this;
 #endif
 }
+
 #if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
 /*
- * Assume a button stack, e.g. only local buttons are deinitialize which were initialized last.
+ * Assume a button stack, e.g. only local buttons are deinitialized which were initialized last.
  * localButtonIndex is used as stack pointer.
  */
 void BDButton::deinit(void) {
