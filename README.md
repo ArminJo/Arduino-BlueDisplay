@@ -54,7 +54,7 @@ For detailed information to sensors see [ShowSensorValues example](https://githu
 
 # Compile options / macros for this library
 To customize the library to different requirements, there are some compile options / macros available.<br/>
-These macros must be defined in your program before the line `#include <BlueDisplay.hpp>` to take effect.<br/>
+These macros must be defined in your program **before** the line `#include <BlueDisplay.hpp>` to take effect.<br/>
 Modify them by enabling / disabling them, or change the values if applicable.
 
 | Name | Default value | Description |

@@ -42,7 +42,7 @@
 #include "BlueDisplayProtocol.h"
 #endif
 
-extern bool sBDEventJustReceived; // is exclusively set to true by BD library
+extern bool sBDEventJustReceived; // is set to true by handleEvent() and can be reset by main loop.
 extern unsigned long sMillisOfLastReceivedBDEvent; // is updated with millis() at each received event. Can be used for timeout detection.
 
 #define TOUCH_STANDARD_CALLBACK_PERIOD_MILLIS 20 // Period between callbacks while touched (a swipe is app 100 ms)
@@ -66,7 +66,7 @@ void resetTouchFlags(void);
 
 extern struct BluetoothEvent remoteEvent;
 #if defined(AVR)
-// Serves also as second buffer for regular events to avoid overwriting of touch down events if CPU is busy and interrupt in not enabled
+// Is used for touch down events. If remoteEvent is not empty, it is used as buffer for next regular event to avoid overwriting of remoteEvent
 extern struct BluetoothEvent remoteTouchDownEvent;
 #endif
 
@@ -77,7 +77,8 @@ extern struct TouchEvent sCurrentPosition;
 extern struct TouchEvent sUpPosition;
 #endif
 
-void delayMillisWithCheckAndHandleEvents(unsigned long aTimeMillis);
+void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis);
+bool delayMillisAndCheckForEvent(unsigned long aDelayMillis);
 
 void checkAndHandleEvents(void);
 

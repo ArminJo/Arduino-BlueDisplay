@@ -41,8 +41,8 @@ You can load the library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. 
 1. Arduino Nano
 2. Breadboard 400 points
 3. Resistors
-   - Resistors for the simple (0-5 volt) version: 1x 10 kOhm, 2x 100 k, 1x 4 M or more.
-   - Resistors for the 3 range (0-110 volt) version: 1x 2.2 kOhm, 2x 10 k, 3x 100 k, 2x 220 k, 2x 1 M, 1x 4 M or greater
+   - Resistors for the simple (0-5 volt) version: 1x 10 k&ohm;, 2x 100 k, 1x 4 M or more.
+   - Resistors for the 3 range (0-110 volt) version: 1x 2.2 k&ohm;, 2x 10 k, 3x 100 k, 2x 220 k, 2x 1 M, 1x 4 M or greater
 4. Capacitors
    - Capacitors for the simple version: 1x 100 nF / 10 volt (or more)
    - Capacitors for the 3 range (0-110 volt) version: 4x 100 nF / 100 volt (or more), 6.8 uF
@@ -121,7 +121,7 @@ The stack size is required for testing different buffer size values during devel
   -**Trigger ext** uses pin 2 as external trigger source.
 
 - Input selector
-  - **%1**   -> Pin A0 with no attenuator, only a 10k Ohm protection resistor.
+  - **%1**   -> Pin A0 with no attenuator, only a 10 k&ohm; protection resistor.
   - **%10**  -> Pin A1 with an 1 to 10 attenuator.
   - **%100** -> Pin A2 with an 1 to 100 attenuator.
   - **CH 3** -> sequences through the channels **CH 4**, **Temp** (internal temperature sensor), **VRef** (internal reference).
@@ -152,9 +152,9 @@ Short touch switches info output, long touch shows active GUI elements.
 |TRIANGLE: clip to minimum 32 samples per period => 512 µs / 1953.125 Hz|1.866 mHz|
 
 ### RC-Filter suggestions
-- Simple: 2k2 Ohm and 100 nF
-- 2nd order (good for sine and triangle): 1 kOhm and 100 nF -> 4k7 Ohm and 22 nF
-- 2nd order (better for sawtooth):        1 kOhm and 22 nF  -> 4k7 Ohm and 4.7 nF
+- Simple: 2.2 k&ohm; and 100 nF
+- 2nd order (good for sine and triangle): 1 k&ohm; and 100 nF -> 4.7 k&ohm; and 22 nF
+- 2nd order (better for sawtooth):        1 k&ohm; and 22 nF  -> 4.7 k&ohm; and 4.7 nF
 
 **Do not run DSO acquisition and non square wave waveform generation at the same time.**
 Because of the interrupts at 62 kHz rate, DSO is almost not usable during non square wave waveform generation

@@ -24,10 +24,10 @@
 #ifndef _SERVO_EASING_H
 #define _SERVO_EASING_H
 
-#define VERSION_SERVO_EASING "3.0.1"
+#define VERSION_SERVO_EASING "3.1.0"
 #define VERSION_SERVO_EASING_MAJOR 3
-#define VERSION_SERVO_EASING_MINOR 0
-#define VERSION_SERVO_EASING_PATCH 1
+#define VERSION_SERVO_EASING_MINOR 1
+#define VERSION_SERVO_EASING_PATCH 0
 // The change log is at the bottom of the file
 
 /*
@@ -72,6 +72,15 @@
 #error USE_LEIGHTWEIGHT_SERVO_LIB can only be activated for the Atmega328 CPU
 #endif
 
+/*
+ * If defined, the void handleServoTimerInterrupt() function must be provided by an external program.
+ * This enables the reuse of the Servo timer interrupt e.g. for synchronizing with NeoPixel updates,
+ * which otherwise leads to servo twitching. See QuadrupedNeoPixel.cpp of QuadrupedControl example.
+ */
+//#define ENABLE_EXTERNAL_SERVO_TIMER_HANDLER
+#if defined(ENABLE_EXTERNAL_SERVO_TIMER_HANDLER)
+__attribute__((weak)) extern void handleServoTimerInterrupt();
+#endif
 
 #if !( defined(__AVR__) || defined(ESP8266) || defined(ESP32) || defined(STM32F1xx) || defined(__STM32F1__) || defined(__SAM3X8E__) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_APOLLO3) || defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_RP2040) || defined(TEENSYDUINO))
 #warning No periodic timer support existent (or known) for this platform. Only blocking functions and simple example will run!
@@ -352,19 +361,21 @@
 // !!! Must be without comment and closed by @formatter:on !!!
 // @formatter:off
 extern const char easeTypeLinear[]     PROGMEM;
+#if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
 extern const char easeTypeQuadratic[]  PROGMEM;
 extern const char easeTypeCubic[]      PROGMEM;
 extern const char easeTypeQuartic[]    PROGMEM;
 extern const char easeTypePrecision[]  PROGMEM;
 extern const char easeTypeUser[]       PROGMEM;
 extern const char easeTypeDummy[]      PROGMEM;
-#if !defined(DISABLE_COMPLEX_FUNCTIONS)
+#  if !defined(DISABLE_COMPLEX_FUNCTIONS)
 extern const char easeTypeSine[]       PROGMEM;
 extern const char easeTypeCircular[]   PROGMEM;
 extern const char easeTypeBack[]       PROGMEM;
 extern const char easeTypeElastic[]    PROGMEM;
 extern const char easeTypeBounce[]     PROGMEM;
-#endif // !defined(DISABLE_COMPLEX_FUNCTIONS)
+#  endif // !defined(DISABLE_COMPLEX_FUNCTIONS)
+#endif // !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
 // @formatter:on
 extern const char *const easeTypeStrings[] PROGMEM;
 
@@ -460,7 +471,7 @@ public:
 #endif
 
     void write(int aTargetDegreeOrMicrosecond);     // Apply trim and reverse to the value and write it direct to the Servo library.
-    void _writeMicrosecondsOrUnits(int aMicrosecondsOrUnits);
+    void _writeMicrosecondsOrUnits(int aTargetDegreeOrMicrosecond);
 
     void easeTo(int aTargetDegreeOrMicrosecond);                                   // blocking move to new position using mLastSpeed
     void easeTo(int aTargetDegreeOrMicrosecond, uint_fast16_t aDegreesPerSecond);  // blocking move to new position using speed
@@ -497,6 +508,7 @@ public:
     uint_fast16_t getSpeed();
 
     void stop();
+    void pause();
     void resumeWithInterrupts();
     void resumeWithoutInterrupts();
     bool update();
@@ -556,19 +568,19 @@ public:
      */
     static bool areInterruptsActive(); // The recommended test if at least one servo is moving yet.
 
-    /*
+    /**
      * Internally only microseconds (or units (= 4.88 us) if using PCA9685 expander) and not degree are used to speed up things.
      * Other expander or libraries can therefore easily be added.
      */
-    volatile int mCurrentMicrosecondsOrUnits; // set by write() and _writeMicrosecondsOrUnits(). Required as start for next move and to avoid unnecessary writes.
-    int mStartMicrosecondsOrUnits;  // Only used with millisAtStartMove to compute currentMicrosecondsOrUnits in update()
-    int mEndMicrosecondsOrUnits;    // Only used once as last value if movement was finished to provide exact end position.
-    int mDeltaMicrosecondsOrUnits;   // end - start
+    volatile int mCurrentMicrosecondsOrUnits; ///< set by write() and _writeMicrosecondsOrUnits(). Required as start for next move and to avoid unnecessary writes.
+    int mStartMicrosecondsOrUnits;  ///< Only used with millisAtStartMove to compute currentMicrosecondsOrUnits in update()
+    int mEndMicrosecondsOrUnits;    ///< Only used once as last value if movement was finished to provide exact end position.
+    int mDeltaMicrosecondsOrUnits;  ///< end - start
 
-    /*
+    /**
      * max speed is 450 degree/sec for SG90 and 540 degree/second for MG90 servos -> see speedTest.cpp
      */
-    uint_fast16_t mSpeed; // in DegreesPerSecond - only set by setSpeed(int16_t aSpeed);
+    uint_fast16_t mSpeed; ///< in DegreesPerSecond - only set by setSpeed(int16_t aSpeed);
 
 #if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
     uint8_t mEasingType; // EASE_LINEAR, EASE_QUADRATIC_IN_OUT, EASE_CUBIC_IN_OUT, EASE_QUARTIC_IN_OUT
@@ -590,51 +602,52 @@ public:
     TwoWire *mI2CClass;
 #  endif
 #endif
-    uint8_t mServoPin; // pin number or NO_SERVO_ATTACHED_PIN_NUMBER - at least required for Lightweight Servo Library
+    uint8_t mServoPin; ///< pin number / port number of PCA9685 [0-15] or NO_SERVO_ATTACHED_PIN_NUMBER - at least required for Lightweight Servo Library
 
-    uint8_t mServoIndex; // Index in sServoArray or INVALID_SERVO if error while attach() or if detached
+    uint8_t mServoIndex; ///< Index in sServoArray or INVALID_SERVO if error while attach() or if detached
 
     uint32_t mMillisAtStartMove;
     uint_fast16_t mMillisForCompleteMove;
-#if !defined(DISABLE_CONTINUE_AFTER_STOP)
+#if !defined(DISABLE_PAUSE_RESUME)
+    bool mServoIsPaused;
     uint32_t mMillisAtStopMove;
 #endif
 
-    /*
+    /**
      * Reverse means, that values for 180 and 0 degrees are swapped by: aValue = mServo180DegreeMicrosecondsOrUnits - (aValue - mServo0DegreeMicrosecondsOrUnits)
      * Be careful, if you specify different end values, it may not behave, as you expect.
      * For this case better use the attach function with 5 parameter.
      */
-    bool mOperateServoReverse; // true -> direction is reversed
+    bool mOperateServoReverse; ///< true -> direction is reversed
 #if !defined(DISABLE_MIN_AND_MAX_CONSTRAINTS)
-    int mMaxMicrosecondsOrUnits; // Max value checked at _writeMicrosecondsOrUnits(), before trim and reverse is applied
-    int mMinMicrosecondsOrUnits; // Min value checked at _writeMicrosecondsOrUnits(), before trim and reverse is applied
+    int mMaxMicrosecondsOrUnits; ///< Max value checked at _writeMicrosecondsOrUnits(), before trim and reverse is applied
+    int mMinMicrosecondsOrUnits; ///< Min value checked at _writeMicrosecondsOrUnits(), before trim and reverse is applied
 #endif
-    int mTrimMicrosecondsOrUnits; // This value is always added by the function _writeMicrosecondsOrUnits() to the requested degree/units/microseconds value
+    int mTrimMicrosecondsOrUnits; ///< This value is always added by the function _writeMicrosecondsOrUnits() to the requested degree/units/microseconds value
 
-    /*
+    /**
      * Values contain always microseconds except for servos connected to a PCA9685 expander, where they contain PWM units.
      * Values are set exclusively by attach(), and here it is determined if they contain microseconds or PWM units.
      */
     int mServo0DegreeMicrosecondsOrUnits;
     int mServo180DegreeMicrosecondsOrUnits;
 
-    void (*TargetPositionReachedHandler)(ServoEasing*);  // Is called any time when target servo position is reached
+    void (*TargetPositionReachedHandler)(ServoEasing*);  ///< Is called any time when target servo position is reached
 
-    /*
+    /**
      * It is required for ESP32, where the timer interrupt routine does not block the loop. Maybe it runs on another CPU?
      * The interrupt routine first sets the mServoMoves flag to false and then disables the timer.
      * But on a ESP32 polling the flag and then starting next movement and enabling timer happens BEFORE the timer is disabled.
      * And this crashes the kernel in esp_timer_delete, which will lead to a reboot.
      */
-    static volatile bool sInterruptsAreActive; // true if interrupts are still active, i.e. at least one Servo is moving with interrupts.
-    /*
-     * Array of all servos to enable synchronized movings
+    static volatile bool sInterruptsAreActive; ///< true if interrupts are still active, i.e. at least one Servo is moving with interrupts.
+    /**
+     * Two arrays of all servos to enable synchronized movings
      * Servos are inserted in the order, in which they are attached
      * I use an fixed array and not a list, since accessing an array is much easier and faster.
      * Using an dynamic array may be possible, but in this case we must first malloc(), then memcpy() and then free(), which leads to heap fragmentation.
      */
-    static uint_fast8_t sServoArrayMaxIndex; // maximum index of an attached servo in sServoArray[]
+    static uint_fast8_t sServoArrayMaxIndex; ///< maximum index of an attached servo in sServoArray[]
     static ServoEasing *ServoEasingArray[MAX_EASING_SERVOS];
     static float ServoEasingNextPositionArray[MAX_EASING_SERVOS];
     /*
@@ -707,11 +720,12 @@ bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial); // Print class ha
 #endif
 
 /*
- * Version 3.0.1 - 07/2022
+ * Version 3.1.0 - 08/2022
  * - SAMD51 support by Lutz Aumüller.
- * - Added support to resume at the stop position and `DISABLE_CONTINUE_AFTER_STOP`.
+ * - Added support to pause and resume and `DISABLE_PAUSE_RESUME`.
  * - Fixed some bugs for PCA9685 expander introduced in 3.0.0.
  * - Feather Huzzah support with the help of Danner Claflin.
+ * - Added `ENABLE_EXTERNAL_SERVO_TIMER_HANDLER` macro.
  *
  * Version 3.0.0 - 05/2022
  * - Added target reached callback functionality, to enable multiple movements without loop control.

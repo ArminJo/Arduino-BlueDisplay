@@ -349,7 +349,7 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs
  * After RECEIVE_BUFFER_SIZE bytes check if SYNC_TOKEN was sent.
  * If OK then interpret content and reset buffer.
  */
-static uint8_t sReceivedEventType = EVENT_NO_EVENT;
+static uint8_t sReceivedEventType = EVENT_NO_EVENT; // Buffer for EventType until event data is complete
 static uint8_t sReceivedDataSize;
 
 #if defined(USE_SIMPLE_SERIAL)
@@ -398,7 +398,7 @@ ISR(USART1_RX_vect) {
 #  if !defined(DO_NOT_NEED_BASIC_TOUCH)
                         if (sReceivedEventType == EVENT_TOUCH_ACTION_DOWN
                                 || (remoteTouchDownEvent.EventType == EVENT_NO_EVENT && remoteEvent.EventType == EVENT_NO_EVENT)) {
-                            tRemoteTouchEventPtr = &remoteTouchDownEvent;
+                            tRemoteTouchEventPtr = &remoteTouchDownEvent; // Use remoteTouchDownEvent now
                         }
 #  endif
                         tRemoteTouchEventPtr->EventType = sReceivedEventType;
@@ -427,6 +427,8 @@ ISR(USART1_RX_vect) {
 
 /*
  * Will be called after each loop() (by Arduino Serial...) to process input data if available.
+ * Fills in the remoteEvent structure with BD event data from serial
+ * EventType is set if event is complete
  */
 void serialEvent(void) {
     if (sReceiveBufferOutOfSync) {
@@ -472,7 +474,7 @@ void serialEvent(void) {
                     remoteEvent.EventType = sReceivedEventType;
                     // copy buffer to structure
                     memcpy(remoteEvent.EventData.ByteArray, sReceiveBuffer, sReceivedDataSize);
-                    sReceivedEventType = EVENT_NO_EVENT;
+                    sReceivedEventType = EVENT_NO_EVENT; // reset EventType buffer
                     handleEvent(&remoteEvent);
                 } else {
                     sReceiveBufferOutOfSync = true;

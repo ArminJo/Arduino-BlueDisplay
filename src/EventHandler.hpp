@@ -82,9 +82,9 @@ bool sTouchIsStillDown = false;
 bool sDisableTouchUpOnce = false;
 bool sDisableUntilTouchUpIsDone = false;
 
-struct BluetoothEvent remoteEvent;
+struct BluetoothEvent remoteEvent; // to hold the current received event
 #if defined(USE_SIMPLE_SERIAL)
-// Serves also as second buffer for regular events to avoid overwriting of touch down events if CPU is busy and interrupt in not enabled
+// Is used for touch down events. If remoteEvent is not empty, it is used as buffer for next regular event to avoid overwriting of remoteEvent
 struct BluetoothEvent remoteTouchDownEvent;
 #endif
 
@@ -235,10 +235,10 @@ void registerSensorChangeCallback(uint8_t aSensorType, uint8_t aSensorRate, uint
  * Delay, which also checks for events
  * AVR - Is not affected by overflow of millis()!
  */
-void delayMillisWithCheckAndHandleEvents(unsigned long aTimeMillis) {
+void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) {
 #if defined(ARDUINO)
     unsigned long tStartMillis = millis();
-    while (millis() - tStartMillis < aTimeMillis) {
+    while (millis() - tStartMillis < aDelayMillis) {
 #  if !defined(USE_SIMPLE_SERIAL) && defined(__AVR__)
         // check for Arduino serial - copied code from arduino main.cpp / main()
         if (serialEventRun) {
@@ -254,6 +254,37 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aTimeMillis) {
         yield(); // required for ESP8266
 #endif
     }
+}
+
+/*
+ * Special delay function for BlueDisplay. Returns prematurely if Event is received.
+ * To be used in blocking functions as delay
+ * @return  true - as soon as event received
+ */
+bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) {
+    sBDEventJustReceived = false;
+#if defined(ARDUINO)
+    unsigned long tStartMillis = millis();
+    while (millis() - tStartMillis < aDelayMillis) {
+#  if !defined(USE_SIMPLE_SERIAL) && defined(__AVR__)
+        // check for Arduino serial - copied code from arduino main.cpp / main()
+        if (serialEventRun) {
+            serialEventRun(); // this in turn calls serialEvent from BlueSerial.cpp
+        }
+#  endif
+#else // ARDUINO
+            unsigned long tStartMillis = getMillisSinceBoot();
+            while (getMillisSinceBoot() - tStartMillis < aTimeMillis) {
+#endif
+        checkAndHandleEvents();
+        if (sBDEventJustReceived) {
+            return true;
+        }
+#if defined(ESP8266)
+            yield(); // required for ESP8266
+#endif
+    }
+    return false;
 }
 
 #if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
@@ -330,13 +361,13 @@ void checkAndHandleEvents(void) {
 #endif
 
 #if defined(ARDUINO)
-#if !defined(USE_SIMPLE_SERIAL)
-    // get Arduino Serial data first
-    serialEvent();
-#else
+#  if defined(USE_SIMPLE_SERIAL)
     handleEvent(&remoteTouchDownEvent);
-#endif
     handleEvent(&remoteEvent);
+#  else
+    // get Arduino Serial data
+    serialEvent(); // calls in turn handleEvent(&remoteEvent);
+#  endif
 #else
     /*
      * check USART buffer, which in turn calls handleEvent() if event was received

@@ -626,6 +626,20 @@ void BlueDisplay::debug(const char *aStringPtr) {
     }
 }
 
+void BlueDisplay::debug(const __FlashStringHelper *aStringPtr) {
+    if (USART_isBluetoothPaired()) {
+        PGM_P tPGMString = reinterpret_cast<PGM_P>(aStringPtr);
+
+        uint8_t tTextLength = strlen_P(tPGMString);
+        if (tTextLength > STRING_BUFFER_STACK_SIZE) {
+            tTextLength = STRING_BUFFER_STACK_SIZE;
+        }
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+        strncpy_P(tStringBuffer, tPGMString, tTextLength);
+        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, tTextLength, tStringBuffer);
+    }
+}
+
 /**
  * Output as warning to log and present as toast every 500 ms
  */

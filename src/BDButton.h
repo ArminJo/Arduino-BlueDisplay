@@ -41,7 +41,9 @@
 #endif
 
 #define BUTTON_AUTO_RED_GREEN_FALSE_COLOR COLOR16_RED
+#define BUTTON_AUTO_RED_GREEN_VALUE_FOR_RED     false
 #define BUTTON_AUTO_RED_GREEN_TRUE_COLOR COLOR16_GREEN
+#define BUTTON_AUTO_RED_GREEN_VALUE_FOR_GREEN   true
 
 // Flags for BUTTON_GLOBAL_SETTINGS
 static const int FLAG_BUTTON_GLOBAL_USE_DOWN_EVENTS_FOR_BUTTONS = 0x00; // Default
@@ -245,7 +247,6 @@ typedef uint8_t BDButtonHandle_t;
 #  else
 typedef uint16_t BDButtonHandle_t;
 #  endif
-
 
 extern BDButtonHandle_t sLocalButtonIndex; // local button index counter used by BDButton.init() and BlueDisplay.createButton()
 

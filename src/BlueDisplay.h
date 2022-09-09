@@ -30,10 +30,10 @@
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
-#define VERSION_BLUE_DISPLAY "3.0.2"
+#define VERSION_BLUE_DISPLAY "3.0.3"
 #define VERSION_BLUE_DISPLAY_MAJOR 3
 #define VERSION_BLUE_DISPLAY_MINOR 0
-#define VERSION_BLUE_DISPLAY_PATCH 2
+#define VERSION_BLUE_DISPLAY_PATCH 3
 // The change log is at the bottom of the file
 
 /*
@@ -325,6 +325,7 @@ public:
 
     void debugMessage(const char *aStringPtr);
     void debug(const char *aStringPtr);
+    void debug(const __FlashStringHelper *aStringPtr);
     void debug(uint8_t aByte);
     void debug(const char *aMessage, uint8_t aByte);
     void debug(const char *aMessage, int8_t aByte);
@@ -533,6 +534,8 @@ float getTemperature(void);
  * Version 3.0.3
  * - All *Rel*() functions now have signed delta parameters. Fixed bug in drawLineRelWithThickness() for local display.
  * - Improved handling of local display and fixed bugs in drawLineRelWithThickness() and Button list for local display.
+ * - Added debug(const __FlashStringHelper *aStringPtr).
+ * - Added bool delayMillisAndCheckForEvent().
  *
  * Version 3.0.2
  * - Added function setPosition() for sliders.

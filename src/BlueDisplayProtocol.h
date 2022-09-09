@@ -201,8 +201,11 @@ struct IntegerInfoCallback {
     union ByteShortLongFloatUnion LongInfo;
 };
 
+/*
+ * The structure to hold the received GUI events
+ */
 struct BluetoothEvent {
-    uint8_t EventType;
+    uint8_t EventType; // Is reset to == EVENT_NO_EVENT just before event is handled
     union EventData {
         unsigned char ByteArray[RECEIVE_MAX_DATA_SIZE]; // To copy data from input buffer
         struct TouchEvent TouchEventInfo; // for EVENT_TOUCH_ACTION_*
