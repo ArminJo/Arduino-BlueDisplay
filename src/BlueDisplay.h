@@ -416,7 +416,6 @@ public:
             void (*aOnTouchHandler)(BDButton*, int16_t));
     void drawButton(BDButtonHandle_t aButtonNumber);
     void removeButton(BDButtonHandle_t aButtonNumber, color16_t aBackgroundColor);
-    void drawButtonCaption(BDButtonHandle_t aButtonNumber);
     void setButtonCaption(BDButtonHandle_t aButtonNumber, const char *aCaption, bool doDrawButton);
     void setButtonValue(BDButtonHandle_t aButtonNumber, int16_t aValue);
     void setButtonValueAndDraw(BDButtonHandle_t aButtonNumber, int16_t aValue);

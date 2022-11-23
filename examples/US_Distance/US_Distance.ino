@@ -5,7 +5,7 @@
  *  Can be used as a parking assistance.
  *  This is an example for using a fullscreen GUI.
  *
- *  Copyright (C) 2014-2020  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
@@ -27,6 +27,8 @@
 
 #include <Arduino.h>
 
+#include "PinDefinitionsAndMore.h"
+
 /*
  * Settings to configure the BlueDisplay library and to reduce its size
  */
@@ -34,9 +36,7 @@
 //#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 #include "BlueDisplay.hpp"
 
-#include "PinDefinitionsAndMore.h"
-
-#include "HCSR04.h"
+#include "HCSR04.hpp"
 
 /****************************************************************************
  * Change this if you have reprogrammed the hc05 module for other baud rate
@@ -49,6 +49,7 @@
 //#define US_SENSOR_SUPPORTS_1_PIN_MODE // Activate it, if you use modified HC-SR04 modules or HY-SRF05 ones
 
 #define MEASUREMENT_INTERVAL_MILLIS 50
+#define DISTANCE_TIMEOUT_CM         300  // cm timeout for US reading
 
 int sCaptionTextSize;
 int sCaptionStartX;
@@ -67,14 +68,17 @@ BDSlider SliderShowDistance;
 
 char sStringBuffer[100];
 
-static unsigned int sCentimeterOld = 50;
+uint8_t sLastBDToneIndex = 0;
 bool sToneIsOff = true;
 
 void handleConnectAndReorientation(void);
 void drawGui(void);
 
-void doStartStop(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue);
-void doGetOffset(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused)));
+void doStartStop(BDButton *aTheTouchedButton __attribute__((unused)), int16_t aValue);
+void doGetOffset(BDButton *aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused)));
+
+// PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
+const char StartMessage[] = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
 
 /*******************************************************************************************
  * Program code starts here
@@ -92,59 +96,57 @@ void setup(void) {
 
 #if defined(ESP32)
     Serial.begin(115200);
-    Serial.println("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
+    Serial.println(StartMessage);
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
 #else
-#  if defined(TONE_PIN)
-    pinMode(TONE_PIN, OUTPUT);
-#  endif
     initSerial(BLUETOOTH_BAUD_RATE);
 #endif
 
-    // Register callback handler and check for connection
+    /*
+     * Register callback handler and check for connection still established.
+     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
+     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
+     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
+     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     */
     BlueDisplay1.initCommunication(&handleConnectAndReorientation, &drawGui);
 
-#if defined(USE_SERIAL1) // defined in BlueSerial.h
+#if defined(USE_SERIAL1) || defined(ESP32) // USE_SERIAL1 may be defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
+    Serial.println(StartMessage);
+#elif !defined(USE_SIMPLE_SERIAL)
+    // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
+    if (!BlueDisplay1.isConnectionEstablished()) {
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+        delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
+#  endif
+        // If connection is enabled, this message was already sent as BlueDisplay1.debug()
+        Serial.println(StartMessage);
+    }
 #endif
 
     /*
      * on double tone, we received max canvas size. Otherwise no connection is available.
      */
-    if (BlueDisplay1.mBlueDisplayConnectionEstablished) {
-        BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
+    if (BlueDisplay1.isConnectionEstablished()) {
         tone(TONE_PIN, 3000, 50);
         delay(100);
-    } else {
-#if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1) // print it now if not printed above
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
-    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
-#endif
-        // Just to know which program is running on my Arduino
-        Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
-#endif
     }
     tone(TONE_PIN, 3000, 50);
     delay(100);
 }
 
 void loop(void) {
-    // Default timeout of 20000L is 3.4 meter
-    uint16_t tUSDistanceMicros = getUSDistance();
-    uint16_t tUSDistanceCentimeter = getCentimeterFromUSMicroSeconds(tUSDistanceMicros);
-//    startUSDistanceAsCentimeterWithCentimeterTimeoutNonBlocking(DISTANCE_TIMEOUT_CM);
-//    while (!isUSDistanceMeasureFinished()) {
-//    }
-
+    getUSDistanceAsCentimeterWithCentimeterTimeout(DISTANCE_TIMEOUT_CM);
+    auto tUSDistanceCentimeter = sUSDistanceCentimeter;
 #if ! defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
-#  if ! defined(USE_SERIAL1)
+#  if !defined(USE_SERIAL1) && !defined(ESP32)
     // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.
     if (!BlueDisplay1.isConnectionEstablished()) {
 #  endif
@@ -153,17 +155,17 @@ void loop(void) {
         } else {
             Serial.print(tUSDistanceCentimeter);
             Serial.print(" cm, ");
-            Serial.print(tUSDistanceMicros);
+            Serial.print(sUSDistanceMicroseconds);
             Serial.println(" micro secounds.");
         }
-#  if ! defined(USE_SERIAL1)
+#  if !defined(USE_SERIAL1) && !defined(ESP32)
     }
 #  endif
 #endif
 
     if (tUSDistanceCentimeter == DISTANCE_TIMEOUT_RESULT) {
         /*
-         * timeout happened here
+         * Here distance timeout happened
          */
         tone(TONE_PIN, 1000, 50);
         delay(100);
@@ -178,7 +180,7 @@ void loop(void) {
             tone(TONE_PIN, tUSDistanceCentimeter * 32, MEASUREMENT_INTERVAL_MILLIS + 20);
         }
         tUSDistanceCentimeter -= sOffset;
-        if (tUSDistanceCentimeter != sCentimeterOld) {
+        if (tUSDistanceCentimeter != sLastUSDistanceCentimeter) {
             if (BlueDisplay1.mBlueDisplayConnectionEstablished) {
                 uint16_t tCmXPosition = BlueDisplay1.drawUnsignedByte(getTextWidth(sCaptionTextSize * 2), sValueStartY,
                         tUSDistanceCentimeter, sCaptionTextSize * 2, COLOR16_YELLOW, COLOR16_BLUE);
@@ -192,7 +194,7 @@ void loop(void) {
                 if (!sToneIsOff) {
                     sToneIsOff = true;
                     if (BlueDisplay1.mBlueDisplayConnectionEstablished) {
-                        // Stop tone
+                        // Stop BD tone
                         BlueDisplay1.playTone(TONE_SILENCE);
                     }
                 }
@@ -202,25 +204,26 @@ void loop(void) {
                  * Switch tones only if range changes
                  */
                 if (BlueDisplay1.mBlueDisplayConnectionEstablished) {
-                    if (tUSDistanceCentimeter < 40 && tUSDistanceCentimeter > 30
-                            && (sCentimeterOld >= 40 || sCentimeterOld <= 30)) {
-                        BlueDisplay1.playTone(22);
-                    } else if (tUSDistanceCentimeter <= 30 && tUSDistanceCentimeter > 20
-                            && (sCentimeterOld >= 30 || sCentimeterOld <= 20)) {
-                        BlueDisplay1.playTone(17);
-                    } else if (tUSDistanceCentimeter <= 20 && tUSDistanceCentimeter > 10
-                            && (sCentimeterOld > 20 || sCentimeterOld <= 10)) {
-                        BlueDisplay1.playTone(18);
-                    } else if (tUSDistanceCentimeter <= 10 && tUSDistanceCentimeter > 3
-                            && (sCentimeterOld > 10 || sCentimeterOld <= 3)) {
-                        BlueDisplay1.playTone(16);
-                    } else if (tUSDistanceCentimeter <= 3 && sCentimeterOld > 3) {
-                        BlueDisplay1.playTone(36);
+                    uint8_t tBDToneIndex;
+                    if (tUSDistanceCentimeter > 30) {
+                        tBDToneIndex = 22;
+                    } else if (tUSDistanceCentimeter > 20) {
+                        tBDToneIndex = 17;
+                    } else if (tUSDistanceCentimeter > 10) {
+                        tBDToneIndex = 18;
+                    } else if (tUSDistanceCentimeter > 3) {
+                        tBDToneIndex = 16;
+                    } else {
+                        tBDToneIndex = 36;
+                    }
+                    if (sLastBDToneIndex != tBDToneIndex) {
+                        sLastBDToneIndex = tBDToneIndex;
+                        BlueDisplay1.playTone(tBDToneIndex);
                     }
                 }
             }
         }
-        sCentimeterOld = tUSDistanceCentimeter;
+        sLastUSDistanceCentimeter = tUSDistanceCentimeter;
     }
     checkAndHandleEvents();
     delay(MEASUREMENT_INTERVAL_MILLIS); // < 200
@@ -262,8 +265,10 @@ void handleConnectAndReorientation(void) {
             sCaptionTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doTone, &doStartStop);
     TouchButtonStartStop.setCaptionForValueTrue("Stop Tone");
 
-    TouchButtonOffset.init(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR16_RED,
-            "Offset", sCaptionTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetOffset);
+    TouchButtonOffset.init(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN,
+    COLOR16_RED, "Offset", sCaptionTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetOffset);
+
+    BlueDisplay1.debug(StartMessage);
 }
 
 /*
@@ -280,7 +285,7 @@ void drawGui(void) {
 /*
  * Change doTone flag as well as color and caption of the button.
  */
-void doStartStop(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue) {
+void doStartStop(BDButton *aTheTouchedButton __attribute__((unused)), int16_t aValue) {
     doTone = aValue;
     if (!aValue) {
         // Stop tone
@@ -303,7 +308,7 @@ void doSetOffset(float aValue) {
 /*
  * Request delay value as number
  */
-void doGetOffset(BDButton * aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doGetOffset(BDButton *aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     BlueDisplay1.getNumberWithShortPrompt(&doSetOffset, "Offset distance [cm]");
 }
 

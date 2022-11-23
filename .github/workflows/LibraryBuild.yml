@@ -82,8 +82,7 @@ jobs:
             platform-url: http://dan.drown.org/stm32duino/package_STM32duino_index.json
             sketches-exclude: SimpleTouchScreenDSO,BTModuleProgrammer   # Comma separated list of example names to exclude in build
 
-      # Do not cancel all jobs / architectures if one job fails
-      fail-fast: false
+      fail-fast: false # false -> do not cancel all jobs / architectures if one job fails
 
     steps:
       - name: Checkout

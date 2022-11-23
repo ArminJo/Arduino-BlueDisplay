@@ -136,6 +136,9 @@ void drawGui(void);
 // a string buffer for BD info output
 char sStringBuffer[20];
 
+// PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
+const char StartMessage[] = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
+
 /*******************************************************************************************
  * Program code starts here
  *******************************************************************************************/
@@ -146,36 +149,41 @@ void setup() {
 
 #if defined(ESP32)
     Serial.begin(115200);
-    Serial.println("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
+    Serial.println(StartMessage);
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
 #else
     initSerial();
 #endif
 
-    // Register callback handler and check for connection
+    /*
+     * Register callback handler and check for connection still established.
+     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
+     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
+     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
+     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     */
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 
-#if defined(USE_SERIAL1) // defined in BlueSerial.h
+#if defined(USE_SERIAL1) || defined(ESP32) // USE_SERIAL1 may be defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 
 #  if !(defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER) || defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER))
     // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
-    if (BlueDisplay1.isConnectionEstablished()) {
-        BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
-    }
+    Serial.println(StartMessage);
 #  endif
-#else
-
+#elif !defined(USE_SIMPLE_SERIAL)
+    // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
 #  if !(defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER) || defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER))
-    if (BlueDisplay1.isConnectionEstablished()) {
-        BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
-    } else {
-        Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
+    if (!BlueDisplay1.isConnectionEstablished()) {
+#    if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+        delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
+#    endif
+    // If connection is enabled, this message was already sent as BlueDisplay1.debug()
+        Serial.println(StartMessage);
     }
 # endif
 #endif
@@ -376,8 +384,9 @@ void initDisplay(void) {
             FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderPitchLeft.setBarThresholdColor(COLOR16_BLUE);
     sPitchLeftRightSliders.negativeSliderPtr = &SliderPitchLeft;
-
 #endif
+
+    BlueDisplay1.debug(StartMessage);
 }
 
 /*

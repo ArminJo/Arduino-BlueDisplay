@@ -390,8 +390,12 @@ extern const char *const easeTypeStrings[] PROGMEM;
 #define PCA9685_MODE_1_SLEEP            4
 #define PCA9685_FIRST_PWM_REGISTER   0x06
 #define PCA9685_PRESCALE_REGISTER    0xFE
+#if !defined(PCA9685_ACTUAL_CLOCK_FREQUENCY)
+// See chapter 2 and 5 of the PCA9685 Datasheet "25 MHz typical internal oscillator requires no external components"
+#define PCA9685_ACTUAL_CLOCK_FREQUENCY   25000000L // 25 MHz this is the default frequency
+#endif
 
-#define PCA9685_PRESCALER_FOR_20_MS ((25000000L /(4096L * 50))-1) // = 121 / 0x79 at 50 Hz
+#define PCA9685_PRESCALER_FOR_20_MS ((PCA9685_ACTUAL_CLOCK_FREQUENCY /(4096L * 50)) - 1) // = 121 / 0x79 at 50 Hz
 
 // to be used as values for parameter bool aStartUpdateByInterrupt
 #define START_UPDATE_BY_INTERRUPT           true
@@ -516,12 +520,13 @@ public:
     void setTargetPositionReachedHandler(void (*aTargetPositionReachedHandler)(ServoEasing*));
 
     int getCurrentAngle();
+    int getCurrentMicroseconds();
     int getEndMicrosecondsOrUnits();
     int getEndMicrosecondsOrUnitsWithTrim();
     int getDeltaMicrosecondsOrUnits();
     int getMillisForCompleteMove();
     bool isMoving();
-    bool isMovingAndCallYield() __attribute__ ((deprecated ("Most times better use areInterruptsActive()")));
+    bool isMovingAndCallYield() __attribute__ ((deprecated ("Replaced by isMoving(). Often better to use areInterruptsActive() instead.")));
 
     int MicrosecondsOrUnitsToDegree(int aMicrosecondsOrUnits);
     int MicrosecondsToDegree(int aMicroseconds);
@@ -676,8 +681,6 @@ bool setEaseToForAllServos(uint_fast16_t aDegreesPerSecond);
 bool setEaseToDForAllServos(uint_fast16_t aMillisForMove);
 void setEaseToForAllServosSynchronizeAndStartInterrupt();
 void setEaseToForAllServosSynchronizeAndStartInterrupt(uint_fast16_t aDegreesPerSecond);
-void synchronizeAndEaseToArrayPositions();
-void synchronizeAndEaseToArrayPositions(uint_fast16_t aDegreesPerSecond);
 void synchronizeAllServosAndStartInterrupt(bool aStartUpdateByInterrupt = START_UPDATE_BY_INTERRUPT);
 
 #if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
@@ -688,6 +691,10 @@ void setEasingTypeForMultipleServos(uint_fast8_t aNumberOfServos, uint_fast8_t a
 // blocking wait functions
 void updateAndWaitForAllServosToStop();
 bool delayAndUpdateAndWaitForAllServosToStop(unsigned long aMillisDelay, bool aTerminateDelayIfAllServosStopped = false);
+void setEaseToForAllServosSynchronizeAndWaitForAllServosToStop();
+void setEaseToForAllServosSynchronizeAndWaitForAllServosToStop(uint_fast16_t aDegreesPerSecond);
+void synchronizeAndEaseToArrayPositions() __attribute__ ((deprecated ("Please use setEaseToForAllServosSynchronizeAndWait().")));
+void synchronizeAndEaseToArrayPositions(uint_fast16_t aDegreesPerSecond) __attribute__ ((deprecated ("Please use setEaseToForAllServosSynchronizeAndWait().")));
 void synchronizeAllServosStartAndWaitForAllServosToStop();
 
 void printArrayPositions(Print *aSerial);
@@ -720,6 +727,12 @@ bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial); // Print class ha
 #endif
 
 /*
+ * Version 3.1.1 - 09/2022
+ * - Added function `getCurrentMicroseconds()`.
+ * - Improved many and added workaround for ESP32 bug in while loops in examples.
+ * - Added `PCA9685_ACTUAL_CLOCK_FREQUENCY` macro.
+ * - Renamed function `synchronizeAndEaseToArrayPositions()` to `setEaseToForAllServosSynchronizeAndWaitForAllServosToStop()`.
+ *
  * Version 3.1.0 - 08/2022
  * - SAMD51 support by Lutz Aumüller.
  * - Added support to pause and resume and `DISABLE_PAUSE_RESUME`.

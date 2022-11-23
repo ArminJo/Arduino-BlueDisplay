@@ -32,7 +32,7 @@
 //#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 #include "BlueDisplay.hpp"
 
-#include "HCSR04.h"
+#include "HCSR04.hpp"
 #include "Servo.h"
 
 /****************************************************************************
@@ -65,7 +65,7 @@ const int FOLLOWER_MAX_SPEED = 150; // empirical value
 #define FILTER_WEIGHT_EXPONENT 2 // must be n of 2^n
 
 BDButton TouchButtonFollowerOnOff;
-BDSlider SliderShowDistance;
+BDSlider SliderShowUSDistance;
 bool sFollowerMode = false;
 // to start follower mode after first distance < DISTANCE_TO_HOLD
 bool sFollowerModeJustStarted = true;
@@ -75,7 +75,7 @@ void doFollowerOnOff(BDButton *aTheTouchedButton, int16_t aValue);
  * Buttons
  */
 BDButton TouchButtonRcCarStartStop;
-void doRcCarStartStop(BDButton *aTheTochedButton, int16_t aValue);
+void doRcCarStartStop(BDButton *aTheTouchedButton, int16_t aValue);
 void resetOutputs(void);
 bool sRCCarStarted = true;
 
@@ -154,6 +154,9 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback *aSensorCallbackI
 #define INTERNAL 3
 #endif
 
+// PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
+const char StartMessage[] = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
+
 /*******************************************************************************************
  * Program code starts here
  *******************************************************************************************/
@@ -168,7 +171,7 @@ void drawGui(void) {
     TouchButtonRcCarStartStop.drawButton();
 
     TouchButtonFollowerOnOff.drawButton();
-    SliderShowDistance.drawSlider();
+    SliderShowUSDistance.drawSlider();
     // draw cm string
     // y Formula is: mPositionY + tSliderLongWidth + aTextLayoutInfo.mMargin + (int) (0.76 * aTextLayoutInfo.mSize)
     BlueDisplay1.drawText(sCurrentDisplayWidth / 2 + sSliderWidth + 3 * getTextWidth(sTextSize),
@@ -253,11 +256,12 @@ void initDisplay(void) {
 
     // US distance Display slider
     uint16_t tUSSliderLength = sCurrentDisplayWidth / 2 - sSliderWidth;
-    SliderShowDistance.init(sCurrentDisplayWidth / 2 + sSliderWidth,
+    SliderShowUSDistance.init(sCurrentDisplayWidth / 2 + sSliderWidth,
     BUTTON_HEIGHT_4_DYN_LINE_2 - sSliderWidth - BUTTON_VERTICAL_SPACING_DYN, sSliderWidth, tUSSliderLength, 99, 0, COLOR16_WHITE,
     COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT | FLAG_SLIDER_SHOW_VALUE, NULL);
-    SliderShowDistance.setScaleFactor(100.0 / tUSSliderLength);
-    SliderShowDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR16_BLACK, COLOR16_WHITE);
+    SliderShowUSDistance.setScaleFactor(100.0 / tUSSliderLength);
+    SliderShowUSDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR16_BLACK,
+            COLOR16_WHITE);
 
     BlueDisplay1.debug("XWidth1=", BlueDisplay1.mCurrentDisplaySize.XWidth);
     BlueDisplay1.debug("BUTTON_WIDTH_3_DYN=", (uint16_t) BUTTON_WIDTH_3_DYN);
@@ -273,10 +277,13 @@ void initDisplay(void) {
             &doFollowerOnOff);
 
     TouchButtonLaserOnOff.init(BUTTON_WIDTH_4_DYN_POS_4, BUTTON_HEIGHT_4_DYN_LINE_3, BUTTON_WIDTH_4_DYN, BUTTON_HEIGHT_4_DYN,
-    COLOR16_RED, F("Laser"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, LaserOn, &doLaserOnOff);
+    COLOR16_RED, F("Laser"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, LaserOn,
+            &doLaserOnOff);
 
     TouchButtonSetZero.init(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN,
     COLOR16_RED, F("Zero"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doSetZero);
+
+    BlueDisplay1.debug(StartMessage);
 }
 
 void BDsetup() {
@@ -293,31 +300,41 @@ void BDsetup() {
     digitalWrite(LASER_POWER_PIN, LaserOn);
     ServoLaser.write(90);
 
-    initSerial(BLUETOOTH_BAUD_RATE);
-
-    // Register callback handler and check for connection
-    BlueDisplay1.initCommunication(&initDisplay, &drawGui, &initDisplay);
-
-#if defined(USE_SERIAL1) // defined in BlueSerial.h
-    // Serial(0) is available for Serial.print output.
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
-    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
-#  endif
-    // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
+#if defined(ESP32)
+    Serial.begin(115200);
+    Serial.println(StartMessage);
+    initSerial("ESP-BD_Example");
+    Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
+#else
+    initSerial();
 #endif
 
-    if (BlueDisplay1.isConnectionEstablished()) {
-        BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
-    } else {
-#if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+    /*
+     * Register callback handler and check for connection still established.
+     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
+     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
+     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
+     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     */
+    BlueDisplay1.initCommunication(&initDisplay, &drawGui, &initDisplay);
+
+#if defined(USE_SERIAL1) || defined(ESP32) // USE_SERIAL1 may be defined in BlueSerial.h
+// Serial(0) is available for Serial.print output.
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 // Just to know which program is running on my Arduino
-        Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
-#endif
+    Serial.println(StartMessage);
+#elif !defined(USE_SIMPLE_SERIAL)
+    // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
+    if (!BlueDisplay1.isConnectionEstablished()) {
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+        delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
+#  endif
+        // If connection is enabled, this message was already sent as BlueDisplay1.debug()
+        Serial.println(StartMessage);
     }
+#endif
 
     ServoLaser.attach(LASER_SERVO_PIN);
 }
@@ -353,7 +370,8 @@ void BDloop() {
         // Stop on timeout
         resetOutputs();
         // set filtered value to "in range"
-        sDistanceCmFiltered = (FOLLOWER_DISTANCE_MINIMUM_CENTIMETER + (FOLLOWER_DISTANCE_DELTA_CENTIMETER / 2)) << FILTER_WEIGHT_EXPONENT;
+        sDistanceCmFiltered = (FOLLOWER_DISTANCE_MINIMUM_CENTIMETER + (FOLLOWER_DISTANCE_DELTA_CENTIMETER / 2))
+                << FILTER_WEIGHT_EXPONENT;
     } else {
         /*
          * Filter distance value and show
@@ -365,7 +383,7 @@ void BDloop() {
         sDistanceCmFiltered = sDistanceCmFiltered >> FILTER_WEIGHT_EXPONENT;
 
         if (sLastCentimeter != sDistanceCmFiltered) {
-            SliderShowDistance.setValueAndDrawBar(sDistanceCmFiltered);
+            SliderShowUSDistance.setValueAndDrawBar(sDistanceCmFiltered);
             sLastCentimeter = sDistanceCmFiltered;
         }
     }

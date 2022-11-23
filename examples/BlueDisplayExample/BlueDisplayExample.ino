@@ -15,7 +15,7 @@
  *  With 9600 baud, the minimal blink delay we observe is 200 ms because of the communication delay
  *  of 8 * printDemoString(), which requires 8*24 ms -> 192 ms
  *
- *  Copyright (C) 2014-2020  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
@@ -77,7 +77,7 @@ struct tm *sTimeInfo;
 
 bool sConnected = false;
 bool doBlink = true;
-bool sInTestPage = false;
+bool sInTestPage = false; // Creates a new page and displays test patterns
 
 int16_t sDelay = DELAY_START_VALUE; // 600
 
@@ -95,8 +95,8 @@ BDButton TouchButtonTest;
 BDButton TouchButtonBack;
 
 // Touch handler for buttons
-void doBDExampleBlinkStartStop(BDButton *aTheTochedButton, int16_t aValue);
-void doPlusMinus(BDButton *aTheTochedButton, int16_t aValue);
+void doBDExampleBlinkStartStop(BDButton *aTheTouchedButton, int16_t aValue);
+void doPlusMinus(BDButton *aTheTouchedButton, int16_t aValue);
 void doSetDelay(float aValue);
 void doGetDelay(BDButton *aTheTouchedButton, int16_t aValue);
 void doTest(BDButton *aTheTouchedButton, int16_t aValue);
@@ -107,7 +107,7 @@ void doBack(BDButton *aTheTouchedButton, int16_t aValue);
  */
 BDSlider TouchSliderDelay;
 // handler for value change
-void doDelay(BDSlider *aTheTochedSlider, uint16_t aSliderValue);
+void doDelay(BDSlider *aTheTouchedSlider, uint16_t aSliderValue);
 
 /*
  * Time functions
@@ -125,6 +125,9 @@ void initDisplay(void);
 // Callback handler for redraw
 void drawGui(void);
 
+// PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
+const char StartMessage[] = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
+
 /*******************************************************************************************
  * Program code starts here
  *******************************************************************************************/
@@ -135,54 +138,56 @@ void setup() {
 
 #if defined(ESP32)
     Serial.begin(115200);
-    Serial.println("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
+    Serial.println(StartMessage);
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
 #else
-#  if defined(TONE_PIN)
-    pinMode(TONE_PIN, OUTPUT);
-#  endif
     initSerial();
 #endif
 
-    // Register callback handler and check for connection
+    /*
+     * Register callback handler and check for connection still established.
+     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
+     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
+     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
+     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     */
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 
-#if defined(USE_SERIAL1) // defined in BlueSerial.h
+#if defined(USE_SERIAL1) || defined(ESP32) // USE_SERIAL1 may be defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
-#else
-    BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
+    Serial.println(StartMessage);
+#elif !defined(USE_SIMPLE_SERIAL)
+    // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
+    if (!BlueDisplay1.isConnectionEstablished()) {
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+        delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
+#  endif
+        // If connection is enabled, this message was already sent as BlueDisplay1.debug()
+        Serial.println(StartMessage);
+    }
 #endif
 
-#if ! defined(USE_C_TIME)
-    // Set function to call when time sync required (default: after 300 seconds)
-    setSyncProvider(requestTimeSync);
-#endif
-
+#if defined(TONE_PIN)
     // to signal that boot has finished
     tone(TONE_PIN, 2000, 200);
+#endif
 }
 
 void loop() {
     static unsigned long sLastMilisOfTimePrinted;
 
     if (!BlueDisplay1.isConnectionEstablished()) {
-        uint16_t tBlinkDuration = analogRead(ANALOG_INPUT_PIN);
-
         /*
-         * This serial output is readable at the Arduino serial monitor
+         * Not connected here, so send serial output, which is readable at the Arduino serial monitor
          */
-#if defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
-        BlueDisplay1.debug("\r\nAnalogIn=", tBlinkDuration);
-#else
-        Serial.print("\r\nAnalogIn=");
+        uint16_t tBlinkDuration = analogRead(ANALOG_INPUT_PIN);
+        Serial.print("AnalogIn=");
         Serial.println(tBlinkDuration);
-#endif
 
         digitalWrite(LED_BUILTIN, HIGH);
         // Delay and check for connection
@@ -191,22 +196,23 @@ void loop() {
         delayMillisWithCheckAndHandleEvents(tBlinkDuration / 2);
 
     } else if (!sInTestPage) {
+        /*
+         * Connected here
+         */
         if (doBlink) {
-
-            uint8_t i;
             /*
-             * LED on
+             * Blinking is enabled, switch LED on
              */
             digitalWrite(LED_BUILTIN, HIGH);
             BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR16_RED);
             /*
-             *  Wait for delay time and update "Demo" string at a rate 16 times the blink rate.
-             *  For Arduino serial check touch events 8 times while waiting.
+             *  Wait for delay time and update "Demo" string at a rate 2*8 times the blink rate.
+             *  Check touch events 8 times while waiting.
              */
-            for (i = 0; i < 8; ++i) {
-                delayMillisWithCheckAndHandleEvents(sDelay / 8);
+            for (uint8_t i = 0; i < 8; ++i) {
+                delayMillisWithCheckAndHandleEvents(sDelay / 8); // This can lead to display of the test page
                 if (sInTestPage) {
-                    break;
+                    return; // leave inner and outer loop immediately
                 }
                 printDemoString();
             }
@@ -214,13 +220,11 @@ void loop() {
              * LED off
              */
             digitalWrite(LED_BUILTIN, LOW);
-            if (sInTestPage) {
-                BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
-            }
-            for (i = 0; i < 8; ++i) {
-                delayMillisWithCheckAndHandleEvents(sDelay / 8);
+            BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
+            for (uint8_t i = 0; i < 8; ++i) {
+                delayMillisWithCheckAndHandleEvents(sDelay / 8); // This can lead to display of the test page
                 if (sInTestPage) {
-                    break;
+                    return; // leave inner and outer loop immediately
                 }
                 printDemoString();
             }
@@ -229,7 +233,7 @@ void loop() {
          * print time every second
          */
         unsigned long tMillis = millis();
-        if (tMillis - sLastMilisOfTimePrinted > 1000 && !sInTestPage) {
+        if (tMillis - sLastMilisOfTimePrinted > 1000) {
             sLastMilisOfTimePrinted = tMillis;
 #if defined(USE_C_TIME)
             BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &infoEventCallback);
@@ -282,8 +286,12 @@ void initDisplay(void) {
 // initialize sTimeInfo
     sTimeInfo = localtime((const time_t*) &BlueDisplay1.mHostUnixTimestamp);
 #else
+    // Set function to call when time sync required (default: after 300 seconds)
+    setSyncProvider(requestTimeSync); // calls getInfo() immediately
     setTime(BlueDisplay1.mHostUnixTimestamp);
 #endif
+
+    BlueDisplay1.debug(StartMessage);
 }
 
 void drawGui(void) {
@@ -408,10 +416,9 @@ void doBack(BDButton *aTheTouchedButton, int16_t aValue) {
  */
 void doTest(BDButton *aTheTouchedButton, int16_t aValue) {
     sInTestPage = true;
-    BlueDisplay1.clearDisplay(COLOR16_WHITE);
     BDButton::deactivateAllButtons();
     BDSlider::deactivateAllSliders();
-    BlueDisplay1.testDisplay(); // draw test patterns
+    BlueDisplay1.testDisplay(); // Blocking draw of test patterns
     TouchButtonBack.drawButton(); // this also activates the button
 }
 

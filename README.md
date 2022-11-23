@@ -1,29 +1,43 @@
-# [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay) Library for Arduino
-Available as Arduino library "BlueDisplay"
+<div align = center>
 
-### [Version 3.0.3](https://github.com/ArminJo/Arduino-BlueDisplay/archive/master.zip) - work in progress
+# [BlueDisplay](https://github.com/ArminJo/Arduino-BlueDisplay)
+This library enables an Android smartphone / tablet to act as a graphical display for your Arduino or ESP32.<br/>
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Installation instructions](https://www.ardu-badge.com/badge/Arduino-BlueDisplay.svg?)](https://www.ardu-badge.com/Arduino-BlueDisplay)
-[![Commits since latest](https://img.shields.io/github/commits-since/ArminJo/Arduino-BlueDisplay/latest)](https://github.com/ArminJo/Arduino-BlueDisplay/commits/master)
-[![Build Status](https://github.com/ArminJo/Arduino-BlueDisplay/workflows/LibraryBuild/badge.svg)](https://github.com/ArminJo/Arduino-BlueDisplay/actions)
-![Hit Counter](https://visitor-badge.laobi.icu/badge?page_id=ArminJo_Arduino-BlueDisplay)
+[![Badge License: GPLv3](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0)
+ &nbsp; &nbsp; 
+[![Badge Version](https://img.shields.io/github/v/release/ArminJo/Arduino-BlueDisplay?include_prereleases&color=yellow&logo=DocuSign&logoColor=white)](https://github.com/ArminJo/Arduino-BlueDisplay/releases/latest)
+ &nbsp; &nbsp; 
+[![Badge Commits since latest](https://img.shields.io/github/commits-since/ArminJo/Arduino-BlueDisplay/latest?color=yellow)](https://github.com/ArminJo/Arduino-BlueDisplay/commits/master)
+ &nbsp; &nbsp; 
+[![Badge Build Status](https://github.com/ArminJo/Arduino-BlueDisplay/workflows/LibraryBuild/badge.svg)](https://github.com/ArminJo/Arduino-BlueDisplay/actions)
+ &nbsp; &nbsp; 
+![Badge Hit Counter](https://visitor-badge.laobi.icu/badge?page_id=ArminJo_Arduino-BlueDisplay)
+<br/>
+<br/>
+[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
-This library enables an Android smartphone / tablet to act as a graphical display for your Arduino or ESP32.
+Available as [Arduino library "BlueDisplay"](https://www.arduinolibraries.info/libraries/blue-display).
 
-## SUMMARY
+[![Button Install](https://img.shields.io/badge/Install-brightgreen?logoColor=white&logo=GitBook)](https://www.ardu-badge.com/BlueDisplay)
+ &nbsp; &nbsp; 
+[![Button Changelog](https://img.shields.io/badge/Changelog-blue?logoColor=white&logo=AzureArtifacts)](https://github.com/ArminJo/Arduino-BlueDisplay#revision-history)
+
+</div>
+
+<br/>
+
+
+# BlueDisplay library for Arduino
 With the BlueDisplay library you create the GUI for your application, e.g. **Graphics, Text, Buttons and Sliders** on the Arduino itself.<br/>
 **No Android programming required!**<br/>
-The Arduino is connected via USB-cable or Bluetooth with your smartphone / tablet, where the BlueDisplay app renders the GUI.
-GUI callback, touch and sensor **events** are sent back to the Arduino, where they can be handled.<br/>
-The Bluetooth connection can be achieved by using an ESP32 or connecting a HC-05 to the RX/TX pins of your Arduino.
+The Arduino is **connected via USB-cable or Bluetooth** with your smartphone / tablet, where the BlueDisplay app renders the GUI.
+**GUI callback, touch and sensor events** are sent back to the Arduino, where they can be handled.<br/>
+The Bluetooth connection can be achieved by using an **ESP32** or connecting a **HC-05** to the RX/TX pins of your Arduino.
 Connecting the Arduino with an USB cable to your smartphone requires an USB-OTG adapter.<br/>
 
-# Installation
-Install this "BlueDisplay" library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. Use "BlueDisplay" as filter string.<br/>
-On Android, you need to install the [BlueDisplay app](https://play.google.com/store/apps/details?id=de.joachimsmeyer.android.bluedisplay).
+<br/>
 
-## Features
+# Features
 - Graphic + text output as well as printf implementation.
 - Draw chart from byte or short values. Enables clearing of last drawn chart.
 - Play system tones.
@@ -37,11 +51,52 @@ On Android, you need to install the [BlueDisplay app](https://play.google.com/st
 - Hex and ASCII output of received Bluetooth data at log level verbose.
 - Debug messages as toasts.
 
+<br/>
+
+# Installation
+On Android, you need to install the [BlueDisplay app](https://play.google.com/store/apps/details?id=de.joachimsmeyer.android.bluedisplay).
+
+<br/>
+
+# Usage
+
+```c++
+//#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
+#include "BlueDisplay.hpp"
+
+// Declare callback handler for (re)connect and resize
+void initDisplay(void);
+void drawGui(void);
+
+void setup() {
+    Serial.begin(BLUETOOTH_BAUD_RATE);
+    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+}
+void loop() {
+...
+    checkAndHandleEvents();
+}
+void initDisplay(void) {
+    // Initialize display size and flags
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, 320, 240);
+    // initialize all GUI elements here
+ ...
+}
+void drawGui(void) {
+    BlueDisplay1.clearDisplay(COLOR16_WHITE);
+    // draw all GUI elements here
+...
+}
+```
+<br/>
+
 ## Which Serial interface?
 For boards which have more than one serial interface, the library tries to use **Serial1** for the BT connection to leave Serial, which is mostly connected to the USB, for other purposes as logging etc..
 If you require **direct USB connection** to the smartphone / tablet by cable for this board, you must activate the macro [`USE_USB_SERIAL`](https://github.com/ArminJo/Arduino-BlueDisplay#compile-options--macros-for-this-library).<br/>
-Another, but more more complicated way, is to activate `USE_SIMPLE_SERIAL` and **modify the central serial interface function**.
-You only have to change the [first 2 lines](src/BlueSerial.cpp#L192) of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.cpp* according to your requirements.
+Another, but more more complicated, way is **to modify the central serial interface function of the library**.
+You only have to change the [first 2 lines](src/BlueSerial.hpp#L224) of the function `sendUSARTBufferNoSizeCheck()` in *BlueSerial.hpp* according to your requirements.
+
+<br/>
 
 # Sensor axis for an Arduino application
 Android axis are [defined for **natural screen orientation**](https://source.android.com/devices/sensors/sensor-types), which is portrait for my devices:
@@ -51,6 +106,17 @@ Android axis are [defined for **natural screen orientation**](https://source.and
 
 **The BlueDisplay application converts the axis, so that this definition holds for each screen orientation.**
 For detailed information to sensors see [ShowSensorValues example](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/examples/ShowSensorValues/ShowSensorValues.ino)
+
+<br/>
+
+# Using the new *.hpp files
+In order to support [compile options](#compile-options--macros-for-this-library) more easily,
+the line `#include <BlueDisplay.h>` must be changed to  `#include <BlueDisplay.hpp>`
+in your main program (aka *.ino file with setup() and loop()).
+
+In **all other files** you must use `#include <BlueDisplay.h>`, to **prevent `multiple definitions` linker errors**:
+
+<br/>
 
 # Compile options / macros for this library
 To customize the library to different requirements, there are some compile options / macros available.<br/>
@@ -65,19 +131,7 @@ Modify them by enabling / disabling them, or change the values if applicable.
 | `USE_USB_SERIAL` | disabled | Activate it, if you want to force using **Serial** instead of **Serial1** for **direct USB cable connection** to your smartphone / tablet. This is only required on platforms, which have Serial1 available. |
 | `BD_DRAW_TO_LOCAL_DISPLAY_TOO` | disabled | Supports simultaneously drawing on a locally attached display. Not (yet) implemented for all commands! |
 
-### Changing include (*.h) files with Arduino IDE
-First, use *Sketch > Show Sketch Folder (Ctrl+K)*.<br/>
-If you have not yet saved the example as your own sketch, then you are instantly in the right library folder.<br/>
-Otherwise you have to navigate to the parallel `libraries` folder and select the library you want to access.<br/>
-In both cases the library source and include files are located in the libraries `src` directory.<br/>
-The modification must be renewed for each new library version!
-
-### Modifying compile options / macros with PlatformIO
-If you are using PlatformIO, you can define the macros in the *[platformio.ini](https://docs.platformio.org/en/latest/projectconf/section_env_build.html)* file with `build_flags = -D MACRO_NAME` or `build_flags = -D MACRO_NAME=macroValue`.
-
-### Modifying compile options / macros with Sloeber IDE
-If you are using [Sloeber](https://eclipse.baeyens.it) as your IDE, you can easily define global symbols with *Properties > Arduino > CompileOptions*.<br/>
-![Sloeber settings](https://github.com/Arduino-IRremote/Arduino-IRremote/blob/master/pictures/SloeberDefineSymbols.png)
+<br/>
 
 # Display Unicode characters with `setCharacterMapping()`
 if we want to use special characters to display, we face the problem, that we can only send ASCII codes to be displayed. But fortunately the ASCII code table has at least 128 "unused" entries between 0x80 and 0xFF, normally used for the local codepage.<br/>
@@ -91,14 +145,18 @@ Since the 2. parameter for setCharacterMapping is 16 bit, you cannot use charact
     BlueDisplay1.setCharacterMapping(0x88, 0x2228); // mapping for unicode OR used as Backwards symbol
 ```
 
+<br/>
+
 # Using another Codepage with `setCodePage()`
 By default, the local codepage of the Android system is used for display special characters above 0x7F.<br/>
 But if you have a [codepage](https://en.wikipedia.org/wiki/Windows_code_page) which better fits your needs and you want to use as your default code page, you can change it with `setCodePage(<ISO_8859_Number>)`. Internally it is done on Android with `Charset.forName("ISO_8859_" + <ISO_8859_Number>)`.
 
+<br/>
+
 # [Examples](examples)
 Before using the examples, take care that the Bluetooth-module (e.g. the the HC-05 module) or ESP32 program is connected to your Android device and is visible in the Bluetooth Settings.
 
-All examples initially use the baud rate of 9600. Especially the SimpleTouchScreenDSO example will run smoother with a baud rate of 115200.<br/>
+All examples initially use the **baud rate of 9600**. Especially the SimpleTouchScreenDSO example will run smoother with a baud rate of 115200.<br/>
 For this, change the example baud rate by deactivating the line `#define BLUETOOTH_BAUD_RATE BAUD_9600` and activating `#define BLUETOOTH_BAUD_RATE BAUD_115200`.<br/>
 **AND** change the Bluetooth-module baud rate e.g. by using the BTModuleProgrammer.ino example.<br/>
 For ESP32 no baud rate must be specified :-).
@@ -160,7 +218,9 @@ Not for STM32.
 Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a parking assistance.
 ![Breadboard and smartphone](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/Distance+Smartphone.jpg)
 
-## Random delays on some smartphones
+<br/>
+
+# Random delays on some smartphones
 Depending on the device you use, you can observe some random **"delays"** up to 500 ms in the timing of the display refresh.
 The **delays does not occur if you use a USB connection** instead of the Bluetooth one.<br/>
 The reason is, that the Android Bluetooth driver does not return its received bytes for a longer time.<br/>
@@ -174,11 +234,11 @@ Lenovo K3 Note 6.0, Nexus7 with AW-NH665 BT-Chip running 6.0.1, Nexus 6P with ?8
 Known devices **without** these "delays" are:<br/>
 Samsung Note 3 running 5.0, Lifetab P9702 running 7.1.2, Lifetab E10310 running 4.2.2, XORO PAD 721 running 4.2.2, Samsung Galaxy S3 GT-I9300 running Lineage 7.1.2, LUX10 running 5.0, iRULU X11 running 5.1.1, Time2 TC1050G running 5.1, Pixel 4 XL running 10.
 
-## Extras
+# Extras
 The extras folder (in the Arduino IDE use "Sketch > Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
 contains more schematics, breadboard layouts and pictures which may help you building the example projects.
 
-## Hints
+# Hints
 ### Debugging
 If you need debugging, you must use the `debug()` functions since using `Serial.print()` etc. gives errors (we have only one serial port on the Arduino).
 

@@ -10,7 +10,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -49,6 +49,11 @@
 #include <math.h> // for PI
 #include <stdlib.h> // for dtostrf()
 
+#if defined(TRACE) && !defined(LOCAL_TRACE)
+#define LOCAL_TRACE
+#else
+//#define LOCAL_TRACE // This enables debug output only for this file
+#endif
 //-------------------- Constructor --------------------
 
 BlueDisplay::BlueDisplay(void) { // @suppress("Class members should be properly initialized")
@@ -70,13 +75,18 @@ void BlueDisplay::resetLocal(void) {
 
 /**
  * Sets callback handler and calls host for requestMaxCanvasSize().
- * This results in a EVENT_REQUESTED_DATA_CANVAS_SIZE callback event, which sends display size and local timestamp.
- * This event calls the ConnectCallback as well as the RedrawCallback.
+ * If host is connected, this results in a EVENT_REQUESTED_DATA_CANVAS_SIZE callback event,
+ * which sends display size and local timestamp. This event calls the ConnectCallback as well as the RedrawCallback.
  *
- * Waits for 300 ms for connection to be established -> bool BlueDisplay1.mBlueDisplayConnectionEstablished
+ * Waits for 300 ms for connection to be established
  *
  * Reorientation callback function is only required if we have a responsive layout,
  * since connect and reorientation event also calls the redraw callback.
+ *
+ * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
+ * but the android app (host) is not manually (re)connected to us, so we are most likely not connected here.
+ * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
+ * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
  */
 void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aRedrawCallback)(void),
         void (*aReorientationCallback)(void)) {
@@ -98,8 +108,10 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(void), void (*aRedr
          */
         delayMillisWithCheckAndHandleEvents(10);
         if (mBlueDisplayConnectionEstablished) { // is set by delayMillisWithCheckAndHandleEvents()
-#if defined(TRACE) && defined(USE_SERIAL1)
-            Serial.println("Connection established");
+#if defined(LOCAL_TRACE) && !defined(USE_SIMPLE_SERIAL) && (defined(USE_SERIAL1) || defined(ESP32))
+            Serial.print("Connection established after ");
+            Serial.print(i * 10);
+            Serial.println("ms");
 #endif
             // Handler are called initially by the received canvas size event
             break;
@@ -124,7 +136,7 @@ void BlueDisplay::setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHe
     mRequestedDisplaySize.YHeight = aHeight;
     if (USART_isBluetoothPaired()) {
         if (aFlags & BD_FLAG_FIRST_RESET_ALL) {
-#if defined(TRACE) && defined(USE_SERIAL1)
+#if defined(LOCAL_TRACE) && !defined(USE_SIMPLE_SERIAL) && (defined(USE_SERIAL1) || defined(ESP32))
             Serial.println("Send reset all");
 #endif
             // reset local buttons to be synchronized
@@ -179,6 +191,7 @@ void BlueDisplay::playTone(void) {
 /*
  * index is from android.media.ToneGenerator see also
  * http://developer.android.com/reference/android/media/ToneGenerator.html
+ * Tone index 0 is DTMF tone for key 0: 1336Hz, 941Hz, continuous
  */
 void BlueDisplay::playTone(uint8_t aToneIndex) {
     if (USART_isBluetoothPaired()) {
@@ -544,7 +557,7 @@ uint16_t BlueDisplay::drawLong(uint16_t aPosX, uint16_t aPosY, int32_t aLong, ui
 #if defined(AVR)
     sprintf_P(tStringBuffer, PSTR("%11ld"), aLong);
 #elif defined(__XTENSA__)
-    sprintf(tStringBuffer, "%11ld", (long)aLong);
+    sprintf(tStringBuffer, "%11ld", (long) aLong);
 #else
     sprintf(tStringBuffer, "%11ld", aLong);
 #endif
@@ -764,7 +777,7 @@ void BlueDisplay::debug(uint32_t aLong) {
 #if defined(AVR)
     sprintf_P(tStringBuffer, PSTR("%10lu 0x%lX"), aLong, aLong);
 #elif defined(__XTENSA__)
-    sprintf(tStringBuffer, "%10lu 0x%lX", (long)aLong, (long)aLong);
+    sprintf(tStringBuffer, "%10lu 0x%lX", (long) aLong, (long) aLong);
 #else
     sprintf(tStringBuffer, "%10lu 0x%lX", aLong, aLong);
 #endif
@@ -778,7 +791,7 @@ void BlueDisplay::debug(int32_t aLong) {
 #if defined(AVR)
     sprintf_P(tStringBuffer, PSTR("%11ld 0x%lX"), aLong, aLong);
 #elif defined(__XTENSA__)
-    sprintf(tStringBuffer, "%11ld 0x%lX", (long)aLong, (long)aLong);
+    sprintf(tStringBuffer, "%11ld 0x%lX", (long) aLong, (long) aLong);
 #else
     sprintf(tStringBuffer, "%11ld 0x%lX", aLong, aLong);
 #endif
@@ -795,7 +808,7 @@ void BlueDisplay::debug(const char *aMessage, uint32_t aLong) {
 #if defined(AVR)
     snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%10lu 0x%lX"), aMessage, aLong, aLong);
 #elif defined(__XTENSA__)
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu 0x%lX", aMessage, (long)aLong, (long)aLong);
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu 0x%lX", aMessage, (long) aLong, (long) aLong);
 #else
     snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu 0x%lX", aMessage, aLong, aLong);
 #endif
@@ -812,7 +825,7 @@ void BlueDisplay::debug(const char *aMessage, int32_t aLong) {
 #if defined(AVR)
     snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%11ld 0x%lX"), aMessage, aLong, aLong);
 #elif defined(__XTENSA__)
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%11ld 0x%lX", aMessage, (long)aLong, (long)aLong);
+    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%11ld 0x%lX", aMessage, (long) aLong, (long) aLong);
 #else
     snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%11ld 0x%lX", aMessage, aLong, aLong);
 #endif
@@ -1291,12 +1304,6 @@ void BlueDisplay::removeButton(BDButtonHandle_t aButtonNumber, color16_t aBackgr
     }
 }
 
-void BlueDisplay::drawButtonCaption(BDButtonHandle_t aButtonNumber) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_DRAW_CAPTION, 1, aButtonNumber);
-    }
-}
-
 void BlueDisplay::setButtonCaption(BDButtonHandle_t aButtonNumber, const char *aCaption, bool doDrawButton) {
     if (USART_isBluetoothPaired()) {
         uint8_t tFunctionCode = FUNCTION_BUTTON_SET_CAPTION;
@@ -1544,7 +1551,7 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
     BDSlider::deactivateAllSliders();
 }
 
-#if defined(AVR) && defined(ADCSRA) && defined(ADATE)
+#if defined(ADC_UTILS_ARE_AVAILABLE)
 /*
  * The next include is for just one BlueDisplay function printVCCAndTemperaturePeriodically().
  */
@@ -1573,10 +1580,13 @@ void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aY
         drawText(aXPos, aYPos, tDataBuffer, aTextSize, COLOR16_BLACK, COLOR16_WHITE);
     }
 }
-#else // defined(AVR) && defined(ADCSRA) && defined(ADATE)
+#else // defined(ADC_UTILS_ARE_AVAILABLE)
 // dummy functions to compile examples without errors
 uint16_t __attribute__((weak)) readADCChannelWithReferenceOversample(uint8_t aChannelNumber, uint8_t aReference,
         uint8_t aOversampleExponent) {
+    (void) aChannelNumber;
+    (void) aReference;
+    (void) aOversampleExponent;
     return 0;
 }
 float __attribute__((weak)) getTemperature(void) {
@@ -1589,7 +1599,7 @@ float __attribute__((weak)) getVCCVoltage(void) {
 void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis) {
 }
 #  endif
-#endif // defined(AVR) && defined(ADCSRA) && defined(ADATE)
+#endif // defined(ADC_UTILS_ARE_AVAILABLE)
 
 /***************************************************************************************************************************************************
  *
@@ -1951,5 +1961,7 @@ void BlueDisplay::generateColorSpectrum(void) {
         }
     }
 }
-
+#if defined(LOCAL_TRACE)
+#undef LOCAL_TRACE
+#endif
 #endif // _BLUEDISPLAY_HPP

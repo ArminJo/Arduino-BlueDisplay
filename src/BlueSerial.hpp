@@ -9,7 +9,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -79,7 +79,7 @@ bool USART_isBluetoothPaired(void) {
 #endif // defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
 }
 
-#if ! defined(USE_SIMPLE_SERIAL) && defined(USE_SERIAL1)
+#if !defined(USE_SIMPLE_SERIAL) && defined(USE_SERIAL1)
 #define Serial Serial1
 #endif
 
@@ -483,6 +483,10 @@ void serialEvent(void) {
         }
     }
 }
-#endif // USE_SIMPLE_SERIAL
+#endif // USE_SIMPLE_SERIAL - line 355
+
+#if defined(ESP32)
+#undef Serial // enable regular usage of Serial for ESP32 programs
+#endif
 
 #endif // _BLUESERIAL_HPP

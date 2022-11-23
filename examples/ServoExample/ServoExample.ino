@@ -2,18 +2,18 @@
  * ServoExample.cpp
  *
  *  BlueDisplay demo which behaves differently if connected or not.
- *  The accelerometer sensor of the android display is used to control two servos
- *  in a frame which holds a laser.
+ *  The accelerometer sensor of the android display is used to control two servos in a frame which holds a laser.
+ *  If no BlueDisplay connection available, the servo first marks the border and then moves randomly in this area (Cat Mover).
+ *  With "Auto move" you can do Cat Mover also online.
  *  This is an example for using a fullscreen GUI.
  *
- *  If no BlueDisplay connection available, the servo first marks the border and then moves randomly in this area (Cat Mover).
  *
  *  Zero -> the actual sensor position is taken as the servos 90/90 degree position.
  *  Bias (reverse of Zero) -> take actual servos position as position for horizontal sensors position.
  *  Move -> moves randomly in the programmed border. Currently horizontal 45 to 135 and vertical 0 to 45
  *
  *
- *  Copyright (C) 2015-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
@@ -46,11 +46,16 @@
 //#define USE_USB_SERIAL                    // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
 #include "BlueDisplay.hpp"
 
-const int LASER_POWER_PIN = 5; // uses timer0
-
-// These pins are used by Timer 2 and can be used without overhead by using SimpleServo functions of ArduinoUtils.cpp - not used yet!
-const int HORIZONTAL_SERVO_PIN = 10;
-const int VERTICAL_SERVO_PIN = 9;
+#if defined(ESP32)
+#define HORIZONTAL_SERVO_PIN     5 // Compatible with ServoEasing
+#define VERTICAL_SERVO_PIN      18
+#define LASER_POWER_PIN          2 // = LED_BUILTIN
+#else
+#define LASER_POWER_PIN          5 // uses timer0
+// These pins are used by Timer 2 and can be also used without overhead by using LightweightServo library https://github.com/ArminJo/LightweightServo.
+#define HORIZONTAL_SERVO_PIN    10
+#define VERTICAL_SERVO_PIN       9
+#endif
 
 struct ServoControlStruct {
     int16_t minDegree;
@@ -66,27 +71,27 @@ ServoEasing ServoVertical;
  * Buttons
  */
 BDButton TouchButtonServosStartStop;
-void doServosStartStop(BDButton * aTheTochedButton, int16_t aValue);
+void doServosStartStop(BDButton *aTheTouchedButton, int16_t aValue);
 void resetOutputs(void);
-bool sExampleIsRunning;  // true running, false stopped
+bool sDoSensorMove;  // true move servos according tom sensor input
 
 BDButton TouchButtonSetZero;
-void doSetZero(BDButton * aTheTouchedButton, int16_t aValue);
+void doSetZero(BDButton *aTheTouchedButton, int16_t aValue);
 #define CALLS_FOR_ZERO_ADJUSTMENT 8
 int tSensorChangeCallCount;
 float sXZeroCompensationValue; // This is the value of the sensor which is taken as "Zero" (90 servo) position
 float sYZeroCompensationValue;
 
 BDButton TouchButtonSetBias;
-void doSetBias(BDButton * aTheTouchedButton, int16_t aValue);
+void doSetBias(BDButton *aTheTouchedButton, int16_t aValue);
 float sXBiasValue = 0;
 float sYBiasValue = 0;
 float sLastSensorXValue;
 float sLastSensorYValue;
 
 BDButton TouchButtonAutoMove;
-void doEnableAutoMove(BDButton * aTheTouchedButton, int16_t aValue);
-bool sDoAutomove;
+void doEnableAutoMove(BDButton *aTheTouchedButton, int16_t aValue);
+bool sDoAutoMove;  // true move servos randomly - Cat mover
 
 /*
  * Slider
@@ -138,7 +143,6 @@ int sSliderHeight;
 int sSliderWidth;
 #define SLIDER_LEFT_RIGHT_THRESHOLD (sSliderWidth/4)
 int sTextSize;
-int sTextSizeVCC;
 
 // a string buffer for any purpose...
 char sStringBuffer[128];
@@ -150,6 +154,11 @@ void drawGui(void);
 void doSensorChange(uint8_t aSensorType, struct SensorCallback *aSensorCallbackInfo);
 uint8_t getRandomValue(ServoControlStruct *aServoControlStruct, ServoEasing *aServoEasing);
 
+// PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
+const char StartMessage[] = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
+const char ServoInfoMessage[] =
+        "Horizontal servo pin=" STR(HORIZONTAL_SERVO_PIN) ", vertical servo pin=" STR(VERTICAL_SERVO_PIN) ", laser pin=" STR(LASER_POWER_PIN);
+
 /*******************************************************************************************
  * Program code starts here
  *******************************************************************************************/
@@ -158,39 +167,16 @@ void setup() {
 // initialize the digital pin as an output.
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(LASER_POWER_PIN, OUTPUT);
-    analogWrite(LASER_POWER_PIN, 0);
 
+#if defined(ESP32)
+    Serial.begin(115200);
+    Serial.println(StartMessage);
+    Serial.flush();
+    initSerial("ESP-BD_Example");
+    Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
+#else
     initSerial();
-
-    // Register callback handler and check for connection
-    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
-
-#if defined(USE_SERIAL1) // defined in BlueSerial.h
-    // Serial(0) is available for Serial.print output.
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
-    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
-#  endif
-    // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
 #endif
-
-    if (BlueDisplay1.isConnectionEstablished()) {
-        // Just to know which program is running on my Arduino
-        BlueDisplay1.debug("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
-
-        // set sLastLaserSliderValue and sLaserPowerValue and enables laser
-        doLaserPowerSlider(NULL, sCurrentDisplayHeight / 8);
-        doServosStartStop(NULL, true);
-    } else {
-#if !defined(USE_SIMPLE_SERIAL) && !defined(USE_SERIAL1)  // print it now if not printed above
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
-    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
-#  endif
-        // Just to know which program is running on my Arduino
-        Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY));
-#endif
-        sExampleIsRunning = true; // no start button available to start example, so do "autostart" here
-    }
 
     /*
      * Set up servos
@@ -207,14 +193,43 @@ void setup() {
 
     resetOutputs();
 
-    delay(4000);
+    /*
+     * Register callback handler and check for connection still established.
+     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
+     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
+     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
+     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     */
+    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+
+#if defined(USE_SERIAL1) || defined(ESP32) // USE_SERIAL1 may be defined in BlueSerial.h
+    // Serial(0) is available for Serial.print output.
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
+#  endif
+    // Just to know which program is running on my Arduino
+    Serial.println(StartMessage);
+    Serial.println(ServoInfoMessage);
+#elif !defined(USE_SIMPLE_SERIAL)
+    // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
+    if (!BlueDisplay1.isConnectionEstablished()) {
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+        delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
+#  endif
+        // If connection is enabled, this message was already sent as BlueDisplay1.debug()
+        Serial.println(StartMessage);
+        Serial.println(ServoInfoMessage);
+    }
+#endif
+
+    delay(2000);
 
     if (!BlueDisplay1.isConnectionEstablished()) {
-        sDoAutomove = true;
+        sDoAutoMove = true; // no start button available to start auto move example, so do "autostart" here
         /*
          * show border of area which can be reached by laser
          */
-#if ! defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
+#if !defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1) || defined(ESP32)
         // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
         Serial.println(F("Not connected to BlueDisplay -> mark border of area and then do auto move."));
 #endif
@@ -236,7 +251,7 @@ void loop() {
 
     uint32_t tMillis = millis();
 
-    if (sDoAutomove) {
+    if (sDoAutoMove) {
         /*
          * Start random auto-moves, if enabled or no Bluetooth connection available
          */
@@ -246,19 +261,19 @@ void loop() {
             uint8_t tNewHorizontal = getRandomValue(&ServoHorizontalControl, &ServoHorizontal);
             uint8_t tNewVertical = getRandomValue(&ServoVerticalControl, &ServoVertical);
             int tSpeed = random(10, 90);
-#if ! defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
+#if !defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1) || defined(ESP32)
             // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
-#  if ! defined(USE_SERIAL1)
+#  if !defined(USE_SERIAL1) && !defined(ESP32)
             // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.
             if (!BlueDisplay1.isConnectionEstablished()) {
 #  endif
-                Serial.print(F("Move to H="));
-                Serial.print(tNewHorizontal);
-                Serial.print(F(" V="));
-                Serial.print(tNewVertical);
-                Serial.print(F(" S="));
-                Serial.println(tSpeed);
-#  if ! defined(USE_SERIAL1)
+            Serial.print(F("Move to H="));
+            Serial.print(tNewHorizontal);
+            Serial.print(F(" V="));
+            Serial.print(tNewVertical);
+            Serial.print(F(" S="));
+            Serial.println(tSpeed);
+#  if !defined(USE_SERIAL1) && !defined(ESP32)
             }
 #  endif
 #endif
@@ -270,7 +285,7 @@ void loop() {
         /*
          * Stop servo output if stop requested or if connection lost
          */
-        if (sExampleIsRunning && (tMillis - sMillisOfLastReveivedEvent) > SENSOR_RECEIVE_TIMEOUT_MILLIS) {
+        if (sDoSensorMove && (tMillis - sMillisOfLastReveivedEvent) > SENSOR_RECEIVE_TIMEOUT_MILLIS) {
             disableServoEasingInterrupt();
             resetOutputs();
         }
@@ -281,7 +296,7 @@ void loop() {
         /*
          * Print VCC and temperature each second
          */
-        BlueDisplay1.printVCCAndTemperaturePeriodically(sCurrentDisplayWidth / 4, sTextSizeVCC, sTextSizeVCC,
+        BlueDisplay1.printVCCAndTemperaturePeriodically(sCurrentDisplayWidth / 4, sTextSize, sTextSize,
         VCC_INFO_PERIOD_MILLIS);
     }
 #endif
@@ -298,6 +313,12 @@ void initDisplay(void) {
      */
     sCurrentDisplayWidth = BlueDisplay1.getMaxDisplayWidth();
     sCurrentDisplayHeight = BlueDisplay1.getMaxDisplayHeight();
+#if !defined(USE_SIMPLE_SERIAL) && (defined(USE_SERIAL1) || defined(ESP32))
+    Serial.print("MaxDisplayWidth=");
+    Serial.print(sCurrentDisplayWidth);
+    Serial.print(" MaxDisplayHeight=");
+    Serial.println(sCurrentDisplayHeight);
+#endif
     if (sCurrentDisplayWidth < sCurrentDisplayHeight) {
         // Portrait -> change to landscape 3/2 format
         sCurrentDisplayHeight = (sCurrentDisplayWidth / 3) * 2;
@@ -310,21 +331,32 @@ void initDisplay(void) {
     sSliderHeight = (sCurrentDisplayHeight / 4) + (sCurrentDisplayHeight / 8);
     sSliderWidth = sSliderHeight - VALUE_X_SLIDER_DEAD_BAND;
 
-    sTextSize = sCurrentDisplayHeight / 16;
-    sTextSizeVCC = sTextSize * 2;
+    sTextSize = sCurrentDisplayHeight / 9;
 
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sCurrentDisplayWidth,
             sCurrentDisplayHeight);
 
+#if !defined(USE_SIMPLE_SERIAL) && (defined(USE_SERIAL1) || defined(ESP32))
+    Serial.print("RequestedDisplayWidth=");
+    Serial.print(sCurrentDisplayWidth);
+    Serial.print(" RequestedDisplayHeight=");
+    Serial.println(sCurrentDisplayHeight);
+#endif
     tSensorChangeCallCount = 0;
     // Since landscape has 2 orientations, let the user choose the right one.
     BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_CURRENT);
 
     uint16_t tSliderSize = sCurrentDisplayHeight / 2;
+
+    /*
+     * Laser power slider
+     */
     SliderLaserPower.init(0, sCurrentDisplayHeight / 8, sSliderSize * 4, tSliderSize, (tSliderSize * 2) / 3, tSliderSize / 2,
     SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doLaserPowerSlider);
-    SliderLaserPower.setCaptionProperties(sTextSize, FLAG_SLIDER_CAPTION_ALIGN_LEFT_BELOW, 4, COLOR16_RED, COLOR_WHITE);
+    SliderLaserPower.setCaptionProperties(sCurrentDisplayHeight / 16, FLAG_SLIDER_CAPTION_ALIGN_LEFT_BELOW, 4, COLOR16_RED,
+    COLOR_WHITE);
     SliderLaserPower.setCaption("Laser");
+    doLaserPowerSlider(NULL, tSliderSize / 2); // set according to initial slider bar length
 
     /*
      * 4 Slider
@@ -356,23 +388,27 @@ void initDisplay(void) {
      */
     TouchButtonServosStartStop.init(0, sCurrentDisplayHeight - sCurrentDisplayHeight / 4, sCurrentDisplayWidth / 4,
             sCurrentDisplayHeight / 4,
-            COLOR16_BLUE, "Start", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sExampleIsRunning,
+            COLOR16_BLUE, "Start", sTextSize, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoSensorMove,
             &doServosStartStop);
     TouchButtonServosStartStop.setCaptionForValueTrue(F("Stop"));
 
     TouchButtonSetBias.init(sCurrentDisplayWidth - sCurrentDisplayWidth / 4,
             (sCurrentDisplayHeight - sCurrentDisplayHeight / 2) - sCurrentDisplayHeight / 32, sCurrentDisplayWidth / 4,
-            sCurrentDisplayHeight / 4, COLOR16_RED, "Bias", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doSetBias);
+            sCurrentDisplayHeight / 4, COLOR16_RED, "Bias", sTextSize, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doSetBias);
 
     TouchButtonSetZero.init(sCurrentDisplayWidth - sCurrentDisplayWidth / 4, sCurrentDisplayHeight - sCurrentDisplayHeight / 4,
-            sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4, COLOR16_RED, "Zero", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0,
+            sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4, COLOR16_RED, "Zero", sTextSize, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0,
             &doSetZero);
 
     TouchButtonAutoMove.init(sCurrentDisplayWidth - sCurrentDisplayWidth / 4,
-            sCurrentDisplayHeight / 4 - sCurrentDisplayHeight / 16, sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4, COLOR16_BLUE,
-            "Auto\nmove", sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoAutomove, &doEnableAutoMove);
+            sCurrentDisplayHeight / 4 - sCurrentDisplayHeight / 16, sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4,
+            COLOR16_BLUE, "Auto\nmove", sTextSize, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoAutoMove,
+            &doEnableAutoMove);
     TouchButtonAutoMove.setCaptionForValueTrue(F("Stop"));
 
+    BlueDisplay1.debug(StartMessage);
+    delay(2000);
+    BlueDisplay1.debug(ServoInfoMessage);
 }
 
 void drawGui(void) {
@@ -422,15 +458,15 @@ void doLaserPowerSlider(BDSlider *aTheTouchedSlider, uint16_t aValue) {
 /*
  * Handle Start/Stop
  */
-void doServosStartStop(BDButton * aTheTouchedButton, int16_t aValue) {
-    sExampleIsRunning = aValue;
-    if (sExampleIsRunning) {
+void doServosStartStop(BDButton *aTheTouchedButton, int16_t aValue) {
+    sDoSensorMove = aValue;
+    if (sDoSensorMove) {
         /*
          * Do start
          */
-        if (sDoAutomove) {
+        if (sDoAutoMove) {
             // first stop auto moves
-            sDoAutomove = false;
+            sDoAutoMove = false;
             TouchButtonAutoMove.setValueAndDraw(false);
         }
         registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, &doSensorChange);
@@ -442,7 +478,7 @@ void doServosStartStop(BDButton * aTheTouchedButton, int16_t aValue) {
          * Do stop
          */
         registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, NULL);
-        if (!sDoAutomove) {
+        if (!sDoAutoMove) {
             resetOutputs();
         }
     }
@@ -463,16 +499,16 @@ void resetOutputs(void) {
 /*
  * The current sensor position is taken as the 90/90 degree position
  */
-void doSetZero(BDButton * aTheTouchedButton, int16_t aValue) {
+void doSetZero(BDButton *aTheTouchedButton, int16_t aValue) {
 // wait for end of touch vibration
     delay(10);
     tSensorChangeCallCount = 0;
 }
 
-void doEnableAutoMove(BDButton * aTheTouchedButton, int16_t aValue) {
-    sDoAutomove = aValue;
-    if (sDoAutomove) {
-        if (sExampleIsRunning) {
+void doEnableAutoMove(BDButton *aTheTouchedButton, int16_t aValue) {
+    sDoAutoMove = aValue;
+    if (sDoAutoMove) {
+        if (sDoSensorMove) {
             // first stop sensor moves
             doServosStartStop(NULL, false);
             TouchButtonServosStartStop.setValueAndDraw(false);
@@ -485,7 +521,7 @@ void doEnableAutoMove(BDButton * aTheTouchedButton, int16_t aValue) {
 /*
  * take current position as horizontal one
  */
-void doSetBias(BDButton * aTheTouchedButton, int16_t aValue) {
+void doSetBias(BDButton *aTheTouchedButton, int16_t aValue) {
 // wait for end of touch vibration
     delay(10);
     // this will do the trick
@@ -493,9 +529,8 @@ void doSetBias(BDButton * aTheTouchedButton, int16_t aValue) {
     sYBiasValue = sLastSensorYValue;
     // show message in order to see the effect
     BlueDisplay1.clearDisplay();
-    BlueDisplay1.drawText(0, sTextSize + getTextAscend(sTextSize * 3), "old position is taken \rfor horizontal input\r",
-            sTextSize * 2,
-            COLOR16_BLACK, COLOR16_GREEN);
+    BlueDisplay1.drawText(0, sTextSize + getTextAscend(sTextSize), "old position is taken \rfor horizontal input\r", sTextSize,
+    COLOR16_BLACK, COLOR16_GREEN);
     delayMillisWithCheckAndHandleEvents(2500);
     drawGui();
 }
@@ -587,7 +622,7 @@ void processHorizontalSensorValue(float aSensorValue) {
 /*
  * Sensor callback handler
  */
-void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallbackInfo) {
+void doSensorChange(uint8_t aSensorType, struct SensorCallback *aSensorCallbackInfo) {
     static float sXZeroValueAdded;
     static float sYZeroValueAdded;
     if (tSensorChangeCallCount < CALLS_FOR_ZERO_ADJUSTMENT) {
@@ -623,7 +658,7 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallback
             BlueDisplay1.drawText(0, sTextSize, sStringBuffer, sTextSize, COLOR16_BLACK, COLOR16_GREEN);
         }
 #endif
-        if (sExampleIsRunning) {
+        if (sDoSensorMove) {
             processVerticalSensorValue(aSensorCallbackInfo->ValueY);
             processHorizontalSensorValue(aSensorCallbackInfo->ValueX);
             sLastSensorXValue = aSensorCallbackInfo->ValueX;

@@ -32,7 +32,7 @@ You can load the library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. 
   - no attenuator (pin 8+9 left open).
   - passive attenuator with /1, /10, /100 attenuation (pin 8 connected to ground).
   - active attenuator (pin 9 connected to ground) - still experimental.
-- Using 1.1 volt internal reference. 5 volt (VCC) is also selectable and is useful if no attenuator is attached.
+- Using 1.1 volt internal reference. 5 V (VCC) is also selectable and is useful if no attenuator is attached.
 
 - Integrated frequency generator using 16 bit Timer1. Frequency from 119 mHz (8.388 second) to 8 MHz
 - Integrated PWM Waveform generator for sinus, triangle and sawtooth using 16 bit Timer1. Frequency from 1.9 mHz to 7.8 kHz
@@ -41,11 +41,11 @@ You can load the library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. 
 1. Arduino Nano
 2. Breadboard 400 points
 3. Resistors
-   - Resistors for the simple (0-5 volt) version: 1x 10 k&ohm;, 2x 100 k, 1x 4 M or more.
-   - Resistors for the 3 range (0-110 volt) version: 1x 2.2 k&ohm;, 2x 10 k, 3x 100 k, 2x 220 k, 2x 1 M, 1x 4 M or greater
+   - Resistors for the simple (0-5 V) version: 1x 10 k&ohm;, 2x 100 k, 1x 4 M or more.
+   - Resistors for the 3 range (0-110 V) version: 1x 2.2 k&ohm;, 2x 10 k, 3x 100 k, 2x 220 k, 2x 1 M, 1x 4 M or greater
 4. Capacitors
-   - Capacitors for the simple version: 1x 100 nF / 10 volt (or more)
-   - Capacitors for the 3 range (0-110 volt) version: 4x 100 nF / 100 volt (or more), 6.8 uF
+   - Capacitors for the simple version: 1x 100 nF / 10 V (or more)
+   - Capacitors for the 3 range (0-110 V) version: 4x 100 nF / 100 V (or more), 6.8 &micro;F
 5. Jumper wires
 
 Optional for Bluetooth connection
@@ -111,7 +111,7 @@ The stack size is required for testing different buffer size values during devel
 - **History** -> **red** history off, **green** history on, i.e. old chart data is not deleted, it stays as a light green trace. This button is also available (invisible) at the chart page.
 - Slope - **Slope A** -> trigger on ascending slope, **Slope D** -> trigger on descending slope.
 - **Back** -> Back to chart page.
-- **Trigger delay** -> Trigger delay can be numerical specified from 4 탎 to 64.000.000 탎 (64 seconds, if you really want). Microseconds resolution is used for values below 64.000.
+- **Trigger delay** -> Trigger delay can be numerical specified from 4 &micro;s to 64.000.000 &micro;s (64 seconds, if you really want). Microseconds resolution is used for values below 64.000.
 - Trigger - the trigger value can be set on the chart page by touching the light violet vertical bar in the 4. left grid.
   - **Trigger auto** -> let the DSO compute the trigger value using the average of the last measurement.
   - **Trigger man timeout** -> use manual trigger value, but with timeout, i.e. if trigger condition not met, new data is shown after timeout.
@@ -147,9 +147,9 @@ Short touch switches info output, long touch shows active GUI elements.
 
 |Maximum values                                                      | Minimum values|
 | :--- | :--- |
-|SINE: clip to minimum 8 samples per period => 128 탎 / 7812.5 Hz       |7,421 mHz|
-|SAWTOOTH: clip to minimum 16 samples per period => 256 탎 / 3906.25 Hz |3.725 mHz|
-|TRIANGLE: clip to minimum 32 samples per period => 512 탎 / 1953.125 Hz|1.866 mHz|
+|SINE: clip to minimum 8 samples per period => 128 &micro;s / 7812.5 Hz       |7,421 mHz|
+|SAWTOOTH: clip to minimum 16 samples per period => 256 &micro;s / 3906.25 Hz |3.725 mHz|
+|TRIANGLE: clip to minimum 32 samples per period => 512 &micro;s / 1953.125 Hz|1.866 mHz|
 
 ### RC-Filter suggestions
 - Simple: 2.2 k&ohm; and 100 nF
@@ -170,11 +170,11 @@ and waveform frequency is not stable and decreased, since not all TIMER1 OVERFLO
 ## Linearity of the ATmega328P(B) ADC converter
 The captured signal was generated with a STM32F303 DAC and the DSO input range was chosen to see the LSB of the 10 bit ADC conversion.
 
-| All ranges including the 1 ms range (up to 30 kSamples per second / 26 탎 conversion time) have almost perfect linearity. | In the 50 탎 to 10 탎 ranges with 300 kSamples per second (3 탎 conversion time) the linearity is only acceptable. |
+| All ranges including the 1 ms range (up to 30 kSamples per second / 26 &micro;s conversion time) have almost perfect linearity. | In the 50 &micro;s to 10 &micro;s ranges with 300 kSamples per second (3 &micro;s conversion time) the linearity is only acceptable. |
 | :-: | :-: |
-| ![26 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_26us_conversion_time.jpg) | ![3 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_3us_conversion_time.jpg) |
-| First small linearity issues can be seen in the 496 탎 range with 60 kSamples per second (13 탎 conversion time). | And in the 101 탎 range with 150 kSamples per second (6.5 탎 conversion time). |
-| ![13 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_13us_conversion_time.jpg) | ![6.5 탎 conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_6us5_conversion_time.jpg) |
+| ![26 &micro;s conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_26us_conversion_time.jpg) | ![3 &micro;s conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_3us_conversion_time.jpg) |
+| First small linearity issues can be seen in the 496 &micro;s range with 60 kSamples per second (13 &micro;s conversion time). | And in the 101 &micro;s range with 150 kSamples per second (6.5 &micro;s conversion time). |
+| ![13 &micro;s conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_13us_conversion_time.jpg) | ![6.5 &micro;s conversion](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Linearity_6us5_conversion_time.jpg) |
 
 # SCHEMATICS
 | SIMPLE 1 RANGE VERSION | 3 RANGE VERSION |

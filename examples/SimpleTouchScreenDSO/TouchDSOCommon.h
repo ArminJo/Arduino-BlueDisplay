@@ -388,8 +388,8 @@ void printInfo(bool aRecomputeValues = true);
 void printTriggerInfo(void);
 
 // GUI event handler section
-void doSwitchInfoModeOnTouchUp(struct TouchEvent * const aTochPosition);
-void doLongTouchDownDSO(struct TouchEvent * const aTochPosition);
+void doSwitchInfoModeOnTouchUp(struct TouchEvent * const aTouchPosition);
+void doLongTouchDownDSO(struct TouchEvent * const aTouchPosition);
 void doSwipeEndDSO(struct Swipe * const aSwipeInfo);
 void doSetTriggerDelay(float aValue);
 

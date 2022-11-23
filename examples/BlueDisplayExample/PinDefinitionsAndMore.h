@@ -1,15 +1,14 @@
 /*
  *  PinDefinitionsAndMore.h
  *
- *  Contains SERVOX_PIN definitions for ServoEasing examples for various platforms
- *  as well as includes and definitions for LED_BUILTIN
+ *  Contains pin definitions for BlueDisplay examples for various platforms
  *
- *  Copyright (C) 2020  Armin Joachimsmeyer
+ *  Copyright (C) 2020-2022  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
- *  This file is part of BlueDisplay https://github.com/ArminJo/ServoEasing.
+ *  This file is part of BlueDisplay https://github.com/ArminJo/BlueDisplay.
  *
- *  IRMP is free software: you can redistribute it and/or modify
+ *  BlueDisplay is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
@@ -27,12 +26,12 @@
 /*
  * Pin mapping table for different platforms
  *
- * Platform     TX          RX
- * -----------------------------
- * AVR           0           1
- * ESP8266       1 // TX     3 // RX
- * DUE          18 // TX1   19 // RX1
- * BluePill     A9         A10
+ * Platform     Tone  HCSR04-Echo   HCSR04-Trigger
+ * ----------------------------------------------
+ * AVR           3           3           4
+ * ESP8266      14          14          15
+ * ESP832       15          26          27
+ * BluePill      2         PB0         PB1
  */
 
 #if defined(ESP8266)
@@ -45,7 +44,6 @@
 #define ANALOG_INPUT_PIN A0 // 36/VP
 #define ECHO_IN_PIN      26
 #define TRIGGER_OUT_PIN  27
-#include <Arduino.h>
 #define TONE_LEDC_CHANNEL        1  // Using channel 1 makes tone() independent of receiving timer -> No need to stop receiving timer.
 // tone() is included in ESP32 core since 2.0.2
 #if !defined(ESP_ARDUINO_VERSION_VAL)
@@ -91,6 +89,7 @@ void noTone(uint8_t aPinNumber){
 #define ECHO_IN_PIN      4
 #define TRIGGER_OUT_PIN  5
 #define TONE_PIN         3 // must be 3 to be compatible with talkie
+#define TONE_PIN_INVERTED  11 // must be 11 to be compatible with talkie
 #define ANALOG_INPUT_PIN A0
 #endif
 

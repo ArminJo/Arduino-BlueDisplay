@@ -1356,7 +1356,7 @@ void doSwitchInfoModeOnTouchUp(struct TouchEvent *const aTouchPosition) {
  * If stopped toggle between Start and Chart page
  * If running toggle between gui display and chart only
  */
-void doLongTouchDownDSO(struct TouchEvent *const aTochPosition) {
+void doLongTouchDownDSO(struct TouchEvent *const aTouchPosition) {
     static bool sIsGUIVisible = false;
     if (DisplayControl.DisplayPage == DISPLAY_PAGE_CHART) {
         if (MeasurementControl.isRunning) {

@@ -149,24 +149,6 @@ void BDButton::removeButton(color16_t aBackgroundColor) {
     }
 }
 
-void BDButton::drawCaption(void) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-    mLocalButtonPtr->drawCaption();
-#endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_DRAW_CAPTION, 1, mButtonHandle);
-    }
-}
-//
-//void BDButton::setCaption(const char *aCaption) {
-//#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-//    mLocalButtonPtr->setCaption(aCaption);
-//#endif
-//    if (USART_isBluetoothPaired()) {
-//        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_SET_CAPTION, 1, mButtonHandle, strlen(aCaption), aCaption);
-//    }
-//}
-
 /*
  * Sets caption for value true (green button) if different from default false (red button) caption
  */
