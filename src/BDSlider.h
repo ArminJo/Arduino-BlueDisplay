@@ -1,13 +1,9 @@
 /*
  * BDSlider.h
  *
- *  SUMMARY
- *  Blue Display is an Open Source Android remote Display for Arduino etc.
- *  It receives basic draw requests from Arduino etc. over Bluetooth and renders it.
- *  It also implements basic GUI elements as buttons and sliders.
- *  GUI callback, touch and sensor events are sent back to Arduino.
+ * The constants here must correspond to the values used in the BlueDisplay App
  *
- *  Copyright (C) 2015-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -19,8 +15,8 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
@@ -35,12 +31,13 @@
  * For more slider constants see BlueDisplay.h
  */
 // Default values
-#define SLIDER_DEFAULT_BORDER_COLOR     COLOR16_BLUE
-#define SLIDER_DEFAULT_BAR_COLOR        COLOR16_GREEN
-#define SLIDER_DEFAULT_BACKGROUND_COLOR COLOR16_WHITE
-#define SLIDER_DEFAULT_THRESHOLD_COLOR  COLOR16_RED
-
-#define SLIDER_DEFAULT_CAPTION_COLOR    COLOR16_BLACK
+#define SLIDER_DEFAULT_BORDER_COLOR         COLOR16_BLUE
+#define SLIDER_DEFAULT_BAR_COLOR            COLOR16_GREEN
+#define SLIDER_DEFAULT_BAR_THRESHOLD_COLOR  COLOR16_RED
+#define SLIDER_DEFAULT_THRESHOLD_COLOR      SLIDER_DEFAULT_BAR_THRESHOLD_COLOR
+#define SLIDER_DEFAULT_BAR_BACKGROUND_COLOR COLOR16_WHITE
+#define SLIDER_DEFAULT_BACKGROUND_COLOR     SLIDER_DEFAULT_BAR_BACKGROUND_COLOR
+#define SLIDER_DEFAULT_CAPTION_COLOR        COLOR16_BLACK
 #define SLIDER_DEFAULT_CAPTION_BACKGROUND_COLOR    COLOR16_WHITE
 
 // Flags for slider options
@@ -50,8 +47,9 @@ static const int FLAG_SLIDER_SHOW_BORDER = 0x01;
 static const int FLAG_SLIDER_SHOW_VALUE = 0x02;         // If set, ASCII value is printed along with change of bar value
 static const int FLAG_SLIDER_IS_HORIZONTAL = 0x04;
 static const int FLAG_SLIDER_IS_INVERSE = 0x08;         // is equivalent to negative slider length at init
-static const int FLAG_SLIDER_VALUE_BY_CALLBACK = 0x10; // If set,  bar (+ ASCII) value will be set by callback handler, not by touch
+static const int FLAG_SLIDER_VALUE_BY_CALLBACK = 0x10;  // If set, bar (+ ASCII) value will be set by callback handler, not by touch
 static const int FLAG_SLIDER_IS_ONLY_OUTPUT = 0x20;     // is equivalent to slider aOnChangeHandler NULL at init
+#define LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK 0x80 // Use pointer to index in slider list instead of pointer to this in callback
 
 // Flags for slider caption position
 static const int FLAG_SLIDER_CAPTION_ALIGN_LEFT_BELOW = 0x00;
@@ -61,15 +59,15 @@ static const int FLAG_SLIDER_CAPTION_ALIGN_MIDDLE = 0x02;
 static const int FLAG_SLIDER_CAPTION_BELOW = 0x00;
 static const int FLAG_SLIDER_CAPTION_ABOVE = 0x04;
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-#include "TouchSlider.h"
+#if defined(SUPPORT_LOCAL_DISPLAY)
+#include "LocalGUI/LocalTouchSlider.h"
 #endif
-#  if defined(AVR)
-typedef uint8_t BDSliderHandle_t;
-#  else
-typedef uint16_t BDSliderHandle_t;
-#  endif
 
+#if defined(AVR)
+typedef uint8_t BDSliderHandle_t;
+#else
+typedef uint16_t BDSliderHandle_t;
+#endif
 
 extern BDSliderHandle_t sLocalSliderIndex;
 
@@ -79,13 +77,13 @@ extern BDSliderHandle_t sLocalSliderIndex;
 class BDSlider {
 public:
 
-    static void resetAllSliders(void);
-    static void activateAllSliders(void);
-    static void deactivateAllSliders(void);
+    static void resetAllSliders();
+    static void activateAllSliders();
+    static void deactivateAllSliders();
 
     // Constructors
     BDSlider();
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPointer);
 #endif
 
@@ -108,8 +106,8 @@ public:
 
     void setPosition(int16_t aPositionX, int16_t aPositionY);
 
-    void drawSlider(void);
-    void drawBorder(void);
+    void drawSlider();
+    void drawBorder();
     void setValue(int16_t aCurrentValue);
     void setValueAndDrawBar(int16_t aCurrentValue);
     void setValue(int16_t aCurrentValue, bool doDrawBar);
@@ -134,19 +132,19 @@ public:
     void setScaleFactor(float aScaleFactor);
     void setValueScaleFactor(float aScaleFactorValue); // calls setScaleFactor( 1/aScaleFactorValue);
 
-    void activate(void);
-    void deactivate(void);
+    void activate();
+    void deactivate();
 
     BDSliderHandle_t mSliderHandle;
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     int printValue();
     void setXOffsetValue(int16_t aXOffsetValue);
 
-    int16_t getCurrentValue(void) const;
-    uint16_t getPositionXRight(void) const;
-    uint16_t getPositionYBottom(void) const;
-    void deinit(void);
+    int16_t getCurrentValue() const;
+    uint16_t getPositionXRight() const;
+    uint16_t getPositionYBottom() const;
+    void deinit();
     TouchSlider * mLocalSliderPointer;
 #endif
 

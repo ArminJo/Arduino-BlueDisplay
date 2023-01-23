@@ -2,14 +2,9 @@
  * BlueDisplayProtocol.h
  *
  * Defines all the protocol related constants and structures required for the client stubs.
+ * The constants here must correspond to the values used in the BlueDisplay App
  *
- *  SUMMARY
- *  Blue Display is an Open Source Android remote Display for Arduino etc.
- *  It receives basic draw requests from Arduino etc. over Bluetooth and renders it.
- *  It also implements basic GUI elements as buttons and sliders.
- *  GUI callback, touch and sensor events are sent back to Arduino.
- *
- *  Copyright (C) 2015  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -21,8 +16,8 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
@@ -101,15 +96,15 @@
 #define EVENT_FIRST_CALLBACK_ACTION_CODE 0x20
 
 // GUI elements (button, slider, get number) callback codes
-#define EVENT_BUTTON_CALLBACK  0x20
-#define EVENT_SLIDER_CALLBACK  0x21
-#define EVENT_SWIPE_CALLBACK  0x22
+#define EVENT_BUTTON_CALLBACK   0x20
+#define EVENT_SLIDER_CALLBACK   0x21
+#define EVENT_SWIPE_CALLBACK    0x22
 #define EVENT_LONG_TOUCH_DOWN_CALLBACK  0x23
 
-#define EVENT_NUMBER_CALLBACK 0x28
-#define EVENT_INFO_CALLBACK  0x29
+#define EVENT_NUMBER_CALLBACK   0x28
+#define EVENT_INFO_CALLBACK     0x29
 
-#define EVENT_TEXT_CALLBACK  0x2C
+#define EVENT_TEXT_CALLBACK     0x2C
 
 // NOP used for synchronizing
 #define EVENT_NOP 0x2F

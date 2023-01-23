@@ -25,8 +25,8 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
@@ -96,7 +96,7 @@ bool sDoAutoMove;  // true move servos randomly - Cat mover
 /*
  * Slider
  */
-#define SLIDER_BACKGROUND_COLOR COLOR_YELLOW
+#define SLIDER_BACKGROUND_COLOR COLOR16_YELLOW
 #define SLIDER_BAR_COLOR COLOR16_GREEN
 #define SLIDER_THRESHOLD_COLOR COLOR16_BLUE
 
@@ -354,7 +354,7 @@ void initDisplay(void) {
     SliderLaserPower.init(0, sCurrentDisplayHeight / 8, sSliderSize * 4, tSliderSize, (tSliderSize * 2) / 3, tSliderSize / 2,
     SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doLaserPowerSlider);
     SliderLaserPower.setCaptionProperties(sCurrentDisplayHeight / 16, FLAG_SLIDER_CAPTION_ALIGN_LEFT_BELOW, 4, COLOR16_RED,
-    COLOR_WHITE);
+    COLOR16_WHITE);
     SliderLaserPower.setCaption("Laser");
     doLaserPowerSlider(NULL, tSliderSize / 2); // set according to initial slider bar length
 

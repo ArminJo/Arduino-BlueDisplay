@@ -1,0 +1,66 @@
+#######################################
+# Syntax Coloring Map For MI0283QT2
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ADS7846	KEYWORD1
+MI0283QT2	KEYWORD1
+SSD1289	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+# from ADS7846
+init	KEYWORD2
+setOrientation	KEYWORD2
+setCalibration	KEYWORD2
+writeCalibration	KEYWORD2
+readCalibration	KEYWORD2
+calibrate	KEYWORD2
+getX	KEYWORD2
+getY	KEYWORD2
+getXraw	KEYWORD2
+getYraw	KEYWORD2
+getPressure	KEYWORD2
+service	KEYWORD2
+readChannel	KEYWORD2
+
+# from MI0283QT2, SSD1289
+init	KEYWORD2
+setBacklightBrightness	KEYWORD2
+drawStart	KEYWORD2
+draw	KEYWORD2
+drawStop	KEYWORD2
+setOrientation	KEYWORD2
+getWidth	KEYWORD2
+getHeight	KEYWORD2
+setArea	KEYWORD2
+setCursor	KEYWORD2
+clear	KEYWORD2
+drawPixel	KEYWORD2
+drawPixelFast	KEYWORD2
+drawLine	KEYWORD2
+drawLineFastOneX	KEYWORD2
+drawRect	KEYWORD2
+fillRect	KEYWORD2
+drawCircle	KEYWORD2
+fillCircle	KEYWORD2
+drawChar	KEYWORD2
+drawInteger	KEYWORD2
+drawText	KEYWORD2
+drawTextPGM	KEYWORD2
+drawMLText	KEYWORD2
+drawMLTextPGM	KEYWORD2
+printOptions	KEYWORD2
+printClear	KEYWORD2
+printXY	KEYWORD2
+printPGM	KEYWORD2
+print	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################

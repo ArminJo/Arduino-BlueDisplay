@@ -1,9 +1,23 @@
 /*
- * SimpleTouchScreenDSO.h
+ * SimpleDSO.h
  *
- *  Copyright (C) 2015  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2023  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
- *  License: GPL v3 (http://www.gnu.org/licenses/gpl.html)
+ *
+ *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
+ *
+ *  Arduino-Simple-DSO is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
 #ifndef _SIMPLE_TOUCHSCREEN_DSO_H
@@ -97,9 +111,9 @@
 /*
  * External attenuator values
  */
-#define ATTENUATOR_TYPE_NO_ATTENUATOR 0     // No attenuator at all. Start with aRef = VCC -> see ATTENUATOR_DETECT_PIN_0
-#define ATTENUATOR_TYPE_FIXED_ATTENUATOR 1  // Fixed attenuator at Channel0,1,2 assume manual AC/DC switch
-#define ATTENUATOR_TYPE_ACTIVE_ATTENUATOR 2 // to be developed
+#define ATTENUATOR_TYPE_NO_ATTENUATOR       0 // No attenuator at all. Start with aRef = VCC -> see ATTENUATOR_DETECT_PIN_0
+#define ATTENUATOR_TYPE_FIXED_ATTENUATOR    1 // Fixed attenuator at Channel0, 1, 2
+#define ATTENUATOR_TYPE_ACTIVE_ATTENUATOR   2 // to be developed
 #define NUMBER_OF_CHANNEL_WITH_ACTIVE_ATTENUATOR 2
 
 struct MeasurementControlStruct {
@@ -110,10 +124,10 @@ struct MeasurementControlStruct {
     bool isSingleShotMode;
 
     float VCC; // Volt of VCC
-    uint8_t ADCReference; // DEFAULT = 1 =VCC   INTERNAL = 3 = 1.1 volt
+    uint8_t ADCReferenceShifted; // DEFAULT = 1 =VCC   INTERNAL = 3 = 1.1 volt
 
     // Input select
-    uint8_t ADCInputMUXChannelIndex;
+    uint8_t ADMUXChannel;
     uint8_t AttenuatorType; //ATTENUATOR_TYPE_NO_ATTENUATOR, ATTENUATOR_TYPE_SIMPLE_ATTENUATOR, ATTENUATOR_TYPE_ACTIVE_ATTENUATOR
     bool ChannelHasActiveAttenuator;
 

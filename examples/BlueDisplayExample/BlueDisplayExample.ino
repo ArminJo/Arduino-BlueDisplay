@@ -27,8 +27,8 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
@@ -250,11 +250,11 @@ void initDisplay(void) {
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, DISPLAY_WIDTH,
     DISPLAY_HEIGHT);
 
-    TouchButtonPlus.init(270, 80, 40, 40, COLOR_YELLOW, F("+"), 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
+    TouchButtonPlus.init(270, 80, 40, 40, COLOR16_YELLOW, F("+"), 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
     DELAY_CHANGE_VALUE, &doPlusMinus);
     TouchButtonPlus.setButtonAutorepeatTiming(600, 100, 10, 30);
 
-    TouchButtonMinus.init(10, 80, 40, 40, COLOR_YELLOW, F("-"), 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
+    TouchButtonMinus.init(10, 80, 40, 40, COLOR16_YELLOW, F("-"), 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
             -DELAY_CHANGE_VALUE, &doPlusMinus);
     TouchButtonMinus.setButtonAutorepeatTiming(600, 100, 10, 30);
 
@@ -264,22 +264,22 @@ void initDisplay(void) {
     TouchButtonBDExampleBlinkStartStop.setCaptionForValueTrue(F("Stop"));
 
 //    TouchButtonValueDirect.init(&ButtonValueDirectInit, F("..."));
-    TouchButtonValueDirect.init(210, 150, 90, 55, COLOR_YELLOW, F("..."), 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetDelay);
+    TouchButtonValueDirect.init(210, 150, 90, 55, COLOR16_YELLOW, F("..."), 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetDelay);
 
     TouchButtonTest.init(BUTTON_WIDTH_4_POS_4, 0, BUTTON_WIDTH_4, BUTTON_HEIGHT_6, COLOR16_DARK_BLUE, "Test", TEXT_SIZE_22,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH, -1, &doTest);
 
-    TouchButtonBack.init(BUTTON_WIDTH_4_POS_4, 0, BUTTON_WIDTH_4, BUTTON_HEIGHT_6, COLOR_RED, "Back", TEXT_SIZE_22,
+    TouchButtonBack.init(BUTTON_WIDTH_4_POS_4, 0, BUTTON_WIDTH_4, BUTTON_HEIGHT_6, COLOR16_RED, "Back", TEXT_SIZE_22,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH, -1, &doBack);
 
-    TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE, COLOR_YELLOW, COLOR16_GREEN,
+    TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE, COLOR16_YELLOW, COLOR16_GREEN,
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_HORIZONTAL, &doDelay);
     TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_RIGHT, 4, COLOR16_RED, COLOR_DEMO_BACKGROUND);
     TouchSliderDelay.setCaption("Delay");
     TouchSliderDelay.setScaleFactor(10); // Slider is virtually 10 times larger
     TouchSliderDelay.setValueUnitString("ms");
 
-    TouchSliderDelay.setPrintValueProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_LEFT, 4, COLOR_WHITE, COLOR_DEMO_BACKGROUND);
+    TouchSliderDelay.setPrintValueProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_LEFT, 4, COLOR16_WHITE, COLOR_DEMO_BACKGROUND);
 
     // here we have received a new local timestamp
 #if defined(USE_C_TIME)

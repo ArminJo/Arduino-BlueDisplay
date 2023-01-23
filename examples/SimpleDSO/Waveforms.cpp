@@ -21,7 +21,7 @@
  * 2nd order (good for sine and triangle): 1 kOhm and 100 nF -> 4.7 kOhm and 22 nF
  * 2nd order (better for sawtooth):        1 kOhm and 22 nF  -> 4.7 kOhm and 4.7 nF
  *
- *  Copyright (C) 2017  Armin Joachimsmeyer
+ *  Copyright (C) 2017-2023  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
@@ -33,8 +33,8 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
@@ -63,7 +63,7 @@ const uint8_t sSineTableQuarter128[SIZE_OF_SINE_TABLE_QUARTER + 1] PROGMEM = { 1
 #define BASE_PERIOD_MICROS_FOR_TRIANGLE 8176UL // (1/F_CPU) * PWM_RESOLUTION * (256+255) Values -> 122.3092 Hz
 #define BASE_PERIOD_MICROS_FOR_SAWTOOTH 4096UL // (1/F_CPU) * PWM_RESOLUTION * 256 Values -> 244.140625 Hz
 
-const char FrequencyFactorChars[4] = { 'm', ' ', 'k', 'M' };
+const char FrequencyRangeChars[4] = { 'm', ' ', 'k', 'M' };
 
 /*
  * 8-bit PWM Output at PIN 10
@@ -108,19 +108,19 @@ void setWaveformMode(uint8_t aNewMode) {
     // start timer if not already done
     startWaveform();
     // recompute values
-    setWaveformFrequency();
+    setWaveformFrequencyFromNormalizedValues();
 }
 
 void cycleWaveformMode() {
     setWaveformMode(sFrequencyInfo.Waveform + 1);
 }
 
-const char * cycleWaveformModePGMString() {
+const char* cycleWaveformModePGMString() {
     cycleWaveformMode();
     return getWaveformModePGMString();
 }
 
-const char * getWaveformModePGMString() {
+const char* getWaveformModePGMString() {
     const char *tResultString;
     tResultString = PSTR("Square");
     if (sFrequencyInfo.Waveform == WAVEFORM_SINE) {
@@ -146,51 +146,56 @@ float getPeriodMicros() {
     return tPeriodMicros;
 }
 
-void setNormalizedFrequencyFactor(int aIndexValue) {
-    sFrequencyInfo.FrequencyFactorIndex = aIndexValue;
+void setNormalizedFrequencyFactorFromRangeIndex(uint8_t aFrequencyRangeIndex) {
+    sFrequencyInfo.FrequencyRangeIndex = aFrequencyRangeIndex;
     uint32_t tFactor = 1;
-    while (aIndexValue >= 1) {
+    while (aFrequencyRangeIndex >= 1) {
         tFactor *= 1000;
-        aIndexValue--;
+        aFrequencyRangeIndex--;
     }
-    sFrequencyInfo.FrequencyFactorTimes1000 = tFactor;
+    sFrequencyInfo.FrequencyNormalizedFactorTimes1000 = tFactor;
 }
 
 /*
- * Set display values sFrequencyNormalized and sFrequencyFactorIndex
- *
- * Problem is set e.g. value of 1 Hz as 1000 mHz or 1 Hz?
- * so we just try to keep the existing range.
- * First put value of 1000 to next range,
- * then undo if value < 1.00001 and existing range is one lower
+ * Convert the effective frequency for display purposes to
+ * a normalized value between 1 and 100 and a factor, so that
+ * aEffectiveFrequency = FrequencyNormalizedTo_1_to_1000 * (FrequencyNormalizedFactorTimes1000 / 1000)
  */
-void setNormalizedFrequencyAndFactor(float aValue) {
-    uint8_t tFrequencyFactorIndex = 1;
-    // normalize Frequency to 1 - 1000 and compute FrequencyFactorIndex
-    if (aValue < 1) {
-        tFrequencyFactorIndex = 0; //mHz
-        aValue *= 1000;
+void setNormalizedFrequencyAndFactor(float aFrequency) {
+    uint8_t tFrequencyRangeIndex = 1;
+
+    /*
+     * Normalize Frequency to 1 - 1000 and compute FrequencyRangeIndex
+     */
+    if (aFrequency < 1) {
+        tFrequencyRangeIndex = 0; // mHz
+        aFrequency *= 1000;
     } else {
-        // 1000.1 to avoid switching to next range because of resolution issues
-        while (aValue >= 1000) {
-            aValue /= 1000;
-            tFrequencyFactorIndex++;
+        while (aFrequency >= 1000) {
+            aFrequency /= 1000;
+            tFrequencyRangeIndex++;
         }
     }
 
-    // check if tFrequencyFactorIndex - 1 fits better
-    if (aValue < 1.00001 && sFrequencyInfo.FrequencyFactorIndex == (tFrequencyFactorIndex - 1)) {
-        aValue *= 1000;
-        tFrequencyFactorIndex--;
+    /*
+     * One problem is, to decide to set the value of e.g. 1 Hz as 1000 mHz or 1 Hz.
+     * So we just try to keep the existing range.
+     */
+    // Check if tFrequencyRangeIndex - 1 fits better. 1000.1 to avoid switching to next range because of resolution issues
+    if (aFrequency < 1.00001 && sFrequencyInfo.FrequencyRangeIndex == (tFrequencyRangeIndex - 1)) {
+        aFrequency *= 1000;
+        tFrequencyRangeIndex--;
     }
 
-    setNormalizedFrequencyFactor(tFrequencyFactorIndex);
-    sFrequencyInfo.FrequencyNormalized = aValue;
+    setNormalizedFrequencyFactorFromRangeIndex(tFrequencyRangeIndex);
+    sFrequencyInfo.FrequencyNormalizedTo_1_to_1000 = aFrequency;
 }
 
-bool setWaveformFrequency() {
-    return setWaveformFrequency((sFrequencyInfo.FrequencyNormalized * sFrequencyInfo.FrequencyFactorTimes1000) / 1000);
+bool setWaveformFrequencyFromNormalizedValues() {
+    return setWaveformFrequency(
+            (sFrequencyInfo.FrequencyNormalizedTo_1_to_1000 * sFrequencyInfo.FrequencyNormalizedFactorTimes1000) / 1000);
 }
+
 /*
  * SINE: clip to minimum 8 samples per period => 128 us / 7812.5 Hz
  * SAWTOOTH: clip to minimum 16 samples per period => 256 us / 3906.25 Hz

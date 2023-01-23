@@ -19,8 +19,8 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
@@ -42,6 +42,21 @@
  */
 #define VERSION_HEX_VALUE(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
 #define VERSION_BLUE_DISPLAY_HEX  VERSION_HEX_VALUE(VERSION_BLUE_DISPLAY_MAJOR, VERSION_BLUE_DISPLAY_MINOR, VERSION_BLUE_DISPLAY_PATCH)
+
+// for backwards compatibility
+#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#define SUPPORT_LOCAL_DISPLAY // new name of BD_DRAW_TO_LOCAL_DISPLAY_TOO
+#endif
+
+//#define AUTOREPEAT_BY_USING_LOCAL_EVENT // localTouchEvent is filled with data. Otherwise autorepeat relies on periodic calls of checkAllButtons() by main loop
+/*
+ * If both macros are enabled LocalGUI.hpp should be included and TouchButton and TouchSlider instead of BDButton and BDSlider used.
+ */
+//#define DISABLE_REMOTE_DISPLAY // Suppress drawing to Bluetooth connected display by defining USART_isBluetoothPaired() to false. Allow only drawing on the locally attached display
+//#define SUPPORT_LOCAL_DISPLAY  // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
+#if defined(SUPPORT_LOCAL_DISPLAY) && !defined(DISABLE_REMOTE_DISPLAY)
+# define SUPPORT_REMOTE_AND_LOCAL_DISPLAY // Both displays used simultaneously. Definition is used internally to avoid #if defined(SUPPORT_LOCAL_DISPLAY) && !defined(DISABLE_REMOTE_DISPLAY)
+#endif
 
 #if defined(ARDUINO)
 #  if ! defined(ESP32)
@@ -77,6 +92,7 @@
 #endif
 
 #include "Colors.h"
+#include "GUIHelper.h"
 
 #include "BlueDisplayProtocol.h"
 #include "BlueSerial.h"
@@ -87,106 +103,9 @@
 #include "BDSlider.h" // for BDSliderHandle_t
 #endif
 
-/***************************
- * Origin 0.0 is upper left
- **************************/
-#define DISPLAY_HALF_VGA_HEIGHT 240
-#define DISPLAY_HALF_VGA_WIDTH  320
-#define DISPLAY_VGA_HEIGHT      480
-#define DISPLAY_VGA_WIDTH       640
-#define DISPLAY_DEFAULT_HEIGHT  DISPLAY_HALF_VGA_HEIGHT // 240 - value to use if not connected
-#define DISPLAY_DEFAULT_WIDTH   DISPLAY_HALF_VGA_WIDTH  // 320 - value to use if not connected
-#define STRING_BUFFER_STACK_SIZE 32 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE]" for ...PGM() functions.
-#define STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE 34 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG]" for debug(const char *aMessage,...) functions.
-
-/*
- * Some useful text sizes constants
- */
-#define TEXT_SIZE_8   8
-#define TEXT_SIZE_9   9
-#define TEXT_SIZE_10 10
-#define TEXT_SIZE_11 11
-#define TEXT_SIZE_12 12
-#define TEXT_SIZE_13 13
-#define TEXT_SIZE_14 14
-#define TEXT_SIZE_16 16
-#define TEXT_SIZE_18 18
-#define TEXT_SIZE_20 20
-#define TEXT_SIZE_22 22
-#define TEXT_SIZE_26 26
-// for factor 3 of 8*12 font
-#define TEXT_SIZE_33 33
-// for factor 4 of 8*12 font
-#define TEXT_SIZE_44 44
-// TextWidth = TextSize * 0.6
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-// 8/16 instead of 7/13 to be compatible with 8*12 font
-#define TEXT_SIZE_11_WIDTH 8
-#define TEXT_SIZE_22_WIDTH 16
-#else
-#define TEXT_SIZE_11_WIDTH 7
-#define TEXT_SIZE_12_WIDTH 7
-#define TEXT_SIZE_13_WIDTH 8
-#define TEXT_SIZE_14_WIDTH 8
-#define TEXT_SIZE_16_WIDTH 10
-#define TEXT_SIZE_18_WIDTH 11
-#define TEXT_SIZE_22_WIDTH 13
-#define TEXT_SIZE_33_WIDTH 20
-#define TEXT_SIZE_44_WIDTH 26
-#endif
-
-// TextSize * 1,125 ( 1 + 1/8)
-// 12 instead of 11 to be compatible with 8*12 font and have a margin
-#define TEXT_SIZE_10_HEIGHT 11
-#define TEXT_SIZE_11_HEIGHT 12
-#define TEXT_SIZE_12_HEIGHT 13
-#define TEXT_SIZE_14_HEIGHT 15
-#define TEXT_SIZE_16_HEIGHT 18
-#define TEXT_SIZE_18_HEIGHT 20
-#define TEXT_SIZE_20_HEIGHT 22
-#define TEXT_SIZE_22_HEIGHT 24
-#define TEXT_SIZE_33_HEIGHT 36
-#define TEXT_SIZE_44_HEIGHT 48
-
-// TextSize * 0.76
-// TextSize * 0.855 to have ASCEND + DECEND = HEIGHT
-// 9 instead of 8 to have ASCEND + DECEND = HEIGHT
-#define TEXT_SIZE_11_ASCEND 9
-#define TEXT_SIZE_12_ASCEND 9
-#define TEXT_SIZE_13_ASCEND 10
-#define TEXT_SIZE_14_ASCEND 11
-#define TEXT_SIZE_16_ASCEND 12
-#define TEXT_SIZE_18_ASCEND 14
-// 18 instead of 17 to have ASCEND + DECEND = HEIGHT
-#define TEXT_SIZE_22_ASCEND 18
-#define TEXT_SIZE_33_ASCEND 28
-#define TEXT_SIZE_44_ASCEND 37
-
-// TextSize * 0.24
-// TextSize * 0.27 to have ASCEND + DECEND = HEIGHT
-#define TEXT_SIZE_11_DECEND 3
-#define TEXT_SIZE_11_DECEND 3
-// 6 instead of 5 to have ASCEND + DECEND = HEIGHT
-#define TEXT_SIZE_22_DECEND 6
-#define TEXT_SIZE_33_DECEND 8
-#define TEXT_SIZE_44_DECEND 11
-
-uint16_t getTextHeight(uint16_t aTextSize);
-uint16_t getTextWidth(uint16_t aTextSize);
-uint16_t getTextAscend(uint16_t aTextSize);
-uint16_t getTextAscendMinusDescend(uint16_t aTextSize);
-uint16_t getTextMiddle(uint16_t aTextSize);
-
-/*
- * Layout for 320 x 240 screen size
- */
-#define LAYOUT_320_WIDTH 320
-#define LAYOUT_240_HEIGHT 240
-#define LAYOUT_256_HEIGHT 256
-
-/**********************
+/*****************************
  * Constants used in protocol
- *********************/
+ *****************************/
 //#define COLOR16_NO_BACKGROUND   ((color16_t)0XFFFE)
 static const float NUMBER_INITIAL_VALUE_DO_NOT_SHOW = 1e-40f;
 
@@ -271,17 +190,17 @@ struct ThickLine {
 class BlueDisplay {
 public:
     BlueDisplay();
-    void resetLocal(void);
-    void initCommunication(void (*aConnectCallback)(void), void (*aRedrawCallback)(void),
-            void (*aReorientationCallback)(void) = NULL);
+    void resetLocal();
+    void initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)(),
+            void (*aReorientationCallback)() = NULL);
     // The result of initCommunication
     bool isConnectionEstablished();
-    void sendSync(void);
+    void sendSync();
     void setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHeight);
     void setCodePage(uint16_t aCodePageNumber);
     void setCharacterMapping(uint8_t aChar, uint16_t aUnicodeChar); // aChar must be bigger than 0x80
 
-    void playTone(void);
+    void playTone();
     void playTone(uint8_t aToneIndex);
     void playTone(uint8_t aToneIndex, int16_t aToneDuration);
     void playTone(uint8_t aToneIndex, int16_t aToneDuration, uint8_t aToneVolume);
@@ -290,42 +209,44 @@ public:
 
     void clearDisplay(color16_t aColor = COLOR16_WHITE);
     void clearDisplayOptional(color16_t aColor = COLOR16_WHITE);
-    void drawDisplayDirect(void);
+    void drawDisplayDirect();
     void setScreenOrientationLock(uint8_t aLockMode);
 
     void drawPixel(uint16_t aXPos, uint16_t aYPos, color16_t aColor);
     void drawCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor, uint16_t aStrokeWidth);
     void fillCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor);
-    void drawRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor, uint16_t aStrokeWidth);
-    void drawRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aWidth, int16_t aHeight, color16_t aColor,
+    void drawRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor, uint16_t aStrokeWidth);
+    void drawRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth, int16_t aHeight, color16_t aColor,
             uint16_t aStrokeWidth);
-    void fillRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
-    void fillRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aWidth, int16_t aHeight, color16_t aColor);
-    uint16_t drawChar(uint16_t aPosX, uint16_t aPosY, char aChar, uint16_t aCharSize, color16_t aFGColor, color16_t aBGColor);
-    void drawText(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr);
-    uint16_t drawText(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr, uint16_t aFontSize, color16_t aFGColor,
-            color16_t aBGColor);
-    void drawMLText(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr, uint16_t aTextSize, color16_t aFGColor,
-            color16_t aBGColor);
+    void fillRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
+    void fillRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth, int16_t aHeight, color16_t aColor);
+    uint16_t drawChar(uint16_t aPositionX, uint16_t aPositionY, char aChar, uint16_t aCharSize, color16_t aCharacterColor, color16_t aBackgroundColor);
+    void drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr);
+    uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize, color16_t aTextColor,
+            color16_t aBackgroundColor);
+    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aTextSize, color16_t aTextColor,
+            color16_t aBackgroundColor);
 
-    uint16_t drawByte(uint16_t aPosX, uint16_t aPosY, int8_t aByte, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
-    COLOR16_BLACK, color16_t aBGColor = COLOR16_WHITE);
-    uint16_t drawUnsignedByte(uint16_t aPosX, uint16_t aPosY, uint8_t aUnsignedByte, uint16_t aTextSize = TEXT_SIZE_11,
-            color16_t aFGColor = COLOR16_BLACK, color16_t aBGColor = COLOR16_WHITE);
-    uint16_t drawShort(uint16_t aPosX, uint16_t aPosY, int16_t aShort, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
-    COLOR16_BLACK, color16_t aBGColor = COLOR16_WHITE);
-    uint16_t drawLong(uint16_t aPosX, uint16_t aPosY, int32_t aLong, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
-    COLOR16_BLACK, color16_t aBGColor = COLOR16_WHITE);
+    uint16_t drawByte(uint16_t aPositionX, uint16_t aPositionY, int8_t aByte, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
+    COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
+    uint16_t drawUnsignedByte(uint16_t aPositionX, uint16_t aPositionY, uint8_t aUnsignedByte, uint16_t aTextSize = TEXT_SIZE_11,
+            color16_t aFGColor = COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
+    uint16_t drawShort(uint16_t aPositionX, uint16_t aPositionY, int16_t aShort, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
+    COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
+    uint16_t drawLong(uint16_t aPositionX, uint16_t aPositionY, int32_t aLong, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
+    COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
 
     void setWriteStringSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
     bool aClearOnNewScreen);
-    void setWriteStringPosition(uint16_t aPosX, uint16_t aPosY);
+    void setWriteStringPosition(uint16_t aPositionX, uint16_t aPositionY);
     void setWriteStringPositionColumnLine(uint16_t aColumnNumber, uint16_t aLineNumber);
     void writeString(const char *aStringPtr, uint8_t aStringLength);
 
     void debugMessage(const char *aStringPtr);
     void debug(const char *aStringPtr);
+#if defined(AVR)
     void debug(const __FlashStringHelper *aStringPtr);
+#endif
     void debug(uint8_t aByte);
     void debug(const char *aMessage, uint8_t aByte);
     void debug(const char *aMessage, int8_t aByte);
@@ -342,16 +263,16 @@ public:
     void debug(const char *aMessage, float aDouble);
     void debug(double aDouble);
 
-    void drawLine(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
-    void drawLineRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
-    void drawLineFastOneX(uint16_t x0, uint16_t y0, uint16_t y1, color16_t aColor);
-    void drawVectorDegrees(uint16_t aXStart, uint16_t aYStart, uint16_t aLength, int aDegrees, color16_t aColor,
+    void drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
+    void drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor);
+    void drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aEndY, color16_t aColor);
+    void drawVectorDegrees(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, int aDegrees, color16_t aColor,
             int16_t aThickness = 1);
-    void drawVectorRadian(uint16_t aXStart, uint16_t aYStart, uint16_t aLength, float aRadian, color16_t aColor,
+    void drawVectorRadian(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, float aRadian, color16_t aColor,
             int16_t aThickness = 1);
-    void drawLineWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd,
+    void drawLineWithThickness(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY,
             color16_t aColor, int16_t aThickness);
-    void drawLineRelWithThickness(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta,
+    void drawLineRelWithThickness(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY,
             color16_t aColor, int16_t aThickness);
 
     void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
@@ -359,18 +280,18 @@ public:
     void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
             uint8_t aChartIndex, bool aDoDrawDirect, uint8_t *aByteBuffer, size_t aByteBufferLength);
 
-    struct XYSize* getMaxDisplaySize(void);
-    uint16_t getMaxDisplayWidth(void);
-    uint16_t getMaxDisplayHeight(void);
-    struct XYSize* getCurrentDisplaySize(void);
-    uint16_t getCurrentDisplayWidth(void);
-    uint16_t getCurrentDisplayHeight(void);
+    struct XYSize* getMaxDisplaySize();
+    uint16_t getMaxDisplayWidth();
+    uint16_t getMaxDisplayHeight();
+    struct XYSize* getCurrentDisplaySize();
+    uint16_t getCurrentDisplayWidth();
+    uint16_t getCurrentDisplayHeight();
     // returns requested size
-    struct XYSize* getRequestedDisplaySize(void);
-    uint16_t getDisplayWidth(void);
-    uint16_t getDisplayHeight(void);
+    struct XYSize* getRequestedDisplaySize();
+    uint16_t getDisplayWidth();
+    uint16_t getDisplayHeight();
     // Implemented by event handler
-    bool isDisplayOrientationLandscape(void);
+    bool isDisplayOrientationLandscape();
 
     void refreshVector(struct ThickLine *aLine, int16_t aNewRelEndX, int16_t aNewRelEndY);
 
@@ -383,31 +304,32 @@ public:
     // This call results in a info callback
     void getInfo(uint8_t aInfoSubcommand, void (*aInfoHandler)(uint8_t, uint8_t, uint16_t, ByteShortLongFloatUnion));
     // This call results in a reorientation callback
-    void requestMaxCanvasSize(void);
+    void requestMaxCanvasSize();
 
     void setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSensorRate, uint8_t aFilterFlag);
 
 #if defined(AVR)
     // On non AVR platforms PGM functions are reduced to plain functions
-    uint16_t drawTextPGM(uint16_t aXStart, uint16_t aYStart, const char *aPGMString, uint16_t aTextSize, color16_t aFGColor,
-            color16_t aBGColor);
-    void drawTextPGM(uint16_t aXStart, uint16_t aYStart, const char *aPGMString);
+    uint16_t drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString, uint16_t aTextSize, color16_t aTextColor,
+            color16_t aBackgroundColor);
+    void drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString, float aInitialValue);
 
     // On non AVR platforms __FlashStringHelper is reduced to char
-    void drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper *aPGMString);
-    uint16_t drawText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
-            color16_t aFGColor, color16_t aBGColor);
-    void drawMLText(uint16_t aXStart, uint16_t aYStart, const __FlashStringHelper *aPGMString, uint16_t aTextSize, color16_t aFGColor,
-            color16_t aBGColor);
+    void drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString);
+    uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
+            color16_t aTextColor, color16_t aBackgroundColor);
+    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aTextSize, color16_t aTextColor,
+            color16_t aBackgroundColor);
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString);
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
             float aInitialValue);
 
     // Not yet implemented    void getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const __FlashStringHelper *aPGMShortPromptString);
-    void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis);
 #endif
+    void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis);
+
     /*
      * Button stuff
      */
@@ -427,8 +349,8 @@ public:
 
     void activateButton(BDButtonHandle_t aButtonNumber);
     void deactivateButton(BDButtonHandle_t aButtonNumber);
-    void activateAllButtons(void);
-    void deactivateAllButtons(void);
+    void activateAllButtons();
+    void deactivateAllButtons();
     void setButtonsGlobalFlags(uint16_t aFlags);
     void setButtonsTouchTone(uint8_t aToneIndex, uint8_t aToneVolume);
 
@@ -457,8 +379,8 @@ public:
 
     void activateSlider(BDSliderHandle_t aSliderNumber);
     void deactivateSlider(BDSliderHandle_t aSliderNumber);
-    void activateAllSliders(void);
-    void deactivateAllSliders(void);
+    void activateAllSliders();
+    void deactivateAllSliders();
 
     struct XYSize mRequestedDisplaySize; // contains requested display size
     struct XYSize mCurrentDisplaySize; // contains real host display size. Is initialized at connection build up and updated at reorientation and redraw event.
@@ -472,8 +394,8 @@ public:
     void drawGreyscale(uint16_t aXPos, uint16_t tYPos, uint16_t aHeight);
     void drawStar(int aXCenter, int aYCenter, int tOffsetCenter, int tLength, int tOffsetDiagonal, int tLengthDiagonal,
             color16_t aColor, int16_t aThickness);
-    void testDisplay(void);
-    void generateColorSpectrum(void);
+    void testDisplay();
+    void generateColorSpectrum();
 
 };
 
@@ -483,19 +405,6 @@ extern BlueDisplay BlueDisplay1;
 void clearDisplayAndDisableButtonsAndSliders();
 void clearDisplayAndDisableButtonsAndSliders(color16_t aColor);
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-/*
- * MI0283QT2 TFTDisplay - must provided by main program
- * external declaration saves ROM (210 bytes) and RAM ( 20 bytes)
- * and avoids missing initialization :-)
- */
-#  if defined(USE_HY32D)
-#include "SSD1289.h"
-#  else
-#include "MI0283QT2.h"
-#  endif
-#endif
-
 #endif // __cplusplus
 
 extern bool isLocalDisplayAvailable;
@@ -504,22 +413,19 @@ extern bool isLocalDisplayAvailable;
 extern "C" {
 #endif
 // For use in syscalls.c
-uint16_t drawTextC(uint16_t aXStart, uint16_t aYStart, const char *aStringPtr, uint16_t aFontSize, color16_t aFGColor,
-        color16_t aBGColor);
+uint16_t drawTextC(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize, color16_t aTextColor,
+        color16_t aBackgroundColor);
 void writeStringC(const char *aStringPtr, uint8_t aStringLength);
 #ifdef __cplusplus
 }
 #endif
 
 /*
- * Utilities used also internal
+ * Dummy definition of functions defined in ADCUtils to compile examples without errors
  */
-#if defined(AVR)
 uint16_t readADCChannelWithReferenceOversample(uint8_t aChannelNumber, uint8_t aReference, uint8_t aOversampleExponent);
-float getVCCValue(void) __attribute__ ((deprecated ("Renamed to getVCCVoltage()")));
 float getVCCVoltage(void);
 float getTemperature(void);
-#endif
 
 // For convenience also included here
 #include "BlueSerial.h"

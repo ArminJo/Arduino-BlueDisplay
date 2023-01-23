@@ -3,7 +3,7 @@
  *
  * Implements the common (GUI) parts of AVR and ARM development
  *
- *  Copyright (C) 2017-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2017-2023  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
@@ -15,8 +15,8 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
@@ -34,7 +34,6 @@
 #include "Pages.h"
 #include "TouchDSO.h"
 
-#include "Chart.h" // for adjustIntWithScaleFactor()
 #include "BlueDisplay.h"
 #endif // defined(AVR)
 
@@ -604,7 +603,7 @@ void initDSOGUI(void) {
     tPosY += 2 * START_PAGE_ROW_INCREMENT;
 #if !defined(AVR)
 // Button for show FFT - only for Start and Chart pages
-    TouchButtonFFT.init(0, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, COLOR16_GREEN, "FFT",
+    TouchButtonFFT.init(0, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, 0, "FFT",
     TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH, DisplayControl.ShowFFT,
             &doShowFFT);
 #endif
@@ -624,10 +623,10 @@ void initDSOGUI(void) {
      */
 #if defined(LOCAL_DISPLAY_EXISTS)
     TouchButtonChartHistoryOnOff.init(SLIDER_DEFAULT_BAR_WIDTH + 6, tPosY, BUTTON_WIDTH_3 - (SLIDER_DEFAULT_BAR_WIDTH + 6),
-    SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_DISPLAY_CONTROL, "History", TEXT_SIZE_11,
+    SETTINGS_PAGE_BUTTON_HEIGHT, 0, "History", TEXT_SIZE_11,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH, 0, &doChartHistory);
 #else
-    TouchButtonChartHistoryOnOff.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR16_RED, F("History"),
+    TouchButtonChartHistoryOnOff.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, 0, F("History"),
     TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH, 0, &doChartHistory);
 #endif
 
@@ -669,13 +668,13 @@ void initDSOGUI(void) {
 #if !defined(AVR)
 // Button for pretrigger area show
 #if defined(LOCAL_DISPLAY_EXISTS)
-    TouchButtonShowPretriggerValuesOnOff.init(SLIDER_DEFAULT_BAR_WIDTH + 6, tPosY,
-    BUTTON_WIDTH_3 - (SLIDER_DEFAULT_BAR_WIDTH + 6), SETTINGS_PAGE_BUTTON_HEIGHT,
-    COLOR_BLACK, "Show\nPretrigger", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN,
-            (DisplayControl.DatabufferPreTriggerDisplaySize != 0), &doShowPretriggerValuesOnOff);
+    TouchButtonShowPretriggerValuesOnOff.init(SLIDER_DEFAULT_BAR_WIDTH + 6, tPosY, BUTTON_WIDTH_3 - (SLIDER_DEFAULT_BAR_WIDTH + 6),
+    SETTINGS_PAGE_BUTTON_HEIGHT, 0, "Show\nPretrigger", TEXT_SIZE_11,
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, (DisplayControl.DatabufferPreTriggerDisplaySize != 0),
+            &doShowPretriggerValuesOnOff);
 #else
     TouchButtonShowPretriggerValuesOnOff.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT,
-            COLOR_BLACK, "Show\nPretrigger", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN,
+            0, "Show\nPretrigger", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN,
             (DisplayControl.DatabufferPreTriggerDisplaySize != 0), &doShowPretriggerValuesOnOff);
 #endif
 #endif
@@ -700,17 +699,14 @@ void initDSOGUI(void) {
 
 #if !defined(AVR)
 // Button for min/max acquisition mode
-#if defined(LOCAL_DISPLAY_EXISTS)
+#  if defined(LOCAL_DISPLAY_EXISTS)
     TouchButtonMinMaxMode.init(SLIDER_DEFAULT_BAR_WIDTH + 6, tPosY, BUTTON_WIDTH_3 - (SLIDER_DEFAULT_BAR_WIDTH + 6),
-    SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_DISPLAY_CONTROL, "", TEXT_SIZE_11,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, MeasurementControl.isMinMaxMode, &doMinMaxMode);
-    setMinMaxModeButtonCaption();
-#else
-    TouchButtonMinMaxMode.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_BLACK, "Sample\nmode", TEXT_SIZE_11,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, MeasurementControl.isMinMaxMode, &doMinMaxMode);
-    TouchButtonMinMaxMode.setCaptionForValueTrue("Min/Max\nmode");
-#endif
-
+    SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "Min/Max\nmode", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, true,
+            &doMinMaxMode);
+#  else
+    TouchButtonMinMaxMode.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "Min/Max\nmode", TEXT_SIZE_11,
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH, true, &doMinMaxMode);
+#  endif
 #endif
 
 // Button for auto offset on, 0-Volt, manual
@@ -721,7 +717,7 @@ void initDSOGUI(void) {
 #if defined(FUTURE)
 // Button for trigger line mode
     TouchButtonDrawModeTriggerLine.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT,
-            COLOR_GUI_DISPLAY_CONTROL, "Trigger\nline", TEXT_SIZE_11,
+            0, "Trigger\nline", TEXT_SIZE_11,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, DisplayControl.showTriggerInfoLine,
             &doDrawModeTriggerLine);
 #endif
@@ -791,7 +787,7 @@ void initDSOGUI(void) {
     /*
      * Backlight slider
      */
-    TouchSliderBacklight.init(0, 0, SLIDER_DEFAULT_BAR_WIDTH, BACKLIGHT_MAX_VALUE, BACKLIGHT_MAX_VALUE, getBacklightValue(),
+    TouchSliderBacklight.init(0, 0, SLIDER_DEFAULT_BAR_WIDTH, BACKLIGHT_MAX_BRIGHTNESS_VALUE, BACKLIGHT_MAX_BRIGHTNESS_VALUE, sCurrentBacklightPercent,
     COLOR16_BLUE, COLOR16_GREEN, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doBacklightSlider);
 #endif
 
@@ -895,7 +891,7 @@ void drawStartPage(void) {
 
 // Hints
 #if !defined(AVR)
-    BlueDisplay1.drawText(BUTTON_WIDTH_3, TEXT_SIZE_11_ASCEND, "\xABScale\xBB", TEXT_SIZE_11, COLOR_YELLOW,
+    BlueDisplay1.drawText(BUTTON_WIDTH_3, TEXT_SIZE_11_ASCEND, "\xABScale\xBB", TEXT_SIZE_11, COLOR16_YELLOW,
     COLOR_BACKGROUND_DSO);
 #endif
     BlueDisplay1.drawText(BUTTON_WIDTH_3, BUTTON_HEIGHT_4_LINE_4 + BUTTON_DEFAULT_SPACING + TEXT_SIZE_22_ASCEND,
@@ -922,14 +918,14 @@ void drawDSOSettingsPage(void) {
      * Determine colors for 3 fixed channel buttons
      */
     for (int i = 0; i < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR; ++i) {
-        if (i == MeasurementControl.ADCInputMUXChannelIndex) {
+        if (i == MeasurementControl.ADMUXChannel) {
             tButtonColor = BUTTON_AUTO_RED_GREEN_TRUE_COLOR;
         } else {
             tButtonColor = BUTTON_AUTO_RED_GREEN_FALSE_COLOR;
         }
         TouchButtonChannels[i].setButtonColorAndDraw(tButtonColor);
     }
-    if (MeasurementControl.ADCInputMUXChannelIndex >= NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR) {
+    if (MeasurementControl.ADMUXChannel >= NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR) {
         tButtonColor = BUTTON_AUTO_RED_GREEN_TRUE_COLOR;
     } else {
         tButtonColor = BUTTON_AUTO_RED_GREEN_FALSE_COLOR;
@@ -1284,22 +1280,12 @@ void setTriggerDelayCaption(void) {
 
 void setReferenceButtonCaption(void) {
     const char *tCaption;
-    if (MeasurementControl.ADCReference == DEFAULT) {
+    if (MeasurementControl.ADCReferenceShifted == (DEFAULT << REFS0)) {
         tCaption = ReferenceButtonVCC;
     } else {
         tCaption = ReferenceButton1_1V;
     }
     TouchButtonADCReference.setCaptionPGM(tCaption, (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS));
-}
-#endif
-
-#if defined(LOCAL_DISPLAY_EXISTS)
-void setMinMaxModeButtonCaption(void) {
-    if (MeasurementControl.isMinMaxMode) {
-        TouchButtonMinMaxMode.setCaption("Min/Max\nmode");
-    } else {
-        TouchButtonMinMaxMode.setCaption("Sample\nmode");
-    }
 }
 #endif
 
@@ -1461,7 +1447,7 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
  * Button handler section
  ************************************************************************/
 /*
- * default handler for back button
+ * default handler for TouchButtonMainHome
  */
 void doDefaultBackButton(BDButton *aTheTouchedButton, int16_t aValue) {
     sBackButtonPressed = true;
@@ -1546,13 +1532,13 @@ void doChannelSelect(BDButton *aTheTouchedButton, int16_t aValue) {
 #if defined(LOCAL_DISPLAY_EXISTS)
     if (MeasurementControl.ADS7846ChannelsAsDatasource) {
 // ADS7846 channels
-        MeasurementControl.ADCInputMUXChannelIndex++;
-        if (MeasurementControl.ADCInputMUXChannelIndex >= ADS7846_CHANNEL_COUNT) {
+        MeasurementControl.ADMUXChannel++;
+        if (MeasurementControl.ADMUXChannel >= ADS7846_CHANNEL_COUNT) {
             // wrap to first channel connected to attenuator and restore ACRange
-            MeasurementControl.ADCInputMUXChannelIndex = 0;
+            MeasurementControl.ADMUXChannel = 0;
             MeasurementControl.isACMode = DSO_getACMode();
         }
-        aTheTouchedButton->setCaption(ADS7846ChannelStrings[MeasurementControl.ADCInputMUXChannelIndex]);
+        aTheTouchedButton->setCaption(ADS7846ChannelStrings[MeasurementControl.ADMUXChannel]);
 
     } else
 #endif
@@ -1563,7 +1549,7 @@ void doChannelSelect(BDButton *aTheTouchedButton, int16_t aValue) {
             /*
              * aValue > 20 means TouchButtonChannelSelect was pressed, so increment button caption here ( "Ch. 3", "Ch. 4", "Temp." , "VRef")
              */
-            uint8_t tOldValue = MeasurementControl.ADCInputMUXChannelIndex;
+            uint8_t tOldValue = MeasurementControl.ADMUXChannel;
             // if channel 3 is not selected, increment channel, otherwise select channel 3
             if (tOldValue < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR) {
                 // first press on this button -> stay at channel 3
@@ -1730,6 +1716,7 @@ void doPromptForTriggerDelay(BDButton *aTheTouchedButton, int16_t aValue) {
 }
 
 #else
+
 void doShowPretriggerValuesOnOff(BDButton *aTheTouchedButton, int16_t aValue) {
     DisplayControl.DatabufferPreTriggerDisplaySize = 0;
     if (aValue) {
@@ -1737,11 +1724,19 @@ void doShowPretriggerValuesOnOff(BDButton *aTheTouchedButton, int16_t aValue) {
     }
 }
 
+void setMinMaxModeButtonCaption(void) {
+    if (MeasurementControl.isMinMaxMode) {
+        TouchButtonMinMaxMode.setCaption("Min/Max\nmode");
+    } else {
+        TouchButtonMinMaxMode.setCaption("Sample\nmode");
+    }
+}
+
 /*
  * Sets only the flag and button caption
  */
 void doMinMaxMode(BDButton *aTheTouchedButton, int16_t aValue) {
-    MeasurementControl.isMinMaxMode = aValue;
+    MeasurementControl.isMinMaxMode = !aValue; // toggle mode
     if (MeasurementControl.TimebaseEffectiveIndex >= TIMEBASE_INDEX_CAN_USE_OVERSAMPLING) {
 // changeTimeBase() manages oversampling rate for Min/Max oversampling
         if (MeasurementControl.isRunning) {
@@ -1751,7 +1746,10 @@ void doMinMaxMode(BDButton *aTheTouchedButton, int16_t aValue) {
             changeTimeBase();
         }
     }
+    setMinMaxModeButtonCaption();
+    TouchButtonMinMaxMode.setValueAndDraw(MeasurementControl.isMinMaxMode);
 }
+
 /*
  * show gui of more settings screen
  */
@@ -1817,7 +1815,7 @@ void doDrawMode(BDButton *aTheTouchedButton, int16_t aValue) {
 void doADS7846TestOnOff(BDButton *aTheTouchedButton, int16_t aValue) {
     aValue = !aValue;
     MeasurementControl.ADS7846ChannelsAsDatasource = aValue;
-    MeasurementControl.ADCInputMUXChannelIndex = 0;
+    MeasurementControl.ADMUXChannel = 0;
     if (aValue) {
 // ADS7846 Test on
         doAcDcMode(&TouchButtonAcDc, true);

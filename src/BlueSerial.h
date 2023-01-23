@@ -1,11 +1,6 @@
 /*
  * BlueSerial.h
  *
- *  SUMMARY
- *  Blue Display is an Open Source Android remote Display for Arduino etc.
- *  It receives basic draw requests from Arduino etc. over Bluetooth and renders it.
- *  It also implements basic GUI elements as buttons and sliders.
- *  GUI callback, touch and sensor events are sent back to Arduino.
  *
  *  Copyright (C) 2014-2020  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
@@ -19,8 +14,8 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
@@ -29,6 +24,8 @@
 
 #ifndef _BLUESERIAL_H
 #define _BLUESERIAL_H
+
+//#if !defined(DISABLE_REMOTE_DISPLAY)
 
 #if defined(ARDUINO)
 #include <Arduino.h> // for UBRR1H + BOARD_HAVE_USART1 + SERIAL_USB
@@ -100,20 +97,33 @@ void sendUSART5ArgsAndByteBuffer(uint8_t aFunctionTag, uint16_t aXStart, uint16_
 void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParameterBufferLength, uint8_t *aDataBufferPointer,
         int16_t aDataBufferLength);
 
-#define PAIRED_PIN 5
-bool USART_isBluetoothPaired(void); // is reduced to return true; if not defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+/*
+ * Checks if additional remote display is paired to avoid program slow down by UART sending to a not paired connection
+ *
+ * USART_isBluetoothPaired() is only required if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+ *   to disable sending by Bluetooth if BT is not connected.
+ * It is reduced to return false if defined(DISABLE_REMOTE_DISPLAY)
+ * It is reduced to return true if not defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+ */
+bool USART_isBluetoothPaired(); //
 
-#  if defined(SUPPORT_LOCAL_DISPLAY) && !defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+#define PAIRED_PIN 5
+void setUsePairedPin(bool aUsePairedPin);
+#  if defined(USE_SIMPLE_SERIAL)
 void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
-#  else
-#    if defined(ESP32)
+#  endif
+#endif
+
+#if defined(ESP32)
 void initSerial(String aBTClientName);
-#    else
+#else
 void initSerial(uint32_t aBaudRate);
 void initSerial();
+#  if defined(USE_SIMPLE_SERIAL)
 void initSimpleSerial(uint32_t aBaudRate);
-#   endif
-#  endif // defined(SUPPORT_LOCAL_DISPLAY)
+#  endif
+#endif
 
 extern bool allowTouchInterrupts;
 void sendUSART(char aChar);
@@ -122,4 +132,5 @@ void sendUSART(const char *aChar);
 
 void serialEvent();
 
+//#endif // !defined(DISABLE_REMOTE_DISPLAY)
 #endif // _BLUESERIAL_H

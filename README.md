@@ -4,13 +4,13 @@
 This library enables an Android smartphone / tablet to act as a graphical display for your Arduino or ESP32.<br/>
 
 [![Badge License: GPLv3](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0)
- &nbsp; &nbsp; 
+ &nbsp; &nbsp;
 [![Badge Version](https://img.shields.io/github/v/release/ArminJo/Arduino-BlueDisplay?include_prereleases&color=yellow&logo=DocuSign&logoColor=white)](https://github.com/ArminJo/Arduino-BlueDisplay/releases/latest)
- &nbsp; &nbsp; 
+ &nbsp; &nbsp;
 [![Badge Commits since latest](https://img.shields.io/github/commits-since/ArminJo/Arduino-BlueDisplay/latest?color=yellow)](https://github.com/ArminJo/Arduino-BlueDisplay/commits/master)
- &nbsp; &nbsp; 
+ &nbsp; &nbsp;
 [![Badge Build Status](https://github.com/ArminJo/Arduino-BlueDisplay/workflows/LibraryBuild/badge.svg)](https://github.com/ArminJo/Arduino-BlueDisplay/actions)
- &nbsp; &nbsp; 
+ &nbsp; &nbsp;
 ![Badge Hit Counter](https://visitor-badge.laobi.icu/badge?page_id=ArminJo_Arduino-BlueDisplay)
 <br/>
 <br/>
@@ -19,7 +19,7 @@ This library enables an Android smartphone / tablet to act as a graphical displa
 Available as [Arduino library "BlueDisplay"](https://www.arduinolibraries.info/libraries/blue-display).
 
 [![Button Install](https://img.shields.io/badge/Install-brightgreen?logoColor=white&logo=GitBook)](https://www.ardu-badge.com/BlueDisplay)
- &nbsp; &nbsp; 
+ &nbsp; &nbsp;
 [![Button Changelog](https://img.shields.io/badge/Changelog-blue?logoColor=white&logo=AzureArtifacts)](https://github.com/ArminJo/Arduino-BlueDisplay#revision-history)
 
 </div>
@@ -79,12 +79,12 @@ void loop() {
 void initDisplay(void) {
     // Initialize display size and flags
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, 320, 240);
-    // initialize all GUI elements here
+    // Initialize all GUI elements here
  ...
 }
 void drawGui(void) {
     BlueDisplay1.clearDisplay(COLOR16_WHITE);
-    // draw all GUI elements here
+    // Draw all GUI elements here
 ...
 }
 ```
@@ -129,7 +129,15 @@ Modify them by enabling / disabling them, or change the values if applicable.
 | `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | Disables basic touch events like down, move and up. Saves up to 620 bytes program memory and 36 bytes RAM. |
 | `USE_SIMPLE_SERIAL` | disabled | Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise. |
 | `USE_USB_SERIAL` | disabled | Activate it, if you want to force using **Serial** instead of **Serial1** for **direct USB cable connection** to your smartphone / tablet. This is only required on platforms, which have Serial1 available. |
-| `BD_DRAW_TO_LOCAL_DISPLAY_TOO` | disabled | Supports simultaneously drawing on a locally attached display. Not (yet) implemented for all commands! |
+| `SUPPORT_LOCAL_DISPLAY` | disabled | Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands! |
+| `DISABLE_REMOTE_DISPLAY` | disabled | Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display. Not (yet) implemented for all commands! |
+| `LOCAL_GUI_FEEDBACK_TONE_PIN` | disabled | If defined, local GUI library calls `tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 3000, 50)` on flags like FLAG_BUTTON_DO_BEEP_ON_TOUCH. |
+| `SUPPORT_ONLY_TEXT_SIZE_11_AND_22` | disabled | If defined, saves program memory especially for local GUI. |
+| `LOCAL_DISPLAY_HEIGHT` | 240 | The height of the local diplay used by the LocalGUI library. |
+| `LOCAL_DISPLAY_WIDTH` | 320 | The width of the local diplay used by the LocalGUI library. |
+
+
+
 
 <br/>
 
@@ -347,7 +355,7 @@ The library examples are tested with GitHub Actions for the following boards:
 - arduino:avr:mega
 - esp8266:esp8266:huzzah:eesz=4M3M,xtal=80
 - esp32:esp32:featheresp32:FlashFreq=80
-- STM32:stm32:GenF1:pnum=BLUEPILL_F103C8
+- STMicroelectronics:stm32:GenF1:pnum=BLUEPILL_F103C8
 
 ## Requests for modifications / extensions
 Please write me a PM including your motivation/problem if you need a modification or an extension.

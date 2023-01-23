@@ -3,13 +3,7 @@
  *
  * Implements the methods to receive events from the Android BlueDisplay app.
  *
- *  SUMMARY
- *  Blue Display is an Open Source Android remote Display for Arduino etc.
- *  It receives basic draw requests from Arduino etc. over Bluetooth and renders it.
- *  It also implements basic GUI elements as buttons and sliders.
- *  GUI callback, touch and sensor events are sent back to Arduino.
- *
- *  Copyright (C) 2014-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -21,8 +15,8 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
@@ -44,45 +38,44 @@
 #include <stdio.h> // for printf
 #endif // ! ARDUINO
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-#include "ADS7846.h"
-#endif
-
 #include <stdlib.h> // for abs()
 
 bool sBDEventJustReceived = false;
 unsigned long sMillisOfLastReceivedBDEvent;
 
-#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
 struct TouchEvent sDownPosition;
 struct TouchEvent sCurrentPosition;
 struct TouchEvent sUpPosition;
-#endif
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 /*
  * helper variables
  */
 //
-bool sNothingTouched = false;// = !(sSliderTouched || sAutorepeatButtonTouched)
-bool sSliderIsMoveTarget = false;// true if slider was touched by DOWN event
+bool sNothingTouched = false; // = !(sSliderTouched || sAutorepeatButtonTouched)
+bool sSliderIsMoveTarget = false; // true if slider was touched by DOWN event
 
 uint32_t sLongTouchDownTimeoutMillis;
+uint32_t sPeriodicCallbackPeriodMillis;
+
+#if defined(AUTOREPEAT_BY_USING_LOCAL_EVENT)
 /*
  * timer related callbacks
  */
 //
-bool (*sPeriodicTouchCallback)(int, int) = NULL;// return parameter not yet used
-uint32_t sPeriodicCallbackPeriodMillis;
-
+void (*sPeriodicTouchCallback)(int, int) = NULL; // return parameter not yet used
 struct BluetoothEvent localTouchEvent;
+#else
+uint32_t sLastMillisOfLastCallOfPeriodicTouchCallback;
 #endif
 
-bool sTouchIsStillDown = false;
-bool sDisableTouchUpOnce = false;
-bool sDisableUntilTouchUpIsDone = false;
+#endif
 
-struct BluetoothEvent remoteEvent; // to hold the current received event
+bool sTouchIsStillDown = false; // To enable simple blocking touch down and touch up detection (without using a touch down or up callback).
+bool sDisableTouchUpOnce = false; // Disable next touch up detection. E.g. because we are already in a touch handler and don't want the end of this touch to be interpreted for a newly displayed button.
+bool sDisableMoveEventsUntilTouchUpIsDone = false; // To suppress move events after button press to avoid interpreting it for a slider. Useful, if page changed and a slider is presented on the position where the page switch button was.
+
+struct BluetoothEvent remoteEvent; // To hold the current received event
 #if defined(USE_SIMPLE_SERIAL)
 // Is used for touch down events. If remoteEvent is not empty, it is used as buffer for next regular event to avoid overwriting of remoteEvent
 struct BluetoothEvent remoteTouchDownEvent;
@@ -98,9 +91,9 @@ bool sTouchUpCallbackEnabled = false;
 void (*sSwipeEndCallback)(struct Swipe*) = NULL;
 bool sSwipeEndCallbackEnabled = false;
 
-void (*sConnectCallback)(void) = NULL;
-void (*sRedrawCallback)(void) = NULL;
-void (*sReorientationCallback)(void) = NULL;
+void (*sConnectCallback)() = NULL;
+void (*sRedrawCallback)() = NULL;
+void (*sReorientationCallback)() = NULL;
 
 void (*sSensorChangeCallback)(uint8_t aEventType, struct SensorCallback *aSensorCallbackInfo) = NULL;
 
@@ -109,7 +102,7 @@ void copyDisplaySizeAndTimestamp(struct BluetoothEvent *aEvent);
 /*
  * Is also called on Connect and Reorientation events
  */
-void registerRedrawCallback(void (*aRedrawCallback)(void)) {
+void registerRedrawCallback(void (*aRedrawCallback)()) {
     sRedrawCallback = aRedrawCallback;
 }
 
@@ -127,14 +120,14 @@ void registerTouchUpCallback(void (*aTouchUpCallback)(struct TouchEvent *aCurren
 
 // !!! Must be without comment and closed by @formatter:on
 // @formatter:off
-void (* getRedrawCallback(void))(void) {
+void (* getRedrawCallback())() {
     return sRedrawCallback;
 }
 
 /**
  * return pointer to end touch callback function
  */
-void (* getTouchUpCallback(void))(struct TouchEvent * ) {
+void (* getTouchUpCallback())(struct TouchEvent * ) {
     return sTouchUpCallback;
 }
 // @formatter:on
@@ -142,14 +135,14 @@ void (* getTouchUpCallback(void))(struct TouchEvent * ) {
 /*
  * Connect event also calls redraw event
  */
-void registerConnectCallback(void (*aConnectCallback)(void)) {
+void registerConnectCallback(void (*aConnectCallback)()) {
     sConnectCallback = aConnectCallback;
 }
 
 /*
  * Reorientation event also calls redraw event
  */
-void registerReorientationCallback(void (*aReorientationCallback)(void)) {
+void registerReorientationCallback(void (*aReorientationCallback)()) {
     sReorientationCallback = aReorientationCallback;
 }
 
@@ -182,7 +175,7 @@ void setTouchUpCallbackEnabled(bool aTouchUpCallbackEnabled) {
  */
 void registerLongTouchDownCallback(void (*aLongTouchDownCallback)(struct TouchEvent*), uint16_t aLongTouchDownTimeoutMillis) {
     sLongTouchDownCallback = aLongTouchDownCallback;
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY) && !defined(ARDUINO)
     sLongTouchDownTimeoutMillis = aLongTouchDownTimeoutMillis;
     if (aLongTouchDownCallback == NULL) {
         changeDelayCallback(&callbackLongTouchDownTimeout, DISABLE_TIMER_DELAY_VALUE); // housekeeping - disable timeout
@@ -196,7 +189,7 @@ void registerLongTouchDownCallback(void (*aLongTouchDownCallback)(struct TouchEv
  */
 void registerSwipeEndCallback(void (*aSwipeEndCallback)(struct Swipe*)) {
     sSwipeEndCallback = aSwipeEndCallback;
-    // disable next end touch since we are already in a touch handler and don't want the end of this touch to be interpreted
+    // Disable next end touch since we are already in a touch handler and don't want the end of this touch to be interpreted
     if (sTouchIsStillDown) {
         sDisableTouchUpOnce = true;
     }
@@ -246,8 +239,8 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) {
         }
 #  endif
 #else // ARDUINO
-        unsigned long tStartMillis = getMillisSinceBoot();
-        while (getMillisSinceBoot() - tStartMillis < aTimeMillis) {
+    unsigned long tStartMillis = getMillisSinceBoot();
+    while (getMillisSinceBoot() - tStartMillis < aDelayMillis) {
 #endif
         checkAndHandleEvents();
 #if defined(ESP8266)
@@ -273,8 +266,8 @@ bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) {
         }
 #  endif
 #else // ARDUINO
-            unsigned long tStartMillis = getMillisSinceBoot();
-            while (getMillisSinceBoot() - tStartMillis < aTimeMillis) {
+    unsigned long tStartMillis = getMillisSinceBoot();
+    while (getMillisSinceBoot() - tStartMillis < aDelayMillis) {
 #endif
         checkAndHandleEvents();
         if (sBDEventJustReceived) {
@@ -287,13 +280,21 @@ bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) {
     return false;
 }
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 bool sDisplayXYValuesEnabled = false;  // displays touch values on screen
+
+#if defined(AUTOREPEAT_BY_USING_LOCAL_EVENT)
+/**
+ * set CallbackPeriod
+ */
+void setPeriodicTouchCallbackPeriod(uint32_t aCallbackPeriod) {
+    sPeriodicCallbackPeriodMillis = aCallbackPeriod;
+}
 
 /**
  * Callback routine for SysTick handler
  */
-void callbackPeriodicTouch(void) {
+void callbackPeriodicTouch() {
     if (sTouchIsStillDown) {
         if (sPeriodicTouchCallback != NULL) {
             // do "normal" callback for autorepeat buttons
@@ -309,17 +310,14 @@ void callbackPeriodicTouch(void) {
 /**
  * Register a callback routine which is called every CallbackPeriod milliseconds while screen is touched
  */
-void registerPeriodicTouchCallback(bool (*aPeriodicTouchCallback)(int, int), uint32_t aCallbackPeriodMillis) {
+void registerPeriodicTouchCallback(void (*aPeriodicTouchCallback)(int, int), uint32_t aCallbackPeriodMillis) {
     sPeriodicTouchCallback = aPeriodicTouchCallback;
     sPeriodicCallbackPeriodMillis = aCallbackPeriodMillis;
+#if defined(AVR)
+    sLastMillisOfLastCallOfPeriodicTouchCallback = millis();
+#  else
     changeDelayCallback(&callbackPeriodicTouch, aCallbackPeriodMillis);
-}
-
-/**
- * set CallbackPeriod
- */
-void setPeriodicTouchCallbackPeriod(uint32_t aCallbackPeriod) {
-    sPeriodicCallbackPeriodMillis = aCallbackPeriod;
+#  endif
 }
 
 /**
@@ -327,7 +325,7 @@ void setPeriodicTouchCallbackPeriod(uint32_t aCallbackPeriod) {
  * Creates event if no Slider was touched and no swipe gesture was started
  * Disabling of touch up handling  (sDisableTouchUpOnce = false) must be done by called handler!!!
  */
-void callbackLongTouchDownTimeout(void) {
+void callbackLongTouchDownTimeout() {
     assert_param(sLongTouchDownCallback != NULL);
 // No long touch if swipe is made or slider touched
     if (!sSliderIsMoveTarget) {
@@ -343,36 +341,42 @@ void callbackLongTouchDownTimeout(void) {
         }
     }
 }
+#  endif
 #endif
 
 /**
- * Is called by thread main loops
+ * Is called by main loop
  */
-void checkAndHandleEvents(void) {
+void checkAndHandleEvents() {
 #if defined(HAL_WWDG_MODULE_ENABLED)
     Watchdog_reload();
 #endif
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     resetTouchFlags();
+    /*
+     * Check if a local event happened, i.e. the localTouchEvent was written by an touch device interrupt handler
+     */
     if (localTouchEvent.EventType != EVENT_NO_EVENT) {
         handleEvent(&localTouchEvent);
     }
 #endif
 
-#if defined(ARDUINO)
-#  if defined(USE_SIMPLE_SERIAL)
+#if !defined(DISABLE_REMOTE_DISPLAY)
+#  if defined(ARDUINO)
+#    if defined(USE_SIMPLE_SERIAL)
     handleEvent(&remoteTouchDownEvent);
     handleEvent(&remoteEvent);
-#  else
+#    else
     // get Arduino Serial data
     serialEvent(); // calls in turn handleEvent(&remoteEvent);
-#  endif
-#else
+#    endif
+#  else
     /*
-     * check USART buffer, which in turn calls handleEvent() if event was received
+     * For non Arduino, check USART buffer, which in turn calls handleEvent() if event was received
      */
     checkAndHandleMessageReceived();
+#  endif
 #endif
 }
 
@@ -400,12 +404,10 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     // avoid using event twice
     aEvent->EventType = EVENT_NO_EVENT;
 
-#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
-#ifdef  BD_DRAW_TO_LOCAL_DISPLAY_TOO
+#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS) && defined(SUPPORT_LOCAL_DISPLAY)
     if (tEventType <= EVENT_TOUCH_ACTION_MOVE && sDisplayXYValuesEnabled) {
-        printTPData(30, 2 + TEXT_SIZE_11_ASCEND, COLOR16_BLACK, COLOR_WHITE);
+        printTPData(30, 2 + TEXT_SIZE_11_ASCEND, COLOR16_BLACK, COLOR16_WHITE);
     }
-#endif
 #endif
 
     void (*tInfoCallback)(uint8_t, uint8_t, uint16_t, ByteShortLongFloatUnion);
@@ -425,7 +427,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         BSP_LED_On(LED_BLUE_2); // BLUE Front
 #endif
         sTouchIsStillDown = true;
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY) && !defined(ARDUINO)
         // start timeout for long touch if it is local event
         if (sLongTouchDownCallback != NULL && aEvent != &remoteEvent) {
             changeDelayCallback(&callbackLongTouchDownTimeout, sLongTouchDownTimeoutMillis); // enable timeout
@@ -438,7 +440,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 
     case EVENT_TOUCH_ACTION_MOVE:
 //    } else if (tEventType == EVENT_TOUCH_ACTION_MOVE) {
-        if (sDisableUntilTouchUpIsDone) {
+        if (sDisableMoveEventsUntilTouchUpIsDone) {
             return;
         }
         if (sTouchMoveCallback != NULL) {
@@ -454,13 +456,13 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         BSP_LED_Off(LED_BLUE_2); // BLUE Front
 #endif
         sTouchIsStillDown = false;
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
         // may set sDisableTouchUpOnce
         handleLocalTouchUp();
 #endif
-        if (sDisableTouchUpOnce || sDisableUntilTouchUpIsDone) {
+        if (sDisableTouchUpOnce || sDisableMoveEventsUntilTouchUpIsDone) {
             sDisableTouchUpOnce = false;
-            sDisableUntilTouchUpIsDone = false;
+            sDisableMoveEventsUntilTouchUpIsDone = false;
             return;
         }
         if (sTouchUpCallback != NULL) {
@@ -483,17 +485,25 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     case EVENT_BUTTON_CALLBACK:
 //    if (tEventType == EVENT_BUTTON_CALLBACK) {
         sTouchIsStillDown = false; // to disable local touch up detection
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-                tButtonCallback = (void (*)(BDButtonHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;; // 2 ;; for pretty print :-(
-                {
-                    BDButton tTempButton = BDButton(tEvent.EventData.GuiCallbackInfo.ObjectIndex,
-                            TouchButton::getLocalButtonFromBDButtonHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex));
-                    tButtonCallback(&tTempButton.mButtonHandle, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
-                }
-#else
-        //BDButton * is the same as BDButtonHandle_t * because BDButton only has one BDButtonHandle_t element
         tButtonCallback = (void (*)(BDButtonHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;
-        ; // 2 ;; for pretty print :-(
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+        { // "{" must be here to avoid nasty errors
+            TouchButton *tLocalButton = TouchButton::getLocalButtonFromBDButtonHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
+            tLocalButton->mValue = tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0];
+
+            if (tLocalButton->mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
+                tLocalButton->drawButton(); // handle color change for local button too
+            }
+            if (tLocalButton->mFlags & FLAG_BUTTON_DO_BEEP_ON_TOUCH) {
+                playLocalFeedbackTone();
+            }
+            // The tTempButton button is removed at exit of the function :-)
+            BDButton tTempButton = BDButton(tEvent.EventData.GuiCallbackInfo.ObjectIndex, tLocalButton);
+            // &tTempButton.mButtonHandle must be a real button pointer, since the callback function may use it for calling button functions for this button
+            tButtonCallback(&tTempButton.mButtonHandle, tLocalButton->mValue);
+        }
+#else
+        // BDButton * is the same as BDButtonHandle_t * because BDButton only has one BDButtonHandle_t element
         tButtonCallback((BDButtonHandle_t*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex,
                 tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
 #endif
@@ -502,19 +512,20 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     case EVENT_SLIDER_CALLBACK:
 //    } else if (tEventType == EVENT_SLIDER_CALLBACK) {
         sTouchIsStillDown = false; // to disable local touch up detection
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-        tSliderCallback = (void (*)(BDSliderHandle_t *, int16_t))tEvent.EventData.GuiCallbackInfo.Handler; {
+        tSliderCallback = (void (*)(BDSliderHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+        { // "{" must be here to avoid nasty errors
             TouchSlider *tLocalSlider = TouchSlider::getLocalSliderFromBDSliderHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
-            BDSlider tTempSlider = BDSlider(tEvent.EventData.GuiCallbackInfo.ObjectIndex, tLocalSlider);
-            tSliderCallback(&tTempSlider.mSliderHandle, tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
+            tLocalSlider->mActualTouchValue = tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0];
 
             // synchronize local slider - remote one is synchronized by local slider itself
-            if (aEvent != &localTouchEvent) {
-                tLocalSlider->setValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
-            }
+            tLocalSlider->setValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
+
+            // The tTempSlider button is removed at exit of the function :-)
+            BDSlider tTempSlider = BDSlider(tEvent.EventData.GuiCallbackInfo.ObjectIndex, tLocalSlider);
+            tSliderCallback(&tTempSlider.mSliderHandle, tLocalSlider->mActualTouchValue);
         }
 #else
-        tSliderCallback = (void (*)(BDSliderHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;
         tSliderCallback((BDSliderHandle_t*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex,
                 tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
 #endif
@@ -550,6 +561,12 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         if (sLongTouchDownCallback != NULL) {
             sLongTouchDownCallback(&(tEvent.EventData.TouchEventInfo));
         }
+        /*
+         *  Do not generate a touch up event on end of this long touch.
+         *  This avoids detecting a button press on touch up, since we may have changed page
+         *  and now a button is presented on the position of the long touch.
+         *  Otherwise the touch up after long touch down is interpreted as button press (of the newly presented button).
+         */
         sDisableTouchUpOnce = true;
         break;
 
@@ -618,10 +635,10 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         // Since with simpleSerial we have only buffer for 1 event, we must also call redraw here
         tEventType = EVENT_REDRAW;
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
         // do it after sConnectCallback() since the upper tends to send a reset all command
-        TouchButton::reinitAllLocalButtonsForRemote();
-        TouchSlider::reinitAllLocalSlidersForRemote();
+        TouchButton::createAllLocalButtonsAtRemote();
+        TouchSlider::createAllLocalSlidersAtRemote();
 #endif
         break;
 
@@ -667,8 +684,8 @@ void copyDisplaySizeAndTimestamp(struct BluetoothEvent *aEvent) {
     BlueDisplay1.mHostUnixTimestamp = aEvent->EventData.DisplaySizeAndTimestamp.UnixTimestamp;
 }
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-void resetTouchFlags(void) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+void resetTouchFlags() {
     sNothingTouched = false;
 }
 
@@ -676,11 +693,13 @@ void resetTouchFlags(void) {
  * Called at Touch Up
  * Handle long callback delay, check for slider and compute swipe info.
  */
-void handleLocalTouchUp(void) {
+void handleLocalTouchUp() {
+#  if !defined(ARDUINO)
     if (sLongTouchDownCallback != NULL) {
         //disable local long touch callback
         changeDelayCallback(&callbackLongTouchDownTimeout, DISABLE_TIMER_DELAY_VALUE);
     }
+#  endif
     if (sSliderIsMoveTarget) {
         sSliderIsMoveTarget = false;
         sDisableTouchUpOnce = true; // Do not call the touch up callback in handleEvent() since slider does not require one
@@ -713,15 +732,19 @@ void handleLocalTouchUp(void) {
 }
 
 /**
- *
+ * A default touch down handler, which checks, if touch is on a slider or on a button
+ * and sets variables sSliderIsMoveTarget and sNothingTouched
  * @param aCurrentPositionPtr
- * @return
  */
 void simpleTouchDownHandler(struct TouchEvent *aCurrentPositionPtr) {
     if (TouchSlider::checkAllSliders(aCurrentPositionPtr->TouchPosition.PosX, aCurrentPositionPtr->TouchPosition.PosY)) {
         sSliderIsMoveTarget = true;
     } else {
-        if (!TouchButton::checkAllButtons(aCurrentPositionPtr->TouchPosition.PosX, aCurrentPositionPtr->TouchPosition.PosY)) {
+        if (TouchButton::checkAllButtons(aCurrentPositionPtr->TouchPosition.PosX, aCurrentPositionPtr->TouchPosition.PosY,
+        false)) {
+            // We touched a button, so disable move events (e.g. for sliders) until touch up
+            sDisableMoveEventsUntilTouchUpIsDone = true;
+        } else {
             sNothingTouched = true;
         }
     }
@@ -752,7 +775,7 @@ void setDisplayXYValuesFlag(bool aEnableDisplay) {
     sDisplayXYValuesEnabled = aEnableDisplay;
 }
 
-bool getDisplayXYValuesFlag(void) {
+bool getDisplayXYValuesFlag() {
     return sDisplayXYValuesEnabled;
 }
 
@@ -764,6 +787,6 @@ void printTPData(int x, int y, color16_t aColor, color16_t aBackColor) {
     snprintf(tStringBuffer, 12, "X:%03i Y:%03i", sCurrentPosition.TouchPosition.PosX, sCurrentPosition.TouchPosition.PosY);
     BlueDisplay1.drawText(x, y, tStringBuffer, TEXT_SIZE_11, aColor, aBackColor);
 }
-#endif //BD_DRAW_TO_LOCAL_DISPLAY_TOO
+#endif //SUPPORT_LOCAL_DISPLAY
 
 #endif // _EVENTHANDLER_HPP

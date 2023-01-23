@@ -1,15 +1,9 @@
 /*
  * BDSlider.hpp
  *
- * Implementation of the Slider client stub for the Android BlueDisplay app.
+ * Implementation of the slider client stub for the Android BlueDisplay app.
  *
- *  SUMMARY
- *  Blue Display is an Open Source Android remote Display for Arduino etc.
- *  It receives basic draw requests from Arduino etc. over Bluetooth and renders it.
- *  It also implements basic GUI elements as buttons and sliders.
- *  GUI callback, touch and sensor events are sent back to Arduino.
- *
- *  Copyright (C) 2015-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -21,8 +15,8 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
@@ -36,14 +30,18 @@
 #include "BlueDisplayProtocol.h"
 #include "BlueSerial.h"
 
+#if defined(SUPPORT_LOCAL_DISPLAY)
+#include "LocalGUI/LocalTouchSlider.hpp"
+#endif
+
 #include <string.h>  // for strlen
 
 BDSliderHandle_t sLocalSliderIndex = 0;
 
-BDSlider::BDSlider(void) { // @suppress("Class members should be properly initialized")
+BDSlider::BDSlider() { // @suppress("Class members should be properly initialized")
 }
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPointer) {
     mSliderHandle = aSliderHandle;
     mLocalSliderPointer = aLocalSliderPointer;
@@ -72,8 +70,8 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
 
     if (USART_isBluetoothPaired()) {
 #if __SIZEOF_POINTER__ == 4
-        sendUSARTArgs(FUNCTION_SLIDER_CREATE, 12, tSliderNumber, aPositionX, aPositionY, aBarWidth, aBarLength,
-                aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags, aOnChangeHandler,
+        sendUSARTArgs(FUNCTION_SLIDER_CREATE, 12, tSliderNumber, aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue,
+                aInitalValue, aSliderColor, aBarColor, aFlags, aOnChangeHandler,
                 (reinterpret_cast<uint32_t>(aOnChangeHandler) >> 16));
 #else
         sendUSARTArgs(FUNCTION_SLIDER_CREATE, 11, tSliderNumber, aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue,
@@ -82,19 +80,25 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
     }
     mSliderHandle = tSliderNumber;
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
+#  if defined(DISABLE_REMOTE_DISPLAY)
     mLocalSliderPointer = new TouchSlider();
+#  else
+    mLocalSliderPointer = new TouchSlider(this);
+#  endif
     // Cast required here. At runtime the right pointer is returned because of FLAG_USE_INDEX_FOR_CALLBACK
-    mLocalSliderPointer->initSlider(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue,
-            aSliderColor, aBarColor, aFlags | FLAG_USE_BDSLIDER_FOR_CALLBACK,
-            reinterpret_cast<void (*)(TouchSlider *, uint16_t)>( aOnChangeHandler));
+    mLocalSliderPointer->init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue,
+            aSliderColor, aBarColor, aFlags | LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK,
+            reinterpret_cast<void (*)(TouchSlider *, uint16_t)>(aOnChangeHandler));
     // keep the formatting
-    mLocalSliderPointer ->mBDSliderPtr = this;
 #endif
 }
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-void BDSlider::deinit(void) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+/*
+ * For description see BDButton::deinit()
+ */
+void BDSlider::deinit() {
     sLocalSliderIndex--;
     delete mLocalSliderPointer;
 }
@@ -105,7 +109,7 @@ void BDSlider::deinit(void) {
  * @param aPositionY - Determines upper left corner
  */
 void BDSlider::setPosition(int16_t aPositionX, int16_t aPositionY) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setPosition(aPositionX, aPositionY);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -116,8 +120,8 @@ void BDSlider::setPosition(int16_t aPositionX, int16_t aPositionY) {
 /*
  * Sets slider to active, draws border, bar, caption and value
  */
-void BDSlider::drawSlider(void) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+void BDSlider::drawSlider() {
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->drawSlider();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -125,8 +129,8 @@ void BDSlider::drawSlider(void) {
     }
 }
 
-void BDSlider::drawBorder(void) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+void BDSlider::drawBorder() {
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->drawBorder();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -135,7 +139,7 @@ void BDSlider::drawBorder(void) {
 }
 
 void BDSlider::setValue(int16_t aCurrentValue) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -147,7 +151,7 @@ void BDSlider::setValue(int16_t aCurrentValue) {
  * Draw bar and set and print current value
  */
 void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -159,7 +163,7 @@ void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
  * Draw bar and set and print current value
  */
 void BDSlider::setValue(int16_t aCurrentValue, bool doDrawBar) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     uint8_t tSubFunctionCode = SUBFUNCTION_SLIDER_SET_VALUE;
@@ -175,7 +179,7 @@ void BDSlider::setValue(int16_t aCurrentValue, bool doDrawBar) {
  * Deprecated
  */
 void BDSlider::setActualValue(int16_t aCurrentValue) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -187,7 +191,7 @@ void BDSlider::setActualValue(int16_t aCurrentValue) {
  * Deprecated
  */
 void BDSlider::setActualValueAndDrawBar(int16_t aCurrentValue) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -196,7 +200,7 @@ void BDSlider::setActualValueAndDrawBar(int16_t aCurrentValue) {
 }
 
 void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setBarThresholdColor(aBarThresholdColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -208,7 +212,7 @@ void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
  * Default threshold color is COLOR16_RED initially
  */
 void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setBarThresholdColor(aBarThresholdDefaultColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -218,7 +222,7 @@ void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) 
 }
 
 void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setBarBackgroundColor(aBarBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -228,11 +232,11 @@ void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
 
 /*
  * Default values are ((BlueDisplay1.mReferenceDisplaySize.YHeight / 12), (FLAG_SLIDER_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_CAPTION_ABOVE),
- *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR16_BLACK, COLOR_WHITE);
+ *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR16_BLACK, COLOR16_WHITE);
  */
 void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPosition, uint8_t aCaptionMargin, color16_t aCaptionColor,
         color16_t aCaptionBackgroundColor) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setCaptionColors(aCaptionColor, aCaptionBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -242,7 +246,7 @@ void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositi
 }
 
 void BDSlider::setCaption(const char *aCaption) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setCaption(aCaption);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -274,11 +278,11 @@ void BDSlider::setValueFormatString(const char *aValueFormatString) {
 
 /*
  * Default values are ((BlueDisplay1.mReferenceDisplaySize.YHeight / 20), (FLAG_SLIDER_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_CAPTION_BELOW),
- *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR16_BLACK, COLOR_WHITE);
+ *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR16_BLACK, COLOR16_WHITE);
  */
 void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPrintValuePosition, uint8_t aPrintValueMargin,
         color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueStringColors(aPrintValueColor, aPrintValueBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -314,7 +318,7 @@ void BDSlider::setValueScaleFactor(float aScaleFactorValue) {
 #pragma GCC diagnostic pop
 
 void BDSlider::printValue(const char *aValueString) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->printValue(aValueString);
 #endif
     if (USART_isBluetoothPaired()) {
@@ -322,8 +326,8 @@ void BDSlider::printValue(const char *aValueString) {
     }
 }
 
-void BDSlider::activate(void) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+void BDSlider::activate() {
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->activate();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -331,8 +335,8 @@ void BDSlider::activate(void) {
     }
 }
 
-void BDSlider::deactivate(void) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+void BDSlider::deactivate() {
+#if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->deactivate();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -340,9 +344,9 @@ void BDSlider::deactivate(void) {
     }
 }
 
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 
-int BDSlider::printValue(void) {
+int BDSlider::printValue() {
     return mLocalSliderPointer->printValue();
 }
 
@@ -366,12 +370,12 @@ uint16_t BDSlider::getPositionYBottom() const {
 /*
  * Static functions
  */
-void BDSlider::resetAllSliders(void) {
+void BDSlider::resetAllSliders() {
     sLocalSliderIndex = 0;
 }
 
-void BDSlider::activateAllSliders(void) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+void BDSlider::activateAllSliders() {
+#if defined(SUPPORT_LOCAL_DISPLAY)
     TouchSlider::activateAllSliders();
 #endif
     if (USART_isBluetoothPaired()) {
@@ -379,8 +383,8 @@ void BDSlider::activateAllSliders(void) {
     }
 }
 
-void BDSlider::deactivateAllSliders(void) {
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
+void BDSlider::deactivateAllSliders() {
+#if defined(SUPPORT_LOCAL_DISPLAY)
     TouchSlider::deactivateAllSliders();
 #endif
     if (USART_isBluetoothPaired()) {

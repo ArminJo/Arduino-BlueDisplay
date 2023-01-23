@@ -1,0 +1,112 @@
+#######################################
+# Syntax coloring map for TouchButton,
+# TouchButtonAutorepeat and TouchSlider
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+TouchButton	KEYWORD1
+TouchSlider	KEYWORD1
+TouchButtonAutorepeat	KEYWORD1
+Chart	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+# from TouchButton
+init	KEYWORD2
+setDefaultTouchBorder	KEYWORD2
+setDefaultButtonColor	KEYWORD2
+setDefaultCaptionColor	KEYWORD2
+checkAllButtons	KEYWORD2
+activateAllButtons	KEYWORD2
+deactivateAllButtons	KEYWORD2
+initSimpleButton	KEYWORD2
+initButton	KEYWORD2
+checkButton	KEYWORD2
+drawButton	KEYWORD2
+setPosition	KEYWORD2
+setCaption	KEYWORD2
+setCaptionColor	KEYWORD2
+setColor	KEYWORD2
+setValue	KEYWORD2
+getCaption	KEYWORD2
+getPositionXRight	KEYWORD2
+getPositionX	KEYWORD2
+getPositionYBottom	KEYWORD2
+getPositionY	KEYWORD2
+activate	KEYWORD2
+deactivate	KEYWORD2
+toString	KEYWORD2
+
+# from TouchButtonAutorepeat
+setButtonAutorepeatTiming	KEYWORD2
+
+# from TouchSlider
+init	KEYWORD2
+setDefaults	KEYWORD2
+checkAllSliders	KEYWORD2
+deactivateAllSliders	KEYWORD2
+initSimpleSlider	KEYWORD2
+initSlider	KEYWORD2
+initSliderColors	KEYWORD2
+initValueAndCaptionBackgroundColor	KEYWORD2
+drawSlider	KEYWORD2
+checkSlider	KEYWORD2
+drawBar	KEYWORD2
+setBarColor	KEYWORD2
+setDefaultSliderColor	KEYWORD2
+setDefaultBarColor	KEYWORD2
+setSliderColor	KEYWORD2
+setBarColor	KEYWORD2
+setBarThresholdColor	KEYWORD2
+getActualValue	KEYWORD2
+setActualValue	KEYWORD2
+getPositionXRight	KEYWORD2
+getPositionYBottom	KEYWORD2
+activate	KEYWORD2
+deactivate	KEYWORD2
+
+# from Chart
+init	KEYWORD2
+initChart	KEYWORD2
+initXLabelInt	KEYWORD2
+stepXLabelInt	KEYWORD2
+initXLabelFloat	KEYWORD2
+stepXLabelFloat	KEYWORD2
+initYLabelInt	KEYWORD2
+stepYLabelInt	KEYWORD2
+initYLabelFloat	KEYWORD2
+stepYLabelFloat	KEYWORD2
+setXLabelStartValue				KEYWORD2
+setXLabelStartValueFloat	KEYWORD2
+setYLabelStartValue				KEYWORD2
+setYLabelStartValueFloat	KEYWORD2
+setXLabelIncrementValue				KEYWORD2
+setXLabelIncrementValueFloat	KEYWORD2
+setYLabelIncrementValue				KEYWORD2
+setYLabelIncrementValueFloat	KEYWORD2
+
+initChartColors	KEYWORD2
+drawChart		KEYWORD2
+drawChartData	KEYWORD2
+drawGrid		KEYWORD2
+drawXAxis		KEYWORD2
+drawYAxis		KEYWORD2
+drawAxes		KEYWORD2
+clear			KEYWORD2
+getHeightY		KEYWORD2
+getPositionX	KEYWORD2
+getPositionY	KEYWORD2
+getWidthX		KEYWORD2
+setHeightY		KEYWORD2
+setPositionX	KEYWORD2
+setPositionY	KEYWORD2
+setWidthX		KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################

@@ -3,11 +3,6 @@
  *
  * Implements the "simpleSerial" low level serial functions for communication with the Android BlueDisplay app.
  *
- *  SUMMARY
- *  Blue Display is an Open Source Android remote Display for Arduino etc.
- *  It receives basic draw requests from Arduino etc. over Bluetooth and renders it.
- *  It also implements basic GUI elements as buttons and sliders.
- *  GUI callback, touch and sensor events are sent back to Arduino.
  *
  *  Copyright (C) 2014-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
@@ -21,8 +16,8 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
@@ -33,6 +28,10 @@
 #define _BLUESERIAL_HPP
 
 #include "BlueDisplay.h"
+
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+#include "digitalWriteFast.h"
+#endif
 
 #if !defined(va_start)
 #include <cstdarg> // for va_start, va_list etc.
@@ -48,36 +47,13 @@
 
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
 bool usePairedPin = false; // Use pin of BT module to decide if BT is paired, this cannot be done by using software managed mBlueDisplayConnectionEstablished value
-#endif
-
 void setUsePairedPin(bool aUsePairedPin) {
-#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
     usePairedPin = aUsePairedPin;
-#else
-    (void) aUsePairedPin;
+    if (aUsePairedPin) {
+        pinMode(PAIRED_PIN, INPUT);
+    }
+}
 #endif
-}
-
-/*
- * Checks if additional remote display is paired to avoid program slow down by UART sending to a not paired connection
- */
-bool USART_isBluetoothPaired(void) {
-#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
-    if (!usePairedPin) {
-        return true;
-    }
-    // use tVal to produce optimal code with the compiler
-    uint8_t tVal = digitalReadFast(PAIRED_PIN);
-    if (tVal != 0) {
-        return true;
-    }
-    return false;
-#elif defined(SUPPORT_LOCAL_DISPLAY)
-    return false;
-#else
-    return true; // is paired by default
-#endif // defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
-}
 
 #if !defined(USE_SIMPLE_SERIAL) && defined(USE_SERIAL1)
 #define Serial Serial1
@@ -88,6 +64,32 @@ bool USART_isBluetoothPaired(void) {
 BluetoothSerial SerialBT;
 #define Serial SerialBT
 #endif
+
+/*
+ * Checks if additional remote display is paired to avoid program slow down by UART sending to a not paired connection
+ *
+ * USART_isBluetoothPaired() is only required if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+ *   to disable sending by Bluetooth if BT is not connected.
+ * It is reduced to return false if defined(DISABLE_REMOTE_DISPLAY)
+ * It is reduced to return true if not defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+ */
+bool USART_isBluetoothPaired() {
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+    if (!usePairedPin) {
+        return true;
+    }
+    // use tVal to produce optimal code with the compiler
+    uint8_t tVal = digitalReadFast(PAIRED_PIN);
+    if (tVal != 0) {
+        return true;
+    }
+    return false;
+#elif defined(DISABLE_REMOTE_DISPLAY)
+    return false; // No BT connected display available -> is not paired by default
+#else
+    return true; // Only BT connected display available -> is paired by default
+#endif // defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+}
 
 /*
  * Wrapper for calling initSimpleSerial or Serial[0,1].begin
@@ -126,14 +128,12 @@ void initSerial() {
 #endif // defined(ESP32)
 
 #if defined(USE_SIMPLE_SERIAL)
-#  if defined(SUPPORT_LOCAL_DISPLAY)
+#  if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
 void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin) {
-    if (aUsePairedPin) {
-        pinMode(PAIRED_PIN, INPUT);
-    }
+    setUsePairedPin(aUsePairedPin);
 #  else
 void initSimpleSerial(uint32_t aBaudRate) {
-#  endif // SUPPORT_LOCAL_DISPLAY
+#  endif // DISABLE_REMOTE_DISPLAY
     uint16_t baud_setting;
 #  if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(ARDUINO_AVR_LEONARDO) || defined(__AVR_ATmega16U4__) || defined(__AVR_ATmega32U4__)
     // Use TX1 on MEGA and on Leonardo, which has no TX0
@@ -430,7 +430,7 @@ ISR(USART1_RX_vect) {
  * Fills in the remoteEvent structure with BD event data from serial
  * EventType is set if event is complete
  */
-void serialEvent(void) {
+void serialEvent() {
     if (sReceiveBufferOutOfSync) {
 // just wait for next sync token
         while (Serial.available() > 0) {
