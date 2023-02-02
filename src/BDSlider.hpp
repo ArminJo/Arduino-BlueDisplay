@@ -60,7 +60,7 @@ BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPoin
  * @param aInitalValue - Scaling applied!
  * @param aSliderColor - Color of slider border. If no border specified, then bar background color.
  * @param aBarColor
- * @param aOptions - See #FLAG_SLIDER_SHOW_BORDER etc.
+ * @param aFlags - See #FLAG_SLIDER_SHOW_BORDER etc.
  * @param aOnChangeHandler - If NULL no update of bar is done on touch - equivalent to FLAG_SLIDER_IS_ONLY_OUTPUT
  */
 void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth, int16_t aBarLength, int16_t aThresholdValue,
@@ -112,9 +112,7 @@ void BDSlider::setPosition(int16_t aPositionX, int16_t aPositionY) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setPosition(aPositionX, aPositionY);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderHandle, SUBFUNCTION_SLIDER_SET_POSITION, aPositionX, aPositionY);
-    }
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderHandle, SUBFUNCTION_SLIDER_SET_POSITION, aPositionX, aPositionY);
 }
 
 /*
@@ -124,27 +122,21 @@ void BDSlider::drawSlider() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->drawSlider();
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_DRAW, 1, mSliderHandle);
-    }
+    sendUSARTArgs(FUNCTION_SLIDER_DRAW, 1, mSliderHandle);
 }
 
 void BDSlider::drawBorder() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->drawBorder();
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_DRAW_BORDER, 1, mSliderHandle);
-    }
+    sendUSARTArgs(FUNCTION_SLIDER_DRAW_BORDER, 1, mSliderHandle);
 }
 
 void BDSlider::setValue(int16_t aCurrentValue) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
-    }
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
 }
 
 /*
@@ -154,9 +146,7 @@ void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);
-    }
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);
 }
 
 /*
@@ -166,36 +156,12 @@ void BDSlider::setValue(int16_t aCurrentValue, bool doDrawBar) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
-    uint8_t tSubFunctionCode = SUBFUNCTION_SLIDER_SET_VALUE;
-    if (doDrawBar) {
-        tSubFunctionCode = SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR;
-    }
     if (USART_isBluetoothPaired()) {
+        uint8_t tSubFunctionCode = SUBFUNCTION_SLIDER_SET_VALUE;
+        if (doDrawBar) {
+            tSubFunctionCode = SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR;
+        }
         sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, tSubFunctionCode, aCurrentValue);
-    }
-}
-
-/*
- * Deprecated
- */
-void BDSlider::setActualValue(int16_t aCurrentValue) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
-#endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
-    }
-}
-
-/*
- * Deprecated
- */
-void BDSlider::setActualValueAndDrawBar(int16_t aCurrentValue) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
-#endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);
     }
 }
 
@@ -203,9 +169,7 @@ void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setBarThresholdColor(aBarThresholdColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_COLOR_THRESHOLD, aBarThresholdColor);
-    }
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_COLOR_THRESHOLD, aBarThresholdColor);
 }
 
 /*
@@ -215,19 +179,14 @@ void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setBarThresholdColor(aBarThresholdDefaultColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_GLOBAL_SETTINGS, 2, SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD,
-                aBarThresholdDefaultColor);
-    }
+    sendUSARTArgs(FUNCTION_SLIDER_GLOBAL_SETTINGS, 2, SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD, aBarThresholdDefaultColor);
 }
 
 void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setBarBackgroundColor(aBarBackgroundColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_COLOR_BAR_BACKGROUND, aBarBackgroundColor);
-    }
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_COLOR_BAR_BACKGROUND, aBarBackgroundColor);
 }
 
 /*
@@ -239,19 +198,15 @@ void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositi
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setCaptionColors(aCaptionColor, aCaptionBackgroundColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 7, mSliderHandle, SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES, aCaptionSize,
-                aCaptionPosition, aCaptionMargin, aCaptionColor, aCaptionBackgroundColor);
-    }
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 7, mSliderHandle, SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES, aCaptionSize,
+            aCaptionPosition, aCaptionMargin, aCaptionColor, aCaptionBackgroundColor);
 }
 
 void BDSlider::setCaption(const char *aCaption) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setCaption(aCaption);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderHandle, strlen(aCaption), aCaption);
-    }
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderHandle, strlen(aCaption), aCaption);
 }
 
 /*
@@ -259,10 +214,7 @@ void BDSlider::setCaption(const char *aCaption) {
  * This unit string is always appended to the value string.
  */
 void BDSlider::setValueUnitString(const char *aValueUnitString) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_VALUE_UNIT_STRING, 1, mSliderHandle, strlen(aValueUnitString),
-                aValueUnitString);
-    }
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_VALUE_UNIT_STRING, 1, mSliderHandle, strlen(aValueUnitString), aValueUnitString);
 }
 
 /*
@@ -270,10 +222,8 @@ void BDSlider::setValueUnitString(const char *aValueUnitString) {
  * Default is "%2d" for a slider with virtual slider length from 10 to 99 and "%3d" for length 100 to 999.
  */
 void BDSlider::setValueFormatString(const char *aValueFormatString) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING, 1, mSliderHandle, strlen(aValueFormatString),
-                aValueFormatString);
-    }
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING, 1, mSliderHandle, strlen(aValueFormatString),
+            aValueFormatString);
 }
 
 /*
@@ -285,10 +235,8 @@ void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPri
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueStringColors(aPrintValueColor, aPrintValueBackgroundColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 7, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_STRING_PROPERTIES,
-                aPrintValueTextSize, aPrintValuePosition, aPrintValueMargin, aPrintValueColor, aPrintValueBackgroundColor);
-    }
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 7, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_STRING_PROPERTIES, aPrintValueTextSize,
+            aPrintValuePosition, aPrintValueMargin, aPrintValueColor, aPrintValueBackgroundColor);
 }
 
 /*
@@ -299,11 +247,9 @@ void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPri
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 void BDSlider::setScaleFactor(float aScaleFactor) {
-    if (USART_isBluetoothPaired()) {
-        long tScaleFactor = *reinterpret_cast<uint32_t*>(&aScaleFactor);
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderHandle, SUBFUNCTION_SLIDER_SET_SCALE_FACTOR,
-                (uint16_t) tScaleFactor & 0XFFFF, (uint16_t) (tScaleFactor >> 16));
-    }
+    long tScaleFactor = *reinterpret_cast<uint32_t*>(&aScaleFactor);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderHandle, SUBFUNCTION_SLIDER_SET_SCALE_FACTOR, (uint16_t) tScaleFactor & 0XFFFF,
+            (uint16_t) (tScaleFactor >> 16));
 }
 
 /*
@@ -321,27 +267,21 @@ void BDSlider::printValue(const char *aValueString) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->printValue(aValueString);
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_PRINT_VALUE, 1, mSliderHandle, strlen(aValueString), aValueString);
-    }
 }
 
 void BDSlider::activate() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->activate();
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, mSliderHandle, SUBFUNCTION_SLIDER_SET_ACTIVE);
-    }
 }
 
 void BDSlider::deactivate() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->deactivate();
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, mSliderHandle, SUBFUNCTION_SLIDER_RESET_ACTIVE);
-    }
 }
 
 #if defined(SUPPORT_LOCAL_DISPLAY)

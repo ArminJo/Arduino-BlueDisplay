@@ -179,9 +179,22 @@ void TouchSlider::createAllLocalSlidersAtRemote() {
 }
 #endif
 
-/*
- * For BDSlider
+/**
+ * @brief initialization with all parameters (except BarBackgroundColor)
+ * @param aPositionX - Determines upper left corner
+ * @param aPositionY - Determines upper left corner
+ * Only next 2 values are physical values in pixel
+ * @param aBarWidth - Width of bar (and border) in pixel - no scaling!
+ * @param aBarLength - Size of slider bar in pixel = maximum slider value if no scaling applied!
+ *                     Negative means slider bar is top down an is equivalent to positive with FLAG_SLIDER_IS_INVERSE.
+ * @param aThresholdValue - Scaling applied! If selected or sent value is bigger, then color of bar changes from BarColor to BarBackgroundColor
+ * @param aInitalValue - Scaling applied!
+ * @param aSliderColor - Color of slider border. If no border specified, then bar background color.
+ * @param aBarColor
+ * @param aFlags - See #FLAG_SLIDER_SHOW_BORDER etc.
+ * @param aOnChangeHandler - If NULL no update of bar is done on touch - equivalent to FLAG_SLIDER_IS_ONLY_OUTPUT
  */
+
 void TouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength, uint16_t aThresholdValue,
         int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags,
         void (*aOnChangeHandler)(TouchSlider*, uint16_t)) {
@@ -213,7 +226,6 @@ void TouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWid
     mActualValue = aInitalValue;
     mThresholdValue = aThresholdValue;
     mOnChangeHandler = aOnChangeHandler;
-    mValueHandler = NULL;
 
     checkParameterValues();
 
@@ -259,6 +271,10 @@ void TouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWid
             mPositionYBottom = LOCAL_DISPLAY_HEIGHT - 1;
         }
     }
+}
+
+// Dummy to be more compatible with BDButton
+void TouchSlider::deinit() {
 }
 
 void TouchSlider::setDefaultSliderColor(uint16_t aDefaultSliderColor) {
@@ -309,98 +325,6 @@ void TouchSlider::deactivateAllSliders() {
     while (tObjectPointer != NULL) {
         tObjectPointer->deactivate();
         tObjectPointer = tObjectPointer->mNextObject;
-    }
-}
-
-/**
- * @brief initialization with all parameters except color
- * @param aPositionX determines upper left corner
- * @param aPositionY determines upper left corner
- * @param aBarWidth width of border and bar in pixel
- * @param aBarLength length of slider bar in pixel
- * @param aThresholdValue value where color of bar changes from #SLIDER_DEFAULT_BAR_COLOR to #SLIDER_DEFAULT_BAR_THRESHOLD_COLOR
- * @param aInitalValue
- * @param aCaption if NULL no caption is drawn
- * @param aTouchBorder border in pixel, where touches are recognized
- * @param aOptions see #FLAG_SLIDER_SHOW_BORDER etc.
- * @param aOnChangeHandler - if NULL no update of bar is done on touch
- * @param aValueHandler Handler to convert actualValue to string - if NULL sprintf("%3d", mActualValue) is used
- *  * @return false if parameters are not consistent ie. are internally modified
- *  or if not enough space to draw caption or value.
- */
-void TouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uintForPgmSpaceSaving aBarWidth, uint16_t aBarLength,
-        uint16_t aThresholdValue, uint16_t aInitalValue, const char *aCaption, int8_t aTouchBorder, uint8_t aFlags,
-        void (*aOnChangeHandler)(TouchSlider*, uint16_t), const char* (*aValueHandler)(uint16_t)) {
-
-    /*
-     * Copy default values
-     */
-    mSliderColor = sDefaultSliderColor;
-    mBarColor = sDefaultBarColor;
-    mBarBackgroundColor = sDefaultBarBackgroundColor;
-    mValueCaptionBackgroundColor = sDefaultValueCaptionBackgroundColor;
-
-    /*
-     * Copy parameter
-     */
-    mPositionX = aPositionX;
-    mPositionY = aPositionY;
-    mFlags = aFlags;
-    mCaption = aCaption;
-    mBarWidth = aBarWidth;
-    mBarLength = aBarLength;
-    mActualValue = aInitalValue;
-    mThresholdValue = aThresholdValue;
-    mTouchBorder = aTouchBorder;
-    mOnChangeHandler = aOnChangeHandler;
-    mValueHandler = aValueHandler;
-    if (mValueHandler != NULL) {
-        mFlags |= FLAG_SLIDER_SHOW_VALUE;
-    }
-
-    checkParameterValues();
-
-    uintForPgmSpaceSaving tShortBordersAddedWidth = mBarWidth;
-    uintForPgmSpaceSaving tLongBordersAddedWidth = 2 * mBarWidth;
-    if (!(mFlags & FLAG_SLIDER_SHOW_BORDER)) {
-        tShortBordersAddedWidth = 0;
-        tLongBordersAddedWidth = 0;
-    }
-
-    /*
-     * compute lower right corner and validate
-     */
-    if (mFlags & FLAG_SLIDER_IS_HORIZONTAL) {
-        mPositionXRight = mPositionX + mBarLength + tShortBordersAddedWidth - 1;
-        if (mPositionXRight >= LOCAL_DISPLAY_WIDTH) {
-            // simple fallback
-            mPositionX = 0;
-            failParamMessage(mPositionXRight, "XRight wrong");
-            mPositionXRight = LOCAL_DISPLAY_WIDTH - 1;
-        }
-        mPositionYBottom = mPositionY + (tLongBordersAddedWidth + mBarWidth) - 1;
-        if (mPositionYBottom >= LOCAL_DISPLAY_HEIGHT) {
-            // simple fallback
-            mPositionY = 0;
-            failParamMessage(mPositionYBottom, "YBottom wrong");
-            mPositionYBottom = LOCAL_DISPLAY_HEIGHT - 1;
-        }
-
-    } else {
-        mPositionXRight = mPositionX + (tLongBordersAddedWidth + mBarWidth) - 1;
-        if (mPositionXRight >= LOCAL_DISPLAY_WIDTH) {
-            // simple fallback
-            mPositionX = 0;
-            failParamMessage(mPositionXRight, "XRight wrong");
-            mPositionXRight = LOCAL_DISPLAY_WIDTH - 1;
-        }
-        mPositionYBottom = mPositionY + mBarLength + tShortBordersAddedWidth - 1;
-        if (mPositionYBottom >= LOCAL_DISPLAY_HEIGHT) {
-            // simple fallback
-            mPositionY = 0;
-            failParamMessage(mPositionYBottom, "YBottom wrong");
-            mPositionYBottom = LOCAL_DISPLAY_HEIGHT - 1;
-        }
     }
 }
 
@@ -576,7 +500,6 @@ int TouchSlider::printValue() {
     if (!(mFlags & FLAG_SLIDER_SHOW_VALUE)) {
         return 0;
     }
-    char *pValueAsString;
     unsigned int tValuePositionY = mPositionYBottom + mBarWidth / 2 + getTextAscend(TEXT_SIZE_11);
     if (mCaption != NULL && !((mFlags & FLAG_SLIDER_IS_HORIZONTAL) && (mFlags & FLAG_SLIDER_SHOW_VALUE))) {
         // print below value
@@ -589,16 +512,10 @@ int TouchSlider::printValue() {
         tValuePositionY = LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_DECEND;
     }
 
-    if (mValueHandler == NULL) {
-        // Convert to string
-        char tValueAsString[4];
-        pValueAsString = &tValueAsString[0];
-        sprintf(tValueAsString, "%03d", mActualValue);
-    } else {
-        // Let mValueHandler provide the string
-        pValueAsString = (char*) mValueHandler(mActualValue);
-    }
-    return LocalDisplay.drawText(mPositionX + mXOffsetValue, tValuePositionY - TEXT_SIZE_11_ASCEND, pValueAsString, 1, mValueColor,
+    // Convert to string
+    char tValueAsString[4];
+    sprintf(tValueAsString, "%03d", mActualValue);
+    return LocalDisplay.drawText(mPositionX + mXOffsetValue, tValuePositionY - TEXT_SIZE_11_ASCEND, tValueAsString, 1, mValueColor,
             mValueCaptionBackgroundColor);
 }
 
@@ -676,7 +593,7 @@ bool TouchSlider::checkSlider(uint16_t aTouchPositionX, uint16_t aTouchPositionY
             if (mFlags & LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK) {
                 mOnChangeHandler((TouchSlider*) this->mBDSliderPtr, tActualTouchValue);
                 // Synchronize remote slider
-                BlueDisplay1.setSliderValueAndDrawBar(this->mBDSliderPtr->mSliderHandle, tActualTouchValue);
+                this->mBDSliderPtr->setValueAndDrawBar(tActualTouchValue);
             } else {
                 mOnChangeHandler(this, tActualTouchValue);
             }

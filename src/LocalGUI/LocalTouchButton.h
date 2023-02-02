@@ -77,6 +77,9 @@ class TouchButton {
 public:
 
     TouchButton();
+    // Operators
+    bool operator==(const TouchButton &aButton);
+    bool operator!=(const TouchButton &aButton);
 
 #if !defined(ARDUINO)
     ~TouchButton();
@@ -88,7 +91,7 @@ public:
 #endif
     static void setDefaultTouchBorder(uint8_t aDefaultTouchBorder);
     static void setDefaultCaptionColor(uint16_t aDefaultCaptionColor);
-    static uint8_t checkAllButtons(unsigned int aTouchPositionX, unsigned int aTouchPositionY, bool aCheckOnlyAutorepeatButtons = false);
+    static bool checkAllButtons(unsigned int aTouchPositionX, unsigned int aTouchPositionY, bool aCheckOnlyAutorepeatButtons = false);
     static void activateAllButtons();
     static void deactivateAllButtons();
 
@@ -96,7 +99,9 @@ public:
             const char *aCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(TouchButton*, int16_t));
 
-    bool checkButton(uint16_t aTouchPositionX, uint16_t aTouchPositionY, bool aCheckOnlyAutorepeatButtons);
+    void deinit(); // Dummy to be more compatible with BDButton
+
+    bool checkButton(uint16_t aTouchPositionX, uint16_t aTouchPositionY, bool aCheckOnlyAutorepeatButtons = false);
     bool checkButtonInArea(uint16_t aTouchPositionX, uint16_t aTouchPositionY);
 
     bool isAutorepeatButton();
@@ -129,6 +134,10 @@ public:
     void setTouchHandler(void (*aOnTouchHandler)(TouchButton*, int16_t));
 
 #ifdef AVR
+    int8_t init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
+            const __FlashStringHelper *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
+            void (*aOnTouchHandler)(TouchButton*, int16_t));
+
     void setCaptionPGM(const char *aCaption);
     void setCaptionPGMForValueTrue(const char *aCaption);
     uint8_t getCaptionLength(char *aCaptionPointer);
@@ -169,6 +178,7 @@ public:
 void doToggleRedGreenButton(TouchButton *aTheTouchedButton, int16_t aValue);
 
 void playLocalFeedbackTone();
+void playLocalFeedbackTone(unsigned int aFeedbackToneType);
 
 /** @} */
 /** @} */

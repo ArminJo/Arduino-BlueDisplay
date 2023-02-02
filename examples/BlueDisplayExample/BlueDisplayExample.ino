@@ -458,13 +458,13 @@ void printDemoString(void) {
         }
 
         // get resulting color
-        uint8_t ColorRed = GET_RED(COLOR_DEMO_BACKGROUND)
-                + ((int16_t) ( GET_RED(COLOR_CAPTION) - GET_RED(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
-        uint8_t ColorGreen = GET_GREEN(COLOR_DEMO_BACKGROUND)
-                + ((int16_t) (GET_GREEN(COLOR_CAPTION) - GET_GREEN(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
-        uint8_t ColorBlue = GET_BLUE(COLOR_DEMO_BACKGROUND)
-                + ((int16_t) ( GET_BLUE(COLOR_CAPTION) - GET_BLUE(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
+        uint8_t ColorRed = COLOR16_GET_RED(COLOR_DEMO_BACKGROUND)
+                + ((int16_t) ( COLOR16_GET_RED(COLOR_CAPTION) - COLOR16_GET_RED(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
+        uint8_t ColorGreen = COLOR16_GET_GREEN(COLOR_DEMO_BACKGROUND)
+                + ((int16_t) (COLOR16_GET_GREEN(COLOR_CAPTION) - COLOR16_GET_GREEN(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
+        uint8_t ColorBlue = COLOR16_GET_BLUE(COLOR_DEMO_BACKGROUND)
+                + ((int16_t) ( COLOR16_GET_BLUE(COLOR_CAPTION) - COLOR16_GET_BLUE(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
         BlueDisplay1.drawText(DISPLAY_WIDTH / 2 - 2 * getTextWidth(36), 4 + getTextAscend(36), "Demo", 36,
-                RGB(ColorRed, ColorGreen, ColorBlue), COLOR_DEMO_BACKGROUND);
+                COLOR16(ColorRed, ColorGreen, ColorBlue), COLOR_DEMO_BACKGROUND);
     }
 }

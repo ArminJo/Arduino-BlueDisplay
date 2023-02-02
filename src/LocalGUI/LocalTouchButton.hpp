@@ -1,7 +1,7 @@
 /*
  * LocalTouchButton.hpp
  *
- * Renders touch buttons for locally attached LCD screens with SSD1289 (an HY32D board) or HX8347 (on MI0283QT2 board) controller
+ * Renders touch buttons for locally attached LCD screens with SSD1289 (on HY32D board) or HX8347 (on MI0283QT2 board) controller
  * A button can be a simple clickable text
  * or a box with or without text or even an invisible touch area
  *
@@ -39,10 +39,10 @@
 
 #include "LocalGUI/LocalTouchButton.h"
 #include "BDButton.h"
+#include "BlueDisplay.h" // for FEEDBACK_TONE_OK
 #if !defined(DISABLE_REMOTE_DISPLAY)
 #include "LocalGUI/LocalTouchButtonAutorepeat.h"
 #endif
-
 /** @addtogroup Gui_Library
  * @{
  */
@@ -75,6 +75,14 @@ TouchButton::TouchButton() { // @suppress("Class members should be properly init
         //insert actual button as last element
         tButtonPointer->mNextObject = this;
     }
+}
+
+bool TouchButton::operator==(const TouchButton &aButton) {
+    return (this == &aButton);
+}
+
+bool TouchButton::operator!=(const TouchButton &aButton) {
+    return (this != &aButton);
 }
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
@@ -199,6 +207,10 @@ int8_t TouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWid
     mValue = aValue;
 
     return setPosition(aPositionX, aPositionY);
+}
+
+// Dummy to be more compatible with BDButton
+void TouchButton::deinit() {
 }
 
 int8_t TouchButton::setPosition(uint16_t aPositionX, uint16_t aPositionY) {
@@ -347,8 +359,7 @@ bool TouchButton::isAutorepeatButton() {
 
 /**
  * Check if touch event is in button area
- * if yes - return true
- * if no - return false
+ * @return  - true if position match, false else
  */
 bool TouchButton::checkButtonInArea(uint16_t aTouchPositionX, uint16_t aTouchPositionY) {
     if (aTouchPositionX < mPositionX || aTouchPositionX > mPositionX + mWidthX || aTouchPositionY < mPositionY
@@ -367,10 +378,45 @@ void playLocalFeedbackTone() {
     tone(3000, 50);
 #endif
 }
+
+void playLocalFeedbackTone(unsigned int aFeedbackToneType) {
+#if defined(ARDUINO)
+#  if defined(LOCAL_GUI_FEEDBACK_TONE_PIN)
+    if (aFeedbackToneType == FEEDBACK_TONE_OK) {
+        tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 3000, 50);
+    } else if (aFeedbackToneType == FEEDBACK_TONE_ERROR) {
+// two short beeps
+        tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 4000, 30);
+        delay(60);
+        tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 2000, 30);
+    } else if (aFeedbackToneType == FEEDBACK_TONE_NO_TONE) {
+        return;
+    } else {
+// long tone
+        tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 3000, 500);
+    }
+
+#  endif
+#else
+    if (aFeedbackToneType == FEEDBACK_TONE_OK) {
+        tone(3000, 50);
+    } else if (aFeedbackToneType == FEEDBACK_TONE_ERROR) {
+// two short beeps
+        tone(4000, 30);
+        delay(60);
+        tone(2000, 30);
+    } else if (aFeedbackToneType == FEEDBACK_TONE_NO_TONE) {
+        return;
+    } else {
+// long tone
+        tone(3000, 500);
+    }
+#endif
+}
+
 /**
- * Check if touch event is in button area
- * if yes - call callback function and return true
- * if no - return false
+ * Check if touch event is in button area and call buttons callback if position match.
+ * @return  - true if position match, false else
  */
 bool TouchButton::checkButton(uint16_t aTouchPositionX, uint16_t aTouchPositionY, bool aCheckOnlyAutorepeatButtons) {
     if ((mFlags & LOCAL_BUTTON_FLAG_IS_ACTIVE) && mOnTouchHandler != NULL
@@ -380,8 +426,15 @@ bool TouchButton::checkButton(uint16_t aTouchPositionX, uint16_t aTouchPositionY
              *  Touch position is in button - call callback function
              */
 
-            //Beep if requested
-            if (mFlags & FLAG_BUTTON_DO_BEEP_ON_TOUCH) {
+            /*
+             * Beep if requested, but not for autorepeat buttons, since they may be checked very often
+             * to create the repeat timing if LOCAL_DISPLAY_GENERATES_BD_EVENTS is not defined.
+             */
+            if ((mFlags & FLAG_BUTTON_DO_BEEP_ON_TOUCH)
+#if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+                    && !(mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT)
+#endif
+                    ) {
                 playLocalFeedbackTone();
             }
             //Red/Green button handling
@@ -416,9 +469,9 @@ bool TouchButton::checkButton(uint16_t aTouchPositionX, uint16_t aTouchPositionY
 }
 
 /**
- * Static convenience method - checks all buttons for matching touch position.
+ * Static convenience method - checks all buttons for matching touch position and call buttons callback if position match.
  */
-uint8_t TouchButton::checkAllButtons(unsigned int aTouchPositionX, unsigned int aTouchPositionY, bool aCheckOnlyAutorepeatButtons) {
+bool TouchButton::checkAllButtons(unsigned int aTouchPositionX, unsigned int aTouchPositionY, bool aCheckOnlyAutorepeatButtons) {
     TouchButton *tButtonPointer = sButtonListStart;
     // walk through list
     while (tButtonPointer != NULL) {
@@ -458,6 +511,23 @@ void TouchButton::activateAllButtons() {
 }
 
 #if defined(AVR)
+int8_t TouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
+        const __FlashStringHelper *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
+        void (*aOnTouchHandler)(TouchButton*, int16_t)) {
+
+    mWidthX = aWidthX;
+    mHeightY = aHeightY;
+    mCaptionColor = sDefaultCaptionColor;
+    mCaption = (const char*) aPGMCaption;
+    mCaptionSize = aCaptionSize;
+    mOnTouchHandler = aOnTouchHandler;
+    mFlags = aFlags | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
+    mButtonColor = aButtonColor;
+    mValue = aValue;
+
+    return setPosition(aPositionX, aPositionY);
+}
+
 /*
  * Not used yet
  */

@@ -56,28 +56,6 @@ typedef uint16_t color16_t;
 #define COLOR16_PURPLE    ((color16_t)0xF81F)
 #define COLOR16_CYAN      ((color16_t)0x07FF)
 
-// deprecated
-typedef uint16_t Color_t __attribute__ ((deprecated ("Renamed to color16_t")));
-
-// 01 because 0 is used as flag (e.g. in touch button for default color)
-#define COLOR_WHITE     ((color16_t)0xFFFF)
-#define COLOR_BLACK     ((color16_t)0X0001)
-#define COLOR_RED       ((color16_t)0xF800)
-#define COLOR_GREEN     ((color16_t)0X07E0)
-#define COLOR_BLUE      ((color16_t)0x001F)
-#define COLOR_DARK_BLUE ((color16_t)0x0014)
-#define COLOR_YELLOW    ((color16_t)0XFFE0)
-#define COLOR_ORANGE    ((color16_t)0XFE00)
-#define COLOR_PURPLE    ((color16_t)0xF81F)
-#define COLOR_CYAN      ((color16_t)0x07FF)
-#define COLOR_NO_BACKGROUND   ((color16_t)0XFFFE)
-#define BLUEMASK 0x1F
-#define GET_RED(rgb)    ((rgb & 0xF800) >> 8)
-#define GET_GREEN(rgb)  ((rgb & 0x07E0) >> 3)
-#define GET_BLUE(rgb)   ((rgb & 0x001F) << 3)
-#define RGB(r,g,b)      ((color16_t)(((r&0xF8)<<8)|((g&0xFC)<<3)|((b&0xF8)>>3))) //5 red | 6 green | 5 blue
-// end deprecated
-
 /*
  * 32 Bit Color values
  */

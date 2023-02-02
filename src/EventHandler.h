@@ -45,7 +45,7 @@ extern unsigned long sMillisOfLastReceivedBDEvent; // is updated with millis() a
 #define TOUCH_SWIPE_RESOLUTION_MILLIS 20
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
-#   if defined(AUTOREPEAT_BY_USING_LOCAL_EVENT)
+#   if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
 extern struct BluetoothEvent localTouchEvent;
 #  endif
 /*
@@ -124,7 +124,7 @@ void setPeriodicTouchCallbackPeriod(uint32_t aCallbackPeriod);
 
 bool getDisplayXYValuesFlag();
 void setDisplayXYValuesFlag(bool aEnableDisplay);
-void printTPData(int x, int y,  color16_t aColor,  color16_t aBackColor);
+void printEventTouchPositionData(int x, int y,  color16_t aColor,  color16_t aBackColor);
 #endif
 
 #ifdef __cplusplus

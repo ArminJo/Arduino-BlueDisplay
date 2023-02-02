@@ -171,15 +171,13 @@
 #include "BlueDisplay.hpp"
 
 #include "SimpleDSO.h"
+#include "LocalDisplay/digitalWriteFast.h"
 #include "FrequencyGeneratorPage.hpp" // include sources
 #include "TouchDSOGui.hpp" // include sources
-
-#include "digitalWriteFast.h"
 
 /**********************
  * Buttons
  *********************/
-
 BDButton TouchButtonBack;
 // global flag for page control. Is evaluated by calling loop or page and set by buttonBack handler
 bool sBackButtonPressed;

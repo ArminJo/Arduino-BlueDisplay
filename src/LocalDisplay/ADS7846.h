@@ -94,9 +94,12 @@ public:
 
     struct XYPosition mTouchActualPosition; // calibrated (screen) position
     struct XYPosition mTouchLastPosition;   // for move detection
-    uint8_t mPressure; // touch panel pressure
+    uint8_t mPressure; // touch panel pressure can be 0 or >= MIN_REASONABLE_PRESSURE
 
-#if !defined(AVR)
+#if defined(AVR)
+    bool ADS7846TouchActive = false; // is true as long as touch lasts
+    bool ADS7846TouchStart = false; // is true once for every touch is reset by call to
+#else
     volatile bool ADS7846TouchActive = false; // is true as long as touch lasts
     volatile bool ADS7846TouchStart = false; // is true once for every touch - independent from calling mLongTouchCallback
 #endif
@@ -105,13 +108,15 @@ public:
     void init(void);
     void readData(void);
     uint8_t getPressure(void);
+    bool wasTouched(void);
 
 #if defined(AVR)
-    void doCalibration(uint16_t eeprom_addr, uint8_t check_eeprom);
+    void doCalibration(uint16_t eeprom_addr, bool check_eeprom);
+    void initAndCalibrateOnPress(uint16_t eeprom_addr);
 #else
     void readData(uint8_t aOversampling);
     void doCalibration(bool aCheckRTC);
-    bool wasTouched(void);
+    void initAndCalibrateOnPress();
 #endif
 
     uint16_t getRawX(void);
@@ -142,6 +147,14 @@ private:
 #endif
 };
 
+#if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+bool isFirstTouch();
+void handleTouchPanelEvents();
+void checkAndHandleTouchPanelEvents();
+
+extern bool sTouchPanelNothingTouched; // only one button handling in loop each touching of local display
+extern bool sTouchPanelSliderIsMoveTarget; // true if slider was touched by DOWN event
+#endif
 extern ADS7846 TouchPanel; // The instance provided by the class itself
 
 #endif //_ADS7846_H

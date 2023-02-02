@@ -24,8 +24,10 @@
  *
  */
 
-#include "LocalGUI/ThickLine.h" // for drawLineOverlap()
 #include "SSD1289.h"
+#include "LocalDisplayInterface.hpp"
+#include "LocalGUI/ThickLine.h" // for drawLineOverlap()
+
 #include "BlueDisplay.h"
 #include "main.h" // for StringBuffer
 #include "STM32TouchScreenDriver.h"
@@ -35,7 +37,6 @@
 #include <string.h>  // for strcat
 #include <stdlib.h>  // for malloc
 
-#include "LocalDisplayInterface.hpp"
 
 /** @addtogroup Graphic_Library
  * @{
@@ -43,8 +44,6 @@
 /** @addtogroup SSD1289_basic
  * @{
  */
-
-SSD1289 LocalDisplay; // The instance of this class
 
 #define LCD_GRAM_WRITE_REGISTER    0x22
 
@@ -120,6 +119,14 @@ void SSD1289::clearDisplay(uint16_t aColor) {
 
 }
 
+uint16_t SSD1289::getDisplayWidth(void) {
+    return LOCAL_DISPLAY_WIDTH;
+}
+
+uint16_t SSD1289::getDisplayHeight(void) {
+    return LOCAL_DISPLAY_HEIGHT;
+}
+
 /**
  * set register address to LCD_GRAM_READ/WRITE_REGISTER
  */
@@ -161,6 +168,10 @@ void SSD1289::drawPixel(uint16_t aPositionX, uint16_t aPositionY, uint16_t aColo
     drawStart();
     draw(aColor);
     drawStop();
+}
+
+void SSD1289::drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor) {
+    drawLine(aStartX, aStartY, aStartX + aDeltaX, aStartY + aDeltaY, aColor);
 }
 
 void SSD1289::drawLine(uint16_t aPositionX, uint16_t aPositionY, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor) {
@@ -422,7 +433,7 @@ void setBrightness(int aLCDBacklightPercent) {
 /**
  * Value for lcd backlight dimming delay
  */
-void setDimDelayMillis(int32_t aTimeMillis) {
+void setDimdelay(int32_t aTimeMillis) {
     changeDelayCallback(&callbackLCDDimming, aTimeMillis);
     sLCDDimDelay = aTimeMillis;
 }
@@ -504,7 +515,7 @@ bool initalizeDisplay(void) {
 // Reset is done by hardware reset button
 // Original Code
     writeCommand(0x0000, 0x0001); // Enable LCD Oscillator
-    delayMillis(10);
+    delay(10);
 // Check Device Code - 0x8989
     if (readCommand(0x0000) != 0x8989) {
         return false;
@@ -519,7 +530,7 @@ bool initalizeDisplay(void) {
 
     writeCommand(0x0002, 0x0600); // LCD driver AC setting
     writeCommand(0x0010, 0x0000); // Exit sleep mode
-    delayMillis(50);
+    delay(50);
 
     writeCommand(0x0011, 0x6038); // 6=65k Color, 38=draw direction -> 3=horizontal increment, 8=vertical increment
 //	writeCommand(0x0016, 0xEF1C); // 240 pixel
@@ -534,7 +545,7 @@ bool initalizeDisplay(void) {
 //	writeCommand(0x004A, 0x0000); // 0 is default 2nd Screen driving position
 //	writeCommand(0x004B, 0x0000);  // 13F is default
 
-    delayMillis(10);
+    delay(10);
 //gamma control
     writeCommand(0x0030, 0x0707);
     writeCommand(0x0031, 0x0204);
@@ -556,7 +567,7 @@ bool initalizeDisplay(void) {
  */
 void initalizeDisplay2(void) {
 // Reset is done by hardware reset button
-    delayMillis(1);
+    delay(1);
     writeCommand(0x0011, 0x6838); // 6=65k Color, 8 = OE defines the display window 0 =the display window is defined by R4Eh and R4Fh.
 //writeCommand(0x0011, 0x6038); // 6=65k Color, 8 = OE defines the display window 0 =the display window is defined by R4Eh and R4Fh.
 //Entry Mode setting
@@ -576,9 +587,9 @@ void initalizeDisplay2(void) {
 //writeCommand(0x0006, 0x0000);
 
 //writeCommand(0x0017, 0x0103); //Vertical Porch
-    delayMillis(1);
+    delay(1);
 
-    delayMillis(30);
+    delay(30);
 //gamma control
     writeCommand(0x0030, 0x0707);
     writeCommand(0x0031, 0x0204);
@@ -593,9 +604,9 @@ void initalizeDisplay2(void) {
 
     writeCommand(0x002F, 0x12BE);
     writeCommand(0x0023, 0x0000);
-    delayMillis(1);
+    delay(1);
     writeCommand(0x0024, 0x0000);
-    delayMillis(1);
+    delay(1);
     writeCommand(0x0025, 0x8000);
 
     writeCommand(0x004e, 0x0000); // RAM address set
@@ -653,14 +664,14 @@ uint16_t* SSD1289::fillDisplayLineBuffer(uint16_t *aBufferPtr, uint16_t yLineNum
         if (i > 1) {
             // skip inital value (=0) and first reading from display (is from last read => scrap)
             // shift red and green one bit down so that every color has 5 bits
-            tValue = (tValue & BLUEMASK) | ((tValue >> 1) & ~BLUEMASK);
+            tValue = (tValue & COLOR16_BLUEMASK) | ((tValue >> 1) & ~COLOR16_BLUEMASK);
             *aBufferPtr++ = tValue;
         }
         tValue = HY32D_DATA_GPIO_PORT->IDR;
         HY32D_WR_GPIO_PORT->BSRR = HY32D_RD_PIN;
     }
 // last value
-    tValue = (tValue & BLUEMASK) | ((tValue >> 1) & ~BLUEMASK);
+    tValue = (tValue & COLOR16_BLUEMASK) | ((tValue >> 1) & ~COLOR16_BLUEMASK);
     *aBufferPtr++ = tValue;
 // set port pins to output
     HY32D_DATA_GPIO_PORT->MODER = 0x55555555;
@@ -712,7 +723,7 @@ extern "C" void storeScreenshot(void) {
             tFeedbackType = FEEDBACK_TONE_OK;
         }
     }
-    FeedbackTone(tFeedbackType);
+    playLocalFeedbackTone(tFeedbackType);
 }
 
 /** @} */

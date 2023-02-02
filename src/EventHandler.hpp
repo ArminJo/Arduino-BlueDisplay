@@ -52,13 +52,13 @@ struct TouchEvent sUpPosition;
  * helper variables
  */
 //
-bool sNothingTouched = false; // = !(sSliderTouched || sAutorepeatButtonTouched)
+bool sNothingTouched = false;
 bool sSliderIsMoveTarget = false; // true if slider was touched by DOWN event
 
 uint32_t sLongTouchDownTimeoutMillis;
 uint32_t sPeriodicCallbackPeriodMillis;
 
-#if defined(AUTOREPEAT_BY_USING_LOCAL_EVENT)
+#if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
 /*
  * timer related callbacks
  */
@@ -239,8 +239,8 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) {
         }
 #  endif
 #else // ARDUINO
-    unsigned long tStartMillis = getMillisSinceBoot();
-    while (getMillisSinceBoot() - tStartMillis < aDelayMillis) {
+    unsigned long tStartMillis = millis();
+    while (millis() - tStartMillis < aDelayMillis) {
 #endif
         checkAndHandleEvents();
 #if defined(ESP8266)
@@ -266,8 +266,8 @@ bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) {
         }
 #  endif
 #else // ARDUINO
-    unsigned long tStartMillis = getMillisSinceBoot();
-    while (getMillisSinceBoot() - tStartMillis < aDelayMillis) {
+    unsigned long tStartMillis = millis();
+    while (millis() - tStartMillis < aDelayMillis) {
 #endif
         checkAndHandleEvents();
         if (sBDEventJustReceived) {
@@ -283,7 +283,7 @@ bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
 bool sDisplayXYValuesEnabled = false;  // displays touch values on screen
 
-#if defined(AUTOREPEAT_BY_USING_LOCAL_EVENT)
+#if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
 /**
  * set CallbackPeriod
  */
@@ -354,12 +354,15 @@ void checkAndHandleEvents() {
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     resetTouchFlags();
+
+#  if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
     /*
      * Check if a local event happened, i.e. the localTouchEvent was written by an touch device interrupt handler
      */
     if (localTouchEvent.EventType != EVENT_NO_EVENT) {
         handleEvent(&localTouchEvent);
     }
+#  endif
 #endif
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
@@ -375,7 +378,11 @@ void checkAndHandleEvents() {
     /*
      * For non Arduino, check USART buffer, which in turn calls handleEvent() if event was received
      */
-    checkAndHandleMessageReceived();
+    // get actual DMA byte count
+    int32_t tBytesAvailable = getReceiveBytesAvailable();
+    if (tBytesAvailable != 0) {
+        serialEvent();
+    }
 #  endif
 #endif
 }
@@ -406,7 +413,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 
 #if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS) && defined(SUPPORT_LOCAL_DISPLAY)
     if (tEventType <= EVENT_TOUCH_ACTION_MOVE && sDisplayXYValuesEnabled) {
-        printTPData(30, 2 + TEXT_SIZE_11_ASCEND, COLOR16_BLACK, COLOR16_WHITE);
+        printEventTouchPositionData(30, 2 + TEXT_SIZE_11_ASCEND, COLOR16_BLACK, COLOR16_WHITE);
     }
 #endif
 
@@ -672,7 +679,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 #if defined(ARDUINO)
     sMillisOfLastReceivedBDEvent = millis(); // set time of (last) event
 #else
-    sMillisOfLastReceivedBDEvent = getMillisSinceBoot(); // set time of (last) event
+    sMillisOfLastReceivedBDEvent = millis(); // set time of (last) event
 #endif
 }
 
@@ -782,7 +789,7 @@ bool getDisplayXYValuesFlag() {
 /**
  * show touchpanel data on screen
  */
-void printTPData(int x, int y, color16_t aColor, color16_t aBackColor) {
+void printEventTouchPositionData(int x, int y, color16_t aColor, color16_t aBackColor) {
     char tStringBuffer[12];
     snprintf(tStringBuffer, 12, "X:%03i Y:%03i", sCurrentPosition.TouchPosition.PosX, sCurrentPosition.TouchPosition.PosY);
     BlueDisplay1.drawText(x, y, tStringBuffer, TEXT_SIZE_11, aColor, aBackColor);

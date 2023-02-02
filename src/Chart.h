@@ -1,18 +1,24 @@
 /**
- * chart.h
+ * Chart.h
  *
- * Draws charts for LCD screen
- * Charts have axes and a data area
- * Data can be printed as pixels or line or area
- * Labels and grid are optional
  *
- * @date  14.02.2012
- * @author  Armin Joachimsmeyer
- * armin.joachimsmeyer@gmail.com
- * @copyright LGPL v3 (http://www.gnu.org/licenses/lgpl.html)
- * @version 1.0.0
+ *  Copyright (C) 2012-2023  Armin Joachimsmeyer
+ *  armin.joachimsmeyer@gmail.com
  *
- *  64 / 0x40 Bytes per button on 32Bit ARM
+ *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
+ *
+ *  BlueDisplay is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
 #include "BlueDisplay.h"
@@ -25,7 +31,7 @@
 #define CHART_DISPLAY_GRID              true
 
 #define CHART_DEFAULT_AXES_COLOR        COLOR16_BLACK
-#define CHART_DEFAULT_GRID_COLOR        RGB( 180, 180, 180)
+#define CHART_DEFAULT_GRID_COLOR        COLOR16( 180, 180, 180)
 #define CHART_DEFAULT_BACKGROUND_COLOR  COLOR16_WHITE
 #define CHART_DEFAULT_LABEL_COLOR       COLOR16_BLACK
 #define CHART_MAX_AXES_SIZE             10
@@ -61,11 +67,7 @@ void showChartDemo(void);
 
 class Chart {
 public:
-#if defined(DISABLE_REMOTE_DISPLAY)
-    Chart(MI0283QT2 *aDisplay);
-#else
-    Chart(BlueDisplay *aDisplay);
-#endif
+    Chart();
     uint8_t initChart(const uint16_t aPositionX, const uint16_t aPositionY, const uint16_t aWidthX, const uint16_t aHeightY,
             const uint8_t aAxesSize, const bool aHasGrid, const uint8_t aGridXResolution, const uint8_t aGridYResolution);
 
@@ -170,11 +172,6 @@ public:
     void setYTitleText(const char * aLabelText);
     void drawYAxisTitle(const int aYOffset) const;
 
-#if !defined(DISABLE_REMOTE_DISPLAY)
-    BlueDisplay * mDisplay; // The Display to use
-#else
-    MI0283QT2 * mDisplay; // The Display to use
-#endif
     // layout
     uint16_t mPositionX;    // Position in display coordinates of x - origin is on x axis
     uint16_t mPositionY;    // Position in display coordinates of y - origin is on y axis

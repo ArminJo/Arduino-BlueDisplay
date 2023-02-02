@@ -1,5 +1,5 @@
 /**
- * MI0283QT2.hpp
+ * HX8347D.hpp
  *
  * Firmware to control a MI0283QT 320 x 240, 2.8" Display with a HX8347D controller
  * https://shop.watterott.com/MI0283QT-Adapter-v1-inkl-28-LCD-Touchpanel
@@ -27,11 +27,16 @@
  */
 
 #include "digitalWriteFast.h"
-#include "MI0283QT2.h"
+#include "HX8347D.h"
 
 #include "LocalDisplayInterface.hpp"
 
-MI0283QT2 LocalDisplay; // The instance provided by the class itself
+/*
+ * For automatic LCD dimming
+ */
+uint8_t sCurrentBacklightPercent = BACKLIGHT_START_BRIGHTNESS_VALUE;
+uint8_t sLastBacklightPercent; //! for state of backlight before dimming
+int sLCDDimDelay; //actual dim delay
 
 #define PRINT_STARTX    (2)
 #define PRINT_STARTY    (2)
@@ -52,7 +57,7 @@ MI0283QT2 LocalDisplay; // The instance provided by the class itself
 #define SOFTWARE_SPI
 # define LED_PIN        (9) //PH6: OC2B
 # define RST_PIN        (8)
-# define MI0283QT2_CS_PIN (7)
+# define HX8347D_CS_PIN (7)
 # if defined(SOFTWARE_SPI)
 #  define MOSI_PIN      (11)
 #  define MISO_PIN      (12)
@@ -67,7 +72,7 @@ MI0283QT2 LocalDisplay; // The instance provided by the class itself
        defined(__AVR_ATmega644P__))    //--- Arduino 644 (www.mafu-foto.de) ---
 # define LED_PIN        (3) //PB3: OC0
 # define RST_PIN        (12)
-# define MI0283QT2_CS_PIN (13)
+# define HX8347D_CS_PIN (13)
 # define MOSI_PIN       (5)
 # define MISO_PIN       (6)
 # define CLK_PIN        (7)
@@ -79,7 +84,7 @@ MI0283QT2 LocalDisplay; // The instance provided by the class itself
 #else
 # define RST_PIN        (8)
 #endif
-# define MI0283QT2_CS_PIN (7)
+# define HX8347D_CS_PIN (7)
 # define MOSI_PIN       (11)
 # define MISO_PIN       (12)
 # define CLK_PIN        (13)
@@ -97,8 +102,8 @@ MI0283QT2 LocalDisplay; // The instance provided by the class itself
 #define RST_ENABLE()    digitalWriteFast(RST_PIN, LOW)
 #endif
 
-#define MI0283QT2_CS_DISABLE()    digitalWriteFast(MI0283QT2_CS_PIN, HIGH)
-#define MI0283QT2_CS_ENABLE()     digitalWriteFast(MI0283QT2_CS_PIN, LOW)
+#define HX8347D_CS_DISABLE()    digitalWriteFast(HX8347D_CS_PIN, HIGH)
+#define HX8347D_CS_ENABLE()     digitalWriteFast(HX8347D_CS_PIN, LOW)
 
 #define MOSI_HIGH()     digitalWriteFast(MOSI_PIN, HIGH)
 #define MOSI_LOW()      digitalWriteFast(MOSI_PIN, LOW)
@@ -110,12 +115,12 @@ MI0283QT2 LocalDisplay; // The instance provided by the class itself
 
 //-------------------- Constructor --------------------
 
-MI0283QT2::MI0283QT2() {   // @suppress("Class members should be properly initialized")
+HX8347D::HX8347D() {   // @suppress("Class members should be properly initialized")
 }
 
 //-------------------- Public --------------------
 
-void MI0283QT2::init(uint8_t aSPIClockDivider) {
+void HX8347D::init(uint8_t aSPIClockDivider) {
     //init pins
     pinMode(LED_PIN, OUTPUT);
     digitalWriteFast(LED_PIN, LOW);
@@ -127,8 +132,8 @@ void MI0283QT2::init(uint8_t aSPIClockDivider) {
     pinMode(RST_PIN, OUTPUT);
     digitalWriteFast(RST_PIN, LOW);
 #endif
-    pinMode(MI0283QT2_CS_PIN, OUTPUT);
-    digitalWriteFast(MI0283QT2_CS_PIN, HIGH);
+    pinMode(HX8347D_CS_PIN, OUTPUT);
+    digitalWriteFast(HX8347D_CS_PIN, HIGH);
     pinMode(CLK_PIN, OUTPUT);
     pinMode(MOSI_PIN, OUTPUT);
     pinMode(MISO_PIN, INPUT);
@@ -198,7 +203,7 @@ void MI0283QT2::init(uint8_t aSPIClockDivider) {
 /**
  * @param aBrightnessPercent value from 0 to 100
  */
-void MI0283QT2::setBacklightBrightness(uint8_t aBrightnessPercent) {
+void HX8347D::setBacklightBrightness(uint8_t aBrightnessPercent) {
     if (aBrightnessPercent == 0) { //off
         analogWrite(LED_PIN, 0);
         LED_DISABLE();
@@ -210,7 +215,7 @@ void MI0283QT2::setBacklightBrightness(uint8_t aBrightnessPercent) {
     }
 }
 
-void MI0283QT2::setOrientation(uint16_t o) {
+void HX8347D::setOrientation(uint16_t o) {
 #if !defined(SUPPORT_HY32D)
     switch (o) {
     case 0:
@@ -250,15 +255,15 @@ void MI0283QT2::setOrientation(uint16_t o) {
 #endif
 }
 
-uint16_t MI0283QT2::getDisplayWidth(void) {
+uint16_t HX8347D::getDisplayWidth(void) {
     return LOCAL_DISPLAY_WIDTH;
 }
 
-uint16_t MI0283QT2::getDisplayHeight(void) {
+uint16_t HX8347D::getDisplayHeight(void) {
     return LOCAL_DISPLAY_HEIGHT;
 }
 
-void MI0283QT2::setArea(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd) {
+void HX8347D::setArea(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd) {
     if ((aXEnd >= LOCAL_DISPLAY_WIDTH) || (aYEnd >= LOCAL_DISPLAY_HEIGHT)) {
         return;
     }
@@ -282,13 +287,13 @@ void MI0283QT2::setArea(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint
 #endif
 }
 
-void MI0283QT2::setCursor(uint16_t x, uint16_t y) {
+void HX8347D::setCursor(uint16_t x, uint16_t y) {
     setArea(x, y, x, y);
 
     return;
 }
 
-void MI0283QT2::clearDisplay(color16_t aColor) {
+void HX8347D::clearDisplay(color16_t aColor) {
     uint16_t size;
 
     setArea(0, 0, LOCAL_DISPLAY_WIDTH - 1, LOCAL_DISPLAY_HEIGHT - 1);
@@ -309,37 +314,37 @@ void MI0283QT2::clearDisplay(color16_t aColor) {
     return;
 }
 
-void MI0283QT2::drawStart() {
+void HX8347D::drawStart() {
 #if defined(SUPPORT_HY32D)
-    MI0283QT2_CS_ENABLE();
+    HX8347D_CS_ENABLE();
     DC_COMMAND();
     wr_spi(0x22); // #define LCD_GRAM_WRITE_REGISTER    0x22
-    MI0283QT2_CS_DISABLE();
+    HX8347D_CS_DISABLE();
 
-    MI0283QT2_CS_ENABLE();
+    HX8347D_CS_ENABLE();
     DC_DATA();
 
 #else
-    MI0283QT2_CS_ENABLE();
+    HX8347D_CS_ENABLE();
     wr_spi(LCD_REGISTER);
     wr_spi(0x22);
-    MI0283QT2_CS_DISABLE();
+    HX8347D_CS_DISABLE();
 
-    MI0283QT2_CS_ENABLE();
+    HX8347D_CS_ENABLE();
     wr_spi(LCD_DATA);
 #endif
 }
 
-inline void MI0283QT2::draw(color16_t aColor) {
+inline void HX8347D::draw(color16_t aColor) {
     wr_spi(aColor >> 8);
     wr_spi(aColor);
 }
 
-inline void MI0283QT2::drawStop(void) {
-    MI0283QT2_CS_DISABLE();
+inline void HX8347D::drawStop(void) {
+    HX8347D_CS_DISABLE();
 }
 
-void MI0283QT2::drawPixel(uint16_t aPositionX, uint16_t aPositionY, color16_t aColor) {
+void HX8347D::drawPixel(uint16_t aPositionX, uint16_t aPositionY, color16_t aColor) {
     if ((aPositionX >= LOCAL_DISPLAY_WIDTH) || (aPositionY >= LOCAL_DISPLAY_HEIGHT)) {
         return;
     }
@@ -354,7 +359,7 @@ void MI0283QT2::drawPixel(uint16_t aPositionX, uint16_t aPositionY, color16_t aC
 /*
  * needs an TFTDisplay.setArea(0, 0, LOCAL_DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1) first.
  */
-void MI0283QT2::drawPixelFast(uint16_t aPositionX, uint8_t aPositionY, color16_t aColor) {
+void HX8347D::drawPixelFast(uint16_t aPositionX, uint8_t aPositionY, color16_t aColor) {
 
 #if defined(SUPPORT_HY32D)
     setArea(aPositionX, aPositionY, aPositionX, aPositionY);
@@ -385,7 +390,7 @@ void MI0283QT2::drawPixelFast(uint16_t aPositionX, uint8_t aPositionY, color16_t
  * first pixel is omitted because it is drawn by preceeding line
  * uint16_t aStartX, uint16_t aStartY, uint16_t aEndY, color16_t aColor
  */
-void MI0283QT2::drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aEndY, color16_t aColor) {
+void HX8347D::drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aEndY, color16_t aColor) {
     uint8_t i;
     bool up = true;
     //calculate direction
@@ -439,10 +444,10 @@ void MI0283QT2::drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aE
     }
 }
 
-void MI0283QT2::drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor) {
+void HX8347D::drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor) {
     drawLine(aStartX, aStartY, aStartX + aDeltaX, aStartY + aDeltaY, aColor);
 }
-void MI0283QT2::drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
+void HX8347D::drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
     int16_t dx, dy, dx2, dy2, err, stepx, stepy;
 
     if (aStartX >= LOCAL_DISPLAY_WIDTH) {
@@ -507,14 +512,14 @@ void MI0283QT2::drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uin
     }
 }
 
-void MI0283QT2::drawRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
+void HX8347D::drawRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
     fillRect(aStartX, aStartY, aStartX, aEndY, aColor);
     fillRect(aStartX, aEndY, aEndX, aEndY, aColor);
     fillRect(aEndX, aStartY, aEndX, aEndY, aColor);
     fillRect(aStartX, aStartY, aEndX, aStartY, aColor);
 }
 
-void MI0283QT2::fillRectRel(uint16_t aStartX, uint16_t aStartY, uint16_t aWidth, uint16_t aHeight, color16_t aColor) {
+void HX8347D::fillRectRel(uint16_t aStartX, uint16_t aStartY, uint16_t aWidth, uint16_t aHeight, color16_t aColor) {
     fillRect(aStartX, aStartY, aStartX + aWidth - 1, aStartY + aHeight - 1, aColor);
 }
 
@@ -522,7 +527,7 @@ void MI0283QT2::fillRectRel(uint16_t aStartX, uint16_t aStartY, uint16_t aWidth,
  * Fill rectangle starting upper left with aStartX, aStartY
  * and ending lower right at aEndX, aEndY including these values
  */
-void MI0283QT2::fillRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
+void HX8347D::fillRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
     uint32_t size;
     uint16_t tmp, i;
 
@@ -575,7 +580,7 @@ void MI0283QT2::fillRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uin
     drawStop();
 }
 
-void MI0283QT2::drawCircle(uint16_t aCenterX, uint16_t aCenterY, uint16_t aRadius, color16_t aColor) {
+void HX8347D::drawCircle(uint16_t aCenterX, uint16_t aCenterY, uint16_t aRadius, color16_t aColor) {
     int16_t err, x, y;
 
     err = -aRadius;
@@ -603,7 +608,7 @@ void MI0283QT2::drawCircle(uint16_t aCenterX, uint16_t aCenterY, uint16_t aRadiu
     }
 }
 
-void MI0283QT2::fillCircle(uint16_t aCenterX, uint16_t aCenterY, uint16_t aRadius, color16_t aColor) {
+void HX8347D::fillCircle(uint16_t aCenterX, uint16_t aCenterY, uint16_t aRadius, color16_t aColor) {
     int16_t err, x, y;
 
     err = -aRadius;
@@ -627,125 +632,125 @@ void MI0283QT2::fillCircle(uint16_t aCenterX, uint16_t aCenterY, uint16_t aRadiu
     }
 }
 
-void MI0283QT2::printOptions(uint8_t size, color16_t aColor, color16_t bg_aColor) {
+void HX8347D::printOptions(uint8_t size, color16_t aColor, color16_t bg_aColor) {
     p_size = size;
     p_fg = aColor;
     p_bg = bg_aColor;
 }
 
-void MI0283QT2::printClear(void) {
+void HX8347D::printClear(void) {
     clearDisplay(p_bg);
 
     p_x = PRINT_STARTX;
     p_y = PRINT_STARTY;
 }
 
-void MI0283QT2::printXY(uint16_t x, uint16_t y) {
+void HX8347D::printXY(uint16_t x, uint16_t y) {
     p_x = x;
     p_y = y;
 }
 
-uint16_t MI0283QT2::printGetX(void) {
+uint16_t HX8347D::printGetX(void) {
     return p_x;
 }
 
-uint16_t MI0283QT2::printGetY(void) {
+uint16_t HX8347D::printGetY(void) {
     return p_y;
 }
 
-void MI0283QT2::printPGM(PGM_P aString) {
-    uint16_t x = p_x, y = p_y, x_last;
-    char tChar;
-
-    tChar = pgm_read_byte(aString++);
-    while (tChar != 0) {
-        if (tChar == '\n') //new line
-                {
-            x = PRINT_STARTX;
-            y += (FONT_HEIGHT * p_size) + 1;
-            if (y >= LOCAL_DISPLAY_HEIGHT) {
-                y = PRINT_STARTY;
-            }
-        } else if (tChar == '\r') //skip
-                {
-            //do nothing
-        } else {
-            x_last = x;
-            x = drawChar(x, y, tChar, p_size, p_fg, p_bg);
-            if (x > LOCAL_DISPLAY_WIDTH) {
-                fillRect(x_last, y, LOCAL_DISPLAY_WIDTH - 1, y + (FONT_HEIGHT * p_size), p_bg);
-                x = PRINT_STARTX;
-                y += (FONT_HEIGHT * p_size) + 1;
-                if (y >= LOCAL_DISPLAY_HEIGHT) {
-                    y = PRINT_STARTY;
-                }
-                x = drawChar(x, y, tChar, p_size, p_fg, p_bg);
-            }
-        }
-        tChar = pgm_read_byte(aString++);
-    }
-
-    p_x = x;
-    p_y = y;
-}
-
-size_t MI0283QT2::write(uint8_t c) {
-    uint16_t x = p_x, y = p_y;
-
-    if (c == '\n') {
-        x = PRINT_STARTX;
-        y += (FONT_HEIGHT * p_size) + 1;
-        if (y >= LOCAL_DISPLAY_HEIGHT) {
-            y = PRINT_STARTY;
-        }
-    } else if (c == '\r') //skip
-            {
-        //do nothing
-    } else {
-        x = drawChar(x, y, c, p_size, p_fg, p_bg);
-        if (x > LOCAL_DISPLAY_WIDTH) {
-            fillRect(p_x, y, LOCAL_DISPLAY_WIDTH - 1, y + (FONT_HEIGHT * p_size), p_bg);
-            x = PRINT_STARTX;
-            y += (FONT_HEIGHT * p_size) + 1;
-            if (y >= LOCAL_DISPLAY_HEIGHT) {
-                y = PRINT_STARTY;
-            }
-            x = drawChar(x, y, c, p_size, p_fg, p_bg);
-        }
-    }
-
-    p_x = x;
-    p_y = y;
-
-    return 1;
-}
-
-size_t MI0283QT2::write(const char *s) {
-    size_t len = 0;
-
-    while (*s) {
-        write((uint8_t) *s++);
-        len++;
-    }
-
-    return len;
-}
-
-size_t MI0283QT2::write(const uint8_t *s, size_t size) {
-    size_t len = 0;
-
-    while (size != 0) {
-        write((uint8_t) *s++);
-        size--;
-        len++;
-    }
-
-    return len;
-}
+//void HX8347D::printPGM(PGM_P aString) {
+//    uint16_t x = p_x, y = p_y, x_last;
+//    char tChar;
+//
+//    tChar = pgm_read_byte(aString++);
+//    while (tChar != 0) {
+//        if (tChar == '\n') //new line
+//                {
+//            x = PRINT_STARTX;
+//            y += (FONT_HEIGHT * p_size) + 1;
+//            if (y >= LOCAL_DISPLAY_HEIGHT) {
+//                y = PRINT_STARTY;
+//            }
+//        } else if (tChar == '\r') //skip
+//                {
+//            //do nothing
+//        } else {
+//            x_last = x;
+//            x = drawChar(x, y, tChar, p_size, p_fg, p_bg);
+//            if (x > LOCAL_DISPLAY_WIDTH) {
+//                fillRect(x_last, y, LOCAL_DISPLAY_WIDTH - 1, y + (FONT_HEIGHT * p_size), p_bg);
+//                x = PRINT_STARTX;
+//                y += (FONT_HEIGHT * p_size) + 1;
+//                if (y >= LOCAL_DISPLAY_HEIGHT) {
+//                    y = PRINT_STARTY;
+//                }
+//                x = drawChar(x, y, tChar, p_size, p_fg, p_bg);
+//            }
+//        }
+//        tChar = pgm_read_byte(aString++);
+//    }
+//
+//    p_x = x;
+//    p_y = y;
+//}
+//
+//size_t HX8347D::write(uint8_t c) {
+//    uint16_t x = p_x, y = p_y;
+//
+//    if (c == '\n') {
+//        x = PRINT_STARTX;
+//        y += (FONT_HEIGHT * p_size) + 1;
+//        if (y >= LOCAL_DISPLAY_HEIGHT) {
+//            y = PRINT_STARTY;
+//        }
+//    } else if (c == '\r') //skip
+//            {
+//        //do nothing
+//    } else {
+//        x = drawChar(x, y, c, p_size, p_fg, p_bg);
+//        if (x > LOCAL_DISPLAY_WIDTH) {
+//            fillRect(p_x, y, LOCAL_DISPLAY_WIDTH - 1, y + (FONT_HEIGHT * p_size), p_bg);
+//            x = PRINT_STARTX;
+//            y += (FONT_HEIGHT * p_size) + 1;
+//            if (y >= LOCAL_DISPLAY_HEIGHT) {
+//                y = PRINT_STARTY;
+//            }
+//            x = drawChar(x, y, c, p_size, p_fg, p_bg);
+//        }
+//    }
+//
+//    p_x = x;
+//    p_y = y;
+//
+//    return 1;
+//}
+//
+//size_t HX8347D::write(const char *s) {
+//    size_t len = 0;
+//
+//    while (*s) {
+//        write((uint8_t) *s++);
+//        len++;
+//    }
+//
+//    return len;
+//}
+//
+//size_t HX8347D::write(const uint8_t *s, size_t size) {
+//    size_t len = 0;
+//
+//    while (size != 0) {
+//        write((uint8_t) *s++);
+//        size--;
+//        len++;
+//    }
+//
+//    return len;
+//}
 
 //-------------------- Private --------------------
 
-void MI0283QT2::reset() {
+void HX8347D::reset() {
     //SPI speed-down
 #if !defined(SOFTWARE_SPI)
     uint8_t spcr, spsr;
@@ -801,7 +806,7 @@ void MI0283QT2::reset() {
     writeCommand(0x0025, 0x8000); // Frequency Control 8=65Hz 0=50HZ E=80Hz
 #else
     //reset
-    MI0283QT2_CS_DISABLE();
+    HX8347D_CS_DISABLE();
     RST_ENABLE();
     delay(50);
     RST_DISABLE();
@@ -864,42 +869,42 @@ void MI0283QT2::reset() {
 }
 
 #if defined(SUPPORT_HY32D)
-void MI0283QT2::writeCommand(uint8_t aRegisterAddress, uint16_t aRegisterValue) {
-    MI0283QT2_CS_ENABLE();
+void HX8347D::writeCommand(uint8_t aRegisterAddress, uint16_t aRegisterValue) {
+    HX8347D_CS_ENABLE();
     DC_COMMAND();
     wr_spi(aRegisterAddress);
-    MI0283QT2_CS_DISABLE();
-    MI0283QT2_CS_ENABLE();
+    HX8347D_CS_DISABLE();
+    HX8347D_CS_ENABLE();
     DC_DATA();
     wr_spi(aRegisterValue >> 8);
     wr_spi(aRegisterValue);
-    MI0283QT2_CS_DISABLE();
+    HX8347D_CS_DISABLE();
 }
 #else
-void MI0283QT2::wr_cmd(uint8_t reg, uint8_t param) {
-    MI0283QT2_CS_ENABLE();
+void HX8347D::wr_cmd(uint8_t reg, uint8_t param) {
+    HX8347D_CS_ENABLE();
     wr_spi(LCD_REGISTER);
     wr_spi(reg);
-    MI0283QT2_CS_DISABLE();
+    HX8347D_CS_DISABLE();
 
-    MI0283QT2_CS_ENABLE();
+    HX8347D_CS_ENABLE();
     wr_spi(LCD_DATA);
     wr_spi(param);
-    MI0283QT2_CS_DISABLE();
+    HX8347D_CS_DISABLE();
 }
 #endif
 
-//void MI0283QT2::wr_data(uint16_t data) {
-//    MI0283QT2_CS_ENABLE();
+//void HX8347D::wr_data(uint16_t data) {
+//    HX8347D_CS_ENABLE();
 //    wr_spi(LCD_DATA);
 //    wr_spi(data >> 8);
 //    wr_spi(data);
-//    MI0283QT2_CS_DISABLE();
+//    HX8347D_CS_DISABLE();
 //
 //    return;
 //}
 
-void MI0283QT2::wr_spi(uint8_t data) {
+void HX8347D::wr_spi(uint8_t data) {
 #if defined(SOFTWARE_SPI)
     uint8_t mask;
 

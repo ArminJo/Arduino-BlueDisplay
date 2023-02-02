@@ -1,5 +1,5 @@
 /*
- * MI0283QT2.h
+ * HX8347D.h
  *
  *  Copyright (C) 2012-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
@@ -21,32 +21,32 @@
  *
  */
 
-#ifndef _MI0283QT2_H
-#define _MI0283QT2_H
+#ifndef _HX8347D_H
+#define _HX8347D_H
 
-#include <stdint.h>
-
-#include "LocalDisplayInterface.h" // for LOCAL_DISPLAY_HEIGHT and LOCAL_DISPLAY_WIDTH
-
-#include "Colors.h" // for color16_t
+extern uint8_t sCurrentBacklightPercent;
+extern uint8_t sLastBacklightPercent; //! for state of backlight before dimming
+extern int sLCDDimDelay; //actual dim delay
 
 #define BACKLIGHT_START_BRIGHTNESS_VALUE     50
 #define BACKLIGHT_MAX_BRIGHTNESS_VALUE      100
+#define BACKLIGHT_DIM_VALUE                   7
+#define BACKLIGHT_DIM_DEFAULT_DELAY_MILLIS 120000 // Two minutes
 
-class MI0283QT2: public LocalDisplayInterface, Print { // @suppress("Class has a virtual method and non-virtual destructor")
+class HX8347D { // @suppress("Class has a virtual method and non-virtual destructor")
 public:
 
-    MI0283QT2();
+    HX8347D();
     void init(uint8_t aSPIClockDivider); //2 4 8 16 32
     void setBacklightBrightness(uint8_t aBrightnessPercent); //0-100
 
     void setOrientation(uint16_t o); //0 90 180 270
-    uint16_t getDisplayWidth(void);
-    uint16_t getDisplayHeight(void);
+    uint16_t getDisplayWidth();
+    uint16_t getDisplayHeight();
     void setCursor(uint16_t x, uint16_t y);
 
     /*
-     * Basic hardware functions required for the draw functions below
+     * Basic hardware functions required for the text draw functions in LocalDisplayInterface
      */
     void fillRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
     void setArea(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY);
@@ -54,6 +54,7 @@ public:
     void draw(color16_t aColor);
     void drawStop();
 
+    void clearDisplay(uint16_t aColor);
     void drawPixel(uint16_t x0, uint16_t y0, uint16_t color);
     void drawPixelFast(uint16_t x0, uint8_t y0, uint16_t color);
     void drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
@@ -65,17 +66,15 @@ public:
     void drawCircle(uint16_t aCenterX, uint16_t aCenterY, uint16_t aRadius, uint16_t aColor);
     void fillCircle(uint16_t aCenterX, uint16_t aCenterY, uint16_t aRadius, uint16_t aColor);
 
-    void clearDisplay(uint16_t aColor);
-
     void printOptions(uint8_t size, uint16_t color, uint16_t bg_color);
     void printClear(void);
     void printXY(uint16_t x, uint16_t y);
     uint16_t printGetX(void);
     uint16_t printGetY(void);
-    void printPGM(PGM_P s);
-    virtual size_t write(uint8_t c);
-    virtual size_t write(const char *s);
-    virtual size_t write(const uint8_t *s, size_t size);
+//    void printPGM(PGM_P s);
+//    virtual size_t write(uint8_t c);
+//    virtual size_t write(const char *s);
+//    virtual size_t write(const uint8_t *s, size_t size);
 
     static void reset(void);
 
@@ -90,6 +89,4 @@ private:
     static void wr_spi(uint8_t data);
 };
 
-extern MI0283QT2 LocalDisplay; // The instance provided by the class itself
-
-#endif //_MI0283QT2_H
+#endif //_HX8347D_H

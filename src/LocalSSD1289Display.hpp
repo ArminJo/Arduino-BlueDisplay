@@ -24,7 +24,8 @@
 #ifndef _LOCAL_DISPLAY_HPP
 #define _LOCAL_DISPLAY_HPP
 
-#include "LocalDisplay/SSD1289.hpp"     // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
+#define USE_SSD1289
+#include "LocalDisplay/LocalDisplayInterface.hpp"   // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
 #include "LocalDisplay/ADS7846.hpp"     // Must be after the local display implementation since it uses e.g. LOCAL_DISPLAY_HEIGHT
 
 #endif // _LOCAL_DISPLAY_HPP

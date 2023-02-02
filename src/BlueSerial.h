@@ -2,7 +2,7 @@
  * BlueSerial.h
  *
  *
- *  Copyright (C) 2014-2020  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -19,27 +19,27 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
- *
  */
 
 #ifndef _BLUESERIAL_H
 #define _BLUESERIAL_H
 
-//#if !defined(DISABLE_REMOTE_DISPLAY)
-
 #if defined(ARDUINO)
 #include <Arduino.h> // for UBRR1H + BOARD_HAVE_USART1 + SERIAL_USB
-#else
+#elif defined(STM32F10X)
+#include <stm32f1xx.h>
+#include <stddef.h>
+#elif defined(STM32F30X)
+#include <stm32f3xx.h>
+#include "stm32f3xx_hal_conf.h" // for UART_HandleTypeDef
 #include <stddef.h>
 #endif
 
-#if defined(__AVR__)
 /*
  * Simple serial is a simple blocking serial version without receive buffer and other overhead.
  * Simple serial on the MEGA2560 uses USART1
  */
 //#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
-#endif
 
 #if defined(SERIAL_PORT_HARDWARE1) // is defined for Arduino Due
 #define BOARD_HAVE_USART2 // they start counting with 0
@@ -86,17 +86,8 @@
 #define BAUD_1382400 (1382400)
 
 /*
- * common functions
+ * Common functions which are independent of using simple or standard serial
  */
-void sendUSARTArgs(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs, ...);
-void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs, ...);
-void sendUSART5Args(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, uint16_t aColor);
-void sendUSART5ArgsAndByteBuffer(uint8_t aFunctionTag, uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd,
-        uint16_t aColor, uint8_t *aBufferPtr, size_t aBufferLength);
-// used internal by the above functions
-void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParameterBufferLength, uint8_t *aDataBufferPointer,
-        int16_t aDataBufferLength);
-
 /*
  * Checks if additional remote display is paired to avoid program slow down by UART sending to a not paired connection
  *
@@ -105,32 +96,113 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
  * It is reduced to return false if defined(DISABLE_REMOTE_DISPLAY)
  * It is reduced to return true if not defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
  */
-bool USART_isBluetoothPaired(); //
-
-#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+bool USART_isBluetoothPaired(void);
+#if !defined(PAIRED_PIN) && defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
 #define PAIRED_PIN 5
+#endif
 void setUsePairedPin(bool aUsePairedPin);
-#  if defined(USE_SIMPLE_SERIAL)
-void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
-#  endif
+
+void sendUSARTArgs(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs, ...);
+void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs, ...);
+void sendUSART5Args(uint8_t aFunctionTag, uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
+// used internal by the above functions
+void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParameterBufferLength, uint8_t *aDataBufferPointer,
+        size_t aDataBufferLength);
+
+/*
+ * Functions only valid for standard serial
+ */
+#if !defined(USE_SIMPLE_SERIAL)
+uint8_t getReceiveBufferByte(void);
+size_t getReceiveBytesAvailable(void);
+void serialEvent(void); // Is called by Arduino runtime
 #endif
 
+#if defined(ARDUINO)
+/*
+ * Functions which depends on using simple or standard serial
+ */
 #if defined(ESP32)
 void initSerial(String aBTClientName);
 #else
 void initSerial(uint32_t aBaudRate);
 void initSerial();
-#  if defined(USE_SIMPLE_SERIAL)
-void initSimpleSerial(uint32_t aBaudRate);
-#  endif
 #endif
 
-extern bool allowTouchInterrupts;
 void sendUSART(char aChar);
-void sendUSART(const char *aChar);
-//void USART_send(char aChar);
+void sendUSART(const char *aString);
+#endif
 
-void serialEvent();
+/*
+ * Functions only valid for simple serial
+ */
+#if defined(USE_SIMPLE_SERIAL)
+void initSimpleSerial(uint32_t aBaudRate);
+void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
+#endif
 
-//#endif // !defined(DISABLE_REMOTE_DISPLAY)
+#if defined(STM32F303xC) || defined(STM32F103xB)
+/*
+ * Stuff for STM
+ */
+#ifdef STM32F303xC
+#define UART_BD                     USART3
+#define UART_BD_TX_PIN              GPIO_PIN_10
+#define UART_BD_RX_PIN              GPIO_PIN_11
+#define UART_BD_PORT                GPIOC
+#define UART_BD_IO_CLOCK_ENABLE()   __GPIOC_CLK_ENABLE()
+#define UART_BD_CLOCK_ENABLE()      __USART3_CLK_ENABLE()
+#define UART_BD_IRQ                 USART3_IRQn
+#define UART_BD_IRQHANDLER          USART3_IRQHandler
+
+#define UART_BD_DMA_TX_CHANNEL      DMA1_Channel2
+#define UART_BD_DMA_RX_CHANNEL      DMA1_Channel3
+#define UART_BD_DMA_CLOCK_ENABLE()  __DMA1_CLK_ENABLE()
+
+#define BLUETOOTH_PAIRED_DETECT_PIN     GPIO_PIN_13
+#define BLUETOOTH_PAIRED_DETECT_PORT    GPIOC
+#endif
+
+#ifdef STM32F103xB
+#define UART_BD                     USART1
+#define UART_BD_TX_PIN              GPIO_PIN_9
+#define UART_BD_RX_PIN              GPIO_PIN_10
+#define UART_BD_PORT                GPIOA
+#define UART_BD_IO_CLOCK_ENABLE()   __GPIOA_CLK_ENABLE()
+#define UART_BD_CLOCK_ENABLE()      __USART1_CLK_ENABLE()
+#define UART_BD_IRQ                 USART1_IRQn
+#define UART_BD_IRQHANDLER          USART1_IRQHandler
+
+#define UART_BD_DMA_TX_CHANNEL      DMA1_Channel4
+#define UART_BD_DMA_RX_CHANNEL      DMA1_Channel5
+#define UART_BD_DMA_CLOCK_ENABLE()  __DMA1_CLK_ENABLE()
+
+#define BLUETOOTH_PAIRED_DETECT_PIN     GPIO_PIN_7
+#define BLUETOOTH_PAIRED_DETECT_PORT    GPIOA
+#endif
+
+// The UART used by BlueDisplay
+extern UART_HandleTypeDef UART_BD_Handle;
+#ifdef __cplusplus
+extern "C" {
+#endif
+void UART_BD_IRQHANDLER(void);
+#ifdef __cplusplus
+}
+#endif
+
+// Send functions using buffer and DMA
+int getSendBufferFreeSpace(void);
+
+void UART_BD_initialize(uint32_t aBaudRate);
+void HAL_UART_MspInit(UART_HandleTypeDef* aUARTHandle);
+
+uint32_t getUSART_BD_BaudRate(void);
+void setUART_BD_BaudRate(uint32_t aBaudRate);
+
+// Simple blocking serial version without overhead
+void sendUSARTBufferSimple(uint8_t * aParameterBufferPointer, size_t aParameterBufferLength,
+        uint8_t * aDataBufferPointer, size_t aDataBufferLength);
+
+#endif // defined(AVR)
 #endif // _BLUESERIAL_H

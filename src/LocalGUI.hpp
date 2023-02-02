@@ -27,12 +27,15 @@
 #ifndef _LOCAL_GUI_HPP
 #define _LOCAL_GUI_HPP
 
+#if !defined(DISABLE_REMOTE_DISPLAY)
+#error Remote display is not disabled by #define DISABLE_REMOTE_DISPLAY and #include "LocalGUI.hpp" is used. This is most likely an error. You have to use #include "BlueDisplay.hpp" instead, it in turn includes the local GUI!
+#endif
+
 #include "GUIHelper.hpp"        // Must be included before LocalGUI/*. For TEXT_SIZE_11, getLocalTextSize() etc.
 #include "LocalGUI/LocalTouchButton.hpp"
 #include "LocalGUI/LocalTouchSlider.hpp"
 #include "LocalGUI/LocalTouchButtonAutorepeat.hpp"
 #include "LocalGUI/LocalTinyPrint.hpp"
 #include "LocalGUI/ThickLine.hpp"
-#include "LocalGUI/Chart.hpp"
 
 #endif // _LOCAL_GUI_HPP

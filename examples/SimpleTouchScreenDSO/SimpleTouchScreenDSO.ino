@@ -7,7 +7,6 @@
  *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of SimpleTouchScreenDSO https://github.com/ArminJo/SimpleTouchScreenDSO.
- *  This file is part of SimpleTouchScreenDSO https://github.com/ArminJo/Arduino-Touch-GUI.
  *
  *  SimpleTouchScreenDSO is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -135,7 +134,7 @@
 #define SUPPORT_ONLY_TEXT_SIZE_11_AND_22  // Saves 248 bytes program memory
 #define DISABLE_REMOTE_DISPLAY  // Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display
 #define SUPPORT_LOCAL_DISPLAY   // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
-#include "LocalMI0283QT2Display.hpp" // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
+#include "LocalHX8347DDisplay.hpp" // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
 #include "LocalGUI.hpp"         // Includes the sources for LocalTouchButton etc.
 
 #ifdef USE_RTC
@@ -195,37 +194,34 @@ inline void resetTimingDebug() {
 #define COLOR_DATA_RUN              COLOR16_BLUE
 #define COLOR_DATA_HOLD             COLOR16_RED
 // to see old chart values
-#define COLOR_DATA_ERASE_LOW        RGB(0xA0,0xFF,0xA0)
-#define COLOR_DATA_ERASE_HIGH       RGB(0x20,0xFF,0x20)
+#define COLOR_DATA_ERASE_LOW        COLOR16(0xA0,0xFF,0xA0)
+#define COLOR_DATA_ERASE_HIGH       COLOR16(0x20,0xFF,0x20)
 
 //Line colors
-#define COLOR_DATA_PICKER           COLOR16_YELLOW
+#define COLOR_VOLTAGE_PICKER        COLOR16_YELLOW
+#define COLOR_VOLTAGE_PICKER_SLIDER COLOR16(0xFF,0XFF,0xB0) // Light Yellow
+#define COLOR_TRIGGER_LINE          COLOR16_PURPLE
+#define COLOR_TRIGGER_SLIDER        COLOR16(0xFF,0XD0,0xFF) // light Magenta
+
 #define COLOR_MAX_MIN_LINE          0X0200 // light green
 #define COLOR_HOR_REF_LINE_LABEL    COLOR16_BLUE
-#define COLOR_TRIGGER_LINE          COLOR16_PURPLE
-#define COLOR_TIMING_LINES          RGB(0x00,0x98,0x00)
+#define COLOR_TIMING_LINES          COLOR16(0x00,0x98,0x00)
 
 // GUI element colors
-#define COLOR_GUI_CONTROL           RGB(0xC0,0x00,0x00)
-#define COLOR_GUI_TRIGGER           RGB(0x00,0x00,0xD0) // blue
-#define COLOR_GUI_SOURCE_TIMEBASE   RGB(0x00,0x90,0x00)
-#define COLOR_GUI_DISPLAY_CONTROL   RGB(0xC8,0xC8,0x00)
+#define COLOR_GUI_CONTROL           COLOR16(0xC0,0x00,0x00)
+#define COLOR_GUI_TRIGGER           COLOR16(0x00,0x00,0xD0) // blue
+#define COLOR_GUI_SOURCE_TIMEBASE   COLOR16(0x00,0x90,0x00)
+#define COLOR_GUI_DISPLAY_CONTROL   COLOR16(0xC8,0xC8,0x00)
 
-#define COLOR_INFO_BACKGROUND       RGB(0xC8,0xC8,0x00)
+#define COLOR_INFO_BACKGROUND       COLOR16(0xC8,0xC8,0x00)
 
-#define COLOR_SLIDER                RGB(0xD0,0xE0,0xD0)
+#define COLOR_SLIDER                COLOR16(0xD0,0xE0,0xD0)
 
 /**
  * GUI
  */
 #define TP_EEPROMADDR (E2END -1 - sizeof(CAL_MATRIX)) //eeprom address for calibration data - 28 bytes
 bool sTouchPanelGetPressureValid = false; // Flag to indicate that TouchPanel.service was just called before
-
-// isFirstTouch() implementation for AutorepeatButton
-boolean sStartNewTouchLocal = true; // only one button handling in loop each touching of local display
-bool isFirstTouch() {
-    return sStartNewTouchLocal;
-}
 
 /**********************
  * Buttons
@@ -483,10 +479,10 @@ union Myword {
 /***********************
  *   Loop control
  ***********************/
-bool ButtonPressedFirst;
+bool ButtonPressedFirst; // if true disables checkAllSliders()
 // last sample of millis() in loop as reference for loop duration
 uint32_t sMillisLastLoop = 0;
-uint16_t sMillisSinceLastInfoOutput = 0;
+uint16_t sMillisSinceLastDemoOutput = 0;
 #define MILLIS_BETWEEN_INFO_OUTPUT 1000
 
 uint16_t MillisSinceLastTPCheck = 0;
@@ -505,7 +501,7 @@ uint16_t DebugValue4;
 
 /***********************************************************************************
  * Put those variables at the end of data section (.data + .bss + .noinit)
- * adjacent to stack in order to have stackoverflows running into
+ * adjacent to stack in order to have stack overflows running into
  * DataBuffer array, which is only completely used in ultrafast or single shot mode
  * *********************************************************************************/
 /*
@@ -632,16 +628,7 @@ void setup() {
     Serial.println(F("After display init"));
 #endif
     //init touch controller
-    TouchPanel.init();
-
-    //touch-panel calibration
-    TouchPanel.readData();
-
-    if (TouchPanel.getPressure() > 5) {
-        TouchPanel.doCalibration(TP_EEPROMADDR, 0); //dont check EEPROM for calibration data
-    } else {
-        TouchPanel.doCalibration(TP_EEPROMADDR, 1); //check EEPROM for calibration data
-    }
+    TouchPanel.initAndCalibrateOnPress(TP_EEPROMADDR);
 
     createGUI();
     drawGui();
@@ -706,9 +693,10 @@ void setup() {
     }
 
 #endif
-    FeedbackToneOK();
+
+    playLocalFeedbackTone();
     delay(100);
-    FeedbackToneOK();
+    playLocalFeedbackTone();
 
 #if defined(TRACE)
     Serial.println(F("Start loop"));
@@ -727,7 +715,7 @@ void __attribute__((noreturn)) loop() {
         tMillis = millis();
         tMillisOfLoop = tMillis - sMillisLastLoop;
         sMillisLastLoop = tMillis;
-        sMillisSinceLastInfoOutput += tMillisOfLoop;
+        sMillisSinceLastDemoOutput += tMillisOfLoop;
         MillisSinceLastTPCheck += tMillisOfLoop;
 
         if (MeasurementControl.IsRunning) {
@@ -809,7 +797,7 @@ void __attribute__((noreturn)) loop() {
 //            printDebugData();
 #endif
             if (MeasurementControl.isSingleShotMode && MeasurementControl.searchForTrigger
-                    && sMillisSinceLastInfoOutput > MILLIS_BETWEEN_INFO_OUTPUT) {
+                    && sMillisSinceLastDemoOutput > MILLIS_BETWEEN_INFO_OUTPUT) {
                 /*
                  * Single shot mode here
                  * output actual values every second - abuse the average value ;-)
@@ -821,10 +809,10 @@ void __attribute__((noreturn)) loop() {
             }
 
             /*
-             * check of touch panel at least every MILLIS_BETWEEN_TOUCH_PANEL_CHECK
+             * check of touch panel at least every MILLIS_BETWEEN_TOUCH_PANEL_CHECK (300)
              */
             if (!sTouchPanelGetPressureValid && MeasurementControl.TimebaseJustDelayed
-                    && MillisSinceLastTPCheck > MILLIS_BETWEEN_TOUCH_PANEL_CHECK) {
+                    && MillisSinceLastTPCheck > MILLIS_BETWEEN_TOUCH_PANEL_CHECK) { // 300
                 // must be protected against interrupts otherwise sometimes (rarely) it may get random values
                 TouchPanel.readData();
                 sTouchPanelGetPressureValid = true;
@@ -848,44 +836,11 @@ void __attribute__((noreturn)) loop() {
          */
         if (sTouchPanelGetPressureValid) {
             sTouchPanelGetPressureValid = false;
-            uint8_t tPressure = TouchPanel.getPressure();
-            if (tPressure < MIN_REASONABLE_PRESSURE) {
-                /**
-                 * no touch here
-                 */
-                sStartNewTouchLocal = true;
-                ButtonPressedFirst = false;
-            } else {
-                uint16_t tXPos = TouchPanel.getActualX();
-                uint16_t tYPos = TouchPanel.getActualY();
-
-                /*
-                 * check if button or slider is touched
-                 * check button first in order to give priority to buttons which are overlapped by sliders
-                 * remember which is pressed first and "stay" there
-                 */
-                bool tGuiTouched = TouchButton::checkAllButtons(tXPos, tYPos);
-                if (tGuiTouched) {
-                    ButtonPressedFirst = true;
-                }
-                if (!tGuiTouched && !ButtonPressedFirst) {
-                    tGuiTouched = TouchSlider::checkAllSliders(tXPos, tYPos);
-                    if (tGuiTouched && sStartNewTouchLocal) {
-                        ButtonPressedFirst = false;
-                    }
-                }
-                if (tGuiTouched) {
-                    sStartNewTouchLocal = false;
-                }
-
-#if defined(DEBUG)
-//            printTPData(tGuiTouched);
-#endif
-            }
+            handleTouchPanelEvents();
         }
 
-        if (sMillisSinceLastInfoOutput > MILLIS_BETWEEN_INFO_OUTPUT && MeasurementControl.IsRunning) {
-            sMillisSinceLastInfoOutput = 0;
+        if (sMillisSinceLastDemoOutput > MILLIS_BETWEEN_INFO_OUTPUT && MeasurementControl.IsRunning) {
+            sMillisSinceLastDemoOutput = 0;
             // refresh grid
             drawGridLinesWithHorizLabelsAndTriggerLine();
             if (DisplayControl.showInfoMode) {
@@ -902,7 +857,7 @@ void redrawDisplay() {
     LocalDisplay.clearDisplay(COLOR_BACKGROUND_DSO);
     if (MeasurementControl.IsRunning) {
         if (!MeasurementControl.TriggerValuesAutomatic) {
-            TouchSliderTriggerLevel.drawBorder();
+            TouchSliderTriggerLevel.drawBar();
         }
         if (DisplayControl.DisplayMode == DISPLAY_MODE_SHOW_SETTINGS_GUI) {
             drawSettingsGui();
@@ -1509,9 +1464,9 @@ void createGUI() {
             PSTR("Settings"), TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE, 0,
             &doSettings);
 
-    // Buttons for timebase +/-
+    // Buttons for timebase +/- -NO button beep. Beep is done by handler.
     TouchButtonRight.init(BUTTON_WIDTH_5_POS_2, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_5, BUTTON_HEIGHT_4,
-    COLOR_GUI_SOURCE_TIMEBASE, ">", TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 1, &doTimeBaseDisplayScroll);
+    COLOR_GUI_SOURCE_TIMEBASE, ">", TEXT_SIZE_22, FLAG_BUTTON_NO_BEEP_ON_TOUCH, 1, &doTimeBaseDisplayScroll);
 
     TouchButtonLeft.init(0, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_5, BUTTON_HEIGHT_4, COLOR_GUI_SOURCE_TIMEBASE, "<",
     TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, -1, &doTimeBaseDisplayScroll);
@@ -1571,21 +1526,19 @@ void createGUI() {
      * SLIDER
      */
     TouchSliderBacklight.init(40, 60, 16, BACKLIGHT_MAX_BRIGHTNESS_VALUE, BACKLIGHT_MAX_BRIGHTNESS_VALUE,
-    BACKLIGHT_START_BRIGHTNESS_VALUE, "Backlight", SLIDER_DEFAULT_TOUCH_BORDER, FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE,
-            &doBacklight, NULL);
+    BACKLIGHT_START_BRIGHTNESS_VALUE, COLOR16_BLUE, COLOR16_GREEN, FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE, &doBacklight);
+    TouchSliderBacklight.setCaption("Backlight");
 
-    // make slider slightly visible
-    TouchSlider::setDefaultSliderColor(COLOR_SLIDER);
-    TouchSlider::setDefaultBarColor(COLOR_BACKGROUND_DSO);
-
-    // invisible slider for voltage picker
+    // slightly visible slider for voltage picker
     TouchSliderVoltagePicker.init(SLIDER_VPICKER_VALUE_X - TEXT_SIZE_11_WIDTH + 4, 0, 24, DISPLAY_VALUE_FOR_ZERO,
-    LOCAL_DISPLAY_HEIGHT - 1, 0, NULL, SLIDER_DEFAULT_TOUCH_BORDER, FLAG_SLIDER_VALUE_BY_CALLBACK, &doVoltagePicker,
-    NULL);
+    LOCAL_DISPLAY_HEIGHT - 1, 0, COLOR16_WHITE, COLOR_VOLTAGE_PICKER_SLIDER, FLAG_SLIDER_VALUE_BY_CALLBACK, &doVoltagePicker);
+    TouchSliderVoltagePicker.setBarBackgroundColor(COLOR_VOLTAGE_PICKER_SLIDER);
 
-    // invisible slider for trigger level
-    TouchSliderTriggerLevel.init(SLIDER_TLEVEL_VALUE_X - 4, 0, 24, DISPLAY_VALUE_FOR_ZERO, LOCAL_DISPLAY_HEIGHT - 1, 0, NULL,
-    SLIDER_DEFAULT_TOUCH_BORDER, FLAG_SLIDER_VALUE_BY_CALLBACK, &doTriggerLevel, NULL);
+    // slightly visible slider for trigger level
+    TouchSliderTriggerLevel.init(SLIDER_TLEVEL_VALUE_X - 4, 0, 24, DISPLAY_VALUE_FOR_ZERO, LOCAL_DISPLAY_HEIGHT - 1, 0,
+    COLOR16_WHITE, COLOR_TRIGGER_SLIDER, FLAG_SLIDER_VALUE_BY_CALLBACK, &doTriggerLevel);
+    TouchSliderTriggerLevel.setBarBackgroundColor(COLOR_TRIGGER_SLIDER);
+
 }
 
 void drawGui() {
@@ -1638,10 +1591,10 @@ void activatePartOfGui() {
     TouchButtonLeft.activate();
     TouchButtonRight.activate();
 
-    TouchSliderVoltagePicker.drawBorder();
+    TouchSliderVoltagePicker.drawBar();
     TouchSliderVoltagePicker.activate();
     if (!MeasurementControl.TriggerValuesAutomatic) {
-        TouchSliderTriggerLevel.drawBorder();
+        TouchSliderTriggerLevel.drawBar();
         TouchSliderTriggerLevel.activate();
     }
 }
@@ -1807,11 +1760,11 @@ void doChannelSelect(TouchButton *const aTheTouchedButton __attribute__((unused)
     tChannel++;
     if (tChannel <= MAX_ADC_CHANNEL) {
         // Standard AD channels
-        MeasurementControl.ADCInputMUXChannelChar = 0x30 + tChannel;
+        MeasurementControl.ADCInputMUXChannelChar = '0' + tChannel;
     } else if (tChannel == MAX_ADC_CHANNEL + 1) {
         tChannel = 8; // Temperature
         MeasurementControl.ADCInputMUXChannelChar = 'T';
-    } else if (tChannel == 8) {
+    } else if (tChannel == 9) {
         tChannel = 14; // 1.1 Reference
         MeasurementControl.ADCInputMUXChannelChar = 'R';
     } else if (tChannel == 15) {
@@ -1922,7 +1875,7 @@ void doTriggerSingleshot(TouchButton *const aTheTouchedButton __attribute__((unu
         TEXT_SIZE_11, COLOR16_BLACK, COLOR_INFO_BACKGROUND);
 
         // prepare info output - at least 1 sec later
-        sMillisSinceLastInfoOutput = 0;
+        sMillisSinceLastDemoOutput = 0;
         MeasurementControl.RawValueMax = 0;
         MeasurementControl.RawValueMin = 0;
 
@@ -2061,7 +2014,7 @@ void doVoltagePicker(TouchSlider *aTheTouchedSlider __attribute__((unused)), uin
     }
 // draw new line
     uint8_t tValue = DISPLAY_VALUE_FOR_ZERO - aValue;
-    LocalDisplay.drawLineRel(0, tValue, LOCAL_DISPLAY_WIDTH, 0, COLOR_DATA_PICKER);
+    LocalDisplay.drawLineRel(0, tValue, LOCAL_DISPLAY_WIDTH, 0, COLOR_VOLTAGE_PICKER);
     sLastVoltagePickerValue = aValue;
 
     float tVoltage = getFloatFromDisplayValue(tValue);
@@ -2138,7 +2091,7 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
 
         // Draw label
         LocalDisplay.drawText(HORIZONTAL_LINE_LABELS_CAPION_X, tYPos - tCaptionOffset, tStringBuffer, 11, COLOR_HOR_REF_LINE_LABEL,
-        COLOR_NO_BACKGROUND);
+        COLOR16_NO_BACKGROUND);
         // draw next label on the line
         tCaptionOffset = TEXT_SIZE_11_ASCEND / 2;
         tActualVoltage += MeasurementControl.HorizontalGridVoltage;

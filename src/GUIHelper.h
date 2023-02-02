@@ -53,6 +53,10 @@
 //#define LOCAL_DISPLAY_HEIGHT    DISPLAY_HALF_VGA_WIDTH
 //#define LOCAL_DISPLAY_WIDTH     DISPLAY_HALF_VGA_HEIGHT
 
+#if !defined(BACKGROUND_COLOR)
+#define BACKGROUND_COLOR        COLOR16_WHITE
+#endif
+
 /*
  * Some useful text sizes constants
  */

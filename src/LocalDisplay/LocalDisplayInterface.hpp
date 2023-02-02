@@ -26,6 +26,13 @@
 #define _LOCAL_DISPLAY_INTERFACE_HPP
 
 #include "LocalDisplayInterface.h"
+#if defined(USE_HX8347D)
+#include "HX8347D.hpp"   // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
+#elif defined(USE_SSD1289)
+#include "SSD1289.hpp"  // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
+#endif
+
+LocalDisplayInterface LocalDisplay; // The instance provided by the class itself
 
 LocalDisplayInterface::LocalDisplayInterface() {  // @suppress("Class members should be properly initialized")
 }
@@ -255,7 +262,7 @@ uint16_t LocalDisplayInterface::drawMLText(uint16_t aPositionX, uint16_t aPositi
     uint8_t tFontScaleFactor = getFontScaleFactorFromTextSize(aFontSize);
     uint8_t tEffectiveFontHeight = FONT_HEIGHT * tFontScaleFactor;
 
-    if (aBackgroundColor != COLOR_NO_BACKGROUND) {
+    if (aBackgroundColor != COLOR16_NO_BACKGROUND) {
         // Clear first line until end of display (else only overwrite)
         fillRect(aPositionX, aPositionY, LOCAL_DISPLAY_WIDTH - 1, aPositionY + tEffectiveFontHeight - 1, aBackgroundColor);
     }
@@ -269,7 +276,7 @@ uint16_t LocalDisplayInterface::drawMLText(uint16_t aPositionX, uint16_t aPositi
             // new line -> update position and optionally clear line
             tPositionX = aPositionX;
             tPositionY += tEffectiveFontHeight + 1;
-            if (aBackgroundColor != COLOR_NO_BACKGROUND) {
+            if (aBackgroundColor != COLOR16_NO_BACKGROUND) {
                 // Clear next line until end of display (else only overwrite)
                 fillRect(tPositionX, tPositionY, LOCAL_DISPLAY_WIDTH - 1, tPositionY + tEffectiveFontHeight - 1, aBackgroundColor);
             }

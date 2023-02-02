@@ -71,7 +71,7 @@ public:
     // Static values for currently touched/active button because only one touch to any autorepeat button possible
     static uint8_t sState;
     static uint16_t sCount;
-#if defined(AUTOREPEAT_BY_USING_LOCAL_EVENT)
+#if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
     static TouchButtonAutorepeat *sLastAutorepeatButtonTouched; // Pointer to currently touched/active button for timer callback
 #else
     static unsigned long sCurrentCallbackDelayMillis; // The current period delay value. Can be mMillisFirstDelay, mMillisFirstRate or mMillisSecondRate

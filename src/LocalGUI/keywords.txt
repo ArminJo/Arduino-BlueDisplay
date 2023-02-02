@@ -70,42 +70,6 @@ getPositionYBottom	KEYWORD2
 activate	KEYWORD2
 deactivate	KEYWORD2
 
-# from Chart
-init	KEYWORD2
-initChart	KEYWORD2
-initXLabelInt	KEYWORD2
-stepXLabelInt	KEYWORD2
-initXLabelFloat	KEYWORD2
-stepXLabelFloat	KEYWORD2
-initYLabelInt	KEYWORD2
-stepYLabelInt	KEYWORD2
-initYLabelFloat	KEYWORD2
-stepYLabelFloat	KEYWORD2
-setXLabelStartValue				KEYWORD2
-setXLabelStartValueFloat	KEYWORD2
-setYLabelStartValue				KEYWORD2
-setYLabelStartValueFloat	KEYWORD2
-setXLabelIncrementValue				KEYWORD2
-setXLabelIncrementValueFloat	KEYWORD2
-setYLabelIncrementValue				KEYWORD2
-setYLabelIncrementValueFloat	KEYWORD2
-
-initChartColors	KEYWORD2
-drawChart		KEYWORD2
-drawChartData	KEYWORD2
-drawGrid		KEYWORD2
-drawXAxis		KEYWORD2
-drawYAxis		KEYWORD2
-drawAxes		KEYWORD2
-clear			KEYWORD2
-getHeightY		KEYWORD2
-getPositionX	KEYWORD2
-getPositionY	KEYWORD2
-getWidthX		KEYWORD2
-setHeightY		KEYWORD2
-setPositionX	KEYWORD2
-setPositionY	KEYWORD2
-setWidthX		KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

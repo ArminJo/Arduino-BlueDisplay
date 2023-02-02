@@ -42,15 +42,16 @@ ADS7846 TouchPanel; // The instance provided by the class itself
 #define TOUCH_DEBOUNCE_DELAY_MILLIS 10 // wait for debouncing in ISR - minimum 8 ms
 #define TOUCH_SWIPE_RESOLUTION_MILLIS 20
 
-const char PosZ1[] = "Z Pos 1";
-const char PosZ2[] = "Z Pos 2";
-const char PosX[] = "X Pos";
-const char PosY[] = "Y Pos";
-const char Temperature0[] = "Temp. 0";
-const char Temperature1[] = "Temp. 1";
-const char Vcc[] = "VCC";
-const char Aux[] = "Aux In";
-const char *const ADS7846ChannelStrings[] = { PosZ1, PosZ2, PosX, PosY, Temperature0, Temperature1, Vcc, Aux };
+const char StringPosZ1[] PROGMEM = "Z Pos 1";
+const char StringPosZ2[] PROGMEM = "Z Pos 2";
+const char StringPosX[] PROGMEM = "X Pos";
+const char StringPosY[] PROGMEM = "Y Pos";
+const char StringTemperature0[] PROGMEM = "Temp. 0";
+const char StringTemperature1[] PROGMEM = "Temp. 1";
+const char StringVcc[] PROGMEM = "VCC";
+const char StringAux[] PROGMEM = "Aux In";
+const char *const ADS7846ChannelStrings[] = { StringPosZ1, StringPosZ2, StringPosX, StringPosY, StringTemperature0,
+        StringTemperature1, StringVcc, StringAux };
 const char ADS7846ChannelChars[] = { 'z', 'Z', 'X', 'Y', 't', 'T', 'V', 'A' };
 
 // Channel number to text mapping
@@ -137,7 +138,7 @@ void ADS7846::init(void) {
     mTouchActualPosition.PosY = 0;
     mPressure = 0;
 
-#if defined(AUTOREPEAT_BY_USING_LOCAL_EVENT)
+#if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
     localTouchEvent.EventType = EVENT_NO_EVENT;
 #endif
 }
@@ -224,9 +225,10 @@ void ADS7846::readCalibration(CAL_MATRIX *aMatrix) {
 
 /**
  * touch panel calibration routine
+ * On my MI0283QT calibration points must be touched quick and hard to get good results
  */
 #if defined(AVR)
-void ADS7846::doCalibration(uint16_t eeprom_addr, uint8_t check_eeprom)
+void ADS7846::doCalibration(uint16_t aEEPROMAdress, bool aCheckEEPROM)
 #else
 void ADS7846::doCalibration(bool aCheckRTC)
 #endif
@@ -236,7 +238,7 @@ void ADS7846::doCalibration(bool aCheckRTC)
 
 #if defined(AVR)
     //calibration data in EEPROM?
-    if (readCalibration(eeprom_addr) && check_eeprom) {
+    if (readCalibration(aEEPROMAdress) && aCheckEEPROM) {
         return;
     }
 #else
@@ -269,7 +271,7 @@ void ADS7846::doCalibration(bool aCheckRTC)
         // Wait for touch release
         do {
             readData();
-        } while (getPressure() > MIN_REASONABLE_PRESSURE);
+        } while (getPressure() >= MIN_REASONABLE_PRESSURE);
 #else
         LocalDisplay.drawText((LOCAL_DISPLAY_WIDTH / 2) - 50, (LOCAL_DISPLAY_HEIGHT / 2) - 10, PSTR("Calibration"), 1,
                 COLOR16_BLACK, COLOR16_WHITE);
@@ -285,13 +287,18 @@ void ADS7846::doCalibration(bool aCheckRTC)
         delay(100);
         do {
             readData();
-        } while (getPressure() < MIN_REASONABLE_PRESSURE);
+        } while (getPressure() < 2 * MIN_REASONABLE_PRESSURE);
+
+        // wait for stabilizing data
+        delay(20);
+        readData();
+
 #else
         while (!TouchPanel.wasTouched()) {
-            delayMillis(5);
+            delay(5);
         }
         // wait for stabilizing data
-        delayMillis(10);
+        delay(20);
         //get new data
         readData(4 * ADS7846_READ_OVERSAMPLING_DEFAULT);
         // reset touched flag
@@ -305,7 +312,7 @@ void ADS7846::doCalibration(bool aCheckRTC)
 #if defined(AVR)
         delay(1000);
 #else
-        delayMillis(1000);
+        delay(1000);
 #endif
     }
 
@@ -315,17 +322,43 @@ void ADS7846::doCalibration(bool aCheckRTC)
     if (tp_matrix.div != 0) {
 #if defined(AVR)
         //save calibration matrix and flag for valid data
-        writeCalibration(eeprom_addr);
+        writeCalibration(aEEPROMAdress);
         // Wait for touch release
         do {
             readData();
-        } while (getPressure() > MIN_REASONABLE_PRESSURE);
+        } while (getPressure() >= 2 * MIN_REASONABLE_PRESSURE);
 #else
         //save calibration matrix and flag for valid data
         RTC_setMagicNumber();
         writeCalibration(tp_matrix);
 #endif
     }
+}
+
+/*
+ * Init Touch panel and calibrate it, if it is pressed (at startup)
+ */
+#if defined(AVR)
+void ADS7846::initAndCalibrateOnPress(uint16_t aEEPROMAdress)
+#else
+void ADS7846::initAndCalibrateOnPress()
+#endif
+        {
+    init();
+    TouchPanel.readData();
+#if defined(AVR)
+    if (getPressure() >= MIN_REASONABLE_PRESSURE) {
+        doCalibration(aEEPROMAdress, false); // Don't check EEPROM for calibration data
+    } else {
+        doCalibration(aEEPROMAdress, true); // Ccheck EEPROM for calibration data
+    }
+#else
+    if (getPressure() >= MIN_REASONABLE_PRESSURE) {
+        doCalibration(false); // Don't check RTC for calibration data
+    } else {
+        doCalibration(true); // Check RTC for calibration data
+    }
+#endif
 }
 
 /**
@@ -384,6 +417,62 @@ uint8_t ADS7846::getPressure(void) {
     return mPressure;
 }
 
+#if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+#include "LocalGUI/LocalTouchButton.h"
+#include "LocalGUI/LocalTouchSlider.h"
+bool sTouchPanelNothingTouched; // only one button handling in loop each touching of local display
+bool sTouchPanelSliderIsMoveTarget; // true if slider was touched by DOWN event
+
+/*
+ * isFirstTouch() implementation for AutorepeatButton
+ */
+bool isFirstTouch() {
+    return sTouchPanelNothingTouched;
+}
+
+/**
+ * Handles down and up events by calling checkAllButtons and checkAllSliders
+ */
+void handleTouchPanelEvents() {
+    uint8_t tPressure = TouchPanel.getPressure();
+    if (tPressure < MIN_REASONABLE_PRESSURE) {
+        /**
+         * No touch here, reset flags
+         */
+        sTouchPanelNothingTouched = true;
+        sTouchPanelSliderIsMoveTarget = false;
+    } else {
+        auto tPositionX = TouchPanel.getActualX();
+        auto tPositionY = TouchPanel.getActualY();
+
+        /*
+         * check if button or slider is touched
+         * check button first in order to give priority to buttons which are overlapped by sliders
+         * remember which is pressed first and "stay" there
+         */
+        // Check button only once at a new touch, check autorepeat buttons always to create autorepeat timing
+        bool tGuiTouched = TouchButton::checkAllButtons(tPositionX, tPositionY, !sTouchPanelNothingTouched);
+        if (!tGuiTouched) {
+            tGuiTouched = TouchSlider::checkAllSliders(tPositionX, tPositionY);
+            if (tGuiTouched && sTouchPanelNothingTouched) {
+                sTouchPanelSliderIsMoveTarget = true;
+            }
+        }
+        if (tGuiTouched) {
+            sTouchPanelNothingTouched = false;
+        }
+    }
+}
+
+/**
+ * Reads touch panel data and handles down and up events by calling checkAllButtons and checkAllSliders
+ */
+void checkAndHandleTouchPanelEvents() {
+    TouchPanel.readData();
+    handleTouchPanelEvents();
+}
+#endif // !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+
 #if defined(AVR)
 /**
  * We do a 8 times oversampling here
@@ -393,13 +482,13 @@ void ADS7846::readData(void) {
     uint16_t x, y;
 
     //SPI speed-down
-#if !defined(SOFTWARE_SPI)
+#  if !defined(SOFTWARE_SPI)
     uint8_t spcr, spsr;
     spcr = SPCR;
     SPCR = (1 << SPE) | (1 << MSTR) | (1 << SPR0); //enable SPI, Master, clk=Fcpu/16
     spsr = SPSR;
     SPSR = (1 << SPI2X); //clk*2 -> clk=Fcpu/8
-#endif
+#  endif
 
     //get mPressure
     ADS7846_CS_ENABLE();
@@ -433,16 +522,22 @@ void ADS7846::readData(void) {
             mTouchActualPositionRaw.PosX = x;
             mTouchActualPositionRaw.PosY = y;
             calibrate();
+            if (!ADS7846TouchActive) {
+                // here switch from not active to active
+                ADS7846TouchStart = true;
+            }
+            ADS7846TouchActive = true;
         }
     } else {
+        ADS7846TouchActive = false;
         mPressure = 0;
     }
 
     //restore SPI settings
-#if !defined(SOFTWARE_SPI)
+#  if !defined(SOFTWARE_SPI)
     SPCR = spcr;
     SPSR = spsr;
-#endif
+#  endif
 }
 
 /**
@@ -456,13 +551,13 @@ uint16_t ADS7846::readChannel(uint8_t channel, bool use12Bit, bool useDiffMode, 
     uint8_t low, high, i;
 
 //SPI speed-down
-#if !defined(SOFTWARE_SPI)
+#  if !defined(SOFTWARE_SPI)
     uint8_t spcr, spsr;
     spcr = SPCR;
     SPCR = (1 << SPE) | (1 << MSTR) | (1 << SPR0); //enable SPI, Master, clk=Fcpu/16
     spsr = SPSR;
     SPSR = (1 << SPI2X); //clk*2 -> clk=Fcpu/8
-#endif
+#  endif
 
 //read channel
     uint8_t tMode = CMD_SINGLE;
@@ -484,15 +579,15 @@ uint16_t ADS7846::readChannel(uint8_t channel, bool use12Bit, bool useDiffMode, 
     }
     ADS7846_CS_DISABLE();
 //restore SPI settings
-#if !defined(SOFTWARE_SPI)
+#  if !defined(SOFTWARE_SPI)
     SPCR = spcr;
     SPSR = spsr;
-#endif
+#  endif
 
     return tRetValue / numberOfReadingsToIntegrate;
 }
 
-#else
+#else // defined(AVR)
 void ADS7846::readData(void) {
     readData(ADS7846_READ_OVERSAMPLING_DEFAULT);
 }
@@ -530,8 +625,6 @@ void ADS7846::readData(uint8_t aOversampling) {
     b = 127 - b; // 127 is maximum reading of CMD_Z2_POS!
     int tPressure = a + b;
 
-    mPressure = 0;
-    ADS7846TouchActive = false;
 
     if (tPressure >= MIN_REASONABLE_PRESSURE) {
         // n times oversampling
@@ -588,7 +681,11 @@ void ADS7846::readData(uint8_t aOversampling) {
                 ADS7846TouchActive = true;
             }
         }
+    } else {
+        mPressure = 0;
+        ADS7846TouchActive = false;
     }
+
     ADS7846_CSDisable();
 //restore SPI settings
     SPI1_setPrescaler(tPrescaler);
@@ -640,8 +737,20 @@ uint16_t ADS7846::readChannel(uint8_t channel, bool use12Bit, bool useDiffMode, 
 
     return tRetValue / numberOfReadingsToIntegrate;
 }
-#endif
+#endif // defined(AVR)
 
+/**
+ * Can be called by main loops
+ * returns only one times a "true" per touch
+ */ //
+bool ADS7846::wasTouched(void) {
+    if (ADS7846TouchStart) {
+        // reset => return only one true per touch
+        ADS7846TouchStart = false;
+        return true;
+    }
+    return false;
+}
 
 //-------------------- Private --------------------
 
@@ -715,7 +824,7 @@ uint8_t ADS7846::rd_spi(void) {
 }
 
 void ADS7846::wr_spi(uint8_t data) {
-#if defined(SOFTWARE_SPI)
+#  if defined(SOFTWARE_SPI)
     uint8_t mask;
 
     for(mask=0x80; mask!=0; mask>>=1)
@@ -733,11 +842,11 @@ void ADS7846::wr_spi(uint8_t data) {
     }
     CLK_LOW();
 
-#else
+#  else
     SPDR = data;
     while (!(SPSR & (1 << SPIF)))
         ;
-#endif
+#  endif
 }
 
 #else
@@ -792,7 +901,7 @@ void callbackPeriodicTouch(void);
  */
 extern "C" void EXTI1_IRQHandler(void) {
 // wait for stable reading
-    delayMillis(TOUCH_DEBOUNCE_DELAY_MILLIS);
+    delay(TOUCH_DEBOUNCE_DELAY_MILLIS);
     bool tLevel = ADS7846_getInteruptLineLevel();
     BSP_LED_Toggle (LED_GREEN_2); // GREEN RIGHT
     if (!tLevel) {
@@ -828,19 +937,6 @@ extern "C" void EXTI1_IRQHandler(void) {
     resetBacklightTimeout();
 // Clear the EXTI line pending bit and enable new interrupt on other edge
     ADS7846_ClearITPendingBit();
-}
-
-/**
- * Can be called by main loops
- * returns only one times a "true" per touch
- */ //
-bool ADS7846::wasTouched(void) {
-    if (ADS7846TouchStart) {
-        // reset => return only one true per touch
-        ADS7846TouchStart = false;
-        return true;
-    }
-    return false;
 }
 #endif
 

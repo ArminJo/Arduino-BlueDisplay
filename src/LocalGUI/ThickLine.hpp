@@ -57,9 +57,9 @@ void fillRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd
  *  - pixels are drawn if LINE_OVERLAP_MINOR
  */
 
-#if !defined(DISPLAY_HEIGHT)
-#define DISPLAY_HEIGHT  240
-#define DISPLAY_WIDTH   320
+#if !defined(LOCAL_DISPLAY_HEIGHT) // see GUIHelper.h
+#define LOCAL_DISPLAY_HEIGHT  DISPLAY_HALF_VGA_HEIGHT
+#define LOCAL_DISPLAY_WIDTH   DISPLAY_HALF_VGA_WIDTH
 #endif
 /**
  * Draws a line from aXStart/aYStart to aXEnd/aYEnd including both ends
@@ -72,20 +72,20 @@ void drawLineOverlap(unsigned int aXStart, unsigned int aYStart, unsigned int aX
     /*
      * Clip to display size
      */
-    if (aXStart >= DISPLAY_WIDTH) {
-        aXStart = DISPLAY_WIDTH - 1;
+    if (aXStart >= LOCAL_DISPLAY_WIDTH) {
+        aXStart = LOCAL_DISPLAY_WIDTH - 1;
     }
 
-    if (aXEnd >= DISPLAY_WIDTH) {
-        aXEnd = DISPLAY_WIDTH - 1;
+    if (aXEnd >= LOCAL_DISPLAY_WIDTH) {
+        aXEnd = LOCAL_DISPLAY_WIDTH - 1;
     }
 
-    if (aYStart >= DISPLAY_HEIGHT) {
-        aYStart = DISPLAY_HEIGHT - 1;
+    if (aYStart >= LOCAL_DISPLAY_HEIGHT) {
+        aYStart = LOCAL_DISPLAY_HEIGHT - 1;
     }
 
-    if (aYEnd >= DISPLAY_HEIGHT) {
-        aYEnd = DISPLAY_HEIGHT - 1;
+    if (aYEnd >= LOCAL_DISPLAY_HEIGHT) {
+        aYEnd = LOCAL_DISPLAY_HEIGHT - 1;
     }
 
     if ((aXStart == aXEnd) || (aYStart == aYEnd)) {
@@ -172,20 +172,20 @@ void drawThickLine(unsigned int aXStart, unsigned int aYStart, unsigned int aXEn
     /*
      * Clip to display size
      */
-    if (aXStart >= DISPLAY_WIDTH) {
-        aXStart = DISPLAY_WIDTH - 1;
+    if (aXStart >= LOCAL_DISPLAY_WIDTH) {
+        aXStart = LOCAL_DISPLAY_WIDTH - 1;
     }
 
-    if (aXEnd >= DISPLAY_WIDTH) {
-        aXEnd = DISPLAY_WIDTH - 1;
+    if (aXEnd >= LOCAL_DISPLAY_WIDTH) {
+        aXEnd = LOCAL_DISPLAY_WIDTH - 1;
     }
 
-    if (aYStart >= DISPLAY_HEIGHT) {
-        aYStart = DISPLAY_HEIGHT - 1;
+    if (aYStart >= LOCAL_DISPLAY_HEIGHT) {
+        aYStart = LOCAL_DISPLAY_HEIGHT - 1;
     }
 
-    if (aYEnd >= DISPLAY_HEIGHT) {
-        aYEnd = DISPLAY_HEIGHT - 1;
+    if (aYEnd >= LOCAL_DISPLAY_HEIGHT) {
+        aYEnd = LOCAL_DISPLAY_HEIGHT - 1;
     }
 
     /**
@@ -430,12 +430,12 @@ void drawThickLineSimple(unsigned int aXStart, unsigned int aYStart, unsigned in
 }
 
 // Includes for implementation of drawPixel(), drawLine() and fillRect()
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if !defined(DISABLE_REMOTE_DISPLAY)
 #include "BlueDisplay.h"
 #endif
 
 void drawPixel(uint16_t aXPos, uint16_t aYPos, uint16_t aColor) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if !defined(DISABLE_REMOTE_DISPLAY)
     BlueDisplay1.drawPixel(aXPos, aYPos, aColor); // this in turn also calls LocalDisplay.drawPixel()
 #else
     LocalDisplay.drawPixel(aXPos, aYPos, aColor);
@@ -443,7 +443,7 @@ void drawPixel(uint16_t aXPos, uint16_t aYPos, uint16_t aColor) {
 }
 
 void drawLine(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, uint16_t aColor) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if !defined(DISABLE_REMOTE_DISPLAY)
     BlueDisplay1.drawLine(aXStart, aYStart, aXEnd, aYEnd, aColor); // this in turn also calls LocalDisplay.drawLine()
 #else
     LocalDisplay.drawLine(aXStart, aYStart, aXEnd, aYEnd, aColor);
@@ -451,7 +451,7 @@ void drawLine(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd
 }
 
 void fillRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, uint16_t aColor){
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#if !defined(DISABLE_REMOTE_DISPLAY)
     BlueDisplay1.fillRect(aXStart, aYStart, aXEnd, aYEnd, aColor); // this in turn also calls LocalDisplay.fillRect()
 #else
     LocalDisplay.fillRect(aXStart, aYStart, aXEnd, aYEnd, aColor);

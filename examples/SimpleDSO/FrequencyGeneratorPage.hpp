@@ -40,10 +40,6 @@
 
 #if defined(AVR)
 #include "FrequencyGeneratorPage.h"
-#else
-#include "Pages.h"
-#include "main.h" // for StringBuffer
-#include "TouchDSO.h"
 #endif
 
 #include "Waveforms.h"
@@ -105,7 +101,7 @@ BDButton TouchButtonFrequencyStartStop;
 BDButton TouchButtonGetFrequency;
 BDButton TouchButtonWaveform;
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 BDButton TouchButton1;
 BDButton TouchButton2;
 BDButton TouchButton5;
@@ -165,7 +161,7 @@ void initFrequencyGeneratorPage(void) {
 
     sFrequencyInfo.isOutputEnabled = true; // to start output at first display of page
 
-#if !defined(LOCAL_DISPLAY_EXISTS)
+#if !defined(SUPPORT_LOCAL_DISPLAY)
     initFrequencyGeneratorPageGui();
 #endif
 }
@@ -173,7 +169,7 @@ void initFrequencyGeneratorPage(void) {
 void startFrequencyGeneratorPage(void) {
     BlueDisplay1.clearDisplay();
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     // do it here to enable freeing of button resources in stopFrequencyGeneratorPage()
     initFrequencyGeneratorPageGui();
 #endif
@@ -246,7 +242,7 @@ void initFrequencyGeneratorPageGui() {
         sprintf(sStringBuffer, "%u", tFrequency);
 #endif
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
         TouchButtonFixedFrequency[i]->init(tXPos, 96, BUTTON_WIDTH_10, BUTTON_HEIGHT_6, COLOR16_BLUE, sStringBuffer, TEXT_SIZE_11,
                 0, tFrequency, &doSetFixedFrequency);
 #else
@@ -259,7 +255,7 @@ void initFrequencyGeneratorPageGui() {
         tFrequencyCaptionPtr++;
 #endif
     }
-#if !defined(LOCAL_DISPLAY_EXISTS)
+#if !defined(SUPPORT_LOCAL_DISPLAY)
     TouchButtonFirstFixedFrequency.mButtonHandle -= NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1;
 #endif
 
@@ -299,7 +295,7 @@ void drawFrequencyGeneratorPage(void) {
     // do not clear screen here since it is called periodically for GUI refresh while DSO is running
     BDButton::deactivateAllButtons();
     BDSlider::deactivateAllSliders();
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if !defined(ARDUINO)
     TouchButtonMainHome.drawButton();
 #else
     TouchButtonBack.drawButton();
@@ -320,10 +316,7 @@ void drawFrequencyGeneratorPage(void) {
 
     // fixed frequency buttons
     // we know that the buttons handles are increasing numbers
-#if !defined(LOCAL_DISPLAY_EXISTS)
-    BDButton tButton(TouchButtonFirstFixedFrequency);
-#endif
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
     for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1; ++i) {
         // Generate strings each time buttons are drawn since only the pointer to caption is stored in button
         sprintf(sStringBuffer, "%u", FixedFrequencyButtonCaptions[i]);
@@ -334,6 +327,7 @@ void drawFrequencyGeneratorPage(void) {
     TouchButtonFixedFrequency[NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1]->setCaption("1k");
     TouchButtonFixedFrequency[NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1]->drawButton();
 #else
+    BDButton tButton(TouchButtonFirstFixedFrequency);
     for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS; ++i) {
         tButton.drawButton();
         tButton.mButtonHandle++; // Simply increment id to get the next button
@@ -392,8 +386,8 @@ void doSetFixedFrequency(BDButton *aTheTouchedButton, int16_t aNormalizedFrequen
     setFrequencyNormalizedForGUI(aNormalizedFrequency);
     // Play error feedback tone, if frequency is not available for this waveform
     bool tErrorOrClippingHappend = setWaveformFrequencyAndPrintValues();
-#if defined(LOCAL_DISPLAY_EXISTS)
-    FeedbackTone(tErrorOrClippingHappend);
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    playLocalFeedbackTone(tErrorOrClippingHappend);
 #else
     BlueDisplay1.playFeedbackTone(tErrorOrClippingHappend);
 #endif
@@ -445,7 +439,7 @@ void doWaveformMode(BDButton *aTheTouchedButton, int16_t aValue) {
 #endif
 }
 
-#if defined(LOCAL_DISPLAY_EXISTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 /**
  * gets frequency value from numberpad
  * @param aTheTouchedButton

@@ -43,23 +43,29 @@
 #define VERSION_HEX_VALUE(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
 #define VERSION_BLUE_DISPLAY_HEX  VERSION_HEX_VALUE(VERSION_BLUE_DISPLAY_MAJOR, VERSION_BLUE_DISPLAY_MINOR, VERSION_BLUE_DISPLAY_PATCH)
 
-// for backwards compatibility
-#if defined(BD_DRAW_TO_LOCAL_DISPLAY_TOO)
-#define SUPPORT_LOCAL_DISPLAY // new name of BD_DRAW_TO_LOCAL_DISPLAY_TOO
-#endif
-
-//#define AUTOREPEAT_BY_USING_LOCAL_EVENT // localTouchEvent is filled with data. Otherwise autorepeat relies on periodic calls of checkAllButtons() by main loop
 /*
- * If both macros are enabled LocalGUI.hpp should be included and TouchButton and TouchSlider instead of BDButton and BDSlider used.
+ * If both macros are enabled, LocalGUI.hpp should be included and TouchButton and TouchSlider instead of BDButton and BDSlider used.
  */
-//#define DISABLE_REMOTE_DISPLAY // Suppress drawing to Bluetooth connected display by defining USART_isBluetoothPaired() to false. Allow only drawing on the locally attached display
+//#define DISABLE_REMOTE_DISPLAY // Allow only drawing on the locally attached display by suppress using Bluetooth serial by defining USART_isBluetoothPaired() to return constant false.
 //#define SUPPORT_LOCAL_DISPLAY  // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
-#if defined(SUPPORT_LOCAL_DISPLAY) && !defined(DISABLE_REMOTE_DISPLAY)
+#if !defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY) && defined(SUPPORT_LOCAL_DISPLAY) && !defined(DISABLE_REMOTE_DISPLAY)
 # define SUPPORT_REMOTE_AND_LOCAL_DISPLAY // Both displays used simultaneously. Definition is used internally to avoid #if defined(SUPPORT_LOCAL_DISPLAY) && !defined(DISABLE_REMOTE_DISPLAY)
 #endif
 
+#if !defined(SUPPORT_ONLY_REMOTE_DISPLAY) && !defined(SUPPORT_LOCAL_DISPLAY) && !defined(DISABLE_REMOTE_DISPLAY)
+# define SUPPORT_ONLY_REMOTE_DISPLAY
+#endif
+
+#if !defined(SUPPORT_ONLY_LOCAL_DISPLAY) && defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
+# define SUPPORT_ONLY_LOCAL_DISPLAY
+#endif
+
+#if !defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
+#error DISABLE_REMOTE_DISPLAY is defined but SUPPORT_LOCAL_DISPLAY is not defined! No-display is not supported ;-). Seems you forgot to #define SUPPORT_LOCAL_DISPLAY.
+#endif
+
 #if defined(ARDUINO)
-#  if ! defined(ESP32)
+#  if !defined(ESP32)
 // For not AVR platforms this contains mapping defines (at least for STM32)
 #include <avr/pgmspace.h>
 #  endif
@@ -126,7 +132,6 @@ static const int BD_FLAG_USE_MAX_SIZE = 0x10;      // Use maximum display size f
  ***************************************/
 static const int FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x00;
 static const int FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT = 0x01;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_ACTUAL = 0x02; // deprecated
 static const int FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x02;
 static const int FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x03;
 static const int FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE = 0x06; // both landscapes are allowed
@@ -191,8 +196,7 @@ class BlueDisplay {
 public:
     BlueDisplay();
     void resetLocal();
-    void initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)(),
-            void (*aReorientationCallback)() = NULL);
+    void initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)(), void (*aReorientationCallback)() = NULL);
     // The result of initCommunication
     bool isConnectionEstablished();
     void sendSync();
@@ -204,7 +208,7 @@ public:
     void playTone(uint8_t aToneIndex);
     void playTone(uint8_t aToneIndex, int16_t aToneDuration);
     void playTone(uint8_t aToneIndex, int16_t aToneDuration, uint8_t aToneVolume);
-    void playFeedbackTone(uint8_t isError);
+    void playFeedbackTone(uint8_t aFeedbackToneType);
     void setLongTouchDownTimeout(uint16_t aLongTouchDownTimeoutMillis);
 
     void clearDisplay(color16_t aColor = COLOR16_WHITE);
@@ -216,28 +220,31 @@ public:
     void drawCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor, uint16_t aStrokeWidth);
     void fillCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor);
     void drawRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor, uint16_t aStrokeWidth);
-    void drawRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth, int16_t aHeight, color16_t aColor,
-            uint16_t aStrokeWidth);
+    void drawRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth, int16_t aHeight, color16_t aColor, uint16_t aStrokeWidth);
     void fillRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
     void fillRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth, int16_t aHeight, color16_t aColor);
-    uint16_t drawChar(uint16_t aPositionX, uint16_t aPositionY, char aChar, uint16_t aCharSize, color16_t aCharacterColor, color16_t aBackgroundColor);
+    uint16_t drawChar(uint16_t aPositionX, uint16_t aPositionY, char aChar, uint16_t aCharSize, color16_t aCharacterColor,
+            color16_t aBackgroundColor);
     void drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr);
     uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor);
     void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aTextSize, color16_t aTextColor,
             color16_t aBackgroundColor);
 
-    uint16_t drawByte(uint16_t aPositionX, uint16_t aPositionY, int8_t aByte, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
-    COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
+    uint16_t drawByte(uint16_t aPositionX, uint16_t aPositionY, int8_t aByte, uint16_t aTextSize = TEXT_SIZE_11,
+            color16_t aFGColor =
+            COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
     uint16_t drawUnsignedByte(uint16_t aPositionX, uint16_t aPositionY, uint8_t aUnsignedByte, uint16_t aTextSize = TEXT_SIZE_11,
             color16_t aFGColor = COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
-    uint16_t drawShort(uint16_t aPositionX, uint16_t aPositionY, int16_t aShort, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
-    COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
-    uint16_t drawLong(uint16_t aPositionX, uint16_t aPositionY, int32_t aLong, uint16_t aTextSize = TEXT_SIZE_11, color16_t aFGColor =
-    COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
+    uint16_t drawShort(uint16_t aPositionX, uint16_t aPositionY, int16_t aShort, uint16_t aTextSize = TEXT_SIZE_11,
+            color16_t aFGColor =
+            COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
+    uint16_t drawLong(uint16_t aPositionX, uint16_t aPositionY, int32_t aLong, uint16_t aTextSize = TEXT_SIZE_11,
+            color16_t aFGColor =
+            COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
 
     void setWriteStringSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
-    bool aClearOnNewScreen);
+            bool aClearOnNewScreen);
     void setWriteStringPosition(uint16_t aPositionX, uint16_t aPositionY);
     void setWriteStringPositionColumnLine(uint16_t aColumnNumber, uint16_t aLineNumber);
     void writeString(const char *aStringPtr, uint8_t aStringLength);
@@ -245,7 +252,7 @@ public:
     void debugMessage(const char *aStringPtr);
     void debug(const char *aStringPtr);
 #if defined(AVR)
-    void debug(const __FlashStringHelper *aStringPtr);
+    void debug(const __FlashStringHelper *aPGMString);
 #endif
     void debug(uint8_t aByte);
     void debug(const char *aMessage, uint8_t aByte);
@@ -270,10 +277,10 @@ public:
             int16_t aThickness = 1);
     void drawVectorRadian(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, float aRadian, color16_t aColor,
             int16_t aThickness = 1);
-    void drawLineWithThickness(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY,
-            color16_t aColor, int16_t aThickness);
-    void drawLineRelWithThickness(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY,
-            color16_t aColor, int16_t aThickness);
+    void drawLineWithThickness(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor,
+            int16_t aThickness);
+    void drawLineRelWithThickness(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor,
+            int16_t aThickness);
 
     void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
             uint8_t *aByteBuffer, size_t aByteBufferLength);
@@ -320,8 +327,8 @@ public:
     void drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString);
     uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
             color16_t aTextColor, color16_t aBackgroundColor);
-    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aTextSize, color16_t aTextColor,
-            color16_t aBackgroundColor);
+    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
+            color16_t aTextColor, color16_t aBackgroundColor);
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString);
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
             float aInitialValue);
@@ -329,58 +336,6 @@ public:
     // Not yet implemented    void getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const __FlashStringHelper *aPGMShortPromptString);
 #endif
     void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis);
-
-    /*
-     * Button stuff
-     */
-    BDButtonHandle_t createButton(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY,
-            color16_t aButtonColor, const char *aCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-            void (*aOnTouchHandler)(BDButton*, int16_t));
-    void drawButton(BDButtonHandle_t aButtonNumber);
-    void removeButton(BDButtonHandle_t aButtonNumber, color16_t aBackgroundColor);
-    void setButtonCaption(BDButtonHandle_t aButtonNumber, const char *aCaption, bool doDrawButton);
-    void setButtonValue(BDButtonHandle_t aButtonNumber, int16_t aValue);
-    void setButtonValueAndDraw(BDButtonHandle_t aButtonNumber, int16_t aValue);
-    void setButtonColor(BDButtonHandle_t aButtonNumber, color16_t aButtonColor);
-    void setButtonColorAndDraw(BDButtonHandle_t aButtonNumber, color16_t aButtonColor);
-    void setButtonPosition(BDButtonHandle_t aButtonNumber, int16_t aPositionX, int16_t aPositionY);
-    void setButtonAutorepeatTiming(BDButtonHandle_t aButtonNumber, uint16_t aMillisFirstDelay, uint16_t aMillisFirstRate,
-            uint16_t aFirstCount, uint16_t aMillisSecondRate);
-
-    void activateButton(BDButtonHandle_t aButtonNumber);
-    void deactivateButton(BDButtonHandle_t aButtonNumber);
-    void activateAllButtons();
-    void deactivateAllButtons();
-    void setButtonsGlobalFlags(uint16_t aFlags);
-    void setButtonsTouchTone(uint8_t aToneIndex, uint8_t aToneVolume);
-
-#if defined(AVR)
-    BDButtonHandle_t createButtonPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY,
-            color16_t aButtonColor, const char *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-            void (*aOnTouchHandler)(BDButton*, int16_t));
-    void setButtonCaptionPGM(BDButtonHandle_t aButtonNumber, const char *aPGMCaption, bool doDrawButton);
-#endif
-
-    /*
-     * Slider stuff
-     */
-    BDSliderHandle_t createSlider(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, int16_t aBarLength,
-            int16_t aThresholdValue, int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
-            void (*aOnChangeHandler)(BDSliderHandle_t*, int16_t));
-    void drawSlider(BDSliderHandle_t aSliderNumber);
-    void drawSliderBorder(BDSliderHandle_t aSliderNumber);
-    void setSliderValueAndDrawBar(BDSliderHandle_t aSliderNumber, int16_t aCurrentValue);
-    void setSliderColorBarThreshold(BDSliderHandle_t aSliderNumber, uint16_t aBarThresholdColor);
-    void setSliderColorBarBackground(BDSliderHandle_t aSliderNumber, uint16_t aBarBackgroundColor);
-
-    void setSliderCaptionProperties(BDSliderHandle_t aSliderNumber, uint8_t aCaptionSize, uint8_t aCaptionPosition,
-            uint8_t aCaptionMargin, color16_t aCaptionColor, color16_t aCaptionBackgroundColor);
-    void setSliderCaption(BDSliderHandle_t aSliderNumber, const char *aCaption);
-
-    void activateSlider(BDSliderHandle_t aSliderNumber);
-    void deactivateSlider(BDSliderHandle_t aSliderNumber);
-    void activateAllSliders();
-    void deactivateAllSliders();
 
     struct XYSize mRequestedDisplaySize; // contains requested display size
     struct XYSize mCurrentDisplaySize; // contains real host display size. Is initialized at connection build up and updated at reorientation and redraw event.
@@ -399,9 +354,12 @@ public:
 
 };
 
+#if defined(F) && defined(ARDUINO)
+uint8_t _clipAndCopyPGMString(char *aStringBuffer, const __FlashStringHelper *aPGMString);
+#endif
+
 // The instance provided by the class itself
 extern BlueDisplay BlueDisplay1;
-
 void clearDisplayAndDisableButtonsAndSliders();
 void clearDisplayAndDisableButtonsAndSliders(color16_t aColor);
 
@@ -440,7 +398,7 @@ float getTemperature(void);
  * - All *Rel*() functions now have signed delta parameters. Fixed bug in drawLineRelWithThickness() for local display.
  * - Improved handling of local display and fixed bugs in drawLineRelWithThickness() and Button list for local display.
  * - Added debug(const __FlashStringHelper *aStringPtr).
- * - Added bool delayMillisAndCheckForEvent().
+ * - Added bool delay(AndCheckForEvent().
  *
  * Version 3.0.2
  * - Added function setPosition() for sliders.

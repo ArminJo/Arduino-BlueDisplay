@@ -1,7 +1,7 @@
 /*
  * BlueDisplay.hpp
  *
- * C stub for the Android BlueDisplay app (and the local LCD screens with SSD1289 (an HY32D board) or HX8347 (on MI0283QT2 board) controller.
+ * C stub for the Android BlueDisplay app (and the local LCD screens with SSD1289 (on HY32D board) or HX8347 (on MI0283QT2 board) controller.
  *
  * It implements also a few display test functions.
  *
@@ -35,15 +35,13 @@
 
 #include "BlueDisplay.h"
 
-#if defined(DISABLE_REMOTE_DISPLAY)
-#define USART_isBluetoothPaired() false
-#else
+#if !defined(DISABLE_REMOTE_DISPLAY)
 #include "BlueSerial.hpp"
 #endif
 #include "EventHandler.hpp"
 #include "BDButton.hpp"
 #include "BDSlider.hpp"
-#include "LocalGUI/Chart.hpp"
+#include "Chart.hpp"
 #include "GUIHelper.hpp"
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
@@ -95,8 +93,7 @@ void BlueDisplay::resetLocal() {
  * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
  * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
  */
-void BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)(),
-        void (*aReorientationCallback)()) {
+void BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)(), void (*aReorientationCallback)()) {
     registerConnectCallback(aConnectCallback);
     registerReorientationCallback(aReorientationCallback);
     registerRedrawCallback(aRedrawCallback);
@@ -114,7 +111,7 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*aRedrawCa
          * Time measured is between 50 and 150 ms (or 80 and 120) for Bluetooth.
          */
         delayMillisWithCheckAndHandleEvents(10);
-        if (mBlueDisplayConnectionEstablished) { // is set by delayMillisWithCheckAndHandleEvents()
+        if (mBlueDisplayConnectionEstablished) { // is set by delay(WithCheckAndHandleEvents()
 #if defined(LOCAL_TRACE) && !defined(USE_SIMPLE_SERIAL) && (defined(USE_SERIAL1) || defined(ESP32))
             Serial.print("Connection established after ");
             Serial.print(i * 10);
@@ -159,24 +156,18 @@ void BlueDisplay::setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHe
  * @param aCodePage Number for ISO_8859_<Number>
  */
 void BlueDisplay::setCodePage(uint16_t aCodePageNumber) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 2, SUBFUNCTION_GLOBAL_SET_CODEPAGE, aCodePageNumber);
-    }
+    sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 2, SUBFUNCTION_GLOBAL_SET_CODEPAGE, aCodePageNumber);
 }
 
 /*
  * aChar must be bigger than 0x80!
  */
 void BlueDisplay::setCharacterMapping(uint8_t aChar, uint16_t aUnicodeChar) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 3, SUBFUNCTION_GLOBAL_SET_CHARACTER_CODE_MAPPING, aChar, aUnicodeChar);
-    }
+    sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 3, SUBFUNCTION_GLOBAL_SET_CHARACTER_CODE_MAPPING, aChar, aUnicodeChar);
 }
 
 void BlueDisplay::setLongTouchDownTimeout(uint16_t aLongTouchDownTimeoutMillis) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 2, SUBFUNCTION_GLOBAL_SET_LONG_TOUCH_DOWN_TIMEOUT, aLongTouchDownTimeoutMillis);
-    }
+    sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 2, SUBFUNCTION_GLOBAL_SET_LONG_TOUCH_DOWN_TIMEOUT, aLongTouchDownTimeoutMillis);
 }
 
 /**
@@ -184,15 +175,12 @@ void BlueDisplay::setLongTouchDownTimeout(uint16_t aLongTouchDownTimeoutMillis) 
  *         FLAG_SCREEN_ORIENTATION_LOCK_CURRENT or FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK
  */
 void BlueDisplay::setScreenOrientationLock(uint8_t aLockMode) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 2, SUBFUNCTION_GLOBAL_SET_SCREEN_ORIENTATION_LOCK, aLockMode);
-    }
+    sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 2, SUBFUNCTION_GLOBAL_SET_SCREEN_ORIENTATION_LOCK, aLockMode);
+
 }
 
 void BlueDisplay::playTone() {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_PLAY_TONE, 1, TONE_DEFAULT);
-    }
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 1, TONE_DEFAULT);
 }
 
 /*
@@ -201,9 +189,7 @@ void BlueDisplay::playTone() {
  * Tone index 0 is DTMF tone for key 0: 1336Hz, 941Hz, continuous
  */
 void BlueDisplay::playTone(uint8_t aToneIndex) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_PLAY_TONE, 1, aToneIndex);
-    }
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 1, aToneIndex);
 }
 
 /*
@@ -211,9 +197,7 @@ void BlueDisplay::playTone(uint8_t aToneIndex) {
  * but except the value -1 aToneDuration is taken as unsigned so -2 will give 65534 micros
  */
 void BlueDisplay::playTone(uint8_t aToneIndex, int16_t aToneDuration) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_PLAY_TONE, 2, aToneIndex, aToneDuration);
-    }
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 2, aToneIndex, aToneDuration);
 }
 
 /*
@@ -221,20 +205,18 @@ void BlueDisplay::playTone(uint8_t aToneIndex, int16_t aToneDuration) {
  * but except the value -1 aToneDuration is taken as unsigned so -2 will give 65534 micros
  */
 void BlueDisplay::playTone(uint8_t aToneIndex, int16_t aToneDuration, uint8_t aToneVolume) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_PLAY_TONE, 3, aToneIndex, aToneDuration, aToneVolume);
-    }
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 3, aToneIndex, aToneDuration, aToneVolume);
 }
 
-void BlueDisplay::playFeedbackTone(uint8_t aToneType) {
-    if (aToneType == FEEDBACK_TONE_OK) {
+void BlueDisplay::playFeedbackTone(uint8_t aFeedbackToneType) {
+    if (aFeedbackToneType == FEEDBACK_TONE_OK) {
         BlueDisplay1.playTone(TONE_PROP_BEEP_OK);
-    } else if (aToneType == FEEDBACK_TONE_ERROR) {
+    } else if (aFeedbackToneType == FEEDBACK_TONE_ERROR) {
         BlueDisplay1.playTone(TONE_PROP_BEEP_ERROR);
-    } else if (aToneType == FEEDBACK_TONE_NO_TONE) {
+    } else if (aFeedbackToneType == FEEDBACK_TONE_NO_TONE) {
         return;
     } else {
-        BlueDisplay1.playTone(aToneType);
+        BlueDisplay1.playTone(aFeedbackToneType);
     }
 }
 
@@ -242,22 +224,20 @@ void BlueDisplay::clearDisplay(color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.clearDisplay(aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        // saves 8 bytes for DSO, requires 8 bytes for RobotCar
+    // saves 8 bytes for DSO, requires 8 bytes for RobotCar
 //        sendUSART(SYNC_TOKEN);
 //        sendUSART(FUNCTION_CLEAR_DISPLAY);
 //        sendUSART('\0');
 //        sendUSART('\0');
 //        sendUSART(aColor);
 //        sendUSART(aColor >> 8);
-        // requires 16 bytes for DSO, saves 26 bytes for RobotCar
+    // requires 16 bytes for DSO, saves 26 bytes for RobotCar
 //        uint16_t tParamBuffer[3];
 //        tParamBuffer[0] = FUNCTION_CLEAR_DISPLAY << 8 | SYNC_TOKEN;
 //        tParamBuffer[1] = 1;
 //        tParamBuffer[2] = aColor;
 //        sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], 1 * 2 + 4, NULL, 0);
-        sendUSARTArgs(FUNCTION_CLEAR_DISPLAY, 1, aColor);
-    }
+    sendUSARTArgs(FUNCTION_CLEAR_DISPLAY, 1, aColor);
 }
 
 /*
@@ -265,43 +245,33 @@ void BlueDisplay::clearDisplay(color16_t aColor) {
  * Useful if we send commands faster than the display may able to handle, to avoid increasing delay between sending and rendering.
  */
 void BlueDisplay::clearDisplayOptional(color16_t aColor) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_CLEAR_DISPLAY_OPTIONAL, 1, aColor);
-    }
+    sendUSARTArgs(FUNCTION_CLEAR_DISPLAY_OPTIONAL, 1, aColor);
 }
 
 // forces an rendering of the drawn bitmap
 void BlueDisplay::drawDisplayDirect() {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_DRAW_DISPLAY, 0);
-    }
+    sendUSARTArgs(FUNCTION_DRAW_DISPLAY, 0);
 }
 
 void BlueDisplay::drawPixel(uint16_t aXPos, uint16_t aYPos, color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.drawPixel(aXPos, aYPos, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_DRAW_PIXEL, 3, aXPos, aYPos, aColor);
-    }
+    sendUSARTArgs(FUNCTION_DRAW_PIXEL, 3, aXPos, aYPos, aColor);
 }
 
 void BlueDisplay::drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.drawLine(aStartX, aStartY, aEndX, aEndY, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSART5Args(FUNCTION_DRAW_LINE, aStartX, aStartY, aEndX, aEndY, aColor);
-    }
+    sendUSART5Args(FUNCTION_DRAW_LINE, aStartX, aStartY, aEndX, aEndY, aColor);
 }
 
 void BlueDisplay::drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.drawLine(aStartX, aStartY, aStartX + aDeltaX, aStartY + aDeltaY, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSART5Args(FUNCTION_DRAW_LINE_REL, aStartX, aStartY, aDeltaX, aDeltaY, aColor);
-    }
+    sendUSART5Args(FUNCTION_DRAW_LINE_REL, aStartX, aStartY, aDeltaX, aDeltaY, aColor);
 }
 
 /**
@@ -314,10 +284,8 @@ void BlueDisplay::drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.drawLineFastOneX(aStartX, aStartY, aEndY, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        // Just draw plain line, no need to speed up
-        sendUSART5Args(FUNCTION_DRAW_LINE, aStartX, aStartY, aStartX + 1, aEndY, aColor);
-    }
+    // Just draw plain line, no need to speed up
+    sendUSART5Args(FUNCTION_DRAW_LINE, aStartX, aStartY, aStartX + 1, aEndY, aColor);
 }
 
 /*
@@ -325,10 +293,7 @@ void BlueDisplay::drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t 
  */
 void BlueDisplay::drawVectorDegrees(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, int aDegrees, color16_t aColor,
         int16_t aThickness) {
-
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_DRAW_VECTOR_DEGREE, 6, aStartX, aStartY, aLength, aDegrees, aColor, aThickness);
-    }
+    sendUSARTArgs(FUNCTION_DRAW_VECTOR_DEGREE, 6, aStartX, aStartY, aLength, aDegrees, aColor, aThickness);
 }
 
 /*
@@ -353,9 +318,7 @@ void BlueDisplay::drawLineWithThickness(uint16_t aStartX, uint16_t aStartY, uint
 #if defined(SUPPORT_LOCAL_DISPLAY)
     drawThickLine(aStartX, aStartY, aEndX, aEndY, aThickness, LINE_THICKNESS_MIDDLE, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_DRAW_LINE, 6, aStartX, aStartY, aEndX, aEndY, aColor, aThickness);
-    }
+    sendUSARTArgs(FUNCTION_DRAW_LINE, 6, aStartX, aStartY, aEndX, aEndY, aColor, aThickness);
 }
 
 void BlueDisplay::drawLineRelWithThickness(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor,
@@ -363,9 +326,7 @@ void BlueDisplay::drawLineRelWithThickness(uint16_t aStartX, uint16_t aStartY, i
 #if defined(SUPPORT_LOCAL_DISPLAY)
     drawThickLine(aStartX, aStartY, aStartX + aDeltaX, aStartY + aDeltaY, aThickness, LINE_THICKNESS_MIDDLE, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_DRAW_LINE_REL, 6, aStartX, aStartY, aDeltaX, aDeltaY, aColor, aThickness);
-    }
+    sendUSARTArgs(FUNCTION_DRAW_LINE_REL, 6, aStartX, aStartY, aDeltaX, aDeltaY, aColor, aThickness);
 }
 
 void BlueDisplay::drawRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor,
@@ -373,9 +334,7 @@ void BlueDisplay::drawRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, u
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.drawRect(aStartX, aStartY, aEndX - 1, aEndY - 1, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_DRAW_RECT, 6, aStartX, aStartY, aEndX, aEndY, aColor, aStrokeWidth);
-    }
+    sendUSARTArgs(FUNCTION_DRAW_RECT, 6, aStartX, aStartY, aEndX, aEndY, aColor, aStrokeWidth);
 }
 
 void BlueDisplay::drawRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth, int16_t aHeight, color16_t aColor,
@@ -383,45 +342,35 @@ void BlueDisplay::drawRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.drawRect(aStartX, aStartY, aStartX + aWidth - 1, aStartY + aHeight - 1, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_DRAW_RECT_REL, 6, aStartX, aStartY, aWidth, aHeight, aColor, aStrokeWidth);
-    }
+    sendUSARTArgs(FUNCTION_DRAW_RECT_REL, 6, aStartX, aStartY, aWidth, aHeight, aColor, aStrokeWidth);
 }
 
 void BlueDisplay::fillRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.fillRect(aStartX, aStartY, aEndX, aEndY, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSART5Args(FUNCTION_FILL_RECT, aStartX, aStartY, aEndX, aEndY, aColor);
-    }
+    sendUSART5Args(FUNCTION_FILL_RECT, aStartX, aStartY, aEndX, aEndY, aColor);
 }
 
 void BlueDisplay::fillRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth, int16_t aHeight, color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.fillRect(aStartX, aStartY, aStartX + aWidth - 1, aStartY + aHeight - 1, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSART5Args(FUNCTION_FILL_RECT_REL, aStartX, aStartY, aWidth, aHeight, aColor);
-    }
+    sendUSART5Args(FUNCTION_FILL_RECT_REL, aStartX, aStartY, aWidth, aHeight, aColor);
 }
 
 void BlueDisplay::drawCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor, uint16_t aStrokeWidth) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.drawCircle(aXCenter, aYCenter, aRadius, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSART5Args(FUNCTION_DRAW_CIRCLE, aXCenter, aYCenter, aRadius, aColor, aStrokeWidth);
-    }
+    sendUSART5Args(FUNCTION_DRAW_CIRCLE, aXCenter, aYCenter, aRadius, aColor, aStrokeWidth);
 }
 
 void BlueDisplay::fillCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.fillCircle(aXCenter, aYCenter, aRadius, aColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_FILL_CIRCLE, 4, aXCenter, aYCenter, aRadius, aColor);
-    }
+    sendUSARTArgs(FUNCTION_FILL_CIRCLE, 4, aXCenter, aYCenter, aRadius, aColor);
 }
 
 /**
@@ -452,8 +401,8 @@ uint16_t BlueDisplay::drawChar(uint16_t aPositionX, uint16_t aPositionY, char aC
  * @param aBackgroundColor if COLOR16_NO_BACKGROUND, then the background will not filled
  * @return uint16_t start x for next character - next x Parameter
  */
-uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aTextSize, color16_t aTextColor,
-        color16_t aBackgroundColor) {
+uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aTextSize,
+        color16_t aTextColor, color16_t aBackgroundColor) {
     uint16_t tRetValue = 0;
 #if defined(SUPPORT_LOCAL_DISPLAY)
     tRetValue = LocalDisplay.drawText(aPositionX, aPositionY - getTextAscend(aTextSize), (char *) aStringPtr, aTextSize,
@@ -461,8 +410,8 @@ uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const c
 #endif
     if (USART_isBluetoothPaired()) {
         tRetValue = aPositionX + strlen(aStringPtr) * getTextWidth(aTextSize);
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aTextSize, aTextColor, aBackgroundColor, strlen(aStringPtr),
-                (uint8_t*) aStringPtr);
+        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aTextSize, aTextColor, aBackgroundColor,
+                strlen(aStringPtr), (uint8_t*) aStringPtr);
     }
     return tRetValue;
 }
@@ -471,27 +420,23 @@ uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const c
  * Take size and colors from preceding drawText command
  */
 void BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPositionX, aPositionY, strlen(aStringPtr), (uint8_t*) aStringPtr);
-    }
+    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPositionX, aPositionY, strlen(aStringPtr), (uint8_t*) aStringPtr);
 }
 
 /**
  * @param aBackgroundColor if COLOR16_NO_BACKGROUND, then do not clear rest of line
  */
-void BlueDisplay::drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aTextSize, color16_t aTextColor,
-        color16_t aBackgroundColor) {
+void BlueDisplay::drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aTextSize,
+        color16_t aTextColor, color16_t aBackgroundColor) {
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     // here we have a special (and bigger) function, which handles multiple lines.
     LocalDisplay.drawMLText(aPositionX, aPositionY - getTextAscend(aTextSize), (char *) aStringPtr, aTextSize, aTextColor,
             aBackgroundColor);
 #endif
-    if (USART_isBluetoothPaired()) {
-        // the same as the drawText() function
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aTextSize, aTextColor, aBackgroundColor, strlen(aStringPtr),
-                (uint8_t*) aStringPtr);
-    }
+    // the same as the drawText() function
+    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aTextSize, aTextColor, aBackgroundColor,
+            strlen(aStringPtr), (uint8_t*) aStringPtr);
 }
 
 uint16_t BlueDisplay::drawByte(uint16_t aPositionX, uint16_t aPositionY, int8_t aByte, uint16_t aTextSize, color16_t aFGColor,
@@ -588,37 +533,29 @@ void BlueDisplay::setWriteStringSizeAndColorAndFlag(uint16_t aPrintSize, color16
 #if defined(SUPPORT_LOCAL_DISPLAY)
     printSetOptions(getFontScaleFactorFromTextSize(aPrintSize), aPrintColor, aPrintBackgroundColor, aClearOnNewScreen);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSART5Args(FUNCTION_WRITE_SETTINGS, FLAG_WRITE_SETTINGS_SET_SIZE_AND_COLORS_AND_FLAGS, aPrintSize, aPrintColor,
-                aPrintBackgroundColor, aClearOnNewScreen);
-    }
+    sendUSART5Args(FUNCTION_WRITE_SETTINGS, FLAG_WRITE_SETTINGS_SET_SIZE_AND_COLORS_AND_FLAGS, aPrintSize, aPrintColor,
+            aPrintBackgroundColor, aClearOnNewScreen);
 }
 
 void BlueDisplay::setWriteStringPosition(uint16_t aPositionX, uint16_t aPositionY) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     printSetPosition(aPositionX, aPositionY);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_WRITE_SETTINGS, 3, FLAG_WRITE_SETTINGS_SET_POSITION, aPositionX, aPositionY);
-    }
+    sendUSARTArgs(FUNCTION_WRITE_SETTINGS, 3, FLAG_WRITE_SETTINGS_SET_POSITION, aPositionX, aPositionY);
 }
 
 void BlueDisplay::setWriteStringPositionColumnLine(uint16_t aColumnNumber, uint16_t aLineNumber) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     printSetPositionColumnLine(aColumnNumber, aLineNumber);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_WRITE_SETTINGS, 3, FLAG_WRITE_SETTINGS_SET_LINE_COLUMN, aColumnNumber, aLineNumber);
-    }
+    sendUSARTArgs(FUNCTION_WRITE_SETTINGS, 3, FLAG_WRITE_SETTINGS_SET_LINE_COLUMN, aColumnNumber, aLineNumber);
 }
 
 void BlueDisplay::writeString(const char *aStringPtr, uint8_t aStringLength) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     myPrint(aStringPtr, aStringLength);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_WRITE_STRING, 0, aStringLength, (uint8_t*) aStringPtr);
-    }
+    sendUSARTArgsAndByteBuffer(FUNCTION_WRITE_STRING, 0, aStringLength, (uint8_t*) aStringPtr);
 }
 
 // for use in syscalls.c
@@ -626,38 +563,26 @@ extern "C" void writeStringC(const char *aStringPtr, uint8_t aStringLength) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     myPrint(aStringPtr, aStringLength);
 #endif
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_WRITE_STRING, 0, aStringLength, (uint8_t*) aStringPtr);
-    }
+    sendUSARTArgsAndByteBuffer(FUNCTION_WRITE_STRING, 0, aStringLength, (uint8_t*) aStringPtr);
 }
 
 /**
  * Output String as warning to log and present as toast every 500 ms
  */
 void BlueDisplay::debugMessage(const char *aStringPtr) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(aStringPtr), (uint8_t*) aStringPtr);
-    }
+    sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(aStringPtr), (uint8_t*) aStringPtr);
 }
 
 void BlueDisplay::debug(const char *aStringPtr) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(aStringPtr), (uint8_t*) aStringPtr);
-    }
+    sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(aStringPtr), (uint8_t*) aStringPtr);
 }
 
 #if defined(AVR)
-void BlueDisplay::debug(const __FlashStringHelper *aStringPtr) {
+void BlueDisplay::debug(const __FlashStringHelper *aPGMString) {
     if (USART_isBluetoothPaired()) {
-        PGM_P tPGMString = reinterpret_cast<PGM_P>(aStringPtr);
-
-        uint8_t tTextLength = strlen_P(tPGMString);
-        if (tTextLength > STRING_BUFFER_STACK_SIZE) {
-            tTextLength = STRING_BUFFER_STACK_SIZE;
-        }
         char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        strncpy_P(tStringBuffer, tPGMString, tTextLength);
-        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, tTextLength, tStringBuffer);
+        uint8_t tStringLength = _clipAndCopyPGMString(tStringBuffer, aPGMString);
+        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, tStringLength, tStringBuffer);
     }
 }
 #endif
@@ -666,14 +591,14 @@ void BlueDisplay::debug(const __FlashStringHelper *aStringPtr) {
  * Output as warning to log and present as toast every 500 ms
  */
 void BlueDisplay::debug(uint8_t aByte) {
-    char tStringBuffer[9];
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[9];
 // hhu -> unsigned char instead of unsigned int with u
 #if defined(AVR)
-    sprintf_P(tStringBuffer, PSTR("%3u 0x%02X"), aByte, aByte);
+        sprintf_P(tStringBuffer, PSTR("%3u 0x%02X"), aByte, aByte);
 #else
-    sprintf(tStringBuffer, "%3u 0x%02X", aByte, aByte);
+        sprintf(tStringBuffer, "%3u 0x%02X", aByte, aByte);
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
@@ -682,14 +607,14 @@ void BlueDisplay::debug(uint8_t aByte) {
  * Maximum size of aMessage string is 25 character.
  */
 void BlueDisplay::debug(const char *aMessage, uint8_t aByte) {
-    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hhu -> unsigned char instead of unsigned int with u
 #if defined(AVR)
-    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%3u 0x%02X"), aMessage, aByte, aByte);
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%3u 0x%02X"), aMessage, aByte, aByte);
 #else
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%3u 0x%02X", aMessage, aByte, aByte);
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%3u 0x%02X", aMessage, aByte, aByte);
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
@@ -698,53 +623,53 @@ void BlueDisplay::debug(const char *aMessage, uint8_t aByte) {
  * Maximum size of aMessage string is 24 character.
  */
 void BlueDisplay::debug(const char *aMessage, int8_t aByte) {
-    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hhd -> signed char instead of signed int with d
 #if defined(AVR)
-    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%4d 0x%02X"), aMessage, aByte, aByte);
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%4d 0x%02X"), aMessage, aByte, aByte);
 #else
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%4d 0x%02X", aMessage, aByte, aByte);
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%4d 0x%02X", aMessage, aByte, aByte);
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
 
 void BlueDisplay::debug(int8_t aByte) {
-    char tStringBuffer[10];
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[10];
 // hhd -> signed char instead of int with d
 #if defined(AVR)
-    sprintf_P(tStringBuffer, PSTR("%4d 0x%02X"), aByte, aByte);
+        sprintf_P(tStringBuffer, PSTR("%4d 0x%02X"), aByte, aByte);
 #else
-    sprintf(tStringBuffer, "%4d 0x%02X", aByte, aByte);
+        sprintf(tStringBuffer, "%4d 0x%02X", aByte, aByte);
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
 
 void BlueDisplay::debug(uint16_t aShort) {
-    char tStringBuffer[13]; //5 decimal + 3 " 0x" + 4 hex +1
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[13]; //5 decimal + 3 " 0x" + 4 hex +1
 // hu -> unsigned short int instead of unsigned int with u
 #if defined(AVR)
-    sprintf_P(tStringBuffer, PSTR("%5u 0x%04X"), aShort, aShort);
+        sprintf_P(tStringBuffer, PSTR("%5u 0x%04X"), aShort, aShort);
 #else
-    sprintf(tStringBuffer, "%5u 0x%04X", aShort, aShort);
+        sprintf(tStringBuffer, "%5u 0x%04X", aShort, aShort);
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
 
 void BlueDisplay::debug(int16_t aShort) {
-    char tStringBuffer[14]; //6 decimal + 3 " 0x" + 4 hex +1
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[14]; //6 decimal + 3 " 0x" + 4 hex +1
 // hd -> short int instead of int with d
 #if defined(AVR)
-    sprintf_P(tStringBuffer, PSTR("%6d 0x%04X"), aShort, aShort);
+        sprintf_P(tStringBuffer, PSTR("%6d 0x%04X"), aShort, aShort);
 #else
-    sprintf(tStringBuffer, "%6d 0x%04X", aShort, aShort);
+        sprintf(tStringBuffer, "%6d 0x%04X", aShort, aShort);
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
@@ -753,14 +678,14 @@ void BlueDisplay::debug(int16_t aShort) {
  * Maximum size of aMessage string is 21 character.
  */
 void BlueDisplay::debug(const char *aMessage, uint16_t aShort) {
-    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hd -> short int instead of int with d
 #if defined(AVR)
-    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%5u 0x%04X"), aMessage, aShort, aShort);
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%5u 0x%04X"), aMessage, aShort, aShort);
 #else
     snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%5u 0x%04X", aMessage, aShort, aShort);
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
@@ -769,42 +694,42 @@ void BlueDisplay::debug(const char *aMessage, uint16_t aShort) {
  * Maximum size of aMessage string is 20 character.
  */
 void BlueDisplay::debug(const char *aMessage, int16_t aShort) {
-    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hd -> short int instead of int with d
 #if defined(AVR)
-    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%6d 0x%04X"), aMessage, aShort, aShort);
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%6d 0x%04X"), aMessage, aShort, aShort);
 #else
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%6d 0x%04X", aMessage, aShort, aShort);
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%6d 0x%04X", aMessage, aShort, aShort);
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
 
 void BlueDisplay::debug(uint32_t aLong) {
-    char tStringBuffer[22]; //10 decimal + 3 " 0x" + 8 hex +1
-#if defined(AVR)
-    sprintf_P(tStringBuffer, PSTR("%10lu 0x%0lX"), aLong, aLong);
-#elif defined(__XTENSA__)
-    sprintf(tStringBuffer, "%10lu 0x%0lX", (long) aLong, (long) aLong);
-#else
-    sprintf(tStringBuffer, "%10lu 0x%0lX", aLong, aLong);
-#endif
     if (USART_isBluetoothPaired()) {
+        char tStringBuffer[22]; //10 decimal + 3 " 0x" + 8 hex +1
+#if defined(AVR)
+        sprintf_P(tStringBuffer, PSTR("%10lu 0x%0lX"), aLong, aLong);
+#elif defined(__XTENSA__)
+        sprintf(tStringBuffer, "%10lu 0x%0lX", (long) aLong, (long) aLong);
+#else
+        sprintf(tStringBuffer, "%10lu 0x%0lX", aLong, aLong);
+#endif
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
 
 void BlueDisplay::debug(int32_t aLong) {
-    char tStringBuffer[23]; //11 decimal + 3 " 0x" + 8 hex +1
-#if defined(AVR)
-    sprintf_P(tStringBuffer, PSTR("%11ld 0x%0lX"), aLong, aLong);
-#elif defined(__XTENSA__)
-    sprintf(tStringBuffer, "%11ld 0x%0lX", (long) aLong, (long) aLong);
-#else
-    sprintf(tStringBuffer, "%11ld 0x%0lX", aLong, aLong);
-#endif
     if (USART_isBluetoothPaired()) {
+        char tStringBuffer[23]; //11 decimal + 3 " 0x" + 8 hex +1
+#if defined(AVR)
+        sprintf_P(tStringBuffer, PSTR("%11ld 0x%0lX"), aLong, aLong);
+#elif defined(__XTENSA__)
+        sprintf(tStringBuffer, "%11ld 0x%0lX", (long) aLong, (long) aLong);
+#else
+        sprintf(tStringBuffer, "%11ld 0x%0lX", aLong, aLong);
+#endif
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
@@ -813,15 +738,15 @@ void BlueDisplay::debug(int32_t aLong) {
  * Maximum size of aMessage string is 13 to 20 character depending on content of aLong.
  */
 void BlueDisplay::debug(const char *aMessage, uint32_t aLong) {
-    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
-#if defined(AVR)
-    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%10lu 0x%0lX"), aMessage, aLong, aLong);
-#elif defined(__XTENSA__)
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu 0x%0lX", aMessage, (long) aLong, (long) aLong);
-#else
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu 0x%0lX", aMessage, aLong, aLong);
-#endif
     if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+#if defined(AVR)
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%10lu 0x%0lX"), aMessage, aLong, aLong);
+#elif defined(__XTENSA__)
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu 0x%0lX", aMessage, (long) aLong, (long) aLong);
+#else
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu 0x%0lX", aMessage, aLong, aLong);
+#endif
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
@@ -830,27 +755,27 @@ void BlueDisplay::debug(const char *aMessage, uint32_t aLong) {
  * Maximum size of aMessage string is 12 to 19 character depending on content of aLong.
  */
 void BlueDisplay::debug(const char *aMessage, int32_t aLong) {
-    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
-#if defined(AVR)
-    snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%11ld 0x%0lX"), aMessage, aLong, aLong);
-#elif defined(__XTENSA__)
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%11ld 0x%0lX", aMessage, (long) aLong, (long) aLong);
-#else
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%11ld 0x%0lX", aMessage, aLong, aLong);
-#endif
     if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+#if defined(AVR)
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%11ld 0x%0lX"), aMessage, aLong, aLong);
+#elif defined(__XTENSA__)
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%11ld 0x%0lX", aMessage, (long) aLong, (long) aLong);
+#else
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%11ld 0x%0lX", aMessage, aLong, aLong);
+#endif
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
 
 void BlueDisplay::debug(float aFloat) {
-    char tStringBuffer[22];
-#if defined(AVR)
-    dtostrf(aFloat, 16, 7, tStringBuffer);
-#else
-    sprintf(tStringBuffer, "%f", aFloat);
-#endif
     if (USART_isBluetoothPaired()) {
+        char tStringBuffer[22];
+#if defined(AVR)
+        dtostrf(aFloat, 16, 7, tStringBuffer);
+#else
+        sprintf(tStringBuffer, "%f", aFloat);
+#endif
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
@@ -859,27 +784,27 @@ void BlueDisplay::debug(float aFloat) {
  * Maximum size of aMessage string is up to 30 character depending on content of aFloat.
  */
 void BlueDisplay::debug(const char *aMessage, float aFloat) {
-    char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 #if defined(AVR)
-    strncpy(tStringBuffer, aMessage, (STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE - 22));
-    dtostrf(aFloat, 16, 7, &tStringBuffer[strlen(tStringBuffer)]);
+        strncpy(tStringBuffer, aMessage, (STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE - 22));
+        dtostrf(aFloat, 16, 7, &tStringBuffer[strlen(tStringBuffer)]);
 //    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%f", aMessage, (double)aFloat); // requires ca. 800 bytes more
 #else
-    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%f", aMessage, aFloat);
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%f", aMessage, aFloat);
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
 
 void BlueDisplay::debug(double aDouble) {
-    char tStringBuffer[22];
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[22];
 #if defined(AVR)
-    dtostrf(aDouble, 16, 7, tStringBuffer);
+        dtostrf(aDouble, 16, 7, tStringBuffer);
 #else
     sprintf(tStringBuffer, "%f", aDouble);
 #endif
-    if (USART_isBluetoothPaired()) {
         sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
     }
 }
@@ -889,10 +814,8 @@ void BlueDisplay::debug(double aDouble) {
  */
 void BlueDisplay::drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
         uint8_t *aByteBuffer, size_t aByteBufferLength) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_CHART, 4, aXOffset, aYOffset, aColor, aClearBeforeColor, aByteBufferLength,
-                aByteBuffer);
-    }
+    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_CHART, 4, aXOffset, aYOffset, aColor, aClearBeforeColor, aByteBufferLength,
+            aByteBuffer);
 }
 
 /**
@@ -991,8 +914,8 @@ void BlueDisplay::refreshVector(struct ThickLine *aLine, int16_t aNewRelEndX, in
 }
 
 // for use in syscalls.c
-extern "C" uint16_t drawTextC(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize, color16_t aTextColor,
-        uint16_t aBackgroundColor) {
+extern "C" uint16_t drawTextC(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize,
+        color16_t aTextColor, uint16_t aBackgroundColor) {
     uint16_t tRetValue = 0;
     if (USART_isBluetoothPaired()) {
         tRetValue = BlueDisplay1.drawText(aPositionX, aPositionY, (char*) aStringPtr, aFontSize, aTextColor, aBackgroundColor);
@@ -1001,59 +924,45 @@ extern "C" uint16_t drawTextC(uint16_t aPositionX, uint16_t aPositionY, const ch
 }
 
 #if defined(AVR)
-uint16_t BlueDisplay::drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString, uint16_t aTextSize, color16_t aTextColor,
-        color16_t aBackgroundColor) {
+uint16_t BlueDisplay::drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString, uint16_t aTextSize,
+        color16_t aTextColor, color16_t aBackgroundColor) {
     uint16_t tRetValue = 0;
-    uint8_t tTextLength = strlen_P(aPGMString);
-    if (tTextLength > STRING_BUFFER_STACK_SIZE) {
-        tTextLength = STRING_BUFFER_STACK_SIZE;
-    }
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-    strncpy_P(tStringBuffer, aPGMString, tTextLength);
+    uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, reinterpret_cast<const __FlashStringHelper*>(aPGMString));
 #  if defined(SUPPORT_LOCAL_DISPLAY)
     tRetValue = LocalDisplay.drawTextPGM(aPositionX, aPositionY - getTextAscend(aTextSize), aPGMString, aTextSize, aTextColor,
             aBackgroundColor);
 #  endif
     if (USART_isBluetoothPaired()) {
         tRetValue = aPositionX + tTextLength * getTextWidth(aTextSize);
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aTextSize, aTextColor, aBackgroundColor, tTextLength,
-                (uint8_t*) tStringBuffer);
+        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aTextSize, aTextColor, aBackgroundColor,
+                tTextLength, (uint8_t*) tStringBuffer);
     }
     return tRetValue;
 }
 
 void BlueDisplay::drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString) {
-    uint8_t tTextLength = strlen_P(aPGMString);
-    if (tTextLength > STRING_BUFFER_STACK_SIZE) {
-        tTextLength = STRING_BUFFER_STACK_SIZE;
-    }
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-    strncpy_P(tStringBuffer, aPGMString, tTextLength);
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPositionX, aPositionY, tTextLength, (uint8_t*) tStringBuffer);
-    }
+    uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, reinterpret_cast<const __FlashStringHelper*>(aPGMString));
+#  if defined(SUPPORT_LOCAL_DISPLAY)
+    tRetValue = LocalDisplay.drawTextPGM(aPositionX, aPositionY - getTextAscend(aTextSize), tPGMString, tTextLength, COLOR16_BLACK,
+            COLOR16_WHITE);
+#  endif
+    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPositionX, aPositionY, tTextLength, (uint8_t*) tStringBuffer);
 }
 
 uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
         color16_t aTextColor, color16_t aBackgroundColor) {
     uint16_t tRetValue = 0;
-    PGM_P tPGMString = reinterpret_cast<PGM_P>(aPGMString);
-
-    uint8_t tTextLength = strlen_P(tPGMString);
-    if (tTextLength > STRING_BUFFER_STACK_SIZE) {
-        tTextLength = STRING_BUFFER_STACK_SIZE;
-    }
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-    strncpy_P(tStringBuffer, tPGMString, tTextLength);
+    uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, aPGMString);
+    tRetValue = aPositionX + tTextLength * getTextWidth(aTextSize);
 #  if defined(SUPPORT_LOCAL_DISPLAY)
     tRetValue = LocalDisplay.drawTextPGM(aPositionX, aPositionY - getTextAscend(aTextSize), tPGMString, aTextSize, aTextColor,
             aBackgroundColor);
 #  endif
-    if (USART_isBluetoothPaired()) {
-        tRetValue = aPositionX + tTextLength * getTextWidth(aTextSize);
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aTextSize, aTextColor, aBackgroundColor, tTextLength,
-                (uint8_t*) tStringBuffer);
-    }
+    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aTextSize, aTextColor, aBackgroundColor,
+            tTextLength, (uint8_t*) tStringBuffer);
     return tRetValue;
 }
 
@@ -1072,17 +981,13 @@ void BlueDisplay::drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __F
 }
 
 void BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString) {
-    PGM_P tPGMString = reinterpret_cast<PGM_P>(aPGMString);
-
-    uint8_t tTextLength = strlen_P(tPGMString);
-    if (tTextLength > STRING_BUFFER_STACK_SIZE) {
-        tTextLength = STRING_BUFFER_STACK_SIZE;
-    }
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-    strncpy_P(tStringBuffer, tPGMString, tTextLength);
-    if (USART_isBluetoothPaired()) {
+    uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, aPGMString);
+#  if defined(SUPPORT_LOCAL_DISPLAY)
+    tRetValue = LocalDisplay.drawTextPGM(aPositionX, aPositionY - getTextAscend(aTextSize), tPGMString, tTextLength, COLOR16_BLACK,
+            COLOR16_WHITE);
+#  endif
         sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPositionX, aPositionY, tTextLength, (uint8_t*) tStringBuffer);
-    }
 }
 #endif // defined(AVR)
 
@@ -1095,28 +1000,24 @@ void BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const __Fla
  * If the user enters avalid number and presses OK, it sends a message over bluetooth back to arduino which contains the float value
  */
 void BlueDisplay::getNumber(void (*aNumberHandler)(float)) {
-    if (USART_isBluetoothPaired()) {
 #if __SIZEOF_POINTER__ == 4
         sendUSARTArgs(FUNCTION_GET_NUMBER, 2, aNumberHandler, (reinterpret_cast<uint32_t>(aNumberHandler) >> 16));
 #else
-        sendUSARTArgs(FUNCTION_GET_NUMBER, 1, aNumberHandler);
+    sendUSARTArgs(FUNCTION_GET_NUMBER, 1, aNumberHandler);
 #endif
-    }
 }
 
 /*
  * Message size 1 or 2 shorts
  */
 void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const char *aShortPromptString) {
-    if (USART_isBluetoothPaired()) {
 #if __SIZEOF_POINTER__ == 4
         sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 2, aNumberHandler,
                 (reinterpret_cast<uint32_t>(aNumberHandler) >> 16), strlen(aShortPromptString), (uint8_t*) aShortPromptString);
 #else
-        sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 1, aNumberHandler, strlen(aShortPromptString),
-                (uint8_t*) aShortPromptString);
+    sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 1, aNumberHandler, strlen(aShortPromptString),
+            (uint8_t*) aShortPromptString);
 #endif
-    }
 }
 
 /*
@@ -1155,13 +1056,11 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
  *  This results in an info event
  */
 void BlueDisplay::getInfo(uint8_t aInfoSubcommand, void (*aInfoHandler)(uint8_t, uint8_t, uint16_t, ByteShortLongFloatUnion)) {
-    if (USART_isBluetoothPaired()) {
 #if __SIZEOF_POINTER__ == 4
         sendUSARTArgs(FUNCTION_GET_INFO, 3, aInfoSubcommand, aInfoHandler, (reinterpret_cast<uint32_t>(aInfoHandler) >> 16));
 #else
-        sendUSARTArgs(FUNCTION_GET_INFO, 2, aInfoSubcommand, aInfoHandler);
+    sendUSARTArgs(FUNCTION_GET_INFO, 2, aInfoSubcommand, aInfoHandler);
 #endif
-    }
 }
 
 /*
@@ -1174,12 +1073,9 @@ void BlueDisplay::requestMaxCanvasSize() {
 #if defined(AVR)
 void BlueDisplay::getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString) {
     if (USART_isBluetoothPaired()) {
-        uint8_t tShortPromptLength = strlen_P(aPGMShortPromptString);
-        if (tShortPromptLength > STRING_BUFFER_STACK_SIZE) {
-            tShortPromptLength = STRING_BUFFER_STACK_SIZE;
-        }
         char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        strncpy_P(tStringBuffer, aPGMShortPromptString, tShortPromptLength);
+        uint8_t tShortPromptLength = _clipAndCopyPGMString(tStringBuffer,
+                reinterpret_cast<const __FlashStringHelper*>(aPGMShortPromptString));
         sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 1, aNumberHandler, tShortPromptLength,
                 (uint8_t*) tStringBuffer);
     }
@@ -1187,14 +1083,8 @@ void BlueDisplay::getNumberWithShortPromptPGM(void (*aNumberHandler)(float), con
 
 void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString) {
     if (USART_isBluetoothPaired()) {
-        PGM_P tPGMShortPromptString = reinterpret_cast<PGM_P>(aPGMShortPromptString);
-
-        uint8_t tShortPromptLength = strlen_P(tPGMShortPromptString);
-        if (tShortPromptLength > STRING_BUFFER_STACK_SIZE) {
-            tShortPromptLength = STRING_BUFFER_STACK_SIZE;
-        }
         char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        strncpy_P(tStringBuffer, tPGMShortPromptString, tShortPromptLength);
+        uint8_t tShortPromptLength = _clipAndCopyPGMString(tStringBuffer, aPGMShortPromptString);
         sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 1, aNumberHandler, tShortPromptLength,
                 (uint8_t*) tStringBuffer);
     }
@@ -1203,12 +1093,9 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
 void BlueDisplay::getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString,
         float aInitialValue) {
     if (USART_isBluetoothPaired()) {
-        uint8_t tShortPromptLength = strlen_P(aPGMShortPromptString);
-        if (tShortPromptLength > STRING_BUFFER_STACK_SIZE) {
-            tShortPromptLength = STRING_BUFFER_STACK_SIZE;
-        }
         char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        strncpy_P(tStringBuffer, aPGMShortPromptString, tShortPromptLength);
+        uint8_t tShortPromptLength = _clipAndCopyPGMString(tStringBuffer,
+                reinterpret_cast<const __FlashStringHelper*>(aPGMShortPromptString));
         union {
             float floatValue;
             uint16_t shortArray[2];
@@ -1222,14 +1109,8 @@ void BlueDisplay::getNumberWithShortPromptPGM(void (*aNumberHandler)(float), con
 void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
         float aInitialValue) {
     if (USART_isBluetoothPaired()) {
-        PGM_P tPGMShortPromptString = reinterpret_cast<PGM_P>(aPGMShortPromptString);
-
-        uint8_t tShortPromptLength = strlen_P(tPGMShortPromptString);
-        if (tShortPromptLength > STRING_BUFFER_STACK_SIZE) {
-            tShortPromptLength = STRING_BUFFER_STACK_SIZE;
-        }
         char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        strncpy_P(tStringBuffer, tPGMShortPromptString, tShortPromptLength);
+        uint8_t tShortPromptLength = _clipAndCopyPGMString(tStringBuffer, aPGMShortPromptString);
         union {
             float floatValue;
             uint16_t shortArray[2];
@@ -1239,23 +1120,6 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
                 floatToShortArray.shortArray[1], tShortPromptLength, (uint8_t*) tStringBuffer);
     }
 }
-
-//void BlueDisplay::getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const char *aPGMShortPromptString) {
-//    if (USART_isBluetoothPaired()) {
-//        uint8_t tShortPromptLength = strlen_P(aPGMShortPromptString);
-//        if (tShortPromptLength < STRING_BUFFER_STACK_SIZE) {
-//            char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-//            strcpy_P(tStringBuffer, aPGMShortPromptString);
-//
-//#if __SIZEOF_POINTER__ == 4
-//            sendUSARTArgsAndByteBuffer(FUNCTION_GET_TEXT_WITH_SHORT_PROMPT, 2, aTextHandler,
-//                    (reinterpret_cast<uint32_t>(aTextHandler) >> 16), tShortPromptLength, (uint8_t*) tStringBuffer);
-//#else
-//            sendUSARTArgsAndByteBuffer(FUNCTION_GET_TEXT_WITH_SHORT_PROMPT, 1, aTextHandler, tShortPromptLength, (uint8_t*) tStringBuffer);
-//#endif
-//        }
-//    }
-//}
 #endif
 
 /***************************************************************************************************************************************************
@@ -1272,274 +1136,7 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
  */
 void BlueDisplay::setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSensorRate, uint8_t aFilterFlag) {
     aSensorRate &= 0x03;
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SENSOR_SETTINGS, 4, aSensorType, aDoActivate, aSensorRate, aFilterFlag);
-    }
-}
-
-/***************************************************************************************************************************************************
- *
- * BUTTONS
- *
- **************************************************************************************************************************************************/
-
-BDButtonHandle_t BlueDisplay::createButton(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY,
-        color16_t aButtonColor, const char *aCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-        void (*aOnTouchHandler)(BDButton*, int16_t)) {
-    BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
-
-    if (USART_isBluetoothPaired()) {
-#if __SIZEOF_POINTER__ == 4
-        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 10, tButtonNumber, aPositionX, aPositionY, aWidthX, aHeightY,
-                aButtonColor, aCaptionSize | (aFlags << 8), aValue, aOnTouchHandler,
-                (reinterpret_cast<uint32_t>(aOnTouchHandler) >> 16), strlen(aCaption), aCaption);
-#else
-        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 9, tButtonNumber, aPositionX, aPositionY, aWidthX, aHeightY,
-                aButtonColor, aCaptionSize | (aFlags << 8), aValue, aOnTouchHandler, strlen(aCaption), aCaption);
-#endif
-    }
-    return tButtonNumber;
-}
-
-void BlueDisplay::drawButton(BDButtonHandle_t aButtonNumber) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_DRAW, 1, aButtonNumber);
-    }
-}
-
-void BlueDisplay::removeButton(BDButtonHandle_t aButtonNumber, color16_t aBackgroundColor) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_REMOVE, 2, aButtonNumber, aBackgroundColor);
-    }
-}
-
-void BlueDisplay::setButtonCaption(BDButtonHandle_t aButtonNumber, const char *aCaption, bool doDrawButton) {
-    if (USART_isBluetoothPaired()) {
-        uint8_t tFunctionCode = FUNCTION_BUTTON_SET_CAPTION;
-        if (doDrawButton) {
-            tFunctionCode = FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON;
-        }
-        sendUSARTArgsAndByteBuffer(tFunctionCode, 1, aButtonNumber, strlen(aCaption), aCaption);
-    }
-}
-
-void BlueDisplay::setButtonValue(BDButtonHandle_t aButtonNumber, int16_t aValue) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, aButtonNumber, SUBFUNCTION_BUTTON_SET_VALUE, aValue);
-    }
-}
-
-void BlueDisplay::setButtonValueAndDraw(BDButtonHandle_t aButtonNumber, int16_t aValue) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, aButtonNumber, SUBFUNCTION_BUTTON_SET_VALUE_AND_DRAW, aValue);
-    }
-}
-
-void BlueDisplay::setButtonColor(BDButtonHandle_t aButtonNumber, color16_t aButtonColor) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, aButtonNumber, SUBFUNCTION_BUTTON_SET_BUTTON_COLOR, aButtonColor);
-    }
-}
-
-void BlueDisplay::setButtonColorAndDraw(BDButtonHandle_t aButtonNumber, color16_t aButtonColor) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, aButtonNumber, SUBFUNCTION_BUTTON_SET_BUTTON_COLOR_AND_DRAW, aButtonColor);
-    }
-}
-
-void BlueDisplay::setButtonPosition(BDButtonHandle_t aButtonNumber, int16_t aPositionX, int16_t aPositionY) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 4, aButtonNumber, SUBFUNCTION_BUTTON_SET_POSITION, aPositionX, aPositionY);
-    }
-}
-
-void BlueDisplay::setButtonAutorepeatTiming(BDButtonHandle_t aButtonNumber, uint16_t aMillisFirstDelay, uint16_t aMillisFirstRate,
-        uint16_t aFirstCount, uint16_t aMillisSecondRate) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 7, aButtonNumber, SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING, aMillisFirstDelay,
-                aMillisFirstRate, aFirstCount, aMillisSecondRate);
-    }
-}
-
-void BlueDisplay::activateButton(BDButtonHandle_t aButtonNumber) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 2, aButtonNumber, SUBFUNCTION_BUTTON_SET_ACTIVE);
-    }
-}
-
-void BlueDisplay::deactivateButton(BDButtonHandle_t aButtonNumber) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 2, aButtonNumber, SUBFUNCTION_BUTTON_RESET_ACTIVE);
-    }
-}
-
-void BlueDisplay::setButtonsGlobalFlags(uint16_t aFlags) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_GLOBAL_SETTINGS, 1, aFlags);
-    }
-}
-
-/*
- * aToneVolume: value in percent
- */
-void BlueDisplay::setButtonsTouchTone(uint8_t aToneIndex, uint8_t aToneVolume) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_GLOBAL_SETTINGS, 3, FLAG_BUTTON_GLOBAL_SET_BEEP_TONE, aToneIndex, aToneVolume);
-    }
-}
-
-void BlueDisplay::activateAllButtons() {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_ACTIVATE_ALL, 0);
-    }
-}
-
-void BlueDisplay::deactivateAllButtons() {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_BUTTON_DEACTIVATE_ALL, 0);
-    }
-}
-
-#if defined(AVR)
-BDButtonHandle_t BlueDisplay::createButtonPGM(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY,
-        color16_t aButtonColor, const char *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-        void (*aOnTouchHandler)(BDButton*, int16_t)) {
-    BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
-    if (USART_isBluetoothPaired()) {
-        uint8_t tCaptionLength = strlen_P(aPGMCaption);
-        if (tCaptionLength > STRING_BUFFER_STACK_SIZE) {
-            tCaptionLength = STRING_BUFFER_STACK_SIZE;
-        }
-        char StringBuffer[STRING_BUFFER_STACK_SIZE];
-        strncpy_P(StringBuffer, aPGMCaption, tCaptionLength);
-        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 9, tButtonNumber, aPositionX, aPositionY, aWidthX, aHeightY,
-                aButtonColor, aCaptionSize | (aFlags << 8), aValue, aOnTouchHandler, tCaptionLength, StringBuffer);
-    }
-    return tButtonNumber;
-}
-
-void BlueDisplay::setButtonCaptionPGM(BDButtonHandle_t aButtonNumber, const char *aPGMCaption, bool doDrawButton) {
-    if (USART_isBluetoothPaired()) {
-        uint8_t tCaptionLength = strlen_P(aPGMCaption);
-        if (tCaptionLength > STRING_BUFFER_STACK_SIZE) {
-            tCaptionLength = STRING_BUFFER_STACK_SIZE;
-        }
-        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        strncpy_P(tStringBuffer, aPGMCaption, tCaptionLength);
-
-        uint8_t tFunctionCode = FUNCTION_BUTTON_SET_CAPTION;
-        if (doDrawButton) {
-            tFunctionCode = FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON;
-        }
-        sendUSARTArgsAndByteBuffer(tFunctionCode, 1, aButtonNumber, tCaptionLength, tStringBuffer);
-    }
-}
-#endif
-
-/***************************************************************************************************************************************************
- *
- * SLIDER
- *
- **************************************************************************************************************************************************/
-
-/**
- * @brief initialization with all parameters except color
- * @param aPositionX determines upper left corner
- * @param aPositionY determines upper left corner
- * @param aBarWidth width of bar (and border) in pixel
- * @param aBarLength size of slider bar in pixel = maximum slider value
- * @param aThresholdValue value where color of bar changes from #SLIDER_DEFAULT_BAR_COLOR to #SLIDER_DEFAULT_BAR_THRESHOLD_COLOR
- * @param aInitalValue
- * @param aSliderColor
- * @param aBarColor
- * @param aOptions see #FLAG_SLIDER_SHOW_BORDER etc.
- * @param aOnChangeHandler - if NULL no update of bar is done on touch
- * @return slider index.
- */
-BDSliderHandle_t BlueDisplay::createSlider(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, int16_t aBarLength,
-        int16_t aThresholdValue, int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
-        void (*aOnChangeHandler)(BDSliderHandle_t*, int16_t)) {
-    BDSliderHandle_t tSliderNumber = sLocalSliderIndex++;
-
-    if (USART_isBluetoothPaired()) {
-#if __SIZEOF_POINTER__ == 4
-        sendUSARTArgs(FUNCTION_SLIDER_CREATE, 12, tSliderNumber, aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue,
-                aInitalValue, aSliderColor, aBarColor, aFlags, aOnChangeHandler,
-                (reinterpret_cast<uint32_t>(aOnChangeHandler) >> 16));
-#else
-        sendUSARTArgs(FUNCTION_SLIDER_CREATE, 11, tSliderNumber, aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue,
-                aInitalValue, aSliderColor, aBarColor, aFlags, aOnChangeHandler);
-#endif
-    }
-    return tSliderNumber;
-}
-
-void BlueDisplay::drawSlider(BDSliderHandle_t aSliderNumber) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_DRAW, 1, aSliderNumber);
-    }
-}
-
-void BlueDisplay::drawSliderBorder(BDSliderHandle_t aSliderNumber) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_DRAW_BORDER, 1, aSliderNumber);
-    }
-}
-
-void BlueDisplay::setSliderValueAndDrawBar(BDSliderHandle_t aSliderNumber, int16_t aCurrentValue) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, aSliderNumber, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);
-    }
-}
-
-void BlueDisplay::setSliderColorBarThreshold(BDSliderHandle_t aSliderNumber, uint16_t aBarThresholdColor) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, aSliderNumber, SUBFUNCTION_SLIDER_SET_COLOR_THRESHOLD, aBarThresholdColor);
-    }
-}
-
-void BlueDisplay::setSliderColorBarBackground(BDSliderHandle_t aSliderNumber, uint16_t aBarBackgroundColor) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, aSliderNumber, SUBFUNCTION_SLIDER_SET_COLOR_BAR_BACKGROUND, aBarBackgroundColor);
-    }
-}
-
-void BlueDisplay::setSliderCaptionProperties(BDSliderHandle_t aSliderNumber, uint8_t aCaptionSize, uint8_t aCaptionPosition,
-        uint8_t aCaptionMargin, color16_t aCaptionColor, color16_t aCaptionBackgroundColor) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 7, aSliderNumber, SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES, aCaptionSize,
-                aCaptionPosition, aCaptionMargin, aCaptionColor, aCaptionBackgroundColor);
-    }
-}
-
-void BlueDisplay::setSliderCaption(BDSliderHandle_t aSliderNumber, const char *aCaption) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, aSliderNumber, strlen(aCaption), aCaption);
-    }
-}
-
-void BlueDisplay::activateSlider(BDSliderHandle_t aSliderNumber) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, aSliderNumber, SUBFUNCTION_SLIDER_SET_ACTIVE);
-    }
-}
-
-void BlueDisplay::deactivateSlider(BDSliderHandle_t aSliderNumber) {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, aSliderNumber, SUBFUNCTION_SLIDER_RESET_ACTIVE);
-    }
-}
-
-void BlueDisplay::activateAllSliders() {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_ACTIVATE_ALL, 0);
-    }
-}
-
-void BlueDisplay::deactivateAllSliders() {
-    if (USART_isBluetoothPaired()) {
-        sendUSARTArgs(FUNCTION_SLIDER_DEACTIVATE_ALL, 0);
-    }
+    sendUSARTArgs(FUNCTION_SENSOR_SETTINGS, 4, aSensorType, aDoActivate, aSensorRate, aFilterFlag);
 }
 
 /***************************************************************************************************************************************************
@@ -1547,6 +1144,26 @@ void BlueDisplay::deactivateAllSliders() {
  * Utilities
  *
  **************************************************************************************************************************************************/
+#if defined(F) && defined(ARDUINO)
+/*
+ * Used internally
+ */
+uint8_t _clipAndCopyPGMString(char *aStringBuffer, const __FlashStringHelper *aPGMString) {
+    PGM_P tPGMString = reinterpret_cast<PGM_P>(aPGMString);
+    /*
+     * compute string length
+     */
+    uint8_t tLength = strlen_P(tPGMString);
+    if (tLength > STRING_BUFFER_STACK_SIZE) {
+        tLength = STRING_BUFFER_STACK_SIZE;
+    }
+    /*
+     * copy string up to length
+     */
+    strncpy_P(aStringBuffer, tPGMString, tLength);
+    return tLength;
+}
+#endif
 
 void clearDisplayAndDisableButtonsAndSliders() {
     BlueDisplay1.clearDisplay();

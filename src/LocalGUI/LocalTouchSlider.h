@@ -65,7 +65,7 @@ class BDSlider;
 /** @} */
 
 #define SLIDER_DEFAULT_VALUE_COLOR          COLOR16_BLUE
-#define SLIDER_DEFAULT_CAPTION_VALUE_BACK_COLOR  COLOR_NO_BACKGROUND
+#define SLIDER_DEFAULT_CAPTION_VALUE_BACK_COLOR  COLOR16_NO_BACKGROUND
 #define SLIDER_DEFAULT_BAR_WIDTH            8
 #define SLIDER_MAX_BAR_WIDTH                40 /** global max value of size parameter */
 #define SLIDER_DEFAULT_TOUCH_BORDER         4 /** extension of touch region in pixel */
@@ -125,13 +125,10 @@ public:
     /*
      * Member functions
      */
-    void init(uint16_t aPositionX, uint16_t aPositionY, uintForPgmSpaceSaving aBarWidth, uint16_t aBarLength,
-            uint16_t aThresholdValue, uint16_t aInitalValue, const char *aCaption, int8_t aTouchBorder, uint8_t aFlags,
-            void (*aOnChangeHandler)(TouchSlider*, uint16_t), const char* (*aValueHandler)(uint16_t));
-    // Used for BDSlider
     void init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength, uint16_t aThresholdValue,
             int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags,
             void (*aOnChangeHandler)(TouchSlider*, uint16_t));
+    void deinit(); // Dummy to be more compatible with BDButton
 
     void initSliderColors(uint16_t aSliderColor, uint16_t aBarColor, uint16_t aBarThresholdColor, uint16_t aBarBackgroundColor,
             uint16_t aCaptionColor, uint16_t aValueColor, uint16_t aValueCaptionBackgroundColor);
@@ -231,7 +228,6 @@ public:
 
     // misc
     void (*mOnChangeHandler)(TouchSlider*, uint16_t);
-    const char* (*mValueHandler)(uint16_t); // provides the string to print
 
     int8_t checkParameterValues();
 
