@@ -680,7 +680,7 @@ uint16_t* SSD1289::fillDisplayLineBuffer(uint16_t *aBufferPtr, uint16_t yLineNum
 }
 
 extern "C" void storeScreenshot(void) {
-    uint8_t tFeedbackType = FEEDBACK_TONE_LONG_ERROR;
+    bool tIsError = true;
     if (MICROSD_isCardInserted()) {
 
         FIL tFile;
@@ -720,10 +720,10 @@ extern "C" void storeScreenshot(void) {
             }
             free(tFourDisplayLinesBufferPointer);
             f_close(&tFile);
-            tFeedbackType = FEEDBACK_TONE_OK;
+            tIsError = false;
         }
     }
-    playLocalFeedbackTone(tFeedbackType);
+    LocalTouchButton::playFeedbackTone(tIsError);
 }
 
 /** @} */

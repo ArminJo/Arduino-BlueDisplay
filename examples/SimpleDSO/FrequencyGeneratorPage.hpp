@@ -387,9 +387,9 @@ void doSetFixedFrequency(BDButton *aTheTouchedButton, int16_t aNormalizedFrequen
     // Play error feedback tone, if frequency is not available for this waveform
     bool tErrorOrClippingHappend = setWaveformFrequencyAndPrintValues();
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    playLocalFeedbackTone(tErrorOrClippingHappend);
+    LocalTouchButton::playFeedbackTone(tErrorOrClippingHappend);
 #else
-    BlueDisplay1.playFeedbackTone(tErrorOrClippingHappend);
+    BDButton::playFeedbackTone(tErrorOrClippingHappend);
 #endif
 }
 

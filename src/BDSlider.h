@@ -84,7 +84,7 @@ public:
     // Constructors
     BDSlider();
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPointer);
+    BDSlider(BDSliderHandle_t aSliderHandle, LocalTouchSlider *aLocalSliderPointer);
 #endif
 
     /**
@@ -135,6 +135,8 @@ public:
 
     BDSliderHandle_t mSliderHandle;
 
+    void deinit();// is defined as dummy if SUPPORT_LOCAL_DISPLAY is not active
+
 #if defined(SUPPORT_LOCAL_DISPLAY)
     int printValue();
     void setXOffsetValue(int16_t aXOffsetValue);
@@ -142,8 +144,7 @@ public:
     int16_t getCurrentValue() const;
     uint16_t getPositionXRight() const;
     uint16_t getPositionYBottom() const;
-    void deinit();
-    TouchSlider * mLocalSliderPointer;
+    LocalTouchSlider * mLocalSliderPointer;
 #endif
 
 private:

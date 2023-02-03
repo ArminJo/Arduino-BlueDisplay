@@ -28,14 +28,24 @@
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
 
-#if defined(DISABLE_REMOTE_DISPLAY)
-#define Button              TouchButton
-#define AutorepeatButton    TouchButtonAutorepeat
-#define Slider              TouchSlider
-#else
+/*
+ * For programs, that must save memory when running on local display only
+ */
+#if !defined(Button)
+#define BUTTON_IS_DEFINED_LOCALLY
+#  if defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
+// Only local display must be supported, so TouchButton, etc is sufficient
+#define Button              LocalTouchButton
+#define AutorepeatButton    LocalTouchButtonAutorepeat
+#define Slider              LocalTouchSlider
+#define Display             LocalDisplay
+#  else
+// Remote display must be served here, so use BD elements, they are aware of the existence of Local* objects and use them if SUPPORT_LOCAL_DISPLAY is enabled
 #define Button              BDButton
 #define AutorepeatButton    BDButton
 #define Slider              BDSlider
+#define Display             BlueDisplay1
+#  endif
 #endif
 
 #if !defined(BACKLIGHT_CONTROL_X)
@@ -93,17 +103,27 @@ void drawBacklightElements(void) {
 }
 
 void doBacklightSlider(Slider *aTheTouchedSlider, uint16_t aBrightnessPercent) {
+    sCurrentBacklightPercent = aBrightnessPercent;
     LocalDisplay.setBacklightBrightness(aBrightnessPercent);
 }
 
 void doChangeBacklight(Button *aTheTouchedButton, int16_t aValue) {
-    LocalDisplay.setBacklightBrightness(sCurrentBacklightPercent + aValue);
+    sCurrentBacklightPercent += aValue; // See 8 bit roll-under here :-)
+    if(sCurrentBacklightPercent == 101) { // we know that aValue can only be 1 or -1
+        sCurrentBacklightPercent = 100;
+        AutorepeatButton::disableAutorepeatUntilEndOfTouch();
+    }
+    LocalDisplay.setBacklightBrightness(sCurrentBacklightPercent);
     TouchSliderBacklight.setValueAndDrawBar(sCurrentBacklightPercent);
 }
 #endif
 
+#if defined(BUTTON_IS_DEFINED_LOCALLY)
+#undef BUTTON_IS_DEFINED_LOCALLY
 #undef Button
 #undef AutorepeatButton
 #undef Slider
+#undef Display
+#endif
 
 #endif // _LOCAL_DISPLAY_GUI_HPP

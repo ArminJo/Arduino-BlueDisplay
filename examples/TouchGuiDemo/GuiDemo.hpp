@@ -26,20 +26,28 @@
 #ifndef _GUI_DEMO_HPP
 #define _GUI_DEMO_HPP
 
-#if defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
-#define Button              TouchButton
-#define AutorepeatButton    TouchButtonAutorepeat
-#define Slider              TouchSlider
+
+#include "GuiDemo.h"
+#include "GameOfLife.hpp"
+
+// Must defined after including GameOfLife.hhp, since this #undefine Button etc.
+#if !defined(Button)
+#define BUTTON_IS_DEFINED_LOCALLY
+#  if defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
+// Only local display must be supported, so TouchButton, etc is sufficient
+#define Button              LocalTouchButton
+#define AutorepeatButton    LocalTouchButtonAutorepeat
+#define Slider              LocalTouchSlider
 #define Display             LocalDisplay
-#else
+#  else
+// Remote display must be served here, so use BD elements, they are aware of the existence of Local* objects and use them if SUPPORT_LOCAL_DISPLAY is enabled
 #define Button              BDButton
 #define AutorepeatButton    BDButton
 #define Slider              BDSlider
 #define Display             BlueDisplay1
+#  endif
 #endif
 
-#include "GuiDemo.h"
-#include "GameOfLife.hpp"
 
 /** @addtogroup Gui_Demo
  * @{
@@ -68,13 +76,15 @@ void showCharts(void);
 
 Button TouchButtonGameOfLife;
 
-Button TouchButtonFont;
-void showFont(void);
+
 
 Button TouchButtonDemoSettings;
 void showSettings(void);
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
+Button TouchButtonFont;
+void showFont(void);
+
 Button TouchButtonCalibration;
 
 //ADS7846 channels stuff
@@ -139,9 +149,9 @@ void initGuiDemo(void) {
 }
 
 Button *TouchButtonsGuiDemo[] = { &TouchButtonChartDemo, &TouchButtonGameOfLife, &TouchButtonDrawDemo, &TouchButtonDemoSettings,
-        &TouchButtonFont, &TouchButtonBack, &TouchButtonGameOfLifeDying, &TouchButtonNewGame, &TouchButtonStartStopGame
+         &TouchButtonBack, &TouchButtonGameOfLifeDying, &TouchButtonNewGame, &TouchButtonStartStopGame
 #  if defined(SUPPORT_LOCAL_DISPLAY)
-        , &TouchButtonCalibration, &TouchButtonADS7846Channels
+        ,&TouchButtonFont, &TouchButtonCalibration, &TouchButtonADS7846Channels
 #  endif
         };
 
@@ -219,21 +229,21 @@ void loopGuiDemo(void) {
     }
 
     /*
-     * Check for drawing
+     * Check for drawing and local events
      */
 #if defined(SUPPORT_LOCAL_DISPLAY) && !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
     if (mCurrentApplication == APPLICATION_DRAW) {
-        if (TouchPanel.ADS7846TouchActive) {
+        if (TouchPanel.ADS7846TouchActive && !sTouchPanelButtonOrSliderTouched) {
             drawLine(TouchPanel.wasTouched(), sDrawColor);
             printTPData();
         }
     }
+
+    checkAndHandleTouchPanelEvents();
 #endif
 
-#if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+#if !defined(DISABLE_REMOTE_DISPLAY)
     checkAndHandleEvents();
-#else
-    checkAndHandleTouchPanelEvents();
 #endif
 }
 
@@ -247,7 +257,9 @@ void stopGuiDemo(void) {
     TouchSliderActionWithoutBorder.deinit();
     TouchSliderAction.deinit();
 
+#if defined(SUPPORT_LOCAL_DISPLAY)
     deinitBacklightElements();
+#endif
 }
 
 /*
@@ -274,10 +286,10 @@ void createDemoButtonsAndSliders(void) {
     TouchButtonDemoSettings.init(0, BUTTON_HEIGHT_4_LINE_3, BUTTON_WIDTH_2, BUTTON_HEIGHT_4, COLOR16_RED, F("Settings\nDemo"),
             TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGuiDemoButtons);
 
+#if defined(SUPPORT_LOCAL_DISPLAY)
     TouchButtonFont.init(BUTTON_WIDTH_2_POS_2, BUTTON_HEIGHT_4_LINE_3, BUTTON_WIDTH_2, BUTTON_HEIGHT_4, COLOR16_RED, F("Font"),
             TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGuiDemoButtons);
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
     // 4. row
     TouchButtonADS7846Channels.init(0, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_2, BUTTON_HEIGHT_4, COLOR16_YELLOW, F("ADS7846"),
     TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doADS7846Channels);
@@ -297,8 +309,8 @@ void createDemoButtonsAndSliders(void) {
     /*
      * Slider
      */
-// self moving sliders
-    TouchSliderActionWithoutBorder.init(180, BUTTON_HEIGHT_4_LINE_2 - 10, 20, ACTION_SLIDER_MAX, ACTION_SLIDER_MAX, 0, COLOR16_BLUE,
+// self moving sliders COLOR16_WHITE is bar background color for slider without border
+    TouchSliderActionWithoutBorder.init(180, BUTTON_HEIGHT_4_LINE_2 - 10, 20, ACTION_SLIDER_MAX, ACTION_SLIDER_MAX, 0, COLOR16_WHITE,
             COLOR16_YELLOW, FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     TouchSliderActionWithoutBorder.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_CAPTION_ALIGN_MIDDLE, 4, COLOR16_BLUE,
             BACKGROUND_COLOR);
@@ -457,7 +469,7 @@ void doStartStopGameOfLife(Button *aTheTouchedButton, int16_t aValue) {
     if (showingGameOfLife) {
         GameOfLifeRunning = !aValue;
         TouchButtonStartStopGame.setValue(GameOfLifeRunning);
-        playLocalFeedbackTone();
+        Button::playFeedbackTone();
     }
 }
 
@@ -483,7 +495,7 @@ void showGuiDemoMenu(void) {
     TouchButtonBack.deactivate();
 
     Display.clearDisplay(COLOR_DEMO_BACKGROUND);
-#if !defined(AVR)
+#if defined(MAIN_HOME_AVAILABLE)
     TouchButtonMainHome.drawButton();
 #endif
     TouchButtonChartDemo.drawButton();
@@ -491,9 +503,9 @@ void showGuiDemoMenu(void) {
     GameOfLifeInitialized = false;
     TouchButtonDrawDemo.drawButton();
     TouchButtonDemoSettings.drawButton();
-    TouchButtonFont.drawButton();
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
+    TouchButtonFont.drawButton();
     TouchButtonADS7846Channels.drawButton();
     TouchButtonCalibration.drawButton();
 #endif
@@ -501,6 +513,17 @@ void showGuiDemoMenu(void) {
     mCurrentApplication = APPLICATION_MENU;
 }
 
+/*
+ * Charts page GUI functions
+ */
+void showCharts(void) {
+    Display.clearDisplay(COLOR_DEMO_BACKGROUND);
+    TouchButtonBack.drawButton();
+    showChartDemo();
+    mCurrentApplication = APPLICATION_CHART;
+}
+
+#if defined(SUPPORT_LOCAL_DISPLAY)
 void showFont(void) {
     Display.clearDisplay(COLOR_DEMO_BACKGROUND);
     TouchButtonBack.drawButton();
@@ -522,28 +545,6 @@ void showFont(void) {
     }
 }
 
-void drawLine(const bool aNewStart, unsigned int color) {
-    static unsigned int last_x = 0, last_y = 0;
-    if (aNewStart) {
-        LocalDisplay.drawPixel(TouchPanel.getActualX(), TouchPanel.getActualY(), color);
-    } else {
-        LocalDisplay.drawLine(last_x, last_y, TouchPanel.getActualX(), TouchPanel.getActualY(), color);
-    }
-    last_x = TouchPanel.getActualX();
-    last_y = TouchPanel.getActualY();
-}
-
-/*
- * Charts page GUI functions
- */
-void showCharts(void) {
-    Display.clearDisplay(COLOR_DEMO_BACKGROUND);
-    TouchButtonBack.drawButton();
-    showChartDemo();
-    mCurrentApplication = APPLICATION_CHART;
-}
-
-#if defined(SUPPORT_LOCAL_DISPLAY)
 /*
  * ADS7846 page GUI functions
  */
@@ -587,15 +588,31 @@ void ADS7846DisplayChannels(void) {
         tPosY += TEXT_SIZE_22_HEIGHT;
     }
 }
+
+/*
+ * For page draw
+ */
+void drawLine(const bool aNewStart, unsigned int color) {
+    static unsigned int last_x = 0, last_y = 0;
+    if (aNewStart) {
+        LocalDisplay.drawPixel(TouchPanel.getActualX(), TouchPanel.getActualY(), color);
+    } else {
+        LocalDisplay.drawLine(last_x, last_y, TouchPanel.getActualX(), TouchPanel.getActualY(), color);
+    }
+    last_x = TouchPanel.getActualX();
+    last_y = TouchPanel.getActualY();
+}
 #endif //
 
 /**
  * @}
  */
-
+#if defined(BUTTON_IS_DEFINED_LOCALLY)
+#undef BUTTON_IS_DEFINED_LOCALLY
 #undef Button
 #undef AutorepeatButton
 #undef Slider
 #undef Display
+#endif
 
 #endif // _GUI_DEMO_HPP

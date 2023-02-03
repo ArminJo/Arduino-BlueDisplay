@@ -89,6 +89,9 @@ extern const char ADS7846ChannelChars[ADS7846_CHANNEL_COUNT];
 // Channel number to text mapping
 extern unsigned char ADS7846ChannelMapping[ADS7846_CHANNEL_COUNT];
 
+extern bool sTouchPanelButtonOrSliderTouched; // only one button handling in loop each touching of local display
+extern bool sTouchPanelSliderIsMoveTarget; // true if slider was touched by DOWN event
+
 class ADS7846 {
 public:
 
@@ -147,14 +150,14 @@ private:
 #endif
 };
 
-#if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-bool isFirstTouch();
-void handleTouchPanelEvents();
-void checkAndHandleTouchPanelEvents();
-
 extern bool sTouchPanelNothingTouched; // only one button handling in loop each touching of local display
 extern bool sTouchPanelSliderIsMoveTarget; // true if slider was touched by DOWN event
+
+#if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+void handleTouchPanelEvents();
+void checkAndHandleTouchPanelEvents();
 #endif
+
 extern ADS7846 TouchPanel; // The instance provided by the class itself
 
 #endif //_ADS7846_H

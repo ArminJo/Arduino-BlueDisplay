@@ -45,6 +45,7 @@
 #include "GUIHelper.hpp"
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
+// LocalGUI/LocalTouchButton.hpp etc are included by BDButton.hpp etc. above
 #include "LocalGUI/ThickLine.hpp"
 #include "LocalGUI/LocalTinyPrint.hpp"
 #endif
@@ -187,6 +188,8 @@ void BlueDisplay::playTone() {
  * index is from android.media.ToneGenerator see also
  * http://developer.android.com/reference/android/media/ToneGenerator.html
  * Tone index 0 is DTMF tone for key 0: 1336Hz, 941Hz, continuous
+ * defaults are:
+ * ToneDuration = as long as the tone on android lasts (100ms?)
  */
 void BlueDisplay::playTone(uint8_t aToneIndex) {
     sendUSARTArgs(FUNCTION_PLAY_TONE, 1, aToneIndex);
@@ -210,13 +213,13 @@ void BlueDisplay::playTone(uint8_t aToneIndex, int16_t aToneDuration, uint8_t aT
 
 void BlueDisplay::playFeedbackTone(uint8_t aFeedbackToneType) {
     if (aFeedbackToneType == FEEDBACK_TONE_OK) {
-        BlueDisplay1.playTone(TONE_PROP_BEEP_OK);
+        playTone(TONE_PROP_BEEP_OK);
     } else if (aFeedbackToneType == FEEDBACK_TONE_ERROR) {
-        BlueDisplay1.playTone(TONE_PROP_BEEP_ERROR);
+        playTone(TONE_PROP_BEEP_ERROR);
     } else if (aFeedbackToneType == FEEDBACK_TONE_NO_TONE) {
         return;
     } else {
-        BlueDisplay1.playTone(aFeedbackToneType);
+        playTone(aFeedbackToneType);
     }
 }
 

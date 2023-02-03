@@ -1,5 +1,5 @@
 /*
- * TouchButtonAutorepeat.hpp
+ * LocalTouchButtonAutorepeat.hpp
  *
  * Extension of TouchButton
  * implements autorepeat feature for touch buttons
@@ -36,27 +36,25 @@
 /** @addtogroup Button
  * @{
  */
+
 #define AUTOREPEAT_BUTTON_STATE_AFTER_FIRST_DELAY   0
 #define AUTOREPEAT_BUTTON_STATE_FIRST_PERIOD        1
 #define AUTOREPEAT_BUTTON_STATE_SECOND_PERIOD       3
+#define AUTOREPEAT_BUTTON_STATE_DISABLED_UNTIL_END_OF_TOUCH 4
 
-uint8_t TouchButtonAutorepeat::sState;
-uint16_t TouchButtonAutorepeat::sCount;
+uint8_t LocalTouchButtonAutorepeat::sState;
+uint16_t LocalTouchButtonAutorepeat::sCount;
 
-#if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-TouchButtonAutorepeat *TouchButtonAutorepeat::sLastAutorepeatButtonTouched = NULL; // Pointer to currently touched/active button for timer callback
-#else
-unsigned long TouchButtonAutorepeat::sCurrentCallbackDelayMillis;
-unsigned long TouchButtonAutorepeat::sMillisOfLastCallOfCallback;
-extern bool isFirstTouch(); // must be provided by main program
-#endif
+unsigned long LocalTouchButtonAutorepeat::sCurrentCallbackDelayMillis;
+unsigned long LocalTouchButtonAutorepeat::sMillisOfLastCallOfCallback;
+extern bool isFirstTouchOfButtonOrSlider(); // must be provided by main program
 
-TouchButtonAutorepeat::TouchButtonAutorepeat() { // @suppress("Class members should be properly initialized")
+LocalTouchButtonAutorepeat::LocalTouchButtonAutorepeat() { // @suppress("Class members should be properly initialized")
     // List handling is done in the base class
 }
 
 #if !defined(ARDUINO)
-TouchButtonAutorepeat::~TouchButtonAutorepeat() {
+LocalTouchButtonAutorepeat::~LocalTouchButtonAutorepeat() {
     // List handling is done in the base class
 }
 #endif
@@ -65,16 +63,16 @@ TouchButtonAutorepeat::~TouchButtonAutorepeat() {
 /*
  * Required for creating a local autorepeat button for an existing aBDButton at BDButton::init
  */
-TouchButtonAutorepeat::TouchButtonAutorepeat(BDButton *aBDButtonPtr) : // @suppress("Class members should be properly initialized")
-        TouchButton(aBDButtonPtr) {
+LocalTouchButtonAutorepeat::LocalTouchButtonAutorepeat(BDButton *aBDButtonPtr) : // @suppress("Class members should be properly initialized")
+        LocalTouchButton(aBDButtonPtr) {
 }
 #endif
 /**
  * after aMillisFirstDelay milliseconds a callback is done every aMillisFirstRate milliseconds for aFirstCount times
  * after this a callback is done every aMillisSecondRate milliseconds
  */
-void TouchButtonAutorepeat::setButtonAutorepeatTiming(uint16_t aMillisFirstDelay, uint16_t aMillisFirstRate, uint16_t aFirstCount,
-        uint16_t aMillisSecondRate) {
+void LocalTouchButtonAutorepeat::setButtonAutorepeatTiming(uint16_t aMillisFirstDelay, uint16_t aMillisFirstRate,
+        uint16_t aFirstCount, uint16_t aMillisSecondRate) {
     mMillisFirstDelay = aMillisFirstDelay;
     mMillisFirstRate = aMillisFirstRate;
     if (aFirstCount < 1) {
@@ -87,39 +85,47 @@ void TouchButtonAutorepeat::setButtonAutorepeatTiming(uint16_t aMillisFirstDelay
 
     // Replace standard button handler with autorepeatTouchHandler
     mOriginalButtonOnTouchHandler = mOnTouchHandler;
-    mOnTouchHandler = ((void (*)(TouchButton*, int16_t)) &autorepeatTouchHandler);
+    mOnTouchHandler = ((void (*)(LocalTouchButton*, int16_t)) &autorepeatTouchHandler);
+}
+
+void LocalTouchButtonAutorepeat::disableAutorepeatUntilEndOfTouch() {
+    sState = AUTOREPEAT_BUTTON_STATE_DISABLED_UNTIL_END_OF_TOUCH;
 }
 
 /**
  * Touch handler for button object called at touch down, which in turn implements the autorepeat functionality
  * by enabling the autorepeatButtonTimerHandler to be called with the initial delay
  */
-void TouchButtonAutorepeat::autorepeatTouchHandler(TouchButtonAutorepeat *aTheTouchedButton, int16_t aButtonValue) {
-#if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+void LocalTouchButtonAutorepeat::autorepeatTouchHandler(LocalTouchButtonAutorepeat *aTheTouchedButton, int16_t aButtonValue) {
+    (void)aButtonValue; // not required here
     /*
      * Autorepeat is implemented by periodic calls of checkAllButtons() by main loop, which ends up here
      * We know that touch is still in the button area
      */
     bool tDoCallback = false;
-#if defined(TRACE)
+#  if defined(TRACE)
     Serial.print(F("First="));
-    Serial.print(isFirstTouch());
+    Serial.print(isFirstTouchOfButtonOrSlider());
     Serial.print(F(" State="));
     Serial.println(sState);
-#endif
+#  endif
     /*
      * Check if we are called initially on touch down
+     * sTouchPanelButtonOrSliderTouched is set to true just after the successful call of checkAllButtons()
+     * which means that it is false at the time of first call of checkAllButtons() which in turn calls autorepeatTouchHandler().
      */
-    if (isFirstTouch()) {
-        tDoCallback = true;
+    if (!sTouchPanelButtonOrSliderTouched) {
         sState = AUTOREPEAT_BUTTON_STATE_AFTER_FIRST_DELAY;
         sCurrentCallbackDelayMillis = aTheTouchedButton->mMillisFirstDelay;
         sCount = aTheTouchedButton->mFirstCount;
+        tDoCallback = true;
 
-    } else if (millis() - sMillisOfLastCallOfCallback > sCurrentCallbackDelayMillis) {
+    } else if (sState != AUTOREPEAT_BUTTON_STATE_DISABLED_UNTIL_END_OF_TOUCH
+            && (millis() - sMillisOfLastCallOfCallback > sCurrentCallbackDelayMillis)) {
         /*
          * Period has expired
          */
+
         switch (sState) {
         case AUTOREPEAT_BUTTON_STATE_AFTER_FIRST_DELAY:
             // register delay for first autorepeat rate
@@ -146,92 +152,17 @@ void TouchButtonAutorepeat::autorepeatTouchHandler(TouchButtonAutorepeat *aTheTo
 
     if (tDoCallback) {
         if (aTheTouchedButton->mFlags & FLAG_BUTTON_DO_BEEP_ON_TOUCH) {
-            playLocalFeedbackTone();
+            playFeedbackTone();
         }
 
-#  if defined(DISABLE_REMOTE_DISPLAY)
-        aTheTouchedButton->mOriginalButtonOnTouchHandler(aTheTouchedButton, aButtonValue);
-#  else // SUPPORT_REMOTE_AND_LOCAL_DISPLAY is defined here
-        if (aTheTouchedButton->mFlags & LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK) {
-            aTheTouchedButton->mOriginalButtonOnTouchHandler((TouchButton*) aTheTouchedButton->mBDButtonPtr, aButtonValue);
-        } else {
-            aTheTouchedButton->mOriginalButtonOnTouchHandler(aTheTouchedButton, aButtonValue);
-        }
-#  endif
+#if defined(DISABLE_REMOTE_DISPLAY)
+        aTheTouchedButton->mOriginalButtonOnTouchHandler(aTheTouchedButton, aTheTouchedButton->mValue);
+#else // SUPPORT_REMOTE_AND_LOCAL_DISPLAY is defined here
+        aTheTouchedButton->mOriginalButtonOnTouchHandler((LocalTouchButton*) aTheTouchedButton->mBDButtonPtr, aTheTouchedButton->mValue);
+#endif
         sMillisOfLastCallOfCallback = millis();
     }
-#else
-    /*
-     * Autorepeat is implemented by timer call
-     */
-    // Touch down goes here, to enable autorepeat, we register delay callback
-    sLastAutorepeatButtonTouched = aTheTouchedButton;
-    registerPeriodicTouchCallback(&TouchButtonAutorepeat::autorepeatButtonTimerHandler, aTheTouchedButton->mMillisFirstDelay);
-
-#  if defined(DISABLE_REMOTE_DISPLAY)
-    aTheTouchedButton->mOriginalButtonOnTouchHandler(aTheTouchedButton, aButtonValue);
-#  else
-    if (aTheTouchedButton->mFlags & LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK) {
-        aTheTouchedButton->mOriginalButtonOnTouchHandler((TouchButton*) aTheTouchedButton->mBDButtonPtr, aButtonValue);
-    } else {
-        aTheTouchedButton->mOriginalButtonOnTouchHandler(aTheTouchedButton, aButtonValue);
-    }
-#  endif
-    sState = AUTOREPEAT_BUTTON_STATE_AFTER_FIRST_DELAY;
-    sCount = aTheTouchedButton->mFirstCount;
-#endif
 }
-
-#if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-
-/**
- * Callback function to be called by EventHandler after the first delay if touch is still active
- */
-void TouchButtonAutorepeat::autorepeatButtonTimerHandler(int aTouchPositionX, int aTouchPositionY) {
-    TouchButtonAutorepeat *tTouchedButton = sLastAutorepeatButtonTouched;
-    /*
-     * Check if touch still in button area
-     */
-    if (tTouchedButton == NULL || !tTouchedButton->checkButtonInArea(aTouchPositionX, aTouchPositionY)) {
-        return;
-    }
-    switch (sState) {
-    case AUTOREPEAT_BUTTON_STATE_AFTER_FIRST_DELAY:
-        // register delay for first autorepeat rate
-        setPeriodicTouchCallbackPeriod(tTouchedButton->mMillisFirstRate);
-        sState = AUTOREPEAT_BUTTON_STATE_FIRST_PERIOD;
-        sCount--;
-        break;
-    case AUTOREPEAT_BUTTON_STATE_FIRST_PERIOD:
-        if (sCount == 0) {
-            // register  delay for second and last autorepeat rate
-            setPeriodicTouchCallbackPeriod(tTouchedButton->mMillisSecondRate);
-            sState = AUTOREPEAT_BUTTON_STATE_SECOND_PERIOD;
-        } else {
-            sCount--;
-        }
-        break;
-    case AUTOREPEAT_BUTTON_STATE_SECOND_PERIOD:
-        // here we stay as long as button is pressed
-        sCount++; // just for fun
-        break;
-    }
-
-    if (tTouchedButton->mFlags & FLAG_BUTTON_DO_BEEP_ON_TOUCH) {
-        playLocalFeedbackTone();
-    }
-
-#  if defined(DISABLE_REMOTE_DISPLAY)
-        tTouchedButton->mOriginalButtonOnTouchHandler(tTouchedButton, tTouchedButton->mValue);
-#  else
-    if (tTouchedButton->mFlags & LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK) {
-        tTouchedButton->mOriginalButtonOnTouchHandler((TouchButton*) tTouchedButton->mBDButtonPtr, tTouchedButton->mValue);
-    } else {
-        tTouchedButton->mOriginalButtonOnTouchHandler(tTouchedButton, tTouchedButton->mValue);
-    }
-#  endif
-}
-#endif // defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
 
 /** @} */
 /** @} */

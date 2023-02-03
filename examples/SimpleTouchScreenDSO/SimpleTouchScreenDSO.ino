@@ -228,34 +228,34 @@ bool sTouchPanelGetPressureValid = false; // Flag to indicate that TouchPanel.se
  *********************/
 #define BUTTON_SPACING 15
 
-TouchButton TouchButtonStartStop;
+LocalTouchButton TouchButtonStartStop;
 
-TouchButton TouchButtonLeft;
-TouchButton TouchButtonRight;
+LocalTouchButton TouchButtonLeft;
+LocalTouchButton TouchButtonRight;
 
-//TouchButton TouchButtonTestTimeIncrement;
-//TouchButton TouchButtonTestTimeDecrement;
+//LocalTouchButton TouchButtonTestTimeIncrement;
+//LocalTouchButton TouchButtonTestTimeDecrement;
 
-TouchButton TouchButtonAutoTriggerOnOff;
+LocalTouchButton TouchButtonAutoTriggerOnOff;
 
 // the warning "only initialized variables can be placed into program memory area"
 // is because of a known bug of the gnu avr complier version
 const char AutoTriggerButtonStringAuto[] PROGMEM = "Trigger\nauto";
 const char AutoTriggerButtonStringManual[] PROGMEM = "Trigger\nman";
 
-TouchButton TouchButtonAutoOffsetOnOff;
+LocalTouchButton TouchButtonAutoOffsetOnOff;
 const char AutoOffsetButtonStringAuto[] PROGMEM = "Offset\nauto";
 const char AutoOffsetButtonString0[] PROGMEM = "Offset\n0V";
 
-TouchButton TouchButtonAutoRangeOnOff;
+LocalTouchButton TouchButtonAutoRangeOnOff;
 const char AutoRangeButtonStringAuto[] PROGMEM = "Range\nauto";
 const char AutoRangeButtonStringManual[] PROGMEM = "Range\nman";
 
-TouchButton TouchButtonADCReference;
+LocalTouchButton TouchButtonADCReference;
 const char ReferenceButton5_0V[] PROGMEM = "Ref\n5.0V";
 const char ReferenceButton1_1V[] PROGMEM = "Ref\n1.1V";
 
-TouchButton TouchButtonChannelSelect;
+LocalTouchButton TouchButtonChannelSelect;
 
 #ifdef USE_RTC
 // since channel 4 + 5 are used for HW SPI
@@ -265,20 +265,20 @@ TouchButton TouchButtonChannelSelect;
 #endif
 char ChannelSelectButtonString[] = "Channel\n3";
 #define CHANNEL_STRING_INDEX 8 // the index of the channel number in char array
-TouchButton TouchButtonDisplayMode;
+LocalTouchButton TouchButtonDisplayMode;
 
-TouchButton TouchButtonSettings;
+LocalTouchButton TouchButtonSettings;
 const char ButtonStringSingleshot[] PROGMEM = "Single";
 const char ButtonStringBack[] PROGMEM = "Back";
 
-TouchButton TouchButtonBack_Singleshot;
+LocalTouchButton TouchButtonBack_Singleshot;
 #define SINGLESHOT_PPRINT_VALUE_X (37 * TEXT_SIZE_11_WIDTH)
 
-TouchButton TouchButtonSlope;
+LocalTouchButton TouchButtonSlope;
 const char SlopeButtonStringAscending[] PROGMEM = "Slope\nascending";
 const char SlopeButtonStringDecending[] PROGMEM = "Slope\ndecending";
 
-TouchButton TouchButtonChartHistory;
+LocalTouchButton TouchButtonChartHistory;
 const char ChartHistoryButtonStringOff[] PROGMEM = "History\noff";
 const char ChartHistoryButtonStringLow[] PROGMEM = "History\nlow";
 const char ChartHistoryButtonStringOn[] PROGMEM = "History\non";
@@ -289,14 +289,14 @@ const char *const ChartHistoryButtonStrings[] = { ChartHistoryButtonStringOff, C
  * Backlight
  */
 #define BACKLIGHT_MIN_BRIGHTNESS_VALUE 1
-TouchSlider TouchSliderBacklight;
+LocalTouchSlider TouchSliderBacklight;
 
 #define SLIDER_TLEVEL_VALUE_X (24 * TEXT_SIZE_11_WIDTH)
 #define SLIDER_VPICKER_VALUE_X (19 * TEXT_SIZE_11_WIDTH)
 
-TouchSlider TouchSliderTriggerLevel;
+LocalTouchSlider TouchSliderTriggerLevel;
 
-TouchSlider TouchSliderVoltagePicker;
+LocalTouchSlider TouchSliderVoltagePicker;
 uint8_t sLastVoltagePickerValue;
 
 /*
@@ -547,21 +547,21 @@ void drawSettingsGui();
 void activatePartOfGui();
 void redrawDisplay();
 
-void doTimeBaseDisplayScroll(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doTriggerAutoOnOff(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doTriggerSlope(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doAutoOffsetOnOff(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doRangeMode(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doADCReference(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doChannelSelect(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doDisplayMode(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doSettings(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doTriggerSingleshot(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doStartStop(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doChartHistory(TouchButton *const aTheTouchedButton, int16_t aValue);
-void doBacklight(TouchSlider *aTheTouchedSlider, uint16_t aBrightness);
-void doTriggerLevel(TouchSlider *aTheTouchedSlider, uint16_t aBrightness);
-void doVoltagePicker(TouchSlider *aTheTouchedSlider, uint16_t aBrightness);
+void doTimeBaseDisplayScroll(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doTriggerAutoOnOff(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doTriggerSlope(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doAutoOffsetOnOff(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doRangeMode(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doADCReference(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doChannelSelect(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doDisplayMode(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doSettings(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doTriggerSingleshot(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doStartStop(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doChartHistory(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
+void doBacklight(LocalTouchSlider *aTheTouchedSlider, uint16_t aBrightness);
+void doTriggerLevel(LocalTouchSlider *aTheTouchedSlider, uint16_t aBrightness);
+void doVoltagePicker(LocalTouchSlider *aTheTouchedSlider, uint16_t aBrightness);
 
 void clearTriggerLine(uint8_t aTriggerLevelDisplayValue);
 void drawTriggerLine();
@@ -694,9 +694,9 @@ void setup() {
 
 #endif
 
-    playLocalFeedbackTone();
+    LocalTouchButton::playFeedbackTone();
     delay(100);
-    playLocalFeedbackTone();
+    LocalTouchButton::playFeedbackTone();
 
 #if defined(TRACE)
     Serial.println(F("Start loop"));
@@ -1544,8 +1544,8 @@ void createGUI() {
 void drawGui() {
     DisplayControl.DisplayMode = DISPLAY_MODE_SHOW_MAIN_GUI;
     LocalDisplay.clearDisplay(COLOR_BACKGROUND_DSO);
-    TouchButton::deactivateAllButtons();
-    TouchSlider::deactivateAllSliders();
+    LocalTouchButton::deactivateAllButtons();
+    LocalTouchSlider::deactivateAllSliders();
 
     TouchButtonStartStop.drawButton();
     TouchButtonBack_Singleshot.drawButton();
@@ -1562,8 +1562,8 @@ void drawGui() {
 
 void drawSettingsGui() {
 
-    TouchButton::deactivateAllButtons();
-    TouchSlider::deactivateAllSliders();
+    LocalTouchButton::deactivateAllButtons();
+    LocalTouchSlider::deactivateAllSliders();
 
     // here the back button
     TouchButtonBack_Singleshot.drawButton();
@@ -1581,7 +1581,7 @@ void drawSettingsGui() {
  */
 void activatePartOfGui() {
 // first deactivate all buttons
-    TouchButton::deactivateAllButtons();
+    LocalTouchButton::deactivateAllButtons();
 
     TouchButtonStartStop.activate();
     TouchButtonBack_Singleshot.activate();
@@ -1606,7 +1606,7 @@ void activatePartOfGui() {
  * running -> Changes timebase
  * stopped -> Horizontal scrolls through data buffer
  */
-void doTimeBaseDisplayScroll(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue) {
+void doTimeBaseDisplayScroll(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue) {
     bool tErrorBeep = false;
     if (MeasurementControl.IsRunning) {
         /*
@@ -1684,7 +1684,7 @@ void doTimeBaseDisplayScroll(TouchButton *const aTheTouchedButton __attribute__(
 /*
  * toggle between automatic and manual trigger voltage value
  */
-void doTriggerAutoOnOff(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doTriggerAutoOnOff(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.TriggerValuesAutomatic = (!MeasurementControl.TriggerValuesAutomatic);
     if (MeasurementControl.TriggerValuesAutomatic) {
         TouchButtonAutoTriggerOnOff.setCaptionPGM(AutoTriggerButtonStringAuto);
@@ -1697,7 +1697,7 @@ void doTriggerAutoOnOff(TouchButton *const aTheTouchedButton __attribute__((unus
 /*
  * toggle between ascending and descending trigger slope
  */
-void doTriggerSlope(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doTriggerSlope(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.TriggerSlopeRising = (!MeasurementControl.TriggerSlopeRising);
     if (MeasurementControl.TriggerSlopeRising) {
         TouchButtonSlope.setCaptionPGM(SlopeButtonStringAscending);
@@ -1710,7 +1710,7 @@ void doTriggerSlope(TouchButton *const aTheTouchedButton __attribute__((unused))
 /*
  * toggle between auto and 0 Volt offset
  */
-void doAutoOffsetOnOff(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doAutoOffsetOnOff(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.OffsetAutomatic = !MeasurementControl.OffsetAutomatic;
     if (MeasurementControl.OffsetAutomatic) {
         TouchButtonAutoOffsetOnOff.setCaptionPGM(AutoOffsetButtonStringAuto);
@@ -1722,7 +1722,7 @@ void doAutoOffsetOnOff(TouchButton *const aTheTouchedButton __attribute__((unuse
     TouchButtonAutoOffsetOnOff.drawButton();
 }
 
-void doRangeMode(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doRangeMode(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.RangeAutomatic = !MeasurementControl.RangeAutomatic;
     if (MeasurementControl.RangeAutomatic) {
         TouchButtonAutoRangeOnOff.setCaptionPGM(AutoRangeButtonStringAuto);
@@ -1735,7 +1735,7 @@ void doRangeMode(TouchButton *const aTheTouchedButton __attribute__((unused)), i
 /*
  * toggle between 5 and 1.1 Volt reference
  */
-void doADCReference(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doADCReference(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     uint8_t tReference = MeasurementControl.ADCReference;
     if (tReference == DEFAULT) {
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
@@ -1755,7 +1755,7 @@ void doADCReference(TouchButton *const aTheTouchedButton __attribute__((unused))
 /*
  * Cycle through all external and internal adc channels
  */
-void doChannelSelect(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doChannelSelect(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     uint8_t tChannel = MeasurementControl.ADCInputMUXChannel;
     tChannel++;
     if (tChannel <= MAX_ADC_CHANNEL) {
@@ -1788,7 +1788,7 @@ void doChannelSelect(TouchButton *const aTheTouchedButton __attribute__((unused)
  * 2. Display of main GUI
  * 3. Data chart + voltage picker - no info line
  */
-void doDisplayMode(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doDisplayMode(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     if (MeasurementControl.IsRunning) {
         // Toggle show info mode
         DisplayControl.showInfoMode = !DisplayControl.showInfoMode;
@@ -1834,7 +1834,7 @@ void doDisplayMode(TouchButton *const aTheTouchedButton __attribute__((unused)),
 /*
  * show gui of settings screen
  */
-void doSettings(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doSettings(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     // convert singleshot to back button - no color change needed :-)
     TouchButtonBack_Singleshot.setCaptionPGM(ButtonStringBack);
     if (!MeasurementControl.IsRunning) {
@@ -1847,7 +1847,7 @@ void doSettings(TouchButton *const aTheTouchedButton __attribute__((unused)), in
 /*
  * set to singleshot mode and draw an indicating "S"
  */
-void doTriggerSingleshot(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doTriggerSingleshot(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     if (DisplayControl.DisplayMode == DISPLAY_MODE_SHOW_SETTINGS_GUI) {
         /*
          * Here, this button is the back button of the settings page!
@@ -1885,7 +1885,7 @@ void doTriggerSingleshot(TouchButton *const aTheTouchedButton __attribute__((unu
     }
 }
 
-void doStartStop(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doStartStop(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     if (MeasurementControl.IsRunning) {
         /*
          * Stop here
@@ -1932,7 +1932,7 @@ void doStartStop(TouchButton *const aTheTouchedButton __attribute__((unused)), i
 /*
  * Cycle through 3 history modes ( => use 3 different erase colors)
  */
-void doChartHistory(TouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
+void doChartHistory(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     DisplayControl.EraseColorIndex++;
     if (DisplayControl.EraseColorIndex > 2) {
         DisplayControl.EraseColorIndex = 0;
@@ -1945,7 +1945,7 @@ void doChartHistory(TouchButton *const aTheTouchedButton __attribute__((unused))
     }
 }
 
-void doBacklight(TouchSlider *const aTheTouchedSlider __attribute__((unused)), uint16_t aBrightness) {
+void doBacklight(LocalTouchSlider *const aTheTouchedSlider __attribute__((unused)), uint16_t aBrightness) {
     if (aBrightness < BACKLIGHT_MIN_BRIGHTNESS_VALUE) {
         aBrightness = BACKLIGHT_MIN_BRIGHTNESS_VALUE;
     }
@@ -1955,7 +1955,7 @@ void doBacklight(TouchSlider *const aTheTouchedSlider __attribute__((unused)), u
 /*
  * The value printed has a resolution of 0,00488 * scale factor
  */
-void doTriggerLevel(TouchSlider *const aTheTouchedSlider __attribute__((unused)), uint16_t aValue) {
+void doTriggerLevel(LocalTouchSlider *const aTheTouchedSlider __attribute__((unused)), uint16_t aValue) {
 // in auto-trigger mode show only computed value and do not modify it
     if (MeasurementControl.TriggerValuesAutomatic) {
         // already shown :-)
@@ -1997,7 +1997,7 @@ void restoreGraphAtYpos(uint16_t tYpos) {
 /*
  * The value printed has a resolution of 0,00488 * scale factor
  */
-void doVoltagePicker(TouchSlider *aTheTouchedSlider __attribute__((unused)), uint16_t aValue) {
+void doVoltagePicker(LocalTouchSlider *aTheTouchedSlider __attribute__((unused)), uint16_t aValue) {
     char tVoltageBuffer[6];
     if (sLastVoltagePickerValue == aValue) {
         return;

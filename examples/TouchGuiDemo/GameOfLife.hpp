@@ -27,13 +27,27 @@
 #ifndef _GAME_OF_LIFE_HPP
 #define _GAME_OF_LIFE_HPP
 
-#if defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
-#define Display    LocalDisplay
-#else
-#define Display    BlueDisplay1
-#endif
-
 #include "GameOfLife.h"
+
+/*
+ * For programs, that must save memory when running on local display only
+ */
+#if !defined(Button)
+#define BUTTON_IS_DEFINED_LOCALLY
+#  if defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
+// Only local display must be supported, so TouchButton, etc is sufficient
+#define Button              LocalTouchButton
+#define AutorepeatButton    LocalTouchButtonAutorepeat
+#define Slider              LocalTouchSlider
+#define Display             LocalDisplay
+#  else
+// Remote display must be served here, so use BD elements, they are aware of the existence of Local* objects and use them if SUPPORT_LOCAL_DISPLAY is enabled
+#define Button              BDButton
+#define AutorepeatButton    BDButton
+#define Slider              BDSlider
+#define Display             BlueDisplay1
+#  endif
+#endif
 
 unsigned long sLastFrameChangeMillis = 0; // Millis of last no tGameOfLifeByteArray change
 uint16_t sCurrentGameOfLifeGeneration = 0;
@@ -287,4 +301,11 @@ void test(void) {
     tGameOfLifeByteArray[7][3] = CELL_IS_ALIVE;
 }
 
+#if defined(BUTTON_IS_DEFINED_LOCALLY)
+#undef BUTTON_IS_DEFINED_LOCALLY
+#undef Button
+#undef AutorepeatButton
+#undef Slider
+#undef Display
+#endif
 #endif // _GAME_OF_LIFE_HPP

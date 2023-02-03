@@ -34,6 +34,12 @@
 #include <cstdarg> // for va_start, va_list etc.
 #endif
 
+#if defined(ESP32)
+#include "BluetoothSerial.h"
+BluetoothSerial SerialBT;
+#define SERIAL_REDEFINED
+#define Serial SerialBT // use SerialBT object instead of Serial object throughout this file
+#endif
 /****************************************************************************
  *
  * Common functions which are independent of using simple or standard serial
@@ -261,22 +267,25 @@ void serialEvent(void) {
 }
 #endif // !defined(USE_SIMPLE_SERIAL)
 
-/**************************************************************
+/*********************************************************************
  *
- * Functions which depends on using simple or standard serial
+ * Functions which depends on using simple or standard serial on AVR
  *
- **************************************************************/
+ ********************************************************************/
 #if defined(ARDUINO)
-/*
- * Wrapper for calling initSimpleSerial or Serial[0,1].begin
- */
-void initSerial(uint32_t aBaudRate) {
-#  if defined(USE_SIMPLE_SERIAL)
-    initSimpleSerial(aBaudRate);
-#  else
-    Serial.begin(aBaudRate);
-#  endif // defined(USE_SIMPLE_SERIAL)
+
+#if defined(ESP32)
+void initSerial(String aBTClientName) {
+    SerialBT.begin(aBTClientName, false);
 }
+/*
+ * Use default name
+ */
+void initSerial() {
+    SerialBT.begin("ESP-BD_Example", false);
+}
+
+#else
 
 /*
  * Take BLUETOOTH_BAUD_RATE for initialization, otherwise use 9600
@@ -296,6 +305,19 @@ void initSerial() {
 #    endif
 #  endif // defined(USE_SIMPLE_SERIAL)
 }
+
+/*
+ * With explicit baud rate
+ */
+void initSerial(uint32_t aBaudRate) {
+#  if defined(USE_SIMPLE_SERIAL)
+    initSimpleSerial(aBaudRate);
+#  else
+    Serial.begin(aBaudRate);
+#  endif // defined(USE_SIMPLE_SERIAL)
+}
+#endif // defined(ESP32)
+
 /**
  * The central point for sending bytes
  */
@@ -347,26 +369,15 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
 
 #endif // defined(ARDUINO)
 
-#if defined(AVR) || defined(ESP32)
+#if defined(AVR)
 
-#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+#  if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
 #include "LocalDisplay/digitalWriteFast.h"
-#endif
+#  endif
 
-#if !defined(USE_SIMPLE_SERIAL) && defined(USE_SERIAL1)
+#  if !defined(USE_SIMPLE_SERIAL) && defined(USE_SERIAL1)
 #define Serial Serial1
-#endif
-
-#if defined(ESP32)
-#include "BluetoothSerial.h"
-BluetoothSerial SerialBT;
-#define Serial SerialBT
-
-void initSerial(String aBTClientName) {
-    Serial.begin(aBTClientName, false);
-}
-#undef Serial // enable regular usage of Serial for ESP32 programs
-#endif
+#  endif
 
 /**************************************************************
  *
@@ -404,8 +415,6 @@ void sendUSART(const char *aString) {
         aString++;
     }
 }
-
-
 
 /*******************************************
  *
@@ -524,7 +533,7 @@ ISR(USART1_RX_vect) {
     }
 #endif // USE_SIMPLE_SERIAL
 
-#elif !defined(ARDUINO) && (defined(STM32F303xC) || defined(STM32F103xB))
+#elif !defined(ARDUINO) && (defined(STM32F303xC) || defined(STM32F103xB)) // defined(AVR)
 
 #include "BlueSerial.h"
 #include "BlueDisplay.h"
@@ -1086,4 +1095,7 @@ extern "C" void DMA1_Channel2_IRQHandler(void) {
 }
 #endif // defined(STM32F303xC) || defined(STM32F103xB)
 
+#if defined(SERIAL_REDEFINED)
+#undef Serial
+#endif
 #endif // _BLUESERIAL_HPP

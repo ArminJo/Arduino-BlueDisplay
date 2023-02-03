@@ -353,15 +353,15 @@ void resetOffset(void);
 void setOffsetAutomatic(bool aNewState);
 void setACMode(bool aNewACMode);
 int changeOffsetGridCount(int aValue);
+
 #if defined(AVR)
 uint8_t changeRange(int8_t aChangeAmount);
 uint8_t changeTimeBaseValue(int8_t aChangeValue);
 #else
 int changeDisplayRangeAndAdjustOffsetGridCount(int aValue);
 int changeTimeBaseValue(int aChangeValue);
-
+bool changeXScale(int aValue);
 #endif
-int changeXScale(int aValue);
 
 // Output and draw section
 void initDSOGUI(void);
@@ -379,7 +379,7 @@ void clearTriggerLine(uint8_t aTriggerLevelDisplayValue);
 void drawRunningOnlyPartOfGui(void);
 void activateChartGui(void);
 #if defined(AVR)
-uint8_t scrollChart(int aValue);
+bool scrollChart(int aValue);
 uint8_t getDisplayFromRawInputValue(uint16_t aRawValue);
 void drawDataBuffer(uint8_t *aByteBuffer, uint16_t aColor, uint16_t aClearBeforeColor);
 #else

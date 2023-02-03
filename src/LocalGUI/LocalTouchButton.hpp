@@ -53,13 +53,13 @@
 /*
  * List for TouchButton(Autorepeat) objects
  */
-TouchButton *TouchButton::sButtonListStart = NULL; // Start of list of touch buttons, required for the *AllButtons functions
-color16_t TouchButton::sDefaultCaptionColor = TOUCHBUTTON_DEFAULT_CAPTION_COLOR;
+LocalTouchButton *LocalTouchButton::sButtonListStart = NULL; // Start of list of touch buttons, required for the *AllButtons functions
+color16_t LocalTouchButton::sDefaultCaptionColor = TOUCHBUTTON_DEFAULT_CAPTION_COLOR;
 
 /**
  * Constructor - insert in list
  */
-TouchButton::TouchButton() { // @suppress("Class members should be properly initialized")
+LocalTouchButton::LocalTouchButton() { // @suppress("Class members should be properly initialized")
     mCaptionForTrue = NULL; // moving this into init() costs 100 bytes
     mNextObject = NULL;
     if (sButtonListStart == NULL) {
@@ -67,7 +67,7 @@ TouchButton::TouchButton() { // @suppress("Class members should be properly init
         sButtonListStart = this;
     } else {
         // put object in button list
-        TouchButton *tButtonPointer = sButtonListStart;
+        LocalTouchButton *tButtonPointer = sButtonListStart;
         // search last list element
         while (tButtonPointer->mNextObject != NULL) {
             tButtonPointer = tButtonPointer->mNextObject;
@@ -77,11 +77,11 @@ TouchButton::TouchButton() { // @suppress("Class members should be properly init
     }
 }
 
-bool TouchButton::operator==(const TouchButton &aButton) {
+bool LocalTouchButton::operator==(const LocalTouchButton &aButton) {
     return (this == &aButton);
 }
 
-bool TouchButton::operator!=(const TouchButton &aButton) {
+bool LocalTouchButton::operator!=(const LocalTouchButton &aButton) {
     return (this != &aButton);
 }
 
@@ -89,7 +89,7 @@ bool TouchButton::operator!=(const TouchButton &aButton) {
 /*
  * Required for creating a local button for an existing aBDButton at BDButton::init
  */
-TouchButton::TouchButton(BDButton *aBDButtonPtr) { // @suppress("Class members should be properly initialized")
+LocalTouchButton::LocalTouchButton(BDButton *aBDButtonPtr) { // @suppress("Class members should be properly initialized")
     mCaptionForTrue = NULL;
     mBDButtonPtr = aBDButtonPtr;
     mNextObject = NULL;
@@ -98,7 +98,7 @@ TouchButton::TouchButton(BDButton *aBDButtonPtr) { // @suppress("Class members s
         sButtonListStart = this;
     } else {
         // put object in button list
-        TouchButton *tButtonPointer = sButtonListStart;
+        LocalTouchButton *tButtonPointer = sButtonListStart;
         // search last list element
         while (tButtonPointer->mNextObject != NULL) {
             tButtonPointer = tButtonPointer->mNextObject;
@@ -113,8 +113,8 @@ TouchButton::TouchButton(BDButton *aBDButtonPtr) { // @suppress("Class members s
 /**
  * Destructor  - remove from button list
  */
-TouchButton::~TouchButton() {
-    TouchButton *tButtonPointer = sButtonListStart;
+LocalTouchButton::~LocalTouchButton() {
+    LocalTouchButton *tButtonPointer = sButtonListStart;
     if (tButtonPointer == this) {
         // remove first element of list
         sButtonListStart = NULL;
@@ -135,29 +135,25 @@ TouchButton::~TouchButton() {
 /*
  * Used by event handler to create a temporary BDButton for setting the value and as calling parameter for the local callback function
  */
-TouchButton* TouchButton::getLocalButtonFromBDButtonHandle(BDButtonHandle_t aButtonHandleToSearchFor) {
-    TouchButton *tButtonPointer = sButtonListStart;
+LocalTouchButton* LocalTouchButton::getLocalTouchButtonFromBDButtonHandle(BDButtonHandle_t aButtonHandleToSearchFor) {
+    LocalTouchButton *tButtonPointer = sButtonListStart;
 // walk through list
     while (tButtonPointer != NULL) {
         if (tButtonPointer->mBDButtonPtr->mButtonHandle == aButtonHandleToSearchFor) {
-            break;
+            return tButtonPointer;
         }
         tButtonPointer = tButtonPointer->mNextObject;
     }
-    if (tButtonPointer->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
-        return (TouchButtonAutorepeat*) tButtonPointer;
-    } else {
-        return tButtonPointer;
-    }
+    return NULL;
 }
 
 /**
  * Is called once after reconnect, to build up a remote copy of all local buttons
  * Handles also mCaptionForTrue and autorepeat buttons
  */
-void TouchButton::createAllLocalButtonsAtRemote() {
+void LocalTouchButton::createAllLocalButtonsAtRemote() {
     if (USART_isBluetoothPaired()) {
-        TouchButton *tButtonPointer = sButtonListStart;
+        LocalTouchButton *tButtonPointer = sButtonListStart;
         sLocalButtonIndex = 0;
 // walk through list
         while (tButtonPointer != NULL) {
@@ -172,7 +168,7 @@ void TouchButton::createAllLocalButtonsAtRemote() {
                 tButtonPointer->setCaptionForValueTrue(tButtonPointer->mCaptionForTrue);
             }
             if (tButtonPointer->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
-                TouchButtonAutorepeat *tAutorepeatButtonPointer = (TouchButtonAutorepeat*) tButtonPointer;
+                LocalTouchButtonAutorepeat *tAutorepeatButtonPointer = (LocalTouchButtonAutorepeat*) tButtonPointer;
                 sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 7, tAutorepeatButtonPointer->mBDButtonPtr->mButtonHandle,
                         SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING, tAutorepeatButtonPointer->mMillisFirstDelay,
                         tAutorepeatButtonPointer->mMillisFirstRate, tAutorepeatButtonPointer->mFirstCount,
@@ -192,9 +188,9 @@ void TouchButton::createAllLocalButtonsAtRemote() {
  * @param aFlags        Like FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE
  * @param aValue        true -> green, false -> red
  */
-int8_t TouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
+int8_t LocalTouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
         const char *aCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-        void (*aOnTouchHandler)(TouchButton*, int16_t)) {
+        void (*aOnTouchHandler)(LocalTouchButton*, int16_t)) {
 
     mWidthX = aWidthX;
     mHeightY = aHeightY;
@@ -210,10 +206,10 @@ int8_t TouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWid
 }
 
 // Dummy to be more compatible with BDButton
-void TouchButton::deinit() {
+void LocalTouchButton::deinit() {
 }
 
-int8_t TouchButton::setPosition(uint16_t aPositionX, uint16_t aPositionY) {
+int8_t LocalTouchButton::setPosition(uint16_t aPositionX, uint16_t aPositionY) {
     int8_t tRetValue = 0;
     mPositionX = aPositionX;
     mPositionY = aPositionY;
@@ -236,14 +232,14 @@ int8_t TouchButton::setPosition(uint16_t aPositionX, uint16_t aPositionY) {
     return tRetValue;
 }
 
-void TouchButton::setDefaultCaptionColor(color16_t aDefaultCaptionColor) {
+void LocalTouchButton::setDefaultCaptionColor(color16_t aDefaultCaptionColor) {
     sDefaultCaptionColor = aDefaultCaptionColor;
 }
 
 /**
  * Renders the button on lcd
  */
-void TouchButton::drawButton() {
+void LocalTouchButton::drawButton() {
     setColorForRedGreenButton(mValue);
     // Draw rect
     LocalDisplay.fillRectRel(mPositionX, mPositionY, mWidthX, mHeightY, mButtonColor);
@@ -253,7 +249,7 @@ void TouchButton::drawButton() {
 /**
  * deactivates the button and redraws its screen space with @a aBackgroundColor
  */
-void TouchButton::removeButton(color16_t aBackgroundColor) {
+void LocalTouchButton::removeButton(color16_t aBackgroundColor) {
     mFlags &= ~LOCAL_BUTTON_FLAG_IS_ACTIVE;
     // Draw rect
     LocalDisplay.fillRectRel(mPositionX, mPositionY, mWidthX, mHeightY, aBackgroundColor);
@@ -264,7 +260,7 @@ void TouchButton::removeButton(color16_t aBackgroundColor) {
  * draws the caption of a button
  * @return 0 or error number #TOUCHBUTTON_ERROR_CAPTION_TOO_LONG etc.
  */
-void TouchButton::drawCaption() {
+void LocalTouchButton::drawCaption() {
     mFlags |= LOCAL_BUTTON_FLAG_IS_ACTIVE;
 
     auto tCaption = mCaption;
@@ -328,8 +324,8 @@ void TouchButton::drawCaption() {
                         mButtonColor, tStringlength);
             }
 #else
-            LocalDisplay.drawText(tXCaptionPosition, tYCaptionPosition, (char*) tCaption, mCaptionSize,
-                    mCaptionColor, mButtonColor, tStringlength);
+            LocalDisplay.drawText(tXCaptionPosition, tYCaptionPosition, (char*) tCaption, mCaptionSize, mCaptionColor, mButtonColor,
+                    tStringlength);
 #endif
             if (tPosOfNewline != NULL) {
                 // 2. line - position the string in the middle of the box again
@@ -353,7 +349,7 @@ void TouchButton::drawCaption() {
     }
 }
 
-bool TouchButton::isAutorepeatButton() {
+bool LocalTouchButton::isAutorepeatButton() {
     return (mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT);
 }
 
@@ -361,15 +357,12 @@ bool TouchButton::isAutorepeatButton() {
  * Check if touch event is in button area
  * @return  - true if position match, false else
  */
-bool TouchButton::checkButtonInArea(uint16_t aTouchPositionX, uint16_t aTouchPositionY) {
-    if (aTouchPositionX < mPositionX || aTouchPositionX > mPositionX + mWidthX || aTouchPositionY < mPositionY
-            || aTouchPositionY > (mPositionY + mHeightY)) {
-        return false;
-    }
-    return true;
+bool LocalTouchButton::checkButtonInArea(uint16_t aTouchPositionX, uint16_t aTouchPositionY) {
+    return (mPositionX <= aTouchPositionX && aTouchPositionX <= (mPositionX + mWidthX) && mPositionY <= aTouchPositionY
+            && aTouchPositionY <= (mPositionY + mHeightY));
 }
 
-void playLocalFeedbackTone() {
+void LocalTouchButton::playFeedbackTone() {
 #if defined(ARDUINO)
 #  if defined(LOCAL_GUI_FEEDBACK_TONE_PIN)
     tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 3000, 50);
@@ -379,37 +372,26 @@ void playLocalFeedbackTone() {
 #endif
 }
 
-void playLocalFeedbackTone(unsigned int aFeedbackToneType) {
+void LocalTouchButton::playFeedbackTone(bool aPlayErrorTone) {
 #if defined(ARDUINO)
 #  if defined(LOCAL_GUI_FEEDBACK_TONE_PIN)
-    if (aFeedbackToneType == FEEDBACK_TONE_OK) {
+    if (aPlayErrorTone) {
+        // two short beeps
         tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 3000, 50);
-    } else if (aFeedbackToneType == FEEDBACK_TONE_ERROR) {
-// two short beeps
-        tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 4000, 30);
-        delay(60);
-        tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 2000, 30);
-    } else if (aFeedbackToneType == FEEDBACK_TONE_NO_TONE) {
-        return;
+        delay(100);
+        tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 3000, 50);
     } else {
-// long tone
-        tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 3000, 500);
+        tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 3000, 50);
     }
-
 #  endif
 #else
-    if (aFeedbackToneType == FEEDBACK_TONE_OK) {
-        tone(3000, 50);
-    } else if (aFeedbackToneType == FEEDBACK_TONE_ERROR) {
+    if (aPlayErrorTone) {
 // two short beeps
-        tone(4000, 30);
+        tone(3000, 50);
         delay(60);
-        tone(2000, 30);
-    } else if (aFeedbackToneType == FEEDBACK_TONE_NO_TONE) {
-        return;
+        tone(3000, 50);
     } else {
-// long tone
-        tone(3000, 500);
+        tone(3000, 50);
     }
 #endif
 }
@@ -418,52 +400,39 @@ void playLocalFeedbackTone(unsigned int aFeedbackToneType) {
  * Check if touch event is in button area and call buttons callback if position match.
  * @return  - true if position match, false else
  */
-bool TouchButton::checkButton(uint16_t aTouchPositionX, uint16_t aTouchPositionY, bool aCheckOnlyAutorepeatButtons) {
-    if ((mFlags & LOCAL_BUTTON_FLAG_IS_ACTIVE) && mOnTouchHandler != NULL
-            && (!aCheckOnlyAutorepeatButtons || (mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT))) {
-        if (checkButtonInArea(aTouchPositionX, aTouchPositionY)) {
-            /*
-             *  Touch position is in button - call callback function
-             */
-
-            /*
-             * Beep if requested, but not for autorepeat buttons, since they may be checked very often
-             * to create the repeat timing if LOCAL_DISPLAY_GENERATES_BD_EVENTS is not defined.
-             */
-            if ((mFlags & FLAG_BUTTON_DO_BEEP_ON_TOUCH)
-#if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-                    && !(mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT)
-#endif
-                    ) {
-                playLocalFeedbackTone();
-            }
-            //Red/Green button handling
-            if (mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
-                // Toggle value and handle color for Red/Green button
-                mValue = !mValue;
-                if (!(mFlags & FLAG_BUTTON_TYPE_MANUAL_REFRESH)) {
+bool LocalTouchButton::checkButton(uint16_t aTouchPositionX, uint16_t aTouchPositionY) {
+    if (checkButtonInArea(aTouchPositionX, aTouchPositionY)) {
+        /*
+         * Touch position is in button - call callback function
+         * Beep if requested, but not for autorepeat buttons, since they may be checked very often to create the repeat timing.
+         */
+        if ((mFlags & FLAG_BUTTON_DO_BEEP_ON_TOUCH) && !(mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT)) {
+            playFeedbackTone();
+        }
+        //Red/Green button handling
+        if (mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
+            // Toggle value and handle color for Red/Green button
+            mValue = !mValue;
+            if (!(mFlags & FLAG_BUTTON_TYPE_MANUAL_REFRESH)) {
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
                     this->mBDButtonPtr->setValueAndDraw(mValue); // Update also the remote button
 #else
-                    drawButton(); // Only local button refresh to show new color (and caption)
+                drawButton(); // Only local button refresh to show new color (and caption)
 #endif
-                }
             }
+        }
 
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
             // Call with mBDButtonPtr as parameter, only the autorepeatTouchHandler must be called with the local button here
-            if ((mFlags & LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK)
-                    && (&TouchButtonAutorepeat::autorepeatTouchHandler
-                            != (void (*)(TouchButtonAutorepeat *, int16_t)) mOnTouchHandler)) {
-                mOnTouchHandler((TouchButton *) this->mBDButtonPtr, mValue);
+            if (&LocalTouchButtonAutorepeat::autorepeatTouchHandler == (void (*)(LocalTouchButtonAutorepeat *, int16_t)) mOnTouchHandler) {
+                mOnTouchHandler(this, 0); // Beep for autorepeat buttons is handled here, value is not required here
             } else {
-                mOnTouchHandler(this, mValue); // Beep for autorepeat buttons is handled here
+                mOnTouchHandler((LocalTouchButton *) this->mBDButtonPtr, mValue);
             }
 #else
-            mOnTouchHandler(this, mValue); // In case of autorepeat button, this calls the autorepeatTouchHandler()
+        mOnTouchHandler(this, mValue); // In case of autorepeat button, this calls the autorepeatTouchHandler()
 #endif
-            return true;
-        }
+        return true;
     }
     return false;
 }
@@ -471,14 +440,16 @@ bool TouchButton::checkButton(uint16_t aTouchPositionX, uint16_t aTouchPositionY
 /**
  * Static convenience method - checks all buttons for matching touch position and call buttons callback if position match.
  */
-bool TouchButton::checkAllButtons(unsigned int aTouchPositionX, unsigned int aTouchPositionY, bool aCheckOnlyAutorepeatButtons) {
-    TouchButton *tButtonPointer = sButtonListStart;
-    // walk through list
+bool LocalTouchButton::checkAllButtons(unsigned int aTouchPositionX, unsigned int aTouchPositionY,
+bool aCheckOnlyAutorepeatButtons) {
+    LocalTouchButton *tButtonPointer = sButtonListStart;
+// walk through list
     while (tButtonPointer != NULL) {
         // Always check autorepeat buttons
-        if ((!aCheckOnlyAutorepeatButtons || (tButtonPointer->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT))) {
-            if (tButtonPointer->checkButton(aTouchPositionX, aTouchPositionY, aCheckOnlyAutorepeatButtons)) {
-                return BUTTON_TOUCHED;
+        if ((tButtonPointer->mFlags & LOCAL_BUTTON_FLAG_IS_ACTIVE) && tButtonPointer->mOnTouchHandler != NULL
+                && (!aCheckOnlyAutorepeatButtons || (tButtonPointer->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT))) {
+            if (tButtonPointer->checkButton(aTouchPositionX, aTouchPositionY)) {
+                return BUTTON_TOUCHED; // true
             }
         }
         tButtonPointer = tButtonPointer->mNextObject;
@@ -487,11 +458,30 @@ bool TouchButton::checkAllButtons(unsigned int aTouchPositionX, unsigned int aTo
 }
 
 /**
+ * @return NULL if no button found at the position
+ */
+LocalTouchButton* LocalTouchButton::findButton(unsigned int aTouchPositionX, unsigned int aTouchPositionY,
+bool aSearchOnlyAutorepeatButtons) {
+    LocalTouchButton *tButtonPointer = sButtonListStart;
+// walk through list
+    while (tButtonPointer != NULL) {
+        // Always check autorepeat buttons
+        if ((tButtonPointer->mFlags & LOCAL_BUTTON_FLAG_IS_ACTIVE) && tButtonPointer->mOnTouchHandler != NULL
+                && (!aSearchOnlyAutorepeatButtons || (tButtonPointer->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT))) {
+            if (tButtonPointer->checkButtonInArea(aTouchPositionX, aTouchPositionY)) {
+                return tButtonPointer;
+            }
+        }
+        tButtonPointer = tButtonPointer->mNextObject;
+    }
+    return NULL;
+}
+/**
  * Static convenience method - deactivate all buttons (e.g. before switching screen)
  */
-void TouchButton::deactivateAllButtons() {
-    TouchButton *tObjectPointer = sButtonListStart;
-    // walk through list
+void LocalTouchButton::deactivateAllButtons() {
+    LocalTouchButton *tObjectPointer = sButtonListStart;
+// walk through list
     while (tObjectPointer != NULL) {
         tObjectPointer->deactivate();
         tObjectPointer = tObjectPointer->mNextObject;
@@ -501,9 +491,9 @@ void TouchButton::deactivateAllButtons() {
 /**
  * Static convenience method - activate all buttons
  */
-void TouchButton::activateAllButtons() {
-    TouchButton *tObjectPointer = sButtonListStart;
-    // walk through list
+void LocalTouchButton::activateAllButtons() {
+    LocalTouchButton *tObjectPointer = sButtonListStart;
+// walk through list
     while (tObjectPointer != NULL) {
         tObjectPointer->activate();
         tObjectPointer = tObjectPointer->mNextObject;
@@ -511,9 +501,9 @@ void TouchButton::activateAllButtons() {
 }
 
 #if defined(AVR)
-int8_t TouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
+int8_t LocalTouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
         const __FlashStringHelper *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-        void (*aOnTouchHandler)(TouchButton*, int16_t)) {
+        void (*aOnTouchHandler)(LocalTouchButton*, int16_t)) {
 
     mWidthX = aWidthX;
     mHeightY = aHeightY;
@@ -531,7 +521,7 @@ int8_t TouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWid
 /*
  * Not used yet
  */
-uint8_t TouchButton::getCaptionLength(char *aCaptionPointer) {
+uint8_t LocalTouchButton::getCaptionLength(char *aCaptionPointer) {
     uint8_t tLength = 0;
     uint8_t tFontWidth = 8;
     if (mCaptionSize > 11) {
@@ -549,12 +539,12 @@ uint8_t TouchButton::getCaptionLength(char *aCaptionPointer) {
     return tLength;
 }
 
-void TouchButton::setCaptionPGM(PGM_P aCaption) {
+void LocalTouchButton::setCaptionPGM(PGM_P aCaption) {
     mFlags |= LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
     mCaption = aCaption;
 }
 
-void TouchButton::setCaptionPGMForValueTrue(PGM_P aCaption) {
+void LocalTouchButton::setCaptionPGMForValueTrue(PGM_P aCaption) {
     mFlags |= LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
     mCaptionForTrue = aCaption;
 }
@@ -564,22 +554,22 @@ void TouchButton::setCaptionPGMForValueTrue(PGM_P aCaption) {
      * for debug purposes
      * needs char aStringBuffer[23+<CaptionLength>]
      */
-    void TouchButton::toString(char * aStringBuffer) const {
+    void LocalTouchButton::toString(char * aStringBuffer) const {
         sprintf(aStringBuffer, "X=%03u Y=%03u X1=%03u Y1=%03u B=%02u %s", mPositionX, mPositionY, mPositionX + mWidthX - 1,
                 mPositionY + mHeightY - 1, mTouchBorder, mCaption);
     }
 #  endif
 #endif
 
-const char* TouchButton::getCaption() const {
+const char* LocalTouchButton::getCaption() const {
     return mCaption;
 }
 
-uint16_t TouchButton::getValue() const {
+uint16_t LocalTouchButton::getValue() const {
     return mValue;
 }
 
-void TouchButton::setCaptionForValueTrue(const char *aCaption) {
+void LocalTouchButton::setCaptionForValueTrue(const char *aCaption) {
 #if defined(AVR)
     mFlags &= ~LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
 #endif
@@ -589,7 +579,7 @@ void TouchButton::setCaptionForValueTrue(const char *aCaption) {
 /*
  * Set caption
  */
-void TouchButton::setCaption(const char *aCaption, bool doDrawButton) {
+void LocalTouchButton::setCaption(const char *aCaption, bool doDrawButton) {
 #if defined(AVR)
     mFlags &= ~LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
 #endif
@@ -602,7 +592,7 @@ void TouchButton::setCaption(const char *aCaption, bool doDrawButton) {
 /**
  * Set caption and draw
  */
-void TouchButton::setCaptionAndDraw(const char *aCaption) {
+void LocalTouchButton::setCaptionAndDraw(const char *aCaption) {
     mCaption = aCaption;
     drawButton();
 }
@@ -610,23 +600,23 @@ void TouchButton::setCaptionAndDraw(const char *aCaption) {
 /*
  * changes box color and redraws button
  */
-void TouchButton::setButtonColor(color16_t aButtonColor) {
+void LocalTouchButton::setButtonColor(color16_t aButtonColor) {
     mButtonColor = aButtonColor;
 }
 
-void TouchButton::setButtonColorAndDraw(color16_t aButtonColor) {
+void LocalTouchButton::setButtonColorAndDraw(color16_t aButtonColor) {
     mButtonColor = aButtonColor;
     this->drawButton();
 }
 
-void TouchButton::setCaptionColor(color16_t aCaptionColor) {
+void LocalTouchButton::setCaptionColor(color16_t aCaptionColor) {
     mCaptionColor = aCaptionColor;
 }
 
 /**
  * value 0 -> red, 1 -> green
  */
-void TouchButton::setColorForRedGreenButton(bool aValue) {
+void LocalTouchButton::setColorForRedGreenButton(bool aValue) {
     if (mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
         if (aValue) {
             mButtonColor = COLOR16_GREEN;
@@ -636,53 +626,53 @@ void TouchButton::setColorForRedGreenButton(bool aValue) {
     }
 }
 
-void TouchButton::setValue(int16_t aValue) {
+void LocalTouchButton::setValue(int16_t aValue) {
     setColorForRedGreenButton(aValue);
     mValue = aValue;
 }
 
-void TouchButton::setValueAndDraw(int16_t aValue) {
+void LocalTouchButton::setValueAndDraw(int16_t aValue) {
     setValue(aValue);
     drawButton();
 }
 
-uint16_t TouchButton::getPositionX() const {
+uint16_t LocalTouchButton::getPositionX() const {
     return mPositionX;
 }
-int8_t TouchButton::setPositionX(uint16_t aPositionX) {
+int8_t LocalTouchButton::setPositionX(uint16_t aPositionX) {
     return setPosition(aPositionX, mPositionY);
 }
 
-uint16_t TouchButton::getPositionY() const {
+uint16_t LocalTouchButton::getPositionY() const {
     return mPositionY;
 }
-int8_t TouchButton::setPositionY(uint16_t aPositionY) {
+int8_t LocalTouchButton::setPositionY(uint16_t aPositionY) {
     return setPosition(mPositionX, aPositionY);
 }
 
-uint16_t TouchButton::getPositionXRight() const {
+uint16_t LocalTouchButton::getPositionXRight() const {
     return mPositionX + mWidthX - 1;
 }
 
-uint16_t TouchButton::getPositionYBottom() const {
+uint16_t LocalTouchButton::getPositionYBottom() const {
     return mPositionY + mHeightY - 1;
 }
 
 /*
  * activate for touch checking
  */
-void TouchButton::activate() {
+void LocalTouchButton::activate() {
     mFlags |= LOCAL_BUTTON_FLAG_IS_ACTIVE;
 }
 
 /*
  * deactivate for touch checking
  */
-void TouchButton::deactivate() {
+void LocalTouchButton::deactivate() {
     mFlags &= ~LOCAL_BUTTON_FLAG_IS_ACTIVE;
 }
 
-void TouchButton::setTouchHandler(void (*aOnTouchHandler)(TouchButton*, int16_t)) {
+void LocalTouchButton::setTouchHandler(void (*aOnTouchHandler)(LocalTouchButton*, int16_t)) {
     mOnTouchHandler = aOnTouchHandler;
 }
 

@@ -128,14 +128,14 @@ void ADS7846::init(void) {
 
     //set vars
     tp_matrix.div = 0;
-    mTouchActualPositionRaw.PosX = 0;
-    mTouchActualPositionRaw.PosY = 0;
-    mTouchLastCalibratedPositionRaw.PosX = 0;
-    mTouchLastCalibratedPositionRaw.PosY = 0;
-    mTouchLastPosition.PosX = 0;
-    mTouchLastPosition.PosY = 0;
-    mTouchActualPosition.PosX = 0;
-    mTouchActualPosition.PosY = 0;
+    mTouchActualPositionRaw.PositionX = 0;
+    mTouchActualPositionRaw.PositionY = 0;
+    mTouchLastCalibratedPositionRaw.PositionX = 0;
+    mTouchLastCalibratedPositionRaw.PositionY = 0;
+    mTouchLastPosition.PositionX = 0;
+    mTouchLastPosition.PositionY = 0;
+    mTouchActualPosition.PositionX = 0;
+    mTouchActualPosition.PositionY = 0;
     mPressure = 0;
 
 #if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
@@ -343,7 +343,7 @@ void ADS7846::initAndCalibrateOnPress(uint16_t aEEPROMAdress)
 #else
 void ADS7846::initAndCalibrateOnPress()
 #endif
-        {
+{
     init();
     TouchPanel.readData();
 #if defined(AVR)
@@ -369,69 +369,64 @@ void ADS7846::calibrate(void) {
     long x, y;
 
     // calculate x position
-    if (mTouchLastCalibratedPositionRaw.PosX != mTouchActualPositionRaw.PosX) {
-        mTouchLastCalibratedPositionRaw.PosX = mTouchActualPositionRaw.PosX;
-        x = mTouchActualPositionRaw.PosX;
-        y = mTouchActualPositionRaw.PosY;
+    if (mTouchLastCalibratedPositionRaw.PositionX != mTouchActualPositionRaw.PositionX) {
+        mTouchLastCalibratedPositionRaw.PositionX = mTouchActualPositionRaw.PositionX;
+        x = mTouchActualPositionRaw.PositionX;
+        y = mTouchActualPositionRaw.PositionY;
         x = ((tp_matrix.a * x) + (tp_matrix.b * y) + tp_matrix.c) / tp_matrix.div;
         if (x < 0) {
             x = 0;
         } else if (x >= LOCAL_DISPLAY_WIDTH) {
             x = LOCAL_DISPLAY_WIDTH - 1;
         }
-        mTouchActualPosition.PosX = x;
+        mTouchActualPosition.PositionX = x;
     }
 
     // calculate y position
-    if (mTouchLastCalibratedPositionRaw.PosY != mTouchActualPositionRaw.PosY) {
-        mTouchLastCalibratedPositionRaw.PosY = mTouchActualPositionRaw.PosY;
-        x = mTouchActualPositionRaw.PosX;
-        y = mTouchActualPositionRaw.PosY;
+    if (mTouchLastCalibratedPositionRaw.PositionY != mTouchActualPositionRaw.PositionY) {
+        mTouchLastCalibratedPositionRaw.PositionY = mTouchActualPositionRaw.PositionY;
+        x = mTouchActualPositionRaw.PositionX;
+        y = mTouchActualPositionRaw.PositionY;
         y = ((tp_matrix.d * x) + (tp_matrix.e * y) + tp_matrix.f) / tp_matrix.div;
         if (y < 0) {
             y = 0;
         } else if (y >= LOCAL_DISPLAY_HEIGHT) {
             y = LOCAL_DISPLAY_HEIGHT - 1;
         }
-        mTouchActualPosition.PosY = y;
+        mTouchActualPosition.PositionY = y;
     }
 }
 
 uint16_t ADS7846::getRawX(void) {
-    return mTouchActualPositionRaw.PosX;
+    return mTouchActualPositionRaw.PositionX;
 }
 
 uint16_t ADS7846::getRawY(void) {
-    return mTouchActualPositionRaw.PosY;
+    return mTouchActualPositionRaw.PositionY;
 }
 
 uint16_t ADS7846::getActualX(void) {
-    return mTouchActualPosition.PosX;
+    return mTouchActualPosition.PositionX;
 }
 
 uint16_t ADS7846::getActualY(void) {
-    return mTouchActualPosition.PosY;
+    return mTouchActualPosition.PositionY;
 }
 
 uint8_t ADS7846::getPressure(void) {
     return mPressure;
 }
 
-#if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-#include "LocalGUI/LocalTouchButton.h"
-#include "LocalGUI/LocalTouchSlider.h"
-bool sTouchPanelNothingTouched; // only one button handling in loop each touching of local display
+bool sTouchPanelButtonOrSliderTouched; // only one button handling in loop each touching of local display
 bool sTouchPanelSliderIsMoveTarget; // true if slider was touched by DOWN event
 
-/*
- * isFirstTouch() implementation for AutorepeatButton
- */
-bool isFirstTouch() {
-    return sTouchPanelNothingTouched;
-}
+#include "LocalGUI/LocalTouchButton.h"
+#include "LocalGUI/LocalTouchSlider.h"
 
+#if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
 /**
  * Handles down and up events by calling checkAllButtons and checkAllSliders
+ * No suppression of micro moves using mTouchLastPosition here!
  */
 void handleTouchPanelEvents() {
     uint8_t tPressure = TouchPanel.getPressure();
@@ -439,27 +434,31 @@ void handleTouchPanelEvents() {
         /**
          * No touch here, reset flags
          */
-        sTouchPanelNothingTouched = true;
+        sTouchPanelButtonOrSliderTouched = false;
         sTouchPanelSliderIsMoveTarget = false;
     } else {
         auto tPositionX = TouchPanel.getActualX();
         auto tPositionY = TouchPanel.getActualY();
 
         /*
-         * check if button or slider is touched
-         * check button first in order to give priority to buttons which are overlapped by sliders
-         * remember which is pressed first and "stay" there
+         * Check if button or slider is touched.
+         * Check button first in order to give priority to buttons which are overlapped by sliders.
+         * Remember which is pressed first and "stay" there.
          */
         // Check button only once at a new touch, check autorepeat buttons always to create autorepeat timing
-        bool tGuiTouched = TouchButton::checkAllButtons(tPositionX, tPositionY, !sTouchPanelNothingTouched);
+        bool tGuiTouched = false;
+        if (!sTouchPanelSliderIsMoveTarget) {
+            // check buttons only if slider was not touched before
+            tGuiTouched = LocalTouchButton::checkAllButtons(tPositionX, tPositionY, sTouchPanelButtonOrSliderTouched);
+        }
         if (!tGuiTouched) {
-            tGuiTouched = TouchSlider::checkAllSliders(tPositionX, tPositionY);
-            if (tGuiTouched && sTouchPanelNothingTouched) {
+            tGuiTouched = LocalTouchSlider::checkAllSliders(tPositionX, tPositionY);
+            if (tGuiTouched) {
                 sTouchPanelSliderIsMoveTarget = true;
             }
         }
         if (tGuiTouched) {
-            sTouchPanelNothingTouched = false;
+            sTouchPanelButtonOrSliderTouched = true;
         }
     }
 }
@@ -519,8 +518,8 @@ void ADS7846::readData(void) {
         y >>= 3; //y/8
 
         if ((x >= 10) && (y >= 10)) {
-            mTouchActualPositionRaw.PosX = x;
-            mTouchActualPositionRaw.PosY = y;
+            mTouchActualPositionRaw.PositionX = x;
+            mTouchActualPositionRaw.PositionY = y;
             calibrate();
             if (!ADS7846TouchActive) {
                 // here switch from not active to active
@@ -625,7 +624,6 @@ void ADS7846::readData(uint8_t aOversampling) {
     b = 127 - b; // 127 is maximum reading of CMD_Z2_POS!
     int tPressure = a + b;
 
-
     if (tPressure >= MIN_REASONABLE_PRESSURE) {
         // n times oversampling
         unsigned int j = 0;
@@ -674,8 +672,8 @@ void ADS7846::readData(uint8_t aOversampling) {
 
             // plausi check - x raw value is from 130 to 3900 here x is (4048 - x)/2, y raw is from 150 to 3900 - low is upper right corner
             if (((a + b) > (tPressure - (tPressure >> 3))) && (tXValue >= 10) && (tYValue >= 10)) {
-                mTouchActualPositionRaw.PosX = tXValue;
-                mTouchActualPositionRaw.PosY = tYValue;
+                mTouchActualPositionRaw.PositionX = tXValue;
+                mTouchActualPositionRaw.PositionY = tYValue;
                 calibrate();
                 mPressure = tPressure;
                 ADS7846TouchActive = true;
@@ -849,10 +847,10 @@ void ADS7846::wr_spi(uint8_t data) {
 #  endif
 }
 
-#else
+#elif !defined(ARDUINO)
 /**
  * Callback routine for SysTick handler
- * Enabled on touch down at a rate of TOUCH_SWIPE_RESOLUTION_MILLIS (20ms)
+ * Enabled at touch down at a rate of TOUCH_SWIPE_RESOLUTION_MILLIS (20ms)
  */
 void callbackADS7846MoveRecognition(void) {
     int tLevel = ADS7846_getInteruptLineLevel();
@@ -863,16 +861,43 @@ void callbackADS7846MoveRecognition(void) {
         localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
         if (!TouchPanel.ADS7846TouchActive) {
             // went inactive just while readRawData()
-            localTouchEvent.EventType = EVENT_TOUCH_ACTION_UP;
+            if (!sTouchPanelButtonOrSliderTouched) {
+                localTouchEvent.EventType = EVENT_TOUCH_ACTION_UP;
+                sTouchPanelSliderIsMoveTarget = false;
+            }
         } else {
             /*
-             * Do not accept pseudo or micro moves as an event.
-             * In the BlueDisplay app the threshold is set to mCurrentViewWidth / 100, which is 3 pixel here.
+             * Check if button or slider is touched.
+             * Check button first in order to give priority to buttons which are overlapped by sliders.
+             * Remember which is pressed first and "stay" there.
+             * !!! we are calling the autorepeat button and slider callbacks here in ISR context !!!
+             * Calling autorepeat button callback with event is too complicated,
+             * because the event is yet not aware of the class LocalTouchButtonAutorepeat
+             * the autorepeatTouchHandler(), which generates the timing, requires and therefore the callback crashes.
              */
-            if (abs(TouchPanel.mTouchLastPosition.PosX - TouchPanel.mTouchActualPosition.PosX) >= 3
-                    || abs(TouchPanel.mTouchLastPosition.PosY - TouchPanel.mTouchActualPosition.PosY) >= 3) {
-                TouchPanel.mTouchLastPosition = TouchPanel.mTouchActualPosition;
+            bool tGuiTouched = false;
+            if (!sTouchPanelSliderIsMoveTarget) {
+                // Check autorepeat buttons only if slider was not touched before
+                tGuiTouched = LocalTouchButton::checkAllButtons(TouchPanel.mTouchActualPosition.PositionX,
+                        TouchPanel.mTouchActualPosition.PositionY, true);
+            }
+            if (!tGuiTouched) {
+                /*
+                 * Do not accept pseudo or micro moves as an event.
+                 * In the BlueDisplay app the threshold is set to mCurrentViewWidth / 100, which is 3 pixel here.
+                 */
+                if (abs(TouchPanel.mTouchLastPosition.PositionX - TouchPanel.mTouchActualPosition.PositionX) >= 3
+                        || abs(TouchPanel.mTouchLastPosition.PositionY - TouchPanel.mTouchActualPosition.PositionY) >= 3) {
+                    TouchPanel.mTouchLastPosition = TouchPanel.mTouchActualPosition;
+                    tGuiTouched = LocalTouchSlider::checkAllSliders(TouchPanel.mTouchActualPosition.PositionX,
+                            TouchPanel.mTouchActualPosition.PositionY);
+                }
+                if (tGuiTouched) {
+                    sTouchPanelSliderIsMoveTarget = true;
+                }
+            }
 
+            if (!sTouchPanelButtonOrSliderTouched) {
                 // avoid overwriting other (e.g long touch down) events
                 if (localTouchEvent.EventType == EVENT_NO_EVENT) {
                     localTouchEvent.EventType = EVENT_TOUCH_ACTION_MOVE;
@@ -883,16 +908,18 @@ void callbackADS7846MoveRecognition(void) {
         }
     } else {
         // line level switched to inactive but callback was not disabled
-        if (TouchPanel.ADS7846TouchActive) {
-            TouchPanel.ADS7846TouchActive = false;
+        if (!sTouchPanelButtonOrSliderTouched) {
+            // Generate touch up event if no button or slider was touched
             localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchLastPosition;
             localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
             localTouchEvent.EventType = EVENT_TOUCH_ACTION_UP;
         }
+        sTouchPanelButtonOrSliderTouched = false;
+        sTouchPanelSliderIsMoveTarget = false;
     }
 }
 
-void callbackPeriodicTouch(void);
+extern void callbackPeriodicTouch(void); // from EventHandler
 
 /**
  * This handler is called on both edge of touch interrupt signal
@@ -910,10 +937,50 @@ extern "C" void EXTI1_IRQHandler(void) {
          * Fill in the local event structure, which is read by checkAndHandleEvents()
          */
         TouchPanel.readData(ADS7846_READ_OVERSAMPLING_DEFAULT); // this disables interrupt for additional TOUCH_DELAY_AFTER_READ_MILLIS
-        localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchActualPosition;
-        localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
         TouchPanel.mTouchLastPosition = TouchPanel.mTouchActualPosition; // for move detection
-        localTouchEvent.EventType = EVENT_TOUCH_ACTION_DOWN;
+
+        /*
+         * check if button or slider is touched
+         * check button first in order to give priority to buttons which are overlapped by sliders
+         * remember which is pressed first and "stay" there
+         * !!! we are calling the slider callback here in ISR context !!!
+         */
+        bool tGuiTouched = false;
+        LocalTouchButton *tTouchedButton = LocalTouchButton::findButton(TouchPanel.mTouchActualPosition.PositionX,
+                TouchPanel.mTouchActualPosition.PositionY, false);
+        if (tTouchedButton != NULL) {
+            if (tTouchedButton->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
+                // Local autorepeat button callback, which is autorepeatTouchHandler() can not be called by event, so we must call it directly here
+                tTouchedButton->mOnTouchHandler(tTouchedButton, 0);
+            } else {
+                /*
+                 * Create button event for processing by main loop in order to return from ISR
+                 */
+                localTouchEvent.EventType = EVENT_BUTTON_CALLBACK;
+                localTouchEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress = (void*) tTouchedButton->mOnTouchHandler;
+                localTouchEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0] = tTouchedButton->mValue; // we support only 16 bit values for buttons
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+                localTouchEvent.EventData.GuiCallbackInfo.ObjectIndex = tTouchedButton->mBDButtonPtr->mButtonHandle;
+#endif
+            }
+            tGuiTouched = true;
+        }
+        if (!tGuiTouched) {
+            tGuiTouched = LocalTouchSlider::checkAllSliders(TouchPanel.mTouchActualPosition.PositionX,
+                    TouchPanel.mTouchActualPosition.PositionY);
+            if (tGuiTouched) {
+                sTouchPanelSliderIsMoveTarget = true;
+            }
+        }
+        if (tGuiTouched) {
+            sTouchPanelButtonOrSliderTouched = true;
+        } else {
+            // no button or slider touched -> plain touch down event
+            localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchActualPosition;
+            localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
+            localTouchEvent.EventType = EVENT_TOUCH_ACTION_DOWN;
+        }
+
         if (TouchPanel.ADS7846TouchActive) {
             TouchPanel.ADS7846TouchStart = true;
             /*
@@ -925,13 +992,20 @@ extern "C" void EXTI1_IRQHandler(void) {
             BSP_LED_Toggle (LED_BLUE); // BLUE Back
         }
     } else {
-        // touch released here
+        /**
+         * Touch released here
+         */
         changeDelayCallback(&callbackPeriodicTouch, DISABLE_TIMER_DELAY_VALUE); // disable periodic interrupts which can call handleTouchRelease
         if (TouchPanel.ADS7846TouchActive) {
             TouchPanel.ADS7846TouchActive = false;
-            localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchLastPosition;
-            localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
-            localTouchEvent.EventType = EVENT_TOUCH_ACTION_UP;
+            if (!sTouchPanelButtonOrSliderTouched) {
+                // Generate touch up event if no button or slider was touched
+                localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchLastPosition;
+                localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
+                localTouchEvent.EventType = EVENT_TOUCH_ACTION_UP;
+            }
+            sTouchPanelButtonOrSliderTouched = false;
+            sTouchPanelSliderIsMoveTarget = false;
         }
     }
     resetBacklightTimeout();

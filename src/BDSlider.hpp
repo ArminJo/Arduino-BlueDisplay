@@ -42,7 +42,7 @@ BDSlider::BDSlider() { // @suppress("Class members should be properly initialize
 }
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
-BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, TouchSlider *aLocalSliderPointer) {
+BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, LocalTouchSlider *aLocalSliderPointer) {
     mSliderHandle = aSliderHandle;
     mLocalSliderPointer = aLocalSliderPointer;
 }
@@ -82,27 +82,28 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
 #  if defined(DISABLE_REMOTE_DISPLAY)
-    mLocalSliderPointer = new TouchSlider();
+    mLocalSliderPointer = new LocalTouchSlider();
 #  else
-    mLocalSliderPointer = new TouchSlider(this);
+    mLocalSliderPointer = new LocalTouchSlider(this);
 #  endif
     // Cast required here. At runtime the right pointer is returned because of FLAG_USE_INDEX_FOR_CALLBACK
     mLocalSliderPointer->init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue,
             aSliderColor, aBarColor, aFlags | LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK,
-            reinterpret_cast<void (*)(TouchSlider *, uint16_t)>(aOnChangeHandler));
+            reinterpret_cast<void (*)(LocalTouchSlider *, uint16_t)>(aOnChangeHandler));
     // keep the formatting
 #endif
 }
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
+
 /*
  * For description see BDButton::deinit()
  */
 void BDSlider::deinit() {
+#if defined(SUPPORT_LOCAL_DISPLAY)
     sLocalSliderIndex--;
     delete mLocalSliderPointer;
-}
 #endif
+}
 
 /**
  * @param aPositionX - Determines upper left corner
@@ -316,7 +317,7 @@ void BDSlider::resetAllSliders() {
 
 void BDSlider::activateAllSliders() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    TouchSlider::activateAllSliders();
+    LocalTouchSlider::activateAllSliders();
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_ACTIVATE_ALL, 0);
@@ -325,7 +326,7 @@ void BDSlider::activateAllSliders() {
 
 void BDSlider::deactivateAllSliders() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    TouchSlider::deactivateAllSliders();
+    LocalTouchSlider::deactivateAllSliders();
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_DEACTIVATE_ALL, 0);

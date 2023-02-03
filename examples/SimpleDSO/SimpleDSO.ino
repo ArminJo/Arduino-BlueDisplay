@@ -508,10 +508,10 @@ void setup() {
     registerTouchUpCallback(&doSwitchInfoModeOnTouchUp);
     registerLongTouchDownCallback(&doLongTouchDownDSO, 900);
 
-    BlueDisplay1.playFeedbackTone(FEEDBACK_TONE_OK);
+    BDButton::playFeedbackTone();
     delay(400);
     setVCCValue(); // this sets ADMUX to 1.1 volt reference channel
-    BlueDisplay1.playFeedbackTone(FEEDBACK_TONE_OK);
+    BDButton::playFeedbackTone();
 
     initStackFreeMeasurement();
 }
@@ -1731,9 +1731,9 @@ void doStartStopDSO(BDButton *aTheTouchedButton __attribute__((unused)), int16_t
  * Graphical output section
  ************************************************************************/
 /*
- * returns false if display was scrolled
+ * returns false if display was successfully scrolled, true on error
  */
-uint8_t scrollChart(int aScrollAmount) {
+bool scrollChart(int aScrollAmount) {
     if (DisplayControl.DisplayPage != DISPLAY_PAGE_CHART) {
         return true;
     }

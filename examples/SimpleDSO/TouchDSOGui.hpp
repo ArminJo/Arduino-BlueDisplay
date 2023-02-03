@@ -1295,7 +1295,7 @@ void startDSOSettingsPage(void) {
 void doSwitchInfoModeOnTouchUp(struct TouchEvent *const aTouchPosition) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
 // first check for buttons
-    if (!TouchButton::checkAllButtons(aTouchPosition->TouchPosition.PosX, aTouchPosition->TouchPosition.PosY)) {
+    if (!LocalTouchButton::checkAllButtons(aTouchPosition->TouchPosition.PositionX, aTouchPosition->TouchPosition.PositionY)) {
 #endif
     if (DisplayControl.DisplayPage == DISPLAY_PAGE_CHART) {
         // Wrap display mode
@@ -1357,11 +1357,7 @@ void doLongTouchDownDSO(struct TouchEvent *const aTouchPosition) {
  * responsible for swipe detection and dispatching
  */
 void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
-#if defined(AVR)
-    uint8_t tFeedbackType = FEEDBACK_TONE_ERROR;
-#else
-    int tFeedbackType = FEEDBACK_TONE_ERROR;
-#endif
+    bool tIsError = true;
 
     if (DisplayControl.DisplayPage == DISPLAY_PAGE_CHART) {
         if (MeasurementControl.isRunning) {
@@ -1378,7 +1374,7 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
                 int tTouchDeltaXGrid = aSwipeInfo->TouchDeltaX / 64;
 #endif
                 if (tTouchDeltaXGrid != 0) {
-                    tFeedbackType = changeTimeBaseValue(-tTouchDeltaXGrid);
+                    tIsError = changeTimeBaseValue(-tTouchDeltaXGrid);
                     printInfo();
                 }
             } else {
@@ -1388,7 +1384,7 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
 #endif
                 if (!MeasurementControl.RangeAutomatic) {
 #if defined(AVR)
-                    tFeedbackType = changeRange(aSwipeInfo->TouchDeltaY / 64);
+                    tIsError = changeRange(aSwipeInfo->TouchDeltaY / 64);
 #else
                     /*
                      * range manual. If offset not fixed, check if swipe in the right third of screen, then do changeOffsetGridCount()
@@ -1397,13 +1393,13 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
                         // decide which swipe to perform according to x position of swipe
                         if (aSwipeInfo->TouchStartX > BUTTON_WIDTH_3_POS_2) {
                             //offset
-                            tFeedbackType = changeOffsetGridCount(tTouchDeltaYGrid);
+                            tIsError = changeOffsetGridCount(tTouchDeltaYGrid);
                         } else {
-                            tFeedbackType = changeDisplayRangeAndAdjustOffsetGridCount(tTouchDeltaYGrid / 2);
+                            tIsError = changeDisplayRangeAndAdjustOffsetGridCount(tTouchDeltaYGrid / 2);
                         }
                     }
                 } else if (MeasurementControl.OffsetMode != OFFSET_MODE_0_VOLT) {
-                    tFeedbackType = changeOffsetGridCount(tTouchDeltaYGrid);
+                    tIsError = changeOffsetGridCount(tTouchDeltaYGrid);
 #endif
                 }
             }
@@ -1414,19 +1410,19 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
 #if !defined(AVR)
             if (aSwipeInfo->TouchStartY > BUTTON_HEIGHT_4_LINE_3 + TEXT_SIZE_22) {
 #endif
-            tFeedbackType = scrollChart(-aSwipeInfo->TouchDeltaX);
+            tIsError = scrollChart(-aSwipeInfo->TouchDeltaX);
 #if !defined(AVR)
             } else {
                 // scale
-                tFeedbackType = changeXScale(aSwipeInfo->TouchDeltaX / 64);
+                tIsError = changeXScale(aSwipeInfo->TouchDeltaX / 64);
             }
 #endif
         }
     }
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    playLocalFeedbackTone(tFeedbackType);
+    LocalTouchButton::playFeedbackTone(tIsError);
 #else
-    BlueDisplay1.playFeedbackTone(tFeedbackType);
+    BDButton::playFeedbackTone(tIsError);
 #endif
 }
 

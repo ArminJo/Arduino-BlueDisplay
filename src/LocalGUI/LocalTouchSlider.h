@@ -46,7 +46,7 @@ class BDSlider;
  */
 /**
  * @name SliderOptions
- * Options for TouchSlider::initSlider() - they can be or-ed together
+ * Options for LocalTouchSlider::initSlider() - they can be or-ed together
  * @{
  */
 
@@ -96,20 +96,20 @@ typedef unsigned int uintForPgmSpaceSaving;
 typedef uint16_t uintForRamSpaceSaving;
 #endif
 
-class TouchSlider {
+class LocalTouchSlider {
 public:
 
-    TouchSlider();
+    LocalTouchSlider();
 
 #if !defined(ARDUINO)
-    ~TouchSlider();
+    ~LocalTouchSlider();
 #endif
 
     /*
      * Static functions
      */
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
-    static TouchSlider* getLocalSliderFromBDSliderHandle(BDSliderHandle_t aSliderHandleToSearchFor);
+    static LocalTouchSlider* getLocalSliderFromBDSliderHandle(BDSliderHandle_t aSliderHandleToSearchFor);
     static void createAllLocalSlidersAtRemote();
 #endif
 
@@ -127,7 +127,7 @@ public:
      */
     void init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength, uint16_t aThresholdValue,
             int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags,
-            void (*aOnChangeHandler)(TouchSlider*, uint16_t));
+            void (*aOnChangeHandler)(LocalTouchSlider*, uint16_t));
     void deinit(); // Dummy to be more compatible with BDButton
 
     void initSliderColors(uint16_t aSliderColor, uint16_t aBarColor, uint16_t aBarThresholdColor, uint16_t aBarBackgroundColor,
@@ -173,15 +173,15 @@ public:
             color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor);
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
-    TouchSlider(BDSlider *aBDSliderPtr); // Required for creating a local slider for an existing aBDSlider at aBDSlider::init
+    LocalTouchSlider(BDSlider *aBDSliderPtr); // Required for creating a local slider for an existing aBDSlider at aBDSlider::init
     BDSlider *mBDSliderPtr;
 #endif
 
     /*
      * Slider list, required for the *AllSliders functions
      */
-    static TouchSlider *sSliderListStart; // Start of list of touch sliders, required for the *AllSliders functions
-    TouchSlider *mNextObject;
+    static LocalTouchSlider *sSliderListStart; // Start of list of touch sliders, required for the *AllSliders functions
+    LocalTouchSlider *mNextObject;
 
     /*
      * Defaults
@@ -227,7 +227,7 @@ public:
     bool mIsActive;
 
     // misc
-    void (*mOnChangeHandler)(TouchSlider*, uint16_t);
+    void (*mOnChangeHandler)(LocalTouchSlider*, uint16_t);
 
     int8_t checkParameterValues();
 

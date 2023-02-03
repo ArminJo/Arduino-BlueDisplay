@@ -55,7 +55,9 @@ static const int FLAG_BUTTON_TYPE_MANUAL_REFRESH = 0x08; // Button must be manua
 static const int FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH = 0x0A; // Red/Green button must be manually drawn after event to show new caption/color
 // Flags for local buttons
 #define LOCAL_BUTTON_FLAG_IS_ACTIVE                     0x10 // Local button is to be checked by checkAllButtons() etc.
-#define LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK     0x20 // Here we have a local and a remote button. Use only the remote button pointer as callback parameter.
+// LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK is set, when we have a local and a remote button, i.e. SUPPORT_REMOTE_AND_LOCAL_DISPLAY is defined.
+// Then only the remote button pointer is used as callback parameter to enable easy comparison of this parameter with a fixed button.
+#define LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK     0x20
 #define LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE 0x40
 #define LOCAL_BUTTON_FLAG_MASK                          0x70
 
@@ -269,10 +271,10 @@ public:
     bool operator!=(const BDButton &aButton);
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    BDButton(BDButtonHandle_t aButtonHandle, TouchButton *aLocalButtonPtr);
+    BDButton(BDButtonHandle_t aButtonHandle, LocalTouchButton *aLocalButtonPtr);
     // Operators
-    bool operator==(const TouchButton &aButton);
-    bool operator!=(const TouchButton &aButton);
+    bool operator==(const LocalTouchButton &aButton);
+    bool operator!=(const LocalTouchButton &aButton);
 #endif
 
     void init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
@@ -293,8 +295,13 @@ public:
     void setValueAndDraw(int16_t aValue);
     void setButtonColor(color16_t aButtonColor);
     void setButtonColorAndDraw(color16_t aButtonColor);
+
+    /*
+     * Autorepeat functions
+     */
     void setButtonAutorepeatTiming(uint16_t aMillisFirstDelay, uint16_t aMillisFirstRate, uint16_t aFirstCount,
             uint16_t aMillisSecondRate);
+    static void disableAutorepeatUntilEndOfTouch();
 
     void activate();
     void deactivate();
@@ -319,10 +326,16 @@ public:
 
     BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions. Taken in init() from sLocalButtonIndex.
 
+    void deinit(); // is defined as dummy if SUPPORT_LOCAL_DISPLAY is not active
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    void deinit();
-    TouchButton *mLocalButtonPtr; // Pointer to the corresponding local button, which is allocated at init()
+    LocalTouchButton *mLocalButtonPtr; // Pointer to the corresponding local button, which is allocated at init()
 #endif
+
+    /*
+     * Feedback tone
+     */
+    static void playFeedbackTone();
+    static void playFeedbackTone(bool aPlayErrorTone);
 
 private:
 };

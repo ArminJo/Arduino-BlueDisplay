@@ -73,35 +73,38 @@ typedef uint16_t BDButtonHandle_t;
 //#define LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE 0x40
 //#define LOCAL_BUTTON_FLAG_MASK                          0x70
 
-class TouchButton {
+class LocalTouchButton {
 public:
 
-    TouchButton();
+    LocalTouchButton();
     // Operators
-    bool operator==(const TouchButton &aButton);
-    bool operator!=(const TouchButton &aButton);
+    bool operator==(const LocalTouchButton &aButton);
+    bool operator!=(const LocalTouchButton &aButton);
 
 #if !defined(ARDUINO)
-    ~TouchButton();
+    ~LocalTouchButton();
 #endif
 
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
-    static TouchButton * getLocalButtonFromBDButtonHandle(BDButtonHandle_t aButtonHandleToSearchFor);
+    static LocalTouchButton * getLocalTouchButtonFromBDButtonHandle(BDButtonHandle_t aButtonHandleToSearchFor);
     static void createAllLocalButtonsAtRemote();
 #endif
     static void setDefaultTouchBorder(uint8_t aDefaultTouchBorder);
     static void setDefaultCaptionColor(uint16_t aDefaultCaptionColor);
-    static bool checkAllButtons(unsigned int aTouchPositionX, unsigned int aTouchPositionY, bool aCheckOnlyAutorepeatButtons = false);
+    static bool checkAllButtons(unsigned int aTouchPositionX, unsigned int aTouchPositionY,
+            bool aCheckOnlyAutorepeatButtons = false);
+    static LocalTouchButton* findButton(unsigned int aTouchPositionX, unsigned int aTouchPositionY,
+            bool aSearchOnlyAutorepeatButtons = false);
     static void activateAllButtons();
     static void deactivateAllButtons();
 
     int8_t init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
             const char *aCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-            void (*aOnTouchHandler)(TouchButton*, int16_t));
+            void (*aOnTouchHandler)(LocalTouchButton*, int16_t));
 
     void deinit(); // Dummy to be more compatible with BDButton
 
-    bool checkButton(uint16_t aTouchPositionX, uint16_t aTouchPositionY, bool aCheckOnlyAutorepeatButtons = false);
+    bool checkButton(uint16_t aTouchPositionX, uint16_t aTouchPositionY);
     bool checkButtonInArea(uint16_t aTouchPositionX, uint16_t aTouchPositionY);
 
     bool isAutorepeatButton();
@@ -131,12 +134,18 @@ public:
 
     void activate();
     void deactivate();
-    void setTouchHandler(void (*aOnTouchHandler)(TouchButton*, int16_t));
+    void setTouchHandler(void (*aOnTouchHandler)(LocalTouchButton*, int16_t));
+
+    /*
+     * Feedback tone
+     */
+    static void playFeedbackTone();
+    static void playFeedbackTone(bool aPlayErrorTone);
 
 #ifdef AVR
     int8_t init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
             const __FlashStringHelper *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-            void (*aOnTouchHandler)(TouchButton*, int16_t));
+            void (*aOnTouchHandler)(LocalTouchButton*, int16_t));
 
     void setCaptionPGM(const char *aCaption);
     void setCaptionPGMForValueTrue(const char *aCaption);
@@ -147,7 +156,7 @@ public:
 #endif
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
-    TouchButton(BDButton *aBDButtonPtr); // Required for creating a local button for an existing aBDButton at BDButton::init
+    LocalTouchButton(BDButton *aBDButtonPtr); // Constructor required for creating a (temporary) local button for an existing aBDButton at BDButton::init
     BDButton *mBDButtonPtr;
 #endif
     color16_t mButtonColor;
@@ -162,23 +171,17 @@ public:
     const char *mCaption; // Pointer to caption
     const char *mCaptionForTrue; // Pointer to caption for true for red green buttons
     int16_t mValue;
-    void (*mOnTouchHandler)(TouchButton*, int16_t);
+    void (*mOnTouchHandler)(LocalTouchButton*, int16_t);
 
     static color16_t sDefaultCaptionColor;
 
     /*
      * Button list, required for the *AllButtons functions
      */
-    static TouchButton *sButtonListStart; // Start of list of touch buttons, required for the *AllButtons functions
-    TouchButton *mNextObject;
+    static LocalTouchButton *sButtonListStart; // Start of list of touch buttons, required for the *AllButtons functions
+    LocalTouchButton *mNextObject;
 
 };
-
-// Handler for red green button
-void doToggleRedGreenButton(TouchButton *aTheTouchedButton, int16_t aValue);
-
-void playLocalFeedbackTone();
-void playLocalFeedbackTone(unsigned int aFeedbackToneType);
 
 /** @} */
 /** @} */

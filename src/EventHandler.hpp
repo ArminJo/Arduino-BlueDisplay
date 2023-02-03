@@ -53,7 +53,7 @@ struct TouchEvent sUpPosition;
  */
 //
 bool sNothingTouched = false;
-bool sSliderIsMoveTarget = false; // true if slider was touched by DOWN event
+bool sSliderIsMoveTarget = false;// true if slider was touched by DOWN event
 
 uint32_t sLongTouchDownTimeoutMillis;
 uint32_t sPeriodicCallbackPeriodMillis;
@@ -62,7 +62,6 @@ uint32_t sPeriodicCallbackPeriodMillis;
 /*
  * timer related callbacks
  */
-//
 void (*sPeriodicTouchCallback)(int, int) = NULL; // return parameter not yet used
 struct BluetoothEvent localTouchEvent;
 #else
@@ -297,8 +296,8 @@ void setPeriodicTouchCallbackPeriod(uint32_t aCallbackPeriod) {
 void callbackPeriodicTouch() {
     if (sTouchIsStillDown) {
         if (sPeriodicTouchCallback != NULL) {
-            // do "normal" callback for autorepeat buttons
-            sPeriodicTouchCallback(sCurrentPosition.TouchPosition.PosX, sCurrentPosition.TouchPosition.PosY);
+            // do callback here
+            sPeriodicTouchCallback(sCurrentPosition.TouchPosition.PositionX, sCurrentPosition.TouchPosition.PositionY);
         }
         if (sTouchIsStillDown) {
             // renew systic callback request
@@ -333,8 +332,8 @@ void callbackLongTouchDownTimeout() {
          * Check if a swipe is intended (position has moved over threshold).
          * If not, call long touch callback
          */
-        if (abs(sDownPosition.TouchPosition.PosX - sCurrentPosition.TouchPosition.PosX) < TOUCH_SWIPE_THRESHOLD
-                && abs(sDownPosition.TouchPosition.PosY - sCurrentPosition.TouchPosition.PosY) < TOUCH_SWIPE_THRESHOLD) {
+        if (abs(sDownPosition.TouchPosition.PositionX - sCurrentPosition.TouchPosition.PositionX) < TOUCH_SWIPE_THRESHOLD
+                && abs(sDownPosition.TouchPosition.PositionY - sCurrentPosition.TouchPosition.PositionY) < TOUCH_SWIPE_THRESHOLD) {
             // fill up event
             localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchLastPosition;
             localTouchEvent.EventType = EVENT_LONG_TOUCH_DOWN_CALLBACK;
@@ -397,8 +396,8 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         return;
     }
 #if defined(ESP32) && defined DEBUG
-        Serial.print("EventType=0x");
-        Serial.println(aEvent->EventType, HEX);
+    Serial.print("EventType=0x");
+    Serial.println(aEvent->EventType, HEX);
 #endif
     uint8_t tEventType = aEvent->EventType;
 
@@ -420,7 +419,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     void (*tInfoCallback)(uint8_t, uint8_t, uint16_t, ByteShortLongFloatUnion);
     void (*tNumberCallback)(float);
     void (*tSliderCallback)(BDSliderHandle_t*, int16_t);
-    void (*tButtonCallback)(BDButtonHandle_t*, int16_t);
+    void (*tButtonCallbackFunction)(BDButtonHandle_t*, int16_t);
 
     switch (tEventType) { // switch requires 36 bytes more code but is clearer to understand :-(
 
@@ -492,41 +491,41 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     case EVENT_BUTTON_CALLBACK:
 //    if (tEventType == EVENT_BUTTON_CALLBACK) {
         sTouchIsStillDown = false; // to disable local touch up detection
-        tButtonCallback = (void (*)(BDButtonHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;
+        tButtonCallbackFunction = (void (*)(BDButtonHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress;
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
         { // "{" must be here to avoid nasty errors
-            TouchButton *tLocalButton = TouchButton::getLocalButtonFromBDButtonHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
-            tLocalButton->mValue = tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0];
+            LocalTouchButton *tLocalButton = LocalTouchButton::getLocalTouchButtonFromBDButtonHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
+            tLocalButton->mValue = tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0]; // we support only 16 bit values for buttons
 
             if (tLocalButton->mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
                 tLocalButton->drawButton(); // handle color change for local button too
             }
             if (tLocalButton->mFlags & FLAG_BUTTON_DO_BEEP_ON_TOUCH) {
-                playLocalFeedbackTone();
+                LocalTouchButton::playFeedbackTone();
             }
             // The tTempButton button is removed at exit of the function :-)
             BDButton tTempButton = BDButton(tEvent.EventData.GuiCallbackInfo.ObjectIndex, tLocalButton);
             // &tTempButton.mButtonHandle must be a real button pointer, since the callback function may use it for calling button functions for this button
-            tButtonCallback(&tTempButton.mButtonHandle, tLocalButton->mValue);
+            tButtonCallbackFunction(&tTempButton.mButtonHandle, tLocalButton->mValue);
         }
 #else
         // BDButton * is the same as BDButtonHandle_t * because BDButton only has one BDButtonHandle_t element
-        tButtonCallback((BDButtonHandle_t*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex,
-                tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
+        tButtonCallbackFunction((BDButtonHandle_t*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex,
+                tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0]); // we support only 16 bit values for buttons
 #endif
         break;
 
     case EVENT_SLIDER_CALLBACK:
 //    } else if (tEventType == EVENT_SLIDER_CALLBACK) {
         sTouchIsStillDown = false; // to disable local touch up detection
-        tSliderCallback = (void (*)(BDSliderHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.Handler;
+        tSliderCallback = (void (*)(BDSliderHandle_t*, int16_t)) tEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress;
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
         { // "{" must be here to avoid nasty errors
-            TouchSlider *tLocalSlider = TouchSlider::getLocalSliderFromBDSliderHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
-            tLocalSlider->mActualTouchValue = tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0];
+            LocalTouchSlider *tLocalSlider = LocalTouchSlider::getLocalSliderFromBDSliderHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
+            tLocalSlider->mActualTouchValue = tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0];
 
             // synchronize local slider - remote one is synchronized by local slider itself
-            tLocalSlider->setValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
+            tLocalSlider->setValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0]);
 
             // The tTempSlider button is removed at exit of the function :-)
             BDSlider tTempSlider = BDSlider(tEvent.EventData.GuiCallbackInfo.ObjectIndex, tLocalSlider);
@@ -534,18 +533,18 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         }
 #else
         tSliderCallback((BDSliderHandle_t*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex,
-                tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.uint16Values[0]);
+                tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0]);
 #endif
         break;
 
     case EVENT_NUMBER_CALLBACK:
 //    } else if (tEventType == EVENT_NUMBER_CALLBACK) {
-        tNumberCallback = (void (*)(float)) tEvent.EventData.GuiCallbackInfo.Handler;
+        tNumberCallback = (void (*)(float)) tEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress;
 #if defined(ESP32) && defined DEBUG
         Serial.print("tNumberCallback=0x");
         Serial.println((uint32_t)tNumberCallback, HEX);
 #endif
-        tNumberCallback(tEvent.EventData.GuiCallbackInfo.ValueForGuiHandler.floatValue);
+        tNumberCallback(tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.floatValue);
         break;
 
     case EVENT_SWIPE_CALLBACK:
@@ -580,7 +579,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     case EVENT_INFO_CALLBACK:
 //    } else if (tEventType == EVENT_INFO_CALLBACK) {
         tInfoCallback =
-                (void (*)(uint8_t, uint8_t, uint16_t, ByteShortLongFloatUnion)) tEvent.EventData.IntegerInfoCallbackData.Handler;
+                (void (*)(uint8_t, uint8_t, uint16_t, ByteShortLongFloatUnion)) tEvent.EventData.IntegerInfoCallbackData.CallbackFunctionAddress;
         tInfoCallback(tEvent.EventData.IntegerInfoCallbackData.SubFunction, tEvent.EventData.IntegerInfoCallbackData.ByteInfo,
                 tEvent.EventData.IntegerInfoCallbackData.ShortInfo, tEvent.EventData.IntegerInfoCallbackData.LongInfo);
         break;
@@ -644,8 +643,8 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
         // do it after sConnectCallback() since the upper tends to send a reset all command
-        TouchButton::createAllLocalButtonsAtRemote();
-        TouchSlider::createAllLocalSlidersAtRemote();
+        LocalTouchButton::createAllLocalButtonsAtRemote();
+        LocalTouchSlider::createAllLocalSlidersAtRemote();
 #endif
         break;
 
@@ -711,18 +710,18 @@ void handleLocalTouchUp() {
         sSliderIsMoveTarget = false;
         sDisableTouchUpOnce = true; // Do not call the touch up callback in handleEvent() since slider does not require one
     } else if (sSwipeEndCallbackEnabled) {
-        if (abs(sDownPosition.TouchPosition.PosX - sCurrentPosition.TouchPosition.PosX) >= TOUCH_SWIPE_THRESHOLD
-                || abs(sDownPosition.TouchPosition.PosY - sCurrentPosition.TouchPosition.PosY) >= TOUCH_SWIPE_THRESHOLD) {
+        if (abs(sDownPosition.TouchPosition.PositionX - sCurrentPosition.TouchPosition.PositionX) >= TOUCH_SWIPE_THRESHOLD
+                || abs(sDownPosition.TouchPosition.PositionY - sCurrentPosition.TouchPosition.PositionY) >= TOUCH_SWIPE_THRESHOLD) {
             /*
              * Swipe recognized here
              * compute SWIPE data and call callback handler
              */
             struct Swipe tSwipeInfo;
-            tSwipeInfo.TouchStartX = sDownPosition.TouchPosition.PosX;
-            tSwipeInfo.TouchStartY = sDownPosition.TouchPosition.PosY;
-            tSwipeInfo.TouchDeltaX = sUpPosition.TouchPosition.PosX - sDownPosition.TouchPosition.PosX;
+            tSwipeInfo.TouchStartX = sDownPosition.TouchPosition.PositionX;
+            tSwipeInfo.TouchStartY = sDownPosition.TouchPosition.PositionY;
+            tSwipeInfo.TouchDeltaX = sUpPosition.TouchPosition.PositionX - sDownPosition.TouchPosition.PositionX;
             uint16_t tTouchDeltaXAbs = abs(tSwipeInfo.TouchDeltaX);
-            tSwipeInfo.TouchDeltaY = sUpPosition.TouchPosition.PosY - sDownPosition.TouchPosition.PosY;
+            tSwipeInfo.TouchDeltaY = sUpPosition.TouchPosition.PositionY - sDownPosition.TouchPosition.PositionY;
             uint16_t tTouchDeltaYAbs = abs(tSwipeInfo.TouchDeltaY);
             if (tTouchDeltaXAbs >= tTouchDeltaYAbs) {
                 // X direction
@@ -744,10 +743,10 @@ void handleLocalTouchUp() {
  * @param aCurrentPositionPtr
  */
 void simpleTouchDownHandler(struct TouchEvent *aCurrentPositionPtr) {
-    if (TouchSlider::checkAllSliders(aCurrentPositionPtr->TouchPosition.PosX, aCurrentPositionPtr->TouchPosition.PosY)) {
+    if (LocalTouchSlider::checkAllSliders(aCurrentPositionPtr->TouchPosition.PositionX, aCurrentPositionPtr->TouchPosition.PositionY)) {
         sSliderIsMoveTarget = true;
     } else {
-        if (TouchButton::checkAllButtons(aCurrentPositionPtr->TouchPosition.PosX, aCurrentPositionPtr->TouchPosition.PosY,
+        if (LocalTouchButton::checkAllButtons(aCurrentPositionPtr->TouchPosition.PositionX, aCurrentPositionPtr->TouchPosition.PositionY,
         false)) {
             // We touched a button, so disable move events (e.g. for sliders) until touch up
             sDisableMoveEventsUntilTouchUpIsDone = true;
@@ -758,13 +757,13 @@ void simpleTouchDownHandler(struct TouchEvent *aCurrentPositionPtr) {
 }
 
 void simpleTouchHandlerOnlyForButtons(struct TouchEvent *aCurrentPositionPtr) {
-    if (!TouchButton::checkAllButtons(aCurrentPositionPtr->TouchPosition.PosX, aCurrentPositionPtr->TouchPosition.PosY)) {
+    if (!LocalTouchButton::checkAllButtons(aCurrentPositionPtr->TouchPosition.PositionX, aCurrentPositionPtr->TouchPosition.PositionY)) {
         sNothingTouched = true;
     }
 }
 
 void simpleTouchDownHandlerOnlyForSlider(struct TouchEvent *aCurrentPositionPtr) {
-    if (TouchSlider::checkAllSliders(aCurrentPositionPtr->TouchPosition.PosX, aCurrentPositionPtr->TouchPosition.PosY)) {
+    if (LocalTouchSlider::checkAllSliders(aCurrentPositionPtr->TouchPosition.PositionX, aCurrentPositionPtr->TouchPosition.PositionY)) {
         sSliderIsMoveTarget = true;
     } else {
         sNothingTouched = true;
@@ -772,7 +771,7 @@ void simpleTouchDownHandlerOnlyForSlider(struct TouchEvent *aCurrentPositionPtr)
 }
 
 void simpleTouchMoveHandlerForSlider(struct TouchEvent *aCurrentPositionPtr) {
-    TouchSlider::checkAllSliders(aCurrentPositionPtr->TouchPosition.PosX, aCurrentPositionPtr->TouchPosition.PosY);
+    LocalTouchSlider::checkAllSliders(aCurrentPositionPtr->TouchPosition.PositionX, aCurrentPositionPtr->TouchPosition.PositionY);
 }
 
 /**
@@ -791,7 +790,7 @@ bool getDisplayXYValuesFlag() {
  */
 void printEventTouchPositionData(int x, int y, color16_t aColor, color16_t aBackColor) {
     char tStringBuffer[12];
-    snprintf(tStringBuffer, 12, "X:%03i Y:%03i", sCurrentPosition.TouchPosition.PosX, sCurrentPosition.TouchPosition.PosY);
+    snprintf(tStringBuffer, 12, "X:%03i Y:%03i", sCurrentPosition.TouchPosition.PositionX, sCurrentPosition.TouchPosition.PositionY);
     BlueDisplay1.drawText(x, y, tStringBuffer, TEXT_SIZE_11, aColor, aBackColor);
 }
 #endif //SUPPORT_LOCAL_DISPLAY

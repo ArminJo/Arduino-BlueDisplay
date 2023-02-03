@@ -1,5 +1,5 @@
 /*
- * LocalTouchGuiDemo.cpp
+ * TouchGuiDemo.cpp
  *
  *      Demo of the libs:
  *      TouchButton
@@ -49,27 +49,59 @@
 //#define RTC_EXISTS  //if a DS1307 is connected to the I2C bus
 #include <Arduino.h>
 
+/*
+ * Enable this lines to run the demo locally
+ */
+//#define RUN_ON_LOCAL_HX8347_DISPLAY_ONLY
+#if defined(RUN_ON_LOCAL_HX8347_DISPLAY_ONLY)
 #define LOCAL_GUI_FEEDBACK_TONE_PIN 2
 #define DISABLE_REMOTE_DISPLAY  // Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display
 #define SUPPORT_LOCAL_DISPLAY   // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
-
 #include "LocalHX8347DDisplay.hpp" // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
-//#include "GUIHelper.hpp"        // Must be included before LocalGUI. For TEXT_SIZE_11, getLocalTextSize() etc.
+#include "GUIHelper.hpp"        // Must be included before LocalGUI. For TEXT_SIZE_11, getLocalTextSize() etc.
 #include "LocalGUI.hpp"         // Includes the sources for LocalTouchButton etc.
+#else
+#include "BlueDisplay.hpp"         // Includes the sources for LocalTouchButton etc.
+void initDisplay(void);
+#endif
 
 char sStringBuffer[32];
 uint32_t sMillisOfLastLoop;
-void printTPData(void);
 
-TouchSlider TouchSliderBacklight;
-TouchButton TouchButtonTPCalibration;
-TouchButton TouchButtonBack;
+/*
+ * For programs, that must save memory when running on local display only
+ */
+#if !defined(Button)
+#  if defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
+// Only local display must be supported, so TouchButton, etc is sufficient
+#define Button              LocalTouchButton
+#define AutorepeatButton    LocalTouchButtonAutorepeat
+#define Slider              LocalTouchSlider
+#define Display             LocalDisplay
+#  else
+// Remote display must be served here, so use BD elements, they are aware of the existence of Local* objects and use them if SUPPORT_LOCAL_DISPLAY is enabled
+#define Button              BDButton
+#define AutorepeatButton    BDButton
+#define Slider              BDSlider
+#define Display             BlueDisplay1
+#  endif
+#endif
+
+Slider TouchSliderBacklight;
+Button TouchButtonTPCalibration;
+Button TouchButtonBack;
 
 #define TP_EEPROMADDR (E2END -1 - sizeof(CAL_MATRIX)) //eeprom address for calibration data - 28 bytes
 
+#if defined(SUPPORT_LOCAL_DISPLAY)
 #include "LocalDisplayGUI.hpp"
+#endif
+
 #include "Chart.hpp"
 #include "PageDraw.hpp"
+#if defined(SUPPORT_LOCAL_DISPLAY) && !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+void printTPData(void); // required in GuiDemo.hpp
+#endif
 #include "GuiDemo.hpp"
 
 #ifdef RTC_EXISTS
@@ -110,16 +142,42 @@ void setup() {
     Serial.println(F("START " __FILE__ " from " __DATE__));
 #endif
 
-    //init display
-    // faster SPI mode - works fine :-)
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    /*
+     * Initialize local display, fast SPI mode
+     */
     LocalDisplay.init(2); //spi-clk = Fcpu/2
-
     //init touch controller
     TouchPanel.initAndCalibrateOnPress(TP_EEPROMADDR);
+#endif
 
-    //show menu
+#if !defined(DISABLE_REMOTE_DISPLAY)
+    /*
+     * Initialize serial connection for BlueDisplay
+     */
+#  if defined(ESP32)
+    Serial.begin(115200);
+    Serial.println("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY);
+    initSerial("ESP-BD_Example");
+    Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
+#  else
+    initSerial();
+#  endif
+    /*
+     * Register callback handler and check for connection still established.
+     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
+     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
+     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
+     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     */
+    BlueDisplay1.initCommunication(&initDisplay, NULL); // redraw is registered by startGuiDemo() called by initDisplay()
+#endif
+
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    // show menu locally at startup
     startGuiDemo();
-    playLocalFeedbackTone();
+#endif
+    Button::playFeedbackTone();
 }
 
 void loop() {
@@ -137,6 +195,18 @@ void loop() {
 #endif
 }
 
+#if !defined(DISABLE_REMOTE_DISPLAY)
+void initDisplay(void) {
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, LOCAL_DISPLAY_WIDTH, LOCAL_DISPLAY_HEIGHT);
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    LocalTouchButton::createAllLocalButtonsAtRemote(); // Local buttons already exists, so recreate the remote ones
+#else
+    startGuiDemo(); // No local buttons created, start initializing GUI elements
+#endif
+}
+#endif
+
+#if defined(SUPPORT_LOCAL_DISPLAY) && !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
 //show touchpanel data
 void printTPData(void) {
     sprintf(sStringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i", TouchPanel.getActualX(), TouchPanel.getRawX(), TouchPanel.getActualY(),
@@ -158,6 +228,7 @@ void doDebug(TouchButton * const aTheTouchedButton, int aValue) {
     LocalDisplay.drawText(1, DISPLAY_HEIGHT - (3 * FONT_HEIGHT) - 1, StringBuffer, 1, COLOR_BLACK, BACKGROUND_COLOR);
 }
 #endif
+#endif
 
 #ifdef RTC_EXISTS
 
@@ -175,12 +246,12 @@ void showRTCTime(void) {
      * get time from RTC
      */
 // write start address
-    i2c_start(DS1307_ADDR + I2C_WRITE); // set device address and write mode
+    i2c_start(DS1307_ADDR + I2C_WRITE);// set device address and write mode
     i2c_write(0x00);
     i2c_stop();
 
 // read 6 bytes from start address
-    i2c_start(DS1307_ADDR + I2C_READ); // set device address and read mode
+    i2c_start(DS1307_ADDR + I2C_READ);// set device address and read mode
     for (uint8_t i = 0; i < 6; ++i) {
         RtcBuf[i] = bcd2bin(i2c_readAck());
     }
@@ -196,7 +267,7 @@ void showRTCTime(void) {
 
 void setRTCTime(uint8_t sec, uint8_t min, uint8_t hour, uint8_t dayOfWeek, uint8_t day, uint8_t month, uint16_t year) {
 //Write Start Adress
-    i2c_start(DS1307_ADDR + I2C_WRITE); // set device address and write mode
+    i2c_start(DS1307_ADDR + I2C_WRITE);// set device address and write mode
     i2c_write(0x00);
 // write data
     i2c_write(bin2bcd(sec));

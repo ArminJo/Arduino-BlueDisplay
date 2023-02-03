@@ -127,8 +127,8 @@ struct XYSize {
 };
 
 struct XYPosition {
-    uint16_t PosX;
-    uint16_t PosY;
+    uint16_t PositionX;
+    uint16_t PositionY;
 };
 
 struct TouchEvent {
@@ -163,15 +163,15 @@ union ByteShortLongFloatUnion {
 };
 
 struct GuiCallback {
-    uint16_t ObjectIndex;
+    uint16_t ObjectIndex; // To find associated local button or slider
     uint16_t Free;
 #if defined(AVR)
-    void * Handler;
-    void * Handler_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
+    void * CallbackFunctionAddress;
+    void * CallbackFunctionAddress_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
 #else
-    void * Handler;
+    void * CallbackFunctionAddress;
 #endif
-    union ByteShortLongFloatUnion ValueForGuiHandler;
+    union ByteShortLongFloatUnion ValueForGUICallback;
 };
 
 /*
@@ -188,10 +188,10 @@ struct IntegerInfoCallback {
     uint8_t ByteInfo;
     uint16_t ShortInfo;
 #if defined(AVR)
-    void * Handler;
-    void * Handler_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
+    void * CallbackFunctionAddress;
+    void * CallbackFunctionAddress_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
 #else
-    void * Handler;
+    void * CallbackFunctionAddress;
 #endif
     union ByteShortLongFloatUnion LongInfo;
 };
@@ -333,6 +333,7 @@ const int FUNCTION_BUTTON_REMOVE = 0x43;
 const int FUNCTION_BUTTON_ACTIVATE_ALL = 0x48;
 const int FUNCTION_BUTTON_DEACTIVATE_ALL = 0x49;
 const int FUNCTION_BUTTON_GLOBAL_SETTINGS = 0x4A;
+const int FUNCTION_BUTTON_DISABLE_AUTOREPEAT_UNTIL_END_OF_TOUCH = 0x4B;  // 2/2023 not yet implemented
 
 // Function with variable data size
 const int FUNCTION_BUTTON_CREATE = 0x70;

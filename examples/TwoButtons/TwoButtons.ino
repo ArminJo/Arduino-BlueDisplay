@@ -47,11 +47,11 @@ char StringBuffer[128];
 // Increment to create a lot of different colors
 #define CAPTION_COLOR_INCREMENT             COLOR16(0x08,0x20,0x60)
 #define BUTTON_BACKGROUND_COLOR_INCREMENT   COLOR16(0x08,0x10,0x40)
-TouchButtonAutorepeat TouchButtonCaptionAutorepeat;
-TouchButton TouchButtonBackground;
+LocalTouchButtonAutorepeat TouchButtonCaptionAutorepeat;
+LocalTouchButton TouchButtonBackground;
 
 // Callback touch handler
-void doButtons(TouchButton *const aTheTouchedButton, int16_t aValue);
+void doButtons(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
 
 void setup() {
 
@@ -90,7 +90,7 @@ void setup() {
 //        LocalDisplay.drawText(40, 120, tErrorValue, TEXT_SIZE_22, COLOR16_RED, BACKGROUND_COLOR);
         delay(5000);
     }
-    playLocalFeedbackTone();
+    LocalTouchButton::playFeedbackTone();
 }
 
 void loop() {
@@ -98,7 +98,7 @@ void loop() {
     printTPData();
 }
 
-void doButtons(TouchButton *const aTheTouchedButton, int16_t aValue) {
+void doButtons(LocalTouchButton *const aTheTouchedButton, int16_t aValue) {
     printRGB(aValue, 10, 200);
     if (aTheTouchedButton == &TouchButtonCaptionAutorepeat) {
         aValue += CAPTION_COLOR_INCREMENT;

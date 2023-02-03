@@ -120,13 +120,14 @@ void serialEvent(void); // Is called by Arduino runtime
 
 #if defined(ARDUINO)
 /*
- * Functions which depends on using simple or standard serial
+ * Functions which depends on using simple or standard serial on AVR
  */
+void initSerial();
+
 #if defined(ESP32)
 void initSerial(String aBTClientName);
 #else
 void initSerial(uint32_t aBaudRate);
-void initSerial();
 #endif
 
 void sendUSART(char aChar);

@@ -37,8 +37,8 @@
 #define _LOCAL_DISPLAY_INTERFACE_H
 
 /*
- * Local touch generates a local touch event for BlueDisplay event handler, i.e. localTouchEvent is filled with data.
- * Otherwise autorepeat relies on periodic calls of checkAllButtons() by main loop
+ * Local touch generates a local touch down or touch up event for BlueDisplay event handler, if not on button or slider.
+ * I.e. localTouchEvent is then filled with data.
  */
 //#define LOCAL_DISPLAY_GENERATES_BD_EVENTS
 /*

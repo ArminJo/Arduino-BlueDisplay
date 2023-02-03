@@ -1,5 +1,5 @@
 /*
- * TouchButtonAutorepeat.h
+ * LocalTouchButtonAutorepeat.h
  *
  * Extension of ToucButton
  * implements autorepeat feature for touch buttons
@@ -36,27 +36,28 @@
  * @{
  */
 
-class TouchButtonAutorepeat: public TouchButton {
+class LocalTouchButtonAutorepeat: public LocalTouchButton {
 public:
 
-    TouchButtonAutorepeat();
+    LocalTouchButtonAutorepeat();
 
 #if !defined(ARDUINO)
-    ~TouchButtonAutorepeat();
+    ~LocalTouchButtonAutorepeat();
 #endif
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
-    TouchButtonAutorepeat(BDButton *aBDButtonPtr);
+    LocalTouchButtonAutorepeat(BDButton *aBDButtonPtr);
 #endif
 
     /*
      * Static functions
      */
     static int checkAllButtons(int aTouchPositionX, int aTouchPositionY, bool doCallback);
-    static void autorepeatTouchHandler(TouchButtonAutorepeat *aTheTouchedButton, int16_t aButtonValue);
+    static void autorepeatTouchHandler(LocalTouchButtonAutorepeat *aTheTouchedButton, int16_t aButtonValue);
     static void autorepeatButtonTimerHandler(int aTouchPositionX, int aTouchPositionY);
     void setButtonAutorepeatTiming(uint16_t aMillisFirstDelay, uint16_t aMillisFirstRate, uint16_t aFirstCount,
             uint16_t aMillisSecondRate);
+    static void disableAutorepeatUntilEndOfTouch();
 
     /*
      * The autorepeat characteristic of this button
@@ -66,17 +67,13 @@ public:
     uint16_t mFirstCount;
     uint16_t mMillisSecondRate;
 
-    void (*mOriginalButtonOnTouchHandler)(TouchButton*, int16_t);
+    void (*mOriginalButtonOnTouchHandler)(LocalTouchButton*, int16_t);
 
     // Static values for currently touched/active button because only one touch to any autorepeat button possible
     static uint8_t sState;
     static uint16_t sCount;
-#if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-    static TouchButtonAutorepeat *sLastAutorepeatButtonTouched; // Pointer to currently touched/active button for timer callback
-#else
     static unsigned long sCurrentCallbackDelayMillis; // The current period delay value. Can be mMillisFirstDelay, mMillisFirstRate or mMillisSecondRate
     static unsigned long sMillisOfLastCallOfCallback; // millis() value of last call to the buttons callback function
-#endif
 
 };
 /** @} */

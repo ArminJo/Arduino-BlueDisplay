@@ -50,7 +50,7 @@ BDButton::BDButton(BDButtonHandle_t aButtonHandle) { // @suppress("Class members
 }
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
-BDButton::BDButton(BDButtonHandle_t aButtonHandle, TouchButton *aLocalButtonPtr) {
+BDButton::BDButton(BDButtonHandle_t aButtonHandle, LocalTouchButton *aLocalButtonPtr) {
     mButtonHandle = aButtonHandle;
     mLocalButtonPtr = aLocalButtonPtr;
 }
@@ -80,11 +80,11 @@ bool BDButton::operator!=(const BDButton &aButton) {
 }
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
-bool BDButton::operator==(const TouchButton &aButton) {
+bool BDButton::operator==(const LocalTouchButton &aButton) {
     return (mLocalButtonPtr == &aButton);
 }
 
-bool BDButton::operator!=(const TouchButton &aButton) {
+bool BDButton::operator!=(const LocalTouchButton &aButton) {
     return (mLocalButtonPtr != &aButton);
 }
 #endif
@@ -119,25 +119,24 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
      */
     if (aFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
 #  if defined(DISABLE_REMOTE_DISPLAY)
-        mLocalButtonPtr = new TouchButtonAutorepeat();
+        mLocalButtonPtr = new LocalTouchButtonAutorepeat();
 #  else
-        mLocalButtonPtr = new TouchButtonAutorepeat(this);
+        mLocalButtonPtr = new LocalTouchButtonAutorepeat(this);
 #  endif
     } else {
 #  if defined(DISABLE_REMOTE_DISPLAY)
-        mLocalButtonPtr = new TouchButton();
+        mLocalButtonPtr = new LocalTouchButton();
 #  else
-        mLocalButtonPtr = new TouchButton(this);
+        mLocalButtonPtr = new LocalTouchButton(this);
 #  endif
     }
     // Cast required here. At runtime the right pointer is returned because of FLAG_USE_BDBUTTON_FOR_CALLBACK
     mLocalButtonPtr->init(aPositionX, aPositionY, aWidthX, aHeightY, aButtonColor, aCaption, aCaptionSize,
-            aFlags | LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK, aValue, reinterpret_cast<void (*)(TouchButton*, int16_t)> (aOnTouchHandler));
+            aFlags | LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK, aValue, reinterpret_cast<void (*)(LocalTouchButton*, int16_t)> (aOnTouchHandler));
 
 #endif
 }
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
 /*
  * This function deletes the last BDButton initialized by BDButton::init() simply by decreasing sLocalButtonIndex by one.
  * So next BDButton::init() uses the same button on the remote side again.
@@ -150,10 +149,11 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
  * This cannot be done with ~BDButton, because we can only delete the last BDButton from stack, and not any arbitrary one.
  */
 void BDButton::deinit() {
+#if defined(SUPPORT_LOCAL_DISPLAY)
     sLocalButtonIndex--;
-    delete mLocalButtonPtr;
-}
+    delete mLocalButtonPtr; // free memory
 #endif
+}
 
 void BDButton::drawButton() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
@@ -255,11 +255,18 @@ void BDButton::setButtonAutorepeatTiming(uint16_t aMillisFirstDelay, uint16_t aM
         uint16_t aMillisSecondRate) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     // In this case, timing must also be generated locally
-    ((TouchButtonAutorepeat*) mLocalButtonPtr)->setButtonAutorepeatTiming(aMillisFirstDelay, aMillisFirstRate, aFirstCount,
+    ((LocalTouchButtonAutorepeat*) mLocalButtonPtr)->setButtonAutorepeatTiming(aMillisFirstDelay, aMillisFirstRate, aFirstCount,
             aMillisSecondRate);
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 7, mButtonHandle, SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING, aMillisFirstDelay,
             aMillisFirstRate, aFirstCount, aMillisSecondRate);
+}
+
+void BDButton::disableAutorepeatUntilEndOfTouch() {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    LocalTouchButtonAutorepeat::disableAutorepeatUntilEndOfTouch();
+#endif
+    sendUSARTArgs(FUNCTION_BUTTON_DISABLE_AUTOREPEAT_UNTIL_END_OF_TOUCH, 0); // 2/2023 not yet implemented
 }
 
 void BDButton::activate() {
@@ -275,6 +282,7 @@ void BDButton::deactivate() {
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 2, mButtonHandle, SUBFUNCTION_BUTTON_RESET_ACTIVE);
 }
+
 
 /*
  * Static functions
@@ -298,20 +306,37 @@ void BDButton::setButtonsTouchTone(uint8_t aToneIndex, uint16_t aToneDuration, u
     sendUSARTArgs(FUNCTION_BUTTON_GLOBAL_SETTINGS, 4, FLAG_BUTTON_GLOBAL_SET_BEEP_TONE, aToneIndex, aToneDuration, aToneVolume);
 }
 
+void BDButton::playFeedbackTone() {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    LocalTouchButton::playFeedbackTone();
+#endif
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 1, FEEDBACK_TONE_OK);
+}
+
+void BDButton::playFeedbackTone(bool aPlayErrorTone) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    LocalTouchButton::playFeedbackTone(aPlayErrorTone);
+#endif
+    uint8_t tAndroidToneIndex = TONE_PROP_BEEP_OK;
+    if (aPlayErrorTone) {
+        tAndroidToneIndex = TONE_PROP_BEEP_ERROR;
+    }
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 1, tAndroidToneIndex);
+}
+
 void BDButton::activateAllButtons() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    TouchButton::activateAllButtons();
+    LocalTouchButton::activateAllButtons();
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_ACTIVATE_ALL, 0);
 }
 
 void BDButton::deactivateAllButtons() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    TouchButton::deactivateAllButtons();
+    LocalTouchButton::deactivateAllButtons();
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_DEACTIVATE_ALL, 0);
 }
-
 
 // this uses around 160 to 200 bytes initially and saves around 20 bytes per call.
 //uint16_t sLastWidthX;
@@ -404,20 +429,20 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
      */
     if (aFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
 #  if defined(DISABLE_REMOTE_DISPLAY)
-        mLocalButtonPtr = new TouchButtonAutorepeat();
+        mLocalButtonPtr = new LocalTouchButtonAutorepeat();
 #  else
-        mLocalButtonPtr = new TouchButtonAutorepeat(this);
+        mLocalButtonPtr = new LocalTouchButtonAutorepeat(this);
 #  endif
     } else {
 #  if defined(DISABLE_REMOTE_DISPLAY)
-        mLocalButtonPtr = new TouchButton();
+        mLocalButtonPtr = new LocalTouchButton();
 #  else
-        mLocalButtonPtr = new TouchButton(this);
+        mLocalButtonPtr = new LocalTouchButton(this);
 #  endif
     }
     // Cast required here. At runtime the right pointer is returned because of FLAG_USE_BDBUTTON_FOR_CALLBACK
     mLocalButtonPtr->init(aPositionX, aPositionY, aWidthX, aHeightY, aButtonColor, aPGMCaption, aCaptionSize,
-            aFlags | LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK, aValue, reinterpret_cast<void (*)(TouchButton*, int16_t)> (aOnTouchHandler));
+            aFlags | LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK, aValue, reinterpret_cast<void (*)(LocalTouchButton*, int16_t)> (aOnTouchHandler));
 
 #endif
 }
@@ -469,7 +494,6 @@ void BDButton::setCaptionPGM(const char *aPGMCaption, bool doDrawButton) {
     setCaption(reinterpret_cast<const __FlashStringHelper*>(aPGMCaption), doDrawButton);
 
 }
-
 
 #endif // defined(AVR)
 
