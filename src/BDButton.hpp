@@ -49,13 +49,6 @@ BDButton::BDButton(BDButtonHandle_t aButtonHandle) { // @suppress("Class members
     mButtonHandle = aButtonHandle;
 }
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
-BDButton::BDButton(BDButtonHandle_t aButtonHandle, LocalTouchButton *aLocalButtonPtr) {
-    mButtonHandle = aButtonHandle;
-    mLocalButtonPtr = aLocalButtonPtr;
-}
-#endif
-
 BDButton::BDButton(BDButton const &aButton) {
     mButtonHandle = aButton.mButtonHandle;
 #if defined(SUPPORT_LOCAL_DISPLAY)
@@ -287,10 +280,13 @@ void BDButton::deactivate() {
 /*
  * Static functions
  */
-void BDButton::resetAllButtons() {
+void BDButton::resetAll() {
     sLocalButtonIndex = 0;
 }
 
+/*
+ * @param aFlags FLAG_BUTTON_GLOBAL_USE_DOWN_EVENTS_FOR_BUTTONS, FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS
+ */
 void BDButton::setGlobalFlags(uint16_t aFlags) {
     sendUSARTArgs(FUNCTION_BUTTON_GLOBAL_SETTINGS, 1, aFlags);
 }
@@ -324,16 +320,16 @@ void BDButton::playFeedbackTone(bool aPlayErrorTone) {
     sendUSARTArgs(FUNCTION_PLAY_TONE, 1, tAndroidToneIndex);
 }
 
-void BDButton::activateAllButtons() {
+void BDButton::activateAll() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    LocalTouchButton::activateAllButtons();
+    LocalTouchButton::activateAll();
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_ACTIVATE_ALL, 0);
 }
 
-void BDButton::deactivateAllButtons() {
+void BDButton::deactivateAll() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    LocalTouchButton::deactivateAllButtons();
+    LocalTouchButton::deactivateAll();
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_DEACTIVATE_ALL, 0);
 }

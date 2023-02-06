@@ -98,10 +98,10 @@ Button TouchButtonBack;
 #endif
 
 #include "Chart.hpp"
-#include "PageDraw.hpp"
 #if defined(SUPPORT_LOCAL_DISPLAY) && !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-void printTPData(void); // required in GuiDemo.hpp
+void printTPData(void); // required in PageDraw.hpp and GuiDemo.hpp
 #endif
+#include "PageDraw.hpp"
 #include "GuiDemo.hpp"
 
 #ifdef RTC_EXISTS
@@ -209,8 +209,8 @@ void initDisplay(void) {
 #if defined(SUPPORT_LOCAL_DISPLAY) && !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
 //show touchpanel data
 void printTPData(void) {
-    sprintf(sStringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i", TouchPanel.getActualX(), TouchPanel.getRawX(), TouchPanel.getActualY(),
-            TouchPanel.getRawY(), TouchPanel.getPressure());
+    sprintf(sStringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getActualX(), TouchPanel.getRawX(), TouchPanel.getActualY(),
+            TouchPanel.getRawY(), TouchPanel.getPressure(), sTouchObjectTouched);
     LocalDisplay.drawText(30, 2, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
 }
 

@@ -30,10 +30,10 @@
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
-#define VERSION_BLUE_DISPLAY "3.0.3"
-#define VERSION_BLUE_DISPLAY_MAJOR 3
+#define VERSION_BLUE_DISPLAY "4.0.0"
+#define VERSION_BLUE_DISPLAY_MAJOR 4
 #define VERSION_BLUE_DISPLAY_MINOR 0
-#define VERSION_BLUE_DISPLAY_PATCH 3
+#define VERSION_BLUE_DISPLAY_PATCH 0
 // The change log is at the bottom of the file
 
 /*
@@ -394,7 +394,8 @@ float getTemperature(void);
 //#endif
 
 /*
- * Version 3.0.3
+ * Version 4.0.0
+ * - Major refactoring, many bug fixes and seamless support of local display.
  * - All *Rel*() functions now have signed delta parameters. Fixed bug in drawLineRelWithThickness() for local display.
  * - Improved handling of local display and fixed bugs in drawLineRelWithThickness() and Button list for local display.
  * - Added debug(const __FlashStringHelper *aStringPtr).

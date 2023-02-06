@@ -75,8 +75,8 @@ bool isLocalDisplayAvailable = false;
 
 void BlueDisplay::resetLocal() {
     // reset local buttons to be synchronized
-    BDButton::resetAllButtons();
-    BDSlider::resetAllSliders();
+    BDButton::resetAll();
+    BDSlider::resetAll();
 }
 
 /**
@@ -145,8 +145,8 @@ void BlueDisplay::setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHe
             Serial.println("Send reset all");
 #endif
             // reset local buttons to be synchronized
-            BDButton::resetAllButtons();
-            BDSlider::resetAllSliders();
+            BDButton::resetAll();
+            BDSlider::resetAll();
         }
         sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 4, SUBFUNCTION_GLOBAL_SET_FLAGS_AND_SIZE, aFlags, aWidth, aHeight);
     }
@@ -1170,14 +1170,14 @@ uint8_t _clipAndCopyPGMString(char *aStringBuffer, const __FlashStringHelper *aP
 
 void clearDisplayAndDisableButtonsAndSliders() {
     BlueDisplay1.clearDisplay();
-    BDButton::deactivateAllButtons();
-    BDSlider::deactivateAllSliders();
+    BDButton::deactivateAll();
+    BDSlider::deactivateAll();
 }
 
 void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
     BlueDisplay1.clearDisplay(aColor);
-    BDButton::deactivateAllButtons();
-    BDSlider::deactivateAllSliders();
+    BDButton::deactivateAll();
+    BDSlider::deactivateAll();
 }
 
 #if __has_include("ADCUtils.h")

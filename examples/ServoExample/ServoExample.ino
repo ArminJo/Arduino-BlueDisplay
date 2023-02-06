@@ -353,7 +353,7 @@ void initDisplay(void) {
      */
     SliderLaserPower.init(0, sCurrentDisplayHeight / 8, sSliderSize * 4, tSliderSize, (tSliderSize * 2) / 3, tSliderSize / 2,
     SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doLaserPowerSlider);
-    SliderLaserPower.setCaptionProperties(sCurrentDisplayHeight / 16, FLAG_SLIDER_CAPTION_ALIGN_LEFT_BELOW, 4, COLOR16_RED,
+    SliderLaserPower.setCaptionProperties(sCurrentDisplayHeight / 16, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT_BELOW, 4, COLOR16_RED,
     COLOR16_WHITE);
     SliderLaserPower.setCaption("Laser");
     doLaserPowerSlider(NULL, tSliderSize / 2); // set according to initial slider bar length

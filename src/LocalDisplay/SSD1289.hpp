@@ -53,7 +53,7 @@ volatile uint32_t sDrawLock = 0;
  * For automatic LCD dimming
  */
 uint8_t sCurrentBacklightPercent = BACKLIGHT_START_BRIGHTNESS_VALUE;
-uint8_t sLastBacklightPercent; //! for state of backlight before dimming
+uint8_t sLastBacklightPercentBeforeDimming; //! for state of backlight before dimming
 int sLCDDimDelay; //actual dim delay
 
 //-------------------- Private functions --------------------
@@ -427,7 +427,7 @@ void SSD1289::setBacklightBrightness(uint8_t aBrightnessPercent) {
 void setBrightness(int aLCDBacklightPercent) {
     PWM_BL_setOnRatio(aLCDBacklightPercent);
     sCurrentBacklightPercent = aLCDBacklightPercent;
-    sLastBacklightPercent = aLCDBacklightPercent;
+    sLastBacklightPercentBeforeDimming = aLCDBacklightPercent;
 }
 
 /**
@@ -442,7 +442,7 @@ void setDimdelay(int32_t aTimeMillis) {
  * restore backlight to value before dimming
  */
 void resetBacklightTimeout(void) {
-    if (sLastBacklightPercent != sCurrentBacklightPercent) {
+    if (sLastBacklightPercentBeforeDimming != sCurrentBacklightPercent) {
         setBrightness(sCurrentBacklightPercent);
     }
     changeDelayCallback(&callbackLCDDimming, sLCDDimDelay);
@@ -454,8 +454,7 @@ void resetBacklightTimeout(void) {
  */
 void callbackLCDDimming(void) {
     if (sCurrentBacklightPercent > BACKLIGHT_DIM_VALUE) {
-        sLastBacklightPercent = sCurrentBacklightPercent;
-        setBrightness(BACKLIGHT_DIM_VALUE);
+        PWM_BL_setOnRatio(BACKLIGHT_DIM_VALUE);
     }
 }
 

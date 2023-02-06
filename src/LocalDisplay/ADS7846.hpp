@@ -294,7 +294,7 @@ void ADS7846::doCalibration(bool aCheckRTC)
         readData();
 
 #else
-        while (!TouchPanel.wasTouched()) {
+        while (!TouchPanel.wasJustTouched()) {
             delay(5);
         }
         // wait for stabilizing data
@@ -302,7 +302,7 @@ void ADS7846::doCalibration(bool aCheckRTC)
         //get new data
         readData(4 * ADS7846_READ_OVERSAMPLING_DEFAULT);
         // reset touched flag
-        TouchPanel.wasTouched();
+        TouchPanel.wasJustTouched();
 #endif
 
         //press detected -> save point
@@ -343,7 +343,7 @@ void ADS7846::initAndCalibrateOnPress(uint16_t aEEPROMAdress)
 #else
 void ADS7846::initAndCalibrateOnPress()
 #endif
-{
+        {
     init();
     TouchPanel.readData();
 #if defined(AVR)
@@ -417,8 +417,7 @@ uint8_t ADS7846::getPressure(void) {
     return mPressure;
 }
 
-bool sTouchPanelButtonOrSliderTouched; // only one button handling in loop each touching of local display
-bool sTouchPanelSliderIsMoveTarget; // true if slider was touched by DOWN event
+uint8_t sTouchObjectTouched; // only one button handling in loop each touching of local display
 
 #include "LocalGUI/LocalTouchButton.h"
 #include "LocalGUI/LocalTouchSlider.h"
@@ -429,13 +428,11 @@ bool sTouchPanelSliderIsMoveTarget; // true if slider was touched by DOWN event
  * No suppression of micro moves using mTouchLastPosition here!
  */
 void handleTouchPanelEvents() {
-    uint8_t tPressure = TouchPanel.getPressure();
-    if (tPressure < MIN_REASONABLE_PRESSURE) {
+    if (!TouchPanel.ADS7846TouchActive) {
         /**
          * No touch here, reset flags
          */
-        sTouchPanelButtonOrSliderTouched = false;
-        sTouchPanelSliderIsMoveTarget = false;
+        sTouchObjectTouched = NO_TOUCH;
     } else {
         auto tPositionX = TouchPanel.getActualX();
         auto tPositionY = TouchPanel.getActualY();
@@ -446,19 +443,20 @@ void handleTouchPanelEvents() {
          * Remember which is pressed first and "stay" there.
          */
         // Check button only once at a new touch, check autorepeat buttons always to create autorepeat timing
-        bool tGuiTouched = false;
-        if (!sTouchPanelSliderIsMoveTarget) {
-            // check buttons only if slider was not touched before
-            tGuiTouched = LocalTouchButton::checkAllButtons(tPositionX, tPositionY, sTouchPanelButtonOrSliderTouched);
-        }
-        if (!tGuiTouched) {
-            tGuiTouched = LocalTouchSlider::checkAllSliders(tPositionX, tPositionY);
-            if (tGuiTouched) {
-                sTouchPanelSliderIsMoveTarget = true;
+        if (sTouchObjectTouched == NO_TOUCH || sTouchObjectTouched == BUTTON_TOUCHED) {
+            if (LocalTouchButton::checkAllButtons(tPositionX, tPositionY, sTouchObjectTouched == BUTTON_TOUCHED)) {
+                sTouchObjectTouched = BUTTON_TOUCHED;
             }
         }
-        if (tGuiTouched) {
-            sTouchPanelButtonOrSliderTouched = true;
+        // Check slider only once at a new touch, or always if initially touched
+        if (sTouchObjectTouched == NO_TOUCH || sTouchObjectTouched == SLIDER_TOUCHED) {
+            if (LocalTouchSlider::checkAllSliders(tPositionX, tPositionY)) {
+                sTouchObjectTouched = SLIDER_TOUCHED;
+            }
+        }
+        if (sTouchObjectTouched == NO_TOUCH) {
+            // initially no object was touched
+            sTouchObjectTouched = PANEL_TOUCHED;
         }
     }
 }
@@ -511,7 +509,7 @@ void ADS7846::readData(void) {
             wr_spi(CMD_START | CMD_12BIT | CMD_DIFF | CMD_Y_POS);
             a = rd_spi();
             b = rd_spi();
-            y += ((a << 2) | (b >> 6)); //12bit: ((a<<4)|(b>>4)) //10bit: ((a<<2)|(b>>6))
+            y += ((a << 2) | (b >> 6));                //12bit: ((a<<4)|(b>>4)) //10bit: ((a<<2)|(b>>6))
             ADS7846_CS_DISABLE();
         }
         x >>= 3; //x/8
@@ -587,161 +585,161 @@ uint16_t ADS7846::readChannel(uint8_t channel, bool use12Bit, bool useDiffMode, 
 }
 
 #else // defined(AVR)
-void ADS7846::readData(void) {
-    readData(ADS7846_READ_OVERSAMPLING_DEFAULT);
-}
+    void ADS7846::readData(void) {
+        readData(ADS7846_READ_OVERSAMPLING_DEFAULT);
+    }
 
-/**
- * 3.3 ms at SPI_BaudRatePrescaler_256 and 16 times oversampling
- * 420 us at SPI_BaudRatePrescaler_64 and x4/y8 times oversampling
- * @param aOversampling for X. Y is oversampled by (2 *aOversampling).
- */
-void ADS7846::readData(uint8_t aOversampling) {
-    uint8_t a, b;
-    int i;
-    uint32_t tXValue, tYValue;
+    /**
+     * 3.3 ms at SPI_BaudRatePrescaler_256 and 16 times oversampling
+     * 420 us at SPI_BaudRatePrescaler_64 and x4/y8 times oversampling
+     * @param aOversampling for X. Y is oversampled by (2 *aOversampling).
+     */
+    void ADS7846::readData(uint8_t aOversampling) {
+        uint8_t a, b;
+        int i;
+        uint32_t tXValue, tYValue;
 
 //  Set_DebugPin();
-    /*
-     * SPI speed-down
-     * datasheet says: optimal is CLK < 125kHz (40-80 kHz)
-     * slowest frequency for SPI1 is 72 MHz / 256 = 280 kHz
-     * but results for divider 64 looks as good as for 256
-     * results for divider 16 are offsetted and not usable
-     */
-    uint16_t tPrescaler = SPI1_getPrescaler();
-    SPI1_setPrescaler (SPI_BAUDRATEPRESCALER_64); // 72 MHz / 256 = 280 kHz, /64 = 1,1Mhz
+        /*
+         * SPI speed-down
+         * datasheet says: optimal is CLK < 125kHz (40-80 kHz)
+         * slowest frequency for SPI1 is 72 MHz / 256 = 280 kHz
+         * but results for divider 64 looks as good as for 256
+         * results for divider 16 are offsetted and not usable
+         */
+        uint16_t tPrescaler = SPI1_getPrescaler();
+        SPI1_setPrescaler (SPI_BAUDRATEPRESCALER_64); // 72 MHz / 256 = 280 kHz, /64 = 1,1Mhz
 
 //Disable interrupt because while ADS7846 is read int line goes low (active)
-    ADS7846_disableInterrupt();
+        ADS7846_disableInterrupt();
 
 //get pressure
-    ADS7846_CSEnable();
-    SPI1_sendReceiveFast(CMD_START | CMD_8BIT | CMD_DIFF | CMD_Z1_POS);
-    a = SPI1_sendReceiveFast(0);
-    SPI1_sendReceiveFast(CMD_START | CMD_8BIT | CMD_DIFF | CMD_Z2_POS);
-    b = SPI1_sendReceiveFast(0);
-    b = 127 - b; // 127 is maximum reading of CMD_Z2_POS!
-    int tPressure = a + b;
+        ADS7846_CSEnable();
+        SPI1_sendReceiveFast(CMD_START | CMD_8BIT | CMD_DIFF | CMD_Z1_POS);
+        a = SPI1_sendReceiveFast(0);
+        SPI1_sendReceiveFast(CMD_START | CMD_8BIT | CMD_DIFF | CMD_Z2_POS);
+        b = SPI1_sendReceiveFast(0);
+        b = 127 - b;// 127 is maximum reading of CMD_Z2_POS!
+        int tPressure = a + b;
 
-    if (tPressure >= MIN_REASONABLE_PRESSURE) {
-        // n times oversampling
-        unsigned int j = 0;
-        for (tXValue = 0, tYValue = 0, i = aOversampling; i != 0; i--) {
-            //get X data
-            SPI1_sendReceiveFast(CMD_START | CMD_12BIT | CMD_DIFF | CMD_X_POS);
-            a = SPI1_sendReceiveFast(0);
-            b = SPI1_sendReceiveFast(0);
-            uint32_t tX = (a << 5) | (b >> 3); //12bit: ((a<<5)|(b>>3)) //10bit: ((a<<3)|(b>>5))
-            if (tX >= 4000) {
-                // no reasonable value
-                break;
+        if (tPressure >= MIN_REASONABLE_PRESSURE) {
+            // n times oversampling
+            unsigned int j = 0;
+            for (tXValue = 0, tYValue = 0, i = aOversampling; i != 0; i--) {
+                //get X data
+                SPI1_sendReceiveFast(CMD_START | CMD_12BIT | CMD_DIFF | CMD_X_POS);
+                a = SPI1_sendReceiveFast(0);
+                b = SPI1_sendReceiveFast(0);
+                uint32_t tX = (a << 5) | (b >> 3);//12bit: ((a<<5)|(b>>3)) //10bit: ((a<<3)|(b>>5))
+                if (tX >= 4000) {
+                    // no reasonable value
+                    break;
+                }
+                tXValue += 4048 - tX;
+
+                //get Y data twice, because it is noisier than Y
+                SPI1_sendReceiveFast(CMD_START | CMD_12BIT | CMD_DIFF | CMD_Y_POS);
+                a = SPI1_sendReceiveFast(0);
+                b = SPI1_sendReceiveFast(0);
+                uint32_t tY = (a << 5) | (b >> 3);//12bit: ((a<<5)|(b>>3)) //10bit: ((a<<3)|(b>>5))
+                if (tY <= 100) {
+                    // no reasonable value
+                    break;
+                }
+                tYValue += tY;
+
+                SPI1_sendReceiveFast(CMD_START | CMD_12BIT | CMD_DIFF | CMD_Y_POS);
+                a = SPI1_sendReceiveFast(0);
+                b = SPI1_sendReceiveFast(0);
+                tY = (a << 5) | (b >> 3); //12bit: ((a<<5)|(b>>3)) //10bit: ((a<<3)|(b>>5))
+                tYValue += tY;
+
+                j += 2;// +2 to get 11 bit values at the end
             }
-            tXValue += 4048 - tX;
+            if (j == (aOversampling * 2)) {
+                // scale down to 11 bit because calibration does not work with 12 bit values
+                tXValue /= j;
+                tYValue /= 2 * j;
 
-            //get Y data twice, because it is noisier than Y
-            SPI1_sendReceiveFast(CMD_START | CMD_12BIT | CMD_DIFF | CMD_Y_POS);
-            a = SPI1_sendReceiveFast(0);
-            b = SPI1_sendReceiveFast(0);
-            uint32_t tY = (a << 5) | (b >> 3); //12bit: ((a<<5)|(b>>3)) //10bit: ((a<<3)|(b>>5))
-            if (tY <= 100) {
-                // no reasonable value
-                break;
+                // plausi check - is pressure still greater than 7/8 start pressure
+                SPI1_sendReceiveFast(CMD_START | CMD_8BIT | CMD_DIFF | CMD_Z1_POS);
+                a = SPI1_sendReceiveFast(0);
+                SPI1_sendReceiveFast(CMD_START | CMD_8BIT | CMD_DIFF | CMD_Z2_POS);
+                b = SPI1_sendReceiveFast(0);
+                b = 127 - b;// 127 is maximum reading of CMD_Z2_POS!
+
+                // plausi check - x raw value is from 130 to 3900 here x is (4048 - x)/2, y raw is from 150 to 3900 - low is upper right corner
+                if (((a + b) > (tPressure - (tPressure >> 3))) && (tXValue >= 10) && (tYValue >= 10)) {
+                    mTouchActualPositionRaw.PositionX = tXValue;
+                    mTouchActualPositionRaw.PositionY = tYValue;
+                    calibrate();
+                    mPressure = tPressure;
+                    ADS7846TouchActive = true;
+                }
             }
-            tYValue += tY;
-
-            SPI1_sendReceiveFast(CMD_START | CMD_12BIT | CMD_DIFF | CMD_Y_POS);
-            a = SPI1_sendReceiveFast(0);
-            b = SPI1_sendReceiveFast(0);
-            tY = (a << 5) | (b >> 3); //12bit: ((a<<5)|(b>>3)) //10bit: ((a<<3)|(b>>5))
-            tYValue += tY;
-
-            j += 2; // +2 to get 11 bit values at the end
+        } else {
+            mPressure = 0;
+            ADS7846TouchActive = false;
         }
-        if (j == (aOversampling * 2)) {
-            // scale down to 11 bit because calibration does not work with 12 bit values
-            tXValue /= j;
-            tYValue /= 2 * j;
 
-            // plausi check - is pressure still greater than 7/8 start pressure
-            SPI1_sendReceiveFast(CMD_START | CMD_8BIT | CMD_DIFF | CMD_Z1_POS);
-            a = SPI1_sendReceiveFast(0);
-            SPI1_sendReceiveFast(CMD_START | CMD_8BIT | CMD_DIFF | CMD_Z2_POS);
-            b = SPI1_sendReceiveFast(0);
-            b = 127 - b; // 127 is maximum reading of CMD_Z2_POS!
-
-            // plausi check - x raw value is from 130 to 3900 here x is (4048 - x)/2, y raw is from 150 to 3900 - low is upper right corner
-            if (((a + b) > (tPressure - (tPressure >> 3))) && (tXValue >= 10) && (tYValue >= 10)) {
-                mTouchActualPositionRaw.PositionX = tXValue;
-                mTouchActualPositionRaw.PositionY = tYValue;
-                calibrate();
-                mPressure = tPressure;
-                ADS7846TouchActive = true;
-            }
-        }
-    } else {
-        mPressure = 0;
-        ADS7846TouchActive = false;
+        ADS7846_CSDisable();
+//restore SPI settings
+        SPI1_setPrescaler(tPrescaler);
+// enable interrupts after some ms in order to wait for the interrupt line to go high  - minimum 3 ms (2ms give errors)
+        changeDelayCallback(&ADS7846_clearAndEnableInterrupt, TOUCH_DELAY_AFTER_READ_MILLIS);
+        return;
     }
 
-    ADS7846_CSDisable();
-//restore SPI settings
-    SPI1_setPrescaler(tPrescaler);
-// enable interrupts after some ms in order to wait for the interrupt line to go high  - minimum 3 ms (2ms give errors)
-    changeDelayCallback(&ADS7846_clearAndEnableInterrupt, TOUCH_DELAY_AFTER_READ_MILLIS);
-    return;
-}
-
-/**
- * Read individual A/D channels like temperature or Vcc
- */
-uint16_t ADS7846::readChannel(uint8_t channel, bool use12Bit, bool useDiffMode, uint8_t numberOfReadingsToIntegrate) {
-    channel <<= 4;
+    /**
+     * Read individual A/D channels like temperature or Vcc
+     */
+    uint16_t ADS7846::readChannel(uint8_t channel, bool use12Bit, bool useDiffMode, uint8_t numberOfReadingsToIntegrate) {
+        channel <<= 4;
 // mask for channel 0 to 7
-    channel &= CHANNEL_MASK;
-    uint16_t tRetValue = 0;
-    uint8_t low, high, i;
+        channel &= CHANNEL_MASK;
+        uint16_t tRetValue = 0;
+        uint8_t low, high, i;
 
 //SPI speed-down
-    uint16_t tPrescaler = SPI1_getPrescaler();
-    SPI1_setPrescaler (SPI_BAUDRATEPRESCALER_64);
+        uint16_t tPrescaler = SPI1_getPrescaler();
+        SPI1_setPrescaler (SPI_BAUDRATEPRESCALER_64);
 
 // disable interrupts for some ms in order to wait for the interrupt line to go high
-    ADS7846_disableInterrupt(); // only needed for X, Y + Z channel
+        ADS7846_disableInterrupt();// only needed for X, Y + Z channel
 
 //read channel
-    ADS7846_CSEnable();
-    uint8_t tMode = CMD_SINGLE;
-    if (useDiffMode) {
-        tMode = CMD_DIFF;
-    }
-    for (i = numberOfReadingsToIntegrate; i != 0; i--) {
-        if (use12Bit) {
-            SPI1_sendReceiveFast(CMD_START | CMD_12BIT | tMode | channel);
-            high = SPI1_sendReceiveFast(0);
-            low = SPI1_sendReceiveFast(0);
-            tRetValue += (high << 5) | (low >> 3);
-        } else {
-            SPI1_sendReceiveFast(CMD_START | CMD_8BIT | tMode | channel);
-            tRetValue += SPI1_sendReceiveFast(0);
+        ADS7846_CSEnable();
+        uint8_t tMode = CMD_SINGLE;
+        if (useDiffMode) {
+            tMode = CMD_DIFF;
         }
-    }
-    ADS7846_CSDisable();
+        for (i = numberOfReadingsToIntegrate; i != 0; i--) {
+            if (use12Bit) {
+                SPI1_sendReceiveFast(CMD_START | CMD_12BIT | tMode | channel);
+                high = SPI1_sendReceiveFast(0);
+                low = SPI1_sendReceiveFast(0);
+                tRetValue += (high << 5) | (low >> 3);
+            } else {
+                SPI1_sendReceiveFast(CMD_START | CMD_8BIT | tMode | channel);
+                tRetValue += SPI1_sendReceiveFast(0);
+            }
+        }
+        ADS7846_CSDisable();
 // enable interrupts after some ms in order to wait for the interrupt line to go high - minimum 3 ms
-    changeDelayCallback(&ADS7846_clearAndEnableInterrupt, TOUCH_DELAY_AFTER_READ_MILLIS);
+        changeDelayCallback(&ADS7846_clearAndEnableInterrupt, TOUCH_DELAY_AFTER_READ_MILLIS);
 
 //restore SPI settings
-    SPI1_setPrescaler(tPrescaler);
+        SPI1_setPrescaler(tPrescaler);
 
-    return tRetValue / numberOfReadingsToIntegrate;
-}
+        return tRetValue / numberOfReadingsToIntegrate;
+    }
 #endif // defined(AVR)
 
 /**
  * Can be called by main loops
  * returns only one times a "true" per touch
  */ //
-bool ADS7846::wasTouched(void) {
+bool ADS7846::wasJustTouched(void) {
     if (ADS7846TouchStart) {
         // reset => return only one true per touch
         ADS7846TouchStart = false;
@@ -763,12 +761,12 @@ void ADS7846_IO_initalize(void) {
     digitalWriteFast(MISO_PIN, HIGH);
     //pull-up
 #ifdef IRQ_PIN
-    pinMode(IRQ_PIN, INPUT);
-    digitalWriteFast(IRQ_PIN, HIGH); //pull-up
+        pinMode(IRQ_PIN, INPUT);
+        digitalWriteFast(IRQ_PIN, HIGH); //pull-up
 #endif
 #ifdef BUSY_PIN
-    pinMode(BUSY_PIN, INPUT);
-    digitalWriteFast(BUSY_PIN, HIGH); //pull-up
+        pinMode(BUSY_PIN, INPUT);
+        digitalWriteFast(BUSY_PIN, HIGH); //pull-up
 #endif
 
 #if !defined(SOFTWARE_SPI)
@@ -861,27 +859,28 @@ void callbackADS7846MoveRecognition(void) {
         localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
         if (!TouchPanel.ADS7846TouchActive) {
             // went inactive just while readRawData()
-            if (!sTouchPanelButtonOrSliderTouched) {
+            if (sTouchObjectTouched == PANEL_TOUCHED) {
+                // Generate touch up event if no button or slider was touched
                 localTouchEvent.EventType = EVENT_TOUCH_ACTION_UP;
-                sTouchPanelSliderIsMoveTarget = false;
             }
         } else {
             /*
-             * Check if button or slider is touched.
+             * Check if autorepeat button or slider is still touched.
              * Check button first in order to give priority to buttons which are overlapped by sliders.
              * Remember which is pressed first and "stay" there.
              * !!! we are calling the autorepeat button and slider callbacks here in ISR context !!!
              * Calling autorepeat button callback with event is too complicated,
-             * because the event is yet not aware of the class LocalTouchButtonAutorepeat
-             * the autorepeatTouchHandler(), which generates the timing, requires and therefore the callback crashes.
+             * because the event is yet not aware of the class LocalTouchButtonAutorepeat required by
+             * the autorepeatTouchHandler(), which generates the timing, and therefore the callback crashes.
              */
-            bool tGuiTouched = false;
-            if (!sTouchPanelSliderIsMoveTarget) {
+            if (sTouchObjectTouched == BUTTON_TOUCHED) {
                 // Check autorepeat buttons only if slider was not touched before
-                tGuiTouched = LocalTouchButton::checkAllButtons(TouchPanel.mTouchActualPosition.PositionX,
+                LocalTouchButton::checkAllButtons(TouchPanel.mTouchActualPosition.PositionX,
                         TouchPanel.mTouchActualPosition.PositionY, true);
-            }
-            if (!tGuiTouched) {
+            } else if (sTouchObjectTouched == SLIDER_TOUCHED) {
+                LocalTouchSlider::checkAllSliders(TouchPanel.mTouchActualPosition.PositionX,
+                        TouchPanel.mTouchActualPosition.PositionY);
+            } else {
                 /*
                  * Do not accept pseudo or micro moves as an event.
                  * In the BlueDisplay app the threshold is set to mCurrentViewWidth / 100, which is 3 pixel here.
@@ -889,18 +888,13 @@ void callbackADS7846MoveRecognition(void) {
                 if (abs(TouchPanel.mTouchLastPosition.PositionX - TouchPanel.mTouchActualPosition.PositionX) >= 3
                         || abs(TouchPanel.mTouchLastPosition.PositionY - TouchPanel.mTouchActualPosition.PositionY) >= 3) {
                     TouchPanel.mTouchLastPosition = TouchPanel.mTouchActualPosition;
-                    tGuiTouched = LocalTouchSlider::checkAllSliders(TouchPanel.mTouchActualPosition.PositionX,
-                            TouchPanel.mTouchActualPosition.PositionY);
-                }
-                if (tGuiTouched) {
-                    sTouchPanelSliderIsMoveTarget = true;
-                }
-            }
 
-            if (!sTouchPanelButtonOrSliderTouched) {
-                // avoid overwriting other (e.g long touch down) events
-                if (localTouchEvent.EventType == EVENT_NO_EVENT) {
-                    localTouchEvent.EventType = EVENT_TOUCH_ACTION_MOVE;
+                    // Significant move here
+
+                    // avoid overwriting other (e.g long touch down) events
+                    if (localTouchEvent.EventType == EVENT_NO_EVENT) {
+                        localTouchEvent.EventType = EVENT_TOUCH_ACTION_MOVE;
+                    }
                 }
             }
             // restart timer
@@ -908,23 +902,22 @@ void callbackADS7846MoveRecognition(void) {
         }
     } else {
         // line level switched to inactive but callback was not disabled
-        if (!sTouchPanelButtonOrSliderTouched) {
+        if (sTouchObjectTouched == PANEL_TOUCHED) {
             // Generate touch up event if no button or slider was touched
             localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchLastPosition;
             localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
             localTouchEvent.EventType = EVENT_TOUCH_ACTION_UP;
         }
-        sTouchPanelButtonOrSliderTouched = false;
-        sTouchPanelSliderIsMoveTarget = false;
+        sTouchObjectTouched = NO_TOUCH;
     }
 }
 
 extern void callbackPeriodicTouch(void); // from EventHandler
 
 /**
- * This handler is called on both edge of touch interrupt signal
- * actually the ADS7846 IRQ signal bounces on rising edge
- * This can happen up to 8 milliseconds after initial transition
+ * This handler is called on both edge of touch interrupt signal.
+ * Actually the ADS7846 IRQ signal bounces on rising edge (going inactive).
+ * This can happen up to 8 milliseconds after initial transition.
  */
 extern "C" void EXTI1_IRQHandler(void) {
 // wait for stable reading
@@ -940,19 +933,29 @@ extern "C" void EXTI1_IRQHandler(void) {
         TouchPanel.mTouchLastPosition = TouchPanel.mTouchActualPosition; // for move detection
 
         /*
-         * check if button or slider is touched
-         * check button first in order to give priority to buttons which are overlapped by sliders
-         * remember which is pressed first and "stay" there
-         * !!! we are calling the slider callback here in ISR context !!!
+         * Check if button or slider is touched
+         * Check button first in order to give priority to buttons which are overlapped by sliders
+         * Remember which is pressed first and "stay" there
+         * !!! We are calling the slider and button callback here in ISR context !!!
          */
-        bool tGuiTouched = false;
-        LocalTouchButton *tTouchedButton = LocalTouchButton::findButton(TouchPanel.mTouchActualPosition.PositionX,
+        LocalTouchButton *tTouchedButton = LocalTouchButton::find(TouchPanel.mTouchActualPosition.PositionX,
                 TouchPanel.mTouchActualPosition.PositionY, false);
         if (tTouchedButton != NULL) {
             if (tTouchedButton->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
                 // Local autorepeat button callback, which is autorepeatTouchHandler() can not be called by event, so we must call it directly here
                 tTouchedButton->mOnTouchHandler(tTouchedButton, 0);
             } else {
+                //Red/Green button handling
+                if (tTouchedButton->mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
+                    // Toggle value for Red/Green button, because we called findButton() and not checkButton() which would do the handling for us.
+                    tTouchedButton->mValue = !tTouchedButton->mValue;
+                    if (!(tTouchedButton->mFlags & FLAG_BUTTON_TYPE_MANUAL_REFRESH)) {
+#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
+                        tTouchedButton->mBDButtonPtr->setValueAndDraw(tTouchedButton->mValue); // Update also the remote button
+                        // local button refresh is done by event handler
+#endif
+                    }
+                }
                 /*
                  * Create button event for processing by main loop in order to return from ISR
                  */
@@ -963,19 +966,16 @@ extern "C" void EXTI1_IRQHandler(void) {
                 localTouchEvent.EventData.GuiCallbackInfo.ObjectIndex = tTouchedButton->mBDButtonPtr->mButtonHandle;
 #endif
             }
-            tGuiTouched = true;
-        }
-        if (!tGuiTouched) {
-            tGuiTouched = LocalTouchSlider::checkAllSliders(TouchPanel.mTouchActualPosition.PositionX,
-                    TouchPanel.mTouchActualPosition.PositionY);
-            if (tGuiTouched) {
-                sTouchPanelSliderIsMoveTarget = true;
-            }
-        }
-        if (tGuiTouched) {
-            sTouchPanelButtonOrSliderTouched = true;
+            sTouchObjectTouched = BUTTON_TOUCHED;
+
+        } else if (LocalTouchSlider::checkAllSliders(TouchPanel.mTouchActualPosition.PositionX,
+                TouchPanel.mTouchActualPosition.PositionY)) {
+            sTouchObjectTouched = SLIDER_TOUCHED;
+
         } else {
             // no button or slider touched -> plain touch down event
+            sTouchObjectTouched = PANEL_TOUCHED;
+
             localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchActualPosition;
             localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
             localTouchEvent.EventType = EVENT_TOUCH_ACTION_DOWN;
@@ -998,14 +998,13 @@ extern "C" void EXTI1_IRQHandler(void) {
         changeDelayCallback(&callbackPeriodicTouch, DISABLE_TIMER_DELAY_VALUE); // disable periodic interrupts which can call handleTouchRelease
         if (TouchPanel.ADS7846TouchActive) {
             TouchPanel.ADS7846TouchActive = false;
-            if (!sTouchPanelButtonOrSliderTouched) {
+            if (sTouchObjectTouched == NO_TOUCH) {
                 // Generate touch up event if no button or slider was touched
                 localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchLastPosition;
                 localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
                 localTouchEvent.EventType = EVENT_TOUCH_ACTION_UP;
             }
-            sTouchPanelButtonOrSliderTouched = false;
-            sTouchPanelSliderIsMoveTarget = false;
+            sTouchObjectTouched = NO_TOUCH;
         }
     }
     resetBacklightTimeout();

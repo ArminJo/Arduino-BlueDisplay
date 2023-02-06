@@ -114,7 +114,7 @@ void LocalTouchButtonAutorepeat::autorepeatTouchHandler(LocalTouchButtonAutorepe
      * sTouchPanelButtonOrSliderTouched is set to true just after the successful call of checkAllButtons()
      * which means that it is false at the time of first call of checkAllButtons() which in turn calls autorepeatTouchHandler().
      */
-    if (!sTouchPanelButtonOrSliderTouched) {
+    if (sTouchObjectTouched == NO_TOUCH) {
         sState = AUTOREPEAT_BUTTON_STATE_AFTER_FIRST_DELAY;
         sCurrentCallbackDelayMillis = aTheTouchedButton->mMillisFirstDelay;
         sCount = aTheTouchedButton->mFirstCount;

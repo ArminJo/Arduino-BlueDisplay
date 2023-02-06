@@ -44,20 +44,12 @@ extern unsigned long sMillisOfLastReceivedBDEvent; // is updated with millis() a
 #define TOUCH_SWIPE_THRESHOLD 10  // threshold for swipe detection to suppress long touch handler calling
 #define TOUCH_SWIPE_RESOLUTION_MILLIS 20
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
-#   if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+#if defined(SUPPORT_LOCAL_DISPLAY) && defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
 extern struct BluetoothEvent localTouchEvent;
-#  endif
-/*
- * helper variables
- */
-extern bool sNothingTouched;
-extern bool sSliderIsMoveTarget;
+#endif
+
 extern bool sDisableTouchUpOnce; // set normally by application if long touch action was made
 extern bool sDisableMoveEventsUntilTouchUpIsDone; // Skip all touch move and touch up events until touch is released
-
-void resetTouchFlags();
-#endif
 
 extern struct BluetoothEvent remoteEvent;
 #if defined(AVR)
@@ -66,10 +58,10 @@ extern struct BluetoothEvent remoteTouchDownEvent;
 #endif
 
 #if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
-extern bool sTouchIsStillDown;
 extern struct TouchEvent sDownPosition;
 extern struct TouchEvent sCurrentPosition;
 extern struct TouchEvent sUpPosition;
+extern bool sTouchIsStillDown;
 #endif
 
 void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis);
@@ -109,23 +101,16 @@ void setTouchUpCallbackEnabled(bool aTouchUpCallbackEnabled);
 void (* getTouchUpCallback(void))(struct TouchEvent * );
 #endif
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
-void handleLocalTouchUp();
-void callbackLongTouchDownTimeout();
-void simpleTouchDownHandler(struct TouchEvent *aActualPositionPtr);
-void simpleTouchHandlerOnlyForButtons(struct TouchEvent *aActualPositionPtr);
-void simpleTouchDownHandlerOnlyForSlider(struct TouchEvent *aActualPositionPtr);
-void simpleTouchDownHandlerForSlider(struct TouchEvent *aActualPositionPtr);
-void simpleTouchMoveHandlerForSlider(struct TouchEvent *aActualPositionPtr);
+void handleLocalTouchUp(void);
+void callbackLongTouchDownTimeout(void);
 
-// for local autorepeat button
+// for local autorepeat button or color picker
 void registerPeriodicTouchCallback(bool (*aPeriodicTouchCallback)(int, int), uint32_t aCallbackPeriodMillis);
 void setPeriodicTouchCallbackPeriod(uint32_t aCallbackPeriod);
 
-bool getDisplayXYValuesFlag();
+bool isDisplayXYValuesEnabled(void);
 void setDisplayXYValuesFlag(bool aEnableDisplay);
 void printEventTouchPositionData(int x, int y,  color16_t aColor,  color16_t aBackColor);
-#endif
 
 #ifdef __cplusplus
 extern "C" {

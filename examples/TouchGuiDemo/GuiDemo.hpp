@@ -26,7 +26,6 @@
 #ifndef _GUI_DEMO_HPP
 #define _GUI_DEMO_HPP
 
-
 #include "GuiDemo.h"
 #include "GameOfLife.hpp"
 
@@ -47,7 +46,6 @@
 #define Display             BlueDisplay1
 #  endif
 #endif
-
 
 /** @addtogroup Gui_Demo
  * @{
@@ -75,8 +73,6 @@ Button TouchButtonChartDemo;
 void showCharts(void);
 
 Button TouchButtonGameOfLife;
-
-
 
 Button TouchButtonDemoSettings;
 void showSettings(void);
@@ -135,11 +131,11 @@ bool ActionSliderUp = true;
 Button TouchButtonDrawDemo;
 void drawLine(const bool aNewStart, unsigned int color);
 
-#define APPLICATION_MENU 0
-#define APPLICATION_SETTINGS 1
-#define APPLICATION_DRAW 2
-#define APPLICATION_GAME_OF_LIFE 3
-#define APPLICATION_CHART 4
+#define APPLICATION_MENU            0
+#define APPLICATION_SETTINGS        1
+#define APPLICATION_DRAW            2
+#define APPLICATION_GAME_OF_LIFE    3
+#define APPLICATION_CHART           4
 #define APPLICATION_ADS7846_CHANNELS 5
 
 int mCurrentApplication = APPLICATION_MENU;
@@ -149,7 +145,7 @@ void initGuiDemo(void) {
 }
 
 Button *TouchButtonsGuiDemo[] = { &TouchButtonChartDemo, &TouchButtonGameOfLife, &TouchButtonDrawDemo, &TouchButtonDemoSettings,
-         &TouchButtonBack, &TouchButtonGameOfLifeDying, &TouchButtonNewGame, &TouchButtonStartStopGame
+        &TouchButtonBack, &TouchButtonGameOfLifeDying, &TouchButtonNewGame, &TouchButtonStartStopGame
 #  if defined(SUPPORT_LOCAL_DISPLAY)
         ,&TouchButtonFont, &TouchButtonCalibration, &TouchButtonADS7846Channels
 #  endif
@@ -224,25 +220,17 @@ void loopGuiDemo(void) {
         break;
 #endif
 
+    case APPLICATION_DRAW:
+        loopDrawPage();
+        break;
+
     case APPLICATION_MENU:
         break;
     }
 
-    /*
-     * Check for drawing and local events
-     */
 #if defined(SUPPORT_LOCAL_DISPLAY) && !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-    if (mCurrentApplication == APPLICATION_DRAW) {
-        if (TouchPanel.ADS7846TouchActive && !sTouchPanelButtonOrSliderTouched) {
-            drawLine(TouchPanel.wasTouched(), sDrawColor);
-            printTPData();
-        }
-    }
-
     checkAndHandleTouchPanelEvents();
-#endif
-
-#if !defined(DISABLE_REMOTE_DISPLAY)
+#else
     checkAndHandleEvents();
 #endif
 }
@@ -310,22 +298,22 @@ void createDemoButtonsAndSliders(void) {
      * Slider
      */
 // self moving sliders COLOR16_WHITE is bar background color for slider without border
-    TouchSliderActionWithoutBorder.init(180, BUTTON_HEIGHT_4_LINE_2 - 10, 20, ACTION_SLIDER_MAX, ACTION_SLIDER_MAX, 0, COLOR16_WHITE,
-            COLOR16_YELLOW, FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    TouchSliderActionWithoutBorder.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_CAPTION_ALIGN_MIDDLE, 4, COLOR16_BLUE,
+    TouchSliderActionWithoutBorder.init(180, BUTTON_HEIGHT_4_LINE_2 - 10, 20, ACTION_SLIDER_MAX, ACTION_SLIDER_MAX, 0,
+            COLOR16_WHITE, COLOR16_YELLOW, FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    TouchSliderActionWithoutBorder.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, SLIDER_DEFAULT_VALUE_MARGIN, COLOR16_BLUE,
             BACKGROUND_COLOR);
 
     TouchSliderAction.init(180 + 2 * 20 + BUTTON_DEFAULT_SPACING, BUTTON_HEIGHT_4_LINE_2 - 10, 20, ACTION_SLIDER_MAX,
     ACTION_SLIDER_MAX, 0, COLOR16_BLUE, COLOR16_YELLOW,
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    TouchSliderAction.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_CAPTION_ALIGN_MIDDLE, 4, COLOR16_BLUE, BACKGROUND_COLOR);
+    TouchSliderAction.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, SLIDER_DEFAULT_VALUE_MARGIN, COLOR16_BLUE, BACKGROUND_COLOR);
 
 #pragma GCC diagnostic pop
 }
 
 void doGuiDemoButtons(Button *aTheTouchedButton, int16_t aValue) {
-    Button::deactivateAllButtons();
-    Slider::deactivateAllSliders();
+    Button::deactivateAll();
+    Slider::deactivateAll();
     // BD button has an operator == defined
     if (*aTheTouchedButton == TouchButtonChartDemo) {
         // Chart button pressed
@@ -390,12 +378,12 @@ void createGameOfLifeGUI() {
             F("Start\nStop"), TEXT_SIZE_22, FLAG_BUTTON_NO_BEEP_ON_TOUCH, GameOfLifeRunning, &doStartStopGameOfLife);
 
     TouchSliderGameOfLifeSpeed.init(70, BUTTON_HEIGHT_4 + BUTTON_DEFAULT_SPACING_HALF, 10, 75, 75, 75, COLOR16_BLUE, COLOR16_GREEN,
-            FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_CAPTION_BELOW | FLAG_SLIDER_VALUE_BY_CALLBACK,
+            FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_VALUE_CAPTION_BELOW | FLAG_SLIDER_VALUE_BY_CALLBACK,
             &doGameOfLifeSpeed);
-    TouchSliderGameOfLifeSpeed.setCaptionProperties(TEXT_SIZE_11, FLAG_SLIDER_CAPTION_ALIGN_MIDDLE, 2, COLOR16_RED,
+    TouchSliderGameOfLifeSpeed.setCaptionProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, 2, COLOR16_RED,
             BACKGROUND_COLOR);
     TouchSliderGameOfLifeSpeed.setCaption("Gol-Speed");
-    TouchSliderGameOfLifeSpeed.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_CAPTION_ALIGN_MIDDLE, 4 + TEXT_SIZE_11,
+    TouchSliderGameOfLifeSpeed.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, 4 + TEXT_SIZE_11,
             COLOR16_BLUE, BACKGROUND_COLOR);
 
     TouchButtonGameOfLifeDying.init(0, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_2, BUTTON_HEIGHT_4, 0, F("Show\ndying"), TEXT_SIZE_22,
@@ -549,7 +537,7 @@ void showFont(void) {
  * ADS7846 page GUI functions
  */
 void doADS7846Channels(Button *aTheTouchedButton, int16_t aValue) {
-    Button::deactivateAllButtons();
+    Button::deactivateAll();
     mCurrentApplication = APPLICATION_ADS7846_CHANNELS;
     Display.clearDisplay(COLOR_DEMO_BACKGROUND);
     uint16_t tPosY = 30;
@@ -589,19 +577,6 @@ void ADS7846DisplayChannels(void) {
     }
 }
 
-/*
- * For page draw
- */
-void drawLine(const bool aNewStart, unsigned int color) {
-    static unsigned int last_x = 0, last_y = 0;
-    if (aNewStart) {
-        LocalDisplay.drawPixel(TouchPanel.getActualX(), TouchPanel.getActualY(), color);
-    } else {
-        LocalDisplay.drawLine(last_x, last_y, TouchPanel.getActualX(), TouchPanel.getActualY(), color);
-    }
-    last_x = TouchPanel.getActualX();
-    last_y = TouchPanel.getActualY();
-}
 #endif //
 
 /**

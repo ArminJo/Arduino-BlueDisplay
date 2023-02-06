@@ -128,9 +128,9 @@ LocalTouchSlider::LocalTouchSlider(BDSlider *aBDSliderPtr) { // @suppress("Class
 /**
  * Static initialization of slider default colors
  */
-void LocalTouchSlider::setDefaults(uintForPgmSpaceSaving aDefaultTouchBorder, uint16_t aDefaultSliderColor, uint16_t aDefaultBarColor,
-        uint16_t aDefaultBarThresholdColor, uint16_t aDefaultBarBackgroundColor, uint16_t aDefaultCaptionColor,
-        uint16_t aDefaultValueColor, uint16_t aDefaultValueCaptionBackgroundColor) {
+void LocalTouchSlider::setDefaults(uintForPgmSpaceSaving aDefaultTouchBorder, uint16_t aDefaultSliderColor,
+        uint16_t aDefaultBarColor, uint16_t aDefaultBarThresholdColor, uint16_t aDefaultBarBackgroundColor,
+        uint16_t aDefaultCaptionColor, uint16_t aDefaultValueColor, uint16_t aDefaultValueCaptionBackgroundColor) {
     sDefaultSliderColor = aDefaultSliderColor;
     sDefaultBarColor = aDefaultBarColor;
     sDefaultBarThresholdColor = aDefaultBarThresholdColor;
@@ -169,7 +169,7 @@ void LocalTouchSlider::createAllLocalSlidersAtRemote() {
             // cannot use BDSlider.init since this allocates a new TouchSlider
             sendUSARTArgs(FUNCTION_SLIDER_CREATE, 12, tSliderPointer->mBDSliderPtr->mSliderHandle, tSliderPointer->mPositionX,
                     tSliderPointer->mPositionY, tSliderPointer->mBarWidth, tSliderPointer->mBarLength,
-                    tSliderPointer->mThresholdValue, tSliderPointer->mActualValue, tSliderPointer->mSliderColor,
+                    tSliderPointer->mThresholdValue, tSliderPointer->mValue, tSliderPointer->mSliderColor,
                     tSliderPointer->mBarColor, tSliderPointer->mFlags, tSliderPointer->mOnChangeHandler,
                     (reinterpret_cast<uint32_t>(tSliderPointer->mOnChangeHandler) >> 16));
             sLocalSliderIndex++;
@@ -195,8 +195,8 @@ void LocalTouchSlider::createAllLocalSlidersAtRemote() {
  * @param aOnChangeHandler - If NULL no update of bar is done on touch - equivalent to FLAG_SLIDER_IS_ONLY_OUTPUT
  */
 
-void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength, uint16_t aThresholdValue,
-        int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags,
+void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength,
+        uint16_t aThresholdValue, int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags,
         void (*aOnChangeHandler)(LocalTouchSlider*, uint16_t)) {
 
     mIsActive = false;
@@ -223,7 +223,7 @@ void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aB
     mBarColor = aBarColor;
     mBarWidth = aBarWidth;
     mBarLength = aBarLength;
-    mActualValue = aInitalValue;
+    mValue = aInitalValue;
     mThresholdValue = aThresholdValue;
     mOnChangeHandler = aOnChangeHandler;
 
@@ -274,6 +274,17 @@ void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aB
     }
 }
 
+void LocalTouchSlider::initSliderColors(uint16_t aSliderColor, uint16_t aBarColor, uint16_t aBarThresholdColor,
+        uint16_t aBarBackgroundColor, uint16_t aCaptionColor, uint16_t aValueColor, uint16_t aValueCaptionBackgroundColor) {
+    mSliderColor = aSliderColor;
+    mBarColor = aBarColor;
+    mBarThresholdColor = aBarThresholdColor;
+    mBarBackgroundColor = aBarBackgroundColor;
+    mCaptionColor = aCaptionColor;
+    mValueColor = aValueColor;
+    mValueCaptionBackgroundColor = aValueCaptionBackgroundColor;
+}
+
 // Dummy to be more compatible with BDButton
 void LocalTouchSlider::deinit() {
 }
@@ -286,15 +297,8 @@ void LocalTouchSlider::setDefaultBarColor(uint16_t aDefaultBarColor) {
     sDefaultBarColor = aDefaultBarColor;
 }
 
-void LocalTouchSlider::initSliderColors(uint16_t aSliderColor, uint16_t aBarColor, uint16_t aBarThresholdColor,
-        uint16_t aBarBackgroundColor, uint16_t aCaptionColor, uint16_t aValueColor, uint16_t aValueCaptionBackgroundColor) {
-    mSliderColor = aSliderColor;
-    mBarColor = aBarColor;
-    mBarThresholdColor = aBarThresholdColor;
-    mBarBackgroundColor = aBarBackgroundColor;
-    mCaptionColor = aCaptionColor;
-    mValueColor = aValueColor;
-    mValueCaptionBackgroundColor = aValueCaptionBackgroundColor;
+void LocalTouchSlider::setDefaultBarThresholdColor(uint16_t aDefaultBarThresholdColor) {
+    sDefaultBarThresholdColor = aDefaultBarThresholdColor;
 }
 
 void LocalTouchSlider::setValueAndCaptionBackgroundColor(uint16_t aValueCaptionBackgroundColor) {
@@ -306,10 +310,12 @@ void LocalTouchSlider::setValueColor(uint16_t aValueColor) {
 }
 
 /**
- * Static convenience method - activate all sliders
- * @see deactivateAllSliders()
+ * Static convenience methods
  */
 void LocalTouchSlider::activateAllSliders() {
+    activateAll();
+}
+void LocalTouchSlider::activateAll() {
     LocalTouchSlider *tObjectPointer = sSliderListStart;
     while (tObjectPointer != NULL) {
         tObjectPointer->activate();
@@ -317,11 +323,10 @@ void LocalTouchSlider::activateAllSliders() {
     }
 }
 
-/**
- * Static convenience method - deactivate all sliders
- * @see activateAllSliders()
- */
 void LocalTouchSlider::deactivateAllSliders() {
+    deactivateAll();
+}
+void LocalTouchSlider::deactivateAll() {
     LocalTouchSlider *tObjectPointer = sSliderListStart;
     while (tObjectPointer != NULL) {
         tObjectPointer->deactivate();
@@ -374,9 +379,9 @@ void LocalTouchSlider::drawBorder() {
  * (re)draws the middle bar according to actual value
  */
 void LocalTouchSlider::drawBar() {
-    uint16_t tActualValue = mActualValue;
-    if (tActualValue > mBarLength) {
-        tActualValue = mBarLength;
+    uint16_t tValue = mValue;
+    if (tValue > mBarLength) {
+        tValue = mBarLength;
     }
 
     uintForPgmSpaceSaving mShortBorderWidth = 0;
@@ -388,28 +393,28 @@ void LocalTouchSlider::drawBar() {
     }
 
 // draw background bar
-    if (tActualValue < mBarLength) {
+    if (tValue < mBarLength) {
         if (mFlags & FLAG_SLIDER_IS_HORIZONTAL) {
-            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth + tActualValue, mPositionY + tLongBorderWidth,
-                    mBarLength - tActualValue, mBarWidth, mBarBackgroundColor);
+            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth + tValue, mPositionY + tLongBorderWidth,
+                    mBarLength - tValue, mBarWidth, mBarBackgroundColor);
         } else {
             LocalDisplay.fillRectRel(mPositionX + tLongBorderWidth, mPositionY + mShortBorderWidth, mBarWidth,
-                    mBarLength - tActualValue, mBarBackgroundColor);
+                    mBarLength - tValue, mBarBackgroundColor);
         }
     }
 
 // Draw value bar
-    if (tActualValue > 0) {
+    if (tValue > 0) {
         int tColor = mBarColor;
-        if (tActualValue > mThresholdValue) {
+        if (tValue > mThresholdValue) {
             tColor = mBarThresholdColor;
         }
         if (mFlags & FLAG_SLIDER_IS_HORIZONTAL) {
-            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth, mPositionY + tLongBorderWidth, tActualValue, mBarWidth,
+            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth, mPositionY + tLongBorderWidth, tValue, mBarWidth,
                     tColor);
         } else {
-            LocalDisplay.fillRectRel(mPositionX + tLongBorderWidth, mPositionYBottom - mShortBorderWidth - tActualValue + 1,
-                    mBarWidth, tActualValue, tColor);
+            LocalDisplay.fillRectRel(mPositionX + tLongBorderWidth, mPositionYBottom - mShortBorderWidth - tValue + 1,
+                    mBarWidth, tValue, tColor);
         }
     }
 }
@@ -427,9 +432,9 @@ void LocalTouchSlider::setCaptionColors(uint16_t aCaptionColor, uint16_t aValueC
  * Dummy stub to compatible with BDSliders
  */
 void LocalTouchSlider::setCaptionProperties(uint8_t aCaptionSize __attribute__((unused)),
-        uint8_t aCaptionPosition __attribute__((unused)), uint8_t aCaptionMargin __attribute__((unused)), color16_t aCaptionColor,
-        color16_t aCaptionBackgroundColor) {
-    setCaptionColors(aCaptionColor, aCaptionBackgroundColor);
+        uint8_t aCaptionPositionFlags __attribute__((unused)), uint8_t aCaptionMargin __attribute__((unused)), color16_t aCaptionColor,
+        color16_t aValueCaptionBackgroundColor) {
+    setCaptionColors(aCaptionColor, aValueCaptionBackgroundColor);
 }
 
 void LocalTouchSlider::setValueStringColors(uint16_t aValueStringColor, uint16_t aValueStringCaptionBackgroundColor) {
@@ -440,11 +445,11 @@ void LocalTouchSlider::setValueStringColors(uint16_t aValueStringColor, uint16_t
 /**
  * Dummy stub to compatible with BDSliders
  *
- * Default values are ((BlueDisplay1.mReferenceDisplaySize.YHeight / 20), (FLAG_SLIDER_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_CAPTION_BELOW),
+ * Default values are ((BlueDisplay1.mReferenceDisplaySize.YHeight / 20), (FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_VALUE_CAPTION_BELOW),
  *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR16_BLACK, COLOR16_WHITE);
  */
 void LocalTouchSlider::setPrintValueProperties(uint8_t aPrintValueTextSize __attribute__((unused)),
-        uint8_t aPrintValuePosition __attribute__((unused)), uint8_t aPrintValueMargin __attribute__((unused)),
+        uint8_t aPrintValuePositionFlags __attribute__((unused)), uint8_t aPrintValueMargin __attribute__((unused)),
         color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor) {
     setValueStringColors(aPrintValueColor, aPrintValueBackgroundColor);
 }
@@ -515,7 +520,7 @@ int LocalTouchSlider::printValue() {
 
     // Convert to string
     char tValueAsString[4];
-    sprintf(tValueAsString, "%03d", mActualValue);
+    sprintf(tValueAsString, "%03d", mValue);
     return LocalDisplay.drawText(mPositionX + mXOffsetValue, tValuePositionY - TEXT_SIZE_11_ASCEND, tValueAsString, 1, mValueColor,
             mValueCaptionBackgroundColor);
 }
@@ -540,12 +545,10 @@ int LocalTouchSlider::printValue(const char *aValueString) {
 }
 
 /**
- * Check if touch event is in slider
- * - if yes - set bar and value call callback function and return true
- * - if no - return false
+ * Check if touch event is in slider area
+ * @return  - true if position match, false else
  */
-
-bool LocalTouchSlider::checkSlider(uint16_t aTouchPositionX, uint16_t aTouchPositionY) {
+bool LocalTouchSlider::isTouched(uint16_t aTouchPositionX, uint16_t aTouchPositionY) {
     unsigned int tPositionBorderX = mPositionX - mTouchBorder;
     if (mTouchBorder > mPositionX) {
         tPositionBorderX = 0;
@@ -554,19 +557,30 @@ bool LocalTouchSlider::checkSlider(uint16_t aTouchPositionX, uint16_t aTouchPosi
     if (mTouchBorder > mPositionY) {
         tPositionBorderY = 0;
     }
-    if (!mIsActive || aTouchPositionX < tPositionBorderX || aTouchPositionX > mPositionXRight + mTouchBorder
-            || aTouchPositionY < tPositionBorderY || aTouchPositionY > mPositionYBottom + mTouchBorder) {
-        return false;
-    }
+    return (tPositionBorderX <= aTouchPositionX && aTouchPositionX <= mPositionXRight + mTouchBorder
+            && tPositionBorderY <= aTouchPositionY && aTouchPositionY <= mPositionYBottom + mTouchBorder);
+}
 
+/**
+ * Performs the defined actions for a slider:
+ * - Get value
+ * - If value has changed
+ *   - Call callback handler
+ *   - Draw bar
+ *   - Print value
+ */
+void LocalTouchSlider::performTouchAction(uint16_t aTouchPositionX, uint16_t aTouchPositionY) {
+    /*
+     * Get value from touch position within slider
+     * Handle horizontal and vertical layout
+     */
     uintForPgmSpaceSaving tShortBorderWidth = 0;
     if ((mFlags & FLAG_SLIDER_SHOW_BORDER)) {
         tShortBorderWidth = mBarWidth / 2;
     }
-    /*
-     *  Touch position is in slider (plus additional touch border) here
-     */
+
     unsigned int tActualTouchValue;
+    // Handle horizontal and vertical layout
     if (mFlags & FLAG_SLIDER_IS_HORIZONTAL) {
         if (aTouchPositionX < (mPositionX + tShortBorderWidth)) {
             tActualTouchValue = 0;
@@ -576,7 +590,7 @@ bool LocalTouchSlider::checkSlider(uint16_t aTouchPositionX, uint16_t aTouchPosi
             tActualTouchValue = aTouchPositionX - mPositionX - tShortBorderWidth + 1;
         }
     } else {
-// adjust value according to size of upper and lower border
+        // Adjust value according to size of upper and lower border
         if (aTouchPositionY > (mPositionYBottom - tShortBorderWidth)) {
             tActualTouchValue = 0;
         } else if (aTouchPositionY < (mPositionY + tShortBorderWidth)) {
@@ -587,79 +601,101 @@ bool LocalTouchSlider::checkSlider(uint16_t aTouchPositionX, uint16_t aTouchPosi
     }
 
     if (tActualTouchValue != mActualTouchValue) {
+        /*
+         * Call callback handler if value has changed
+         */
         mActualTouchValue = tActualTouchValue;
         if (mOnChangeHandler != NULL) {
             // call change handler
 #if !defined(DISABLE_REMOTE_DISPLAY)
-            if (mFlags & LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK) {
-                mOnChangeHandler((LocalTouchSlider*) this->mBDSliderPtr, tActualTouchValue);
+            mOnChangeHandler((LocalTouchSlider*) this->mBDSliderPtr, tActualTouchValue);
+            if (!(mFlags & FLAG_SLIDER_VALUE_BY_CALLBACK)) {
                 // Synchronize remote slider
                 this->mBDSliderPtr->setValueAndDrawBar(tActualTouchValue);
-            } else {
-                mOnChangeHandler(this, tActualTouchValue);
             }
 #else
             mOnChangeHandler(this, tActualTouchValue);
 #endif
 
             if (!(mFlags & FLAG_SLIDER_VALUE_BY_CALLBACK)) {
-                if (tActualTouchValue == mActualValue) {
+                if (mValue == tActualTouchValue) {
                     // value returned is equal displayed value - do nothing
-                    return true;
+                    return;
                 }
                 // display value changed - check, store and redraw
                 if (tActualTouchValue > mBarLength) {
                     tActualTouchValue = mBarLength;
                 }
-                mActualValue = tActualTouchValue;
+                mValue = tActualTouchValue;
                 drawBar();
                 printValue();
             }
         }
     }
-    return true;
 }
 
 /**
  * Static convenience method - checks all sliders in for event position.
  */
-
-bool LocalTouchSlider::checkAllSliders(unsigned int aTouchPositionX, unsigned int aTouchPositionY) {
-    LocalTouchSlider *tObjectPointer = sSliderListStart;
+LocalTouchSlider* LocalTouchSlider::find(unsigned int aTouchPositionX, unsigned int aTouchPositionY) {
+    LocalTouchSlider *tSliderPointer = sSliderListStart;
 
 // walk through list of active elements
-    while (tObjectPointer != NULL) {
-        if (tObjectPointer->mIsActive && tObjectPointer->checkSlider(aTouchPositionX, aTouchPositionY)) {
-            return true;
+    while (tSliderPointer != NULL) {
+        if (tSliderPointer->mIsActive && tSliderPointer->isTouched(aTouchPositionX, aTouchPositionY)) {
+            return tSliderPointer;
         }
-        tObjectPointer = tObjectPointer->mNextObject;
+        tSliderPointer = tSliderPointer->mNextObject;
     }
-    return false;
+    return NULL;
 }
 
-int16_t LocalTouchSlider::getCurrentValue() const {
-    return mActualValue;
+LocalTouchSlider* LocalTouchSlider::findAndAction(unsigned int aTouchPositionX, unsigned int aTouchPositionY) {
+    LocalTouchSlider *tSliderPointer = sSliderListStart;
+
+// walk through list of active elements
+    while (tSliderPointer != NULL) {
+        if (tSliderPointer->mIsActive && tSliderPointer->isTouched(aTouchPositionX, aTouchPositionY)) {
+            tSliderPointer->performTouchAction(aTouchPositionX, aTouchPositionY);
+            return tSliderPointer;
+        }
+        tSliderPointer = tSliderPointer->mNextObject;
+    }
+    return NULL;
+}
+
+/**
+ * Static convenience method - checks all sliders in for event position.
+ */
+bool LocalTouchSlider::checkAllSliders(unsigned int aTouchPositionX, unsigned int aTouchPositionY) {
+    return (findAndAction(aTouchPositionX, aTouchPositionY) != NULL);
+}
+
+int16_t LocalTouchSlider::getValue() const {
+    return mValue;
 }
 
 /*
  * also redraws value bar
  */
-void LocalTouchSlider::setValue(int16_t aCurrentValue) {
-    mActualValue = aCurrentValue;
+void LocalTouchSlider::setValue(int16_t aValue) {
+    mValue = aValue;
 }
 
-void LocalTouchSlider::setValueAndDraw(int16_t aCurrentValue) {
-    mActualValue = aCurrentValue;
+// deprecated
+void LocalTouchSlider::setValueAndDraw(int16_t aValue) {
+    setValueAndDrawBar(aValue);
+}
+
+void LocalTouchSlider::setValueAndDrawBar(int16_t aValue) {
+    mValue = aValue;
     drawBar();
     printValue(); // this checks for flag TOUCHFLAG_SLIDER_SHOW_VALUE itself
 }
 
-void LocalTouchSlider::setValueAndDrawBar(int16_t aCurrentValue) {
-    mActualValue = aCurrentValue;
-    drawBar();
-    printValue(); // this checks for flag TOUCHFLAG_SLIDER_SHOW_VALUE itself
-}
-
+/*
+ * Set offset for printValue
+ */
 void LocalTouchSlider::setXOffsetValue(int16_t aXOffsetValue) {
     mXOffsetValue = aXOffsetValue;
 }
@@ -702,24 +738,29 @@ int8_t LocalTouchSlider::checkParameterValues() {
     if (mBarLength == 0) {
         mBarLength = SLIDER_DEFAULT_MAX_VALUE;
     }
-    if (mActualValue > mBarLength) {
+    if (mValue > mBarLength) {
         tRetValue = SLIDER_ERROR;
-        mActualValue = mBarLength;
+        mValue = mBarLength;
     }
 
     return tRetValue;
 }
 
-void LocalTouchSlider::setBarThresholdColor(uint16_t barThresholdColor) {
-    mBarThresholdColor = barThresholdColor;
+void LocalTouchSlider::setBarThresholdColor(uint16_t aBarThresholdColor) {
+    mBarThresholdColor = aBarThresholdColor;
+}
+
+// Deprecated
+void LocalTouchSlider::setBarThresholdDefaultColor(uint16_t aBarThresholdDefaultColor) {
+    mBarThresholdColor = aBarThresholdDefaultColor;
 }
 
 void LocalTouchSlider::setSliderColor(uint16_t sliderColor) {
     mSliderColor = sliderColor;
 }
 
-void LocalTouchSlider::setBarColor(uint16_t barColor) {
-    mBarColor = barColor;
+void LocalTouchSlider::setBarColor(uint16_t aBarColor) {
+    mBarColor = aBarColor;
 }
 
 void LocalTouchSlider::setBarBackgroundColor(uint16_t aBarBackgroundColor) {

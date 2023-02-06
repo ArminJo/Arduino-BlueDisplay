@@ -293,8 +293,8 @@ void initFrequencyGeneratorPageGui() {
 
 void drawFrequencyGeneratorPage(void) {
     // do not clear screen here since it is called periodically for GUI refresh while DSO is running
-    BDButton::deactivateAllButtons();
-    BDSlider::deactivateAllSliders();
+    BDButton::deactivateAll();
+    BDSlider::deactivateAll();
 #if !defined(ARDUINO)
     TouchButtonMainHome.drawButton();
 #else

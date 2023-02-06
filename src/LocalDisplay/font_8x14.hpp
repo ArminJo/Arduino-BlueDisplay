@@ -1,5 +1,4 @@
 #include <inttypes.h>
-#include "fonts.h"
 
 #ifdef FONT_8X14
 #  if defined(AVR)

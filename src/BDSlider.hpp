@@ -41,13 +41,6 @@ BDSliderHandle_t sLocalSliderIndex = 0;
 BDSlider::BDSlider() { // @suppress("Class members should be properly initialized")
 }
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
-BDSlider::BDSlider(BDSliderHandle_t aSliderHandle, LocalTouchSlider *aLocalSliderPointer) {
-    mSliderHandle = aSliderHandle;
-    mLocalSliderPointer = aLocalSliderPointer;
-}
-#endif
-
 /**
  * @brief initialization with all parameters (except BarBackgroundColor)
  * @param aPositionX - Determines upper left corner
@@ -93,7 +86,6 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
     // keep the formatting
 #endif
 }
-
 
 /*
  * For description see BDButton::deinit()
@@ -177,10 +169,13 @@ void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
  * Default threshold color is COLOR16_RED initially
  */
 void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) {
+    setDefaultBarThresholdColor(aBarThresholdDefaultColor);
+}
+void BDSlider::setDefaultBarThresholdColor(color16_t aDefaultBarThresholdColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalSliderPointer->setBarThresholdColor(aBarThresholdDefaultColor);
+    mLocalSliderPointer->setDefaultBarThresholdColor(aDefaultBarThresholdColor);
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_GLOBAL_SETTINGS, 2, SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD, aBarThresholdDefaultColor);
+    sendUSARTArgs(FUNCTION_SLIDER_GLOBAL_SETTINGS, 2, SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD, aDefaultBarThresholdColor);
 }
 
 void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
@@ -191,16 +186,20 @@ void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
 }
 
 /*
- * Default values are ((BlueDisplay1.mReferenceDisplaySize.YHeight / 12), (FLAG_SLIDER_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_CAPTION_ABOVE),
- *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR16_BLACK, COLOR16_WHITE);
+ * @param aCaptionSize - default is (mRPCView.mRequestedCanvasHeight/20) or (BlueDisplay1.mCurrentDisplaySize.YHeight/20) - for 240 we get 12
+ * @param aCaptionPositionFlags - default is FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_VALUE_CAPTION_BELOW
+ *                                 see BDSlider.h Flags for slider caption position
+ * @param aCaptionMargin - default is (mRPCView.mRequestedCanvasHeight/60) or (BlueDisplay1.mCurrentDisplaySize.YHeight/60) - for 240 we get 4
+ * @param aCaptionColor - default is COLOR16_BLACK
+ * @param aCaptionBackgroundColor - default is COLOR16_WHITE
  */
-void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPosition, uint8_t aCaptionMargin, color16_t aCaptionColor,
+void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositionFlags, uint8_t aCaptionMargin, color16_t aCaptionColor,
         color16_t aCaptionBackgroundColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setCaptionColors(aCaptionColor, aCaptionBackgroundColor);
 #endif
     sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 7, mSliderHandle, SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES, aCaptionSize,
-            aCaptionPosition, aCaptionMargin, aCaptionColor, aCaptionBackgroundColor);
+            aCaptionPositionFlags, aCaptionMargin, aCaptionColor, aCaptionBackgroundColor);
 }
 
 void BDSlider::setCaption(const char *aCaption) {
@@ -228,16 +227,20 @@ void BDSlider::setValueFormatString(const char *aValueFormatString) {
 }
 
 /*
- * Default values are ((BlueDisplay1.mReferenceDisplaySize.YHeight / 20), (FLAG_SLIDER_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_CAPTION_BELOW),
- *                      (BlueDisplay1.mReferenceDisplaySize.YHeight / 40), COLOR16_BLACK, COLOR16_WHITE);
+ * @param aPrintValueTextSize - default is (mRPCView.mRequestedCanvasHeight/20) or (BlueDisplay1.mCurrentDisplaySize.YHeight/20) - for 240 we get 12
+ * @param aPrintValuePositionFlags - default is FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_VALUE_CAPTION_BELOW
+ *                                 see BDSlider.h Flags for slider caption position
+ * @param aPrintValueMargin - default is (mRPCView.mRequestedCanvasHeight/60) or (BlueDisplay1.mCurrentDisplaySize.YHeight/60) - for 240 we get 4
+ * @param aPrintValueColor - default is COLOR16_BLACK
+ * @param aPrintValueBackgroundColor - default is COLOR16_WHITE
  */
-void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPrintValuePosition, uint8_t aPrintValueMargin,
+void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPrintValuePositionFlags, uint8_t aPrintValueMargin,
         color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueStringColors(aPrintValueColor, aPrintValueBackgroundColor);
 #endif
     sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 7, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_STRING_PROPERTIES, aPrintValueTextSize,
-            aPrintValuePosition, aPrintValueMargin, aPrintValueColor, aPrintValueBackgroundColor);
+            aPrintValuePositionFlags, aPrintValueMargin, aPrintValueColor, aPrintValueBackgroundColor);
 }
 
 /*
@@ -268,45 +271,22 @@ void BDSlider::printValue(const char *aValueString) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->printValue(aValueString);
 #endif
-        sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_PRINT_VALUE, 1, mSliderHandle, strlen(aValueString), aValueString);
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_PRINT_VALUE, 1, mSliderHandle, strlen(aValueString), aValueString);
 }
 
 void BDSlider::activate() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->activate();
 #endif
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, mSliderHandle, SUBFUNCTION_SLIDER_SET_ACTIVE);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, mSliderHandle, SUBFUNCTION_SLIDER_SET_ACTIVE);
 }
 
 void BDSlider::deactivate() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->deactivate();
 #endif
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, mSliderHandle, SUBFUNCTION_SLIDER_RESET_ACTIVE);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, mSliderHandle, SUBFUNCTION_SLIDER_RESET_ACTIVE);
 }
-
-#if defined(SUPPORT_LOCAL_DISPLAY)
-
-int BDSlider::printValue() {
-    return mLocalSliderPointer->printValue();
-}
-
-void BDSlider::setXOffsetValue(int16_t aXOffsetValue) {
-    mLocalSliderPointer->setXOffsetValue(aXOffsetValue);
-}
-
-int16_t BDSlider::getCurrentValue() const {
-    return mLocalSliderPointer->getCurrentValue();
-}
-
-uint16_t BDSlider::getPositionXRight() const {
-    return mLocalSliderPointer->getPositionXRight();
-}
-
-uint16_t BDSlider::getPositionYBottom() const {
-    return mLocalSliderPointer->getPositionYBottom();
-}
-#endif
 
 /*
  * Static functions
@@ -314,10 +294,16 @@ uint16_t BDSlider::getPositionYBottom() const {
 void BDSlider::resetAllSliders() {
     sLocalSliderIndex = 0;
 }
+void BDSlider::resetAll() {
+    sLocalSliderIndex = 0;
+}
 
 void BDSlider::activateAllSliders() {
+    activateAll();
+}
+void BDSlider::activateAll() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    LocalTouchSlider::activateAllSliders();
+    LocalTouchSlider::activateAll();
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_ACTIVATE_ALL, 0);
@@ -325,8 +311,12 @@ void BDSlider::activateAllSliders() {
 }
 
 void BDSlider::deactivateAllSliders() {
+    deactivateAll();
+}
+
+void BDSlider::deactivateAll() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    LocalTouchSlider::deactivateAllSliders();
+    LocalTouchSlider::deactivateAll();
 #endif
     if (USART_isBluetoothPaired()) {
         sendUSARTArgs(FUNCTION_SLIDER_DEACTIVATE_ALL, 0);

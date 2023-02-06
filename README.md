@@ -136,9 +136,6 @@ Modify them by enabling / disabling them, or change the values if applicable.
 | `LOCAL_DISPLAY_HEIGHT` | 240 | The height of the local diplay used by the LocalGUI library. |
 | `LOCAL_DISPLAY_WIDTH` | 320 | The width of the local diplay used by the LocalGUI library. |
 
-
-
-
 <br/>
 
 # Display Unicode characters with `setCharacterMapping()`

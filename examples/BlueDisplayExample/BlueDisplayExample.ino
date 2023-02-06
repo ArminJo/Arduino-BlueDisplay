@@ -39,6 +39,9 @@
 
 #include "PinDefinitionsAndMore.h"
 
+#define LOCAL_DISPLAY_WIDTH     DISPLAY_HALF_VGA_WIDTH  // 320
+#define LOCAL_DISPLAY_HEIGHT    DISPLAY_HALF_VGA_HEIGHT // 240
+
 /*
  * Settings to configure the BlueDisplay library and to reduce its size
  * With 9600 baud, the minimal blink delay we observe is 200 ms because of the communication delay
@@ -59,9 +62,6 @@
 #else
 #include "TimeLib.h"
 #endif
-
-#define DISPLAY_WIDTH  DISPLAY_HALF_VGA_WIDTH  // 320
-#define DISPLAY_HEIGHT DISPLAY_HALF_VGA_HEIGHT // 240
 
 #define DELAY_START_VALUE 600
 #define DELAY_CHANGE_VALUE 10
@@ -204,7 +204,7 @@ void loop() {
              * Blinking is enabled, switch LED on
              */
             digitalWrite(LED_BUILTIN, HIGH);
-            BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR16_RED);
+            BlueDisplay1.fillCircle(LOCAL_DISPLAY_WIDTH / 2, LOCAL_DISPLAY_HEIGHT / 2, 20, COLOR16_RED);
             /*
              *  Wait for delay time and update "Demo" string at a rate 2*8 times the blink rate.
              *  Check touch events 8 times while waiting.
@@ -220,7 +220,7 @@ void loop() {
              * LED off
              */
             digitalWrite(LED_BUILTIN, LOW);
-            BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
+            BlueDisplay1.fillCircle(LOCAL_DISPLAY_WIDTH / 2, LOCAL_DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
             for (uint8_t i = 0; i < 8; ++i) {
                 delayMillisWithCheckAndHandleEvents(sDelay / 8); // This can lead to display of the test page
                 if (sInTestPage) {
@@ -247,8 +247,8 @@ void loop() {
 
 void initDisplay(void) {
 
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, DISPLAY_WIDTH,
-    DISPLAY_HEIGHT);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, LOCAL_DISPLAY_WIDTH,
+    LOCAL_DISPLAY_HEIGHT);
 
     TouchButtonPlus.init(270, 80, 40, 40, COLOR16_YELLOW, F("+"), 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
     DELAY_CHANGE_VALUE, &doPlusMinus);
@@ -274,12 +274,12 @@ void initDisplay(void) {
 
     TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE, COLOR16_YELLOW, COLOR16_GREEN,
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_HORIZONTAL, &doDelay);
-    TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_RIGHT, 4, COLOR16_RED, COLOR_DEMO_BACKGROUND);
+    TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_VALUE_CAPTION_ALIGN_RIGHT, 4, COLOR16_RED, COLOR_DEMO_BACKGROUND);
     TouchSliderDelay.setCaption("Delay");
     TouchSliderDelay.setScaleFactor(10); // Slider is virtually 10 times larger
     TouchSliderDelay.setValueUnitString("ms");
 
-    TouchSliderDelay.setPrintValueProperties(TEXT_SIZE_22, FLAG_SLIDER_CAPTION_ALIGN_LEFT, 4, COLOR16_WHITE, COLOR_DEMO_BACKGROUND);
+    TouchSliderDelay.setPrintValueProperties(TEXT_SIZE_22, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT, 4, COLOR16_WHITE, COLOR_DEMO_BACKGROUND);
 
     // here we have received a new local timestamp
 #if defined(USE_C_TIME)
@@ -321,9 +321,10 @@ void infoEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortIn
 
 void printTime() {
     sprintf_P(sStringBuffer, PSTR("%02d.%02d.%4d %02d:%02d:%02d"), sTimeInfo->tm_mday, sTimeInfo->tm_mon, sTimeInfo->tm_year + 1900,
-    sTimeInfo->tm_hour, sTimeInfo->tm_min, sTimeInfo->tm_sec);
-    BlueDisplay1.drawText(DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer, 11,
-    COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
+            sTimeInfo->tm_hour, sTimeInfo->tm_min, sTimeInfo->tm_sec);
+    BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer,
+            11,
+            COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
 }
 
 #else
@@ -346,7 +347,7 @@ void infoEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortIn
 void printTime() {
     // 1600 byte code size for time handling plus print
     sprintf_P(sStringBuffer, PSTR("%02d.%02d.%4d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(), second());
-    BlueDisplay1.drawText(DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer, 11,
+    BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer, 11,
     COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
 }
 #endif
@@ -416,8 +417,8 @@ void doBack(BDButton *aTheTouchedButton, int16_t aValue) {
  */
 void doTest(BDButton *aTheTouchedButton, int16_t aValue) {
     sInTestPage = true;
-    BDButton::deactivateAllButtons();
-    BDSlider::deactivateAllSliders();
+    BDButton::deactivateAll();
+    BDSlider::deactivateAll();
     BlueDisplay1.testDisplay(); // Blocking draw of test patterns
     TouchButtonBack.drawButton(); // this also activates the button
 }
@@ -464,7 +465,7 @@ void printDemoString(void) {
                 + ((int16_t) (COLOR16_GET_GREEN(COLOR_CAPTION) - COLOR16_GET_GREEN(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
         uint8_t ColorBlue = COLOR16_GET_BLUE(COLOR_DEMO_BACKGROUND)
                 + ((int16_t) ( COLOR16_GET_BLUE(COLOR_CAPTION) - COLOR16_GET_BLUE(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
-        BlueDisplay1.drawText(DISPLAY_WIDTH / 2 - 2 * getTextWidth(36), 4 + getTextAscend(36), "Demo", 36,
+        BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH / 2 - 2 * getTextWidth(36), 4 + getTextAscend(36), "Demo", 36,
                 COLOR16(ColorRed, ColorGreen, ColorBlue), COLOR_DEMO_BACKGROUND);
     }
 }

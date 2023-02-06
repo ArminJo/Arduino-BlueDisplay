@@ -20,7 +20,7 @@
  */
 
 extern uint8_t sCurrentBacklightPercent;
-extern uint8_t sLastBacklightPercent; //! for state of backlight before dimming
+extern uint8_t sLastBacklightPercentBeforeDimming; //! for state of backlight before dimming
 extern int sLCDDimDelay; //actual dim delay
 
 /*

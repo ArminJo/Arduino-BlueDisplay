@@ -76,6 +76,19 @@ static void doDrawColor(Button *aTheTouchedButton, int16_t aValue) {
     sDrawColor = DrawColors[aValue];
 }
 
+#if defined(SUPPORT_LOCAL_DISPLAY) && !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+void drawLine(const bool aNewStart, unsigned int color) {
+    static unsigned int last_x = 0, last_y = 0;
+    if (aNewStart) {
+        LocalDisplay.drawPixel(TouchPanel.getActualX(), TouchPanel.getActualY(), color);
+    } else {
+        LocalDisplay.drawLine(last_x, last_y, TouchPanel.getActualX(), TouchPanel.getActualY(), color);
+    }
+    last_x = TouchPanel.getActualX();
+    last_y = TouchPanel.getActualY();
+}
+#endif
+
 /*
  * Position changed -> draw line
  */
@@ -119,7 +132,15 @@ void startDrawPage(void) {
 }
 
 void loopDrawPage(void) {
+#if defined(SUPPORT_LOCAL_DISPLAY) && !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+        if (TouchPanel.ADS7846TouchActive && sTouchObjectTouched == PANEL_TOUCHED) {
+            drawLine(TouchPanel.wasJustTouched(), sDrawColor);
+        }
+        printTPData();
+//    checkAndHandleTouchPanelEvents(); // we know it is called at the loop which called us
+#else
     checkAndHandleEvents();
+#endif
 }
 
 void stopDrawPage(void) {

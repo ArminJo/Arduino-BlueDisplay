@@ -75,15 +75,14 @@ void createBacklightGUI(void) {
     TouchSliderBacklight.init(BACKLIGHT_CONTROL_X, BACKLIGHT_CONTROL_Y + BUTTON_HEIGHT_6 + 4,
     SLIDER_DEFAULT_BAR_WIDTH, BACKLIGHT_MAX_BRIGHTNESS_VALUE, BACKLIGHT_MAX_BRIGHTNESS_VALUE, sCurrentBacklightPercent, COLOR16_BLUE,
     COLOR16_GREEN, FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE, &doBacklightSlider);
-    TouchSliderBacklight.setCaptionProperties(TEXT_SIZE_11, FLAG_SLIDER_CAPTION_ALIGN_MIDDLE, 4, COLOR16_RED,
+    TouchSliderBacklight.setCaptionProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, SLIDER_DEFAULT_VALUE_MARGIN, COLOR16_RED,
     BACKGROUND_COLOR);
     TouchSliderBacklight.setCaption("Backlight");
-    TouchSliderBacklight.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_CAPTION_ALIGN_MIDDLE, 4 + TEXT_SIZE_11,
+    TouchSliderBacklight.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, SLIDER_DEFAULT_VALUE_MARGIN + TEXT_SIZE_11,
     COLOR16_BLUE, BACKGROUND_COLOR);
 
-    TouchButtonAutorepeatBacklight_Minus.init(BACKLIGHT_CONTROL_X, TouchSliderBacklight.getPositionYBottom() + 30,
-    BUTTON_WIDTH_10, BUTTON_HEIGHT_6, COLOR16_RED, "-", TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
-            -1, &doChangeBacklight);
+    TouchButtonAutorepeatBacklight_Minus.init(BACKLIGHT_CONTROL_X, 180, BUTTON_WIDTH_10, BUTTON_HEIGHT_6, COLOR16_RED, "-", TEXT_SIZE_22,
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT, -1, &doChangeBacklight);
 
     TouchButtonAutorepeatBacklight_Plus.setButtonAutorepeatTiming(600, 100, 10, 20);
     TouchButtonAutorepeatBacklight_Minus.setButtonAutorepeatTiming(600, 100, 10, 20);
@@ -103,18 +102,17 @@ void drawBacklightElements(void) {
 }
 
 void doBacklightSlider(Slider *aTheTouchedSlider, uint16_t aBrightnessPercent) {
-    sCurrentBacklightPercent = aBrightnessPercent;
     LocalDisplay.setBacklightBrightness(aBrightnessPercent);
 }
 
 void doChangeBacklight(Button *aTheTouchedButton, int16_t aValue) {
-    sCurrentBacklightPercent += aValue; // See 8 bit roll-under here :-)
-    if(sCurrentBacklightPercent == 101) { // we know that aValue can only be 1 or -1
-        sCurrentBacklightPercent = 100;
+    auto tCurrentBacklightPercent = sCurrentBacklightPercent + aValue; // See 8 bit roll-under here :-)
+    if(tCurrentBacklightPercent == 101) { // we know that aValue can only be 1 or -1
+        tCurrentBacklightPercent = 100;
         AutorepeatButton::disableAutorepeatUntilEndOfTouch();
     }
-    LocalDisplay.setBacklightBrightness(sCurrentBacklightPercent);
-    TouchSliderBacklight.setValueAndDrawBar(sCurrentBacklightPercent);
+    LocalDisplay.setBacklightBrightness(tCurrentBacklightPercent);
+    TouchSliderBacklight.setValueAndDrawBar(tCurrentBacklightPercent);
 }
 #endif
 

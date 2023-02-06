@@ -89,8 +89,11 @@ extern const char ADS7846ChannelChars[ADS7846_CHANNEL_COUNT];
 // Channel number to text mapping
 extern unsigned char ADS7846ChannelMapping[ADS7846_CHANNEL_COUNT];
 
-extern bool sTouchPanelButtonOrSliderTouched; // only one button handling in loop each touching of local display
-extern bool sTouchPanelSliderIsMoveTarget; // true if slider was touched by DOWN event
+#define NO_TOUCH                    0
+#define BUTTON_TOUCHED              1
+#define SLIDER_TOUCHED              2
+#define PANEL_TOUCHED               3 // We have a touch down, but not on a touch object
+extern uint8_t sTouchObjectTouched; // only one button handling in loop each touching of local display
 
 class ADS7846 {
 public:
@@ -111,7 +114,7 @@ public:
     void init(void);
     void readData(void);
     uint8_t getPressure(void);
-    bool wasTouched(void);
+    bool wasJustTouched(void);
 
 #if defined(AVR)
     void doCalibration(uint16_t eeprom_addr, bool check_eeprom);
@@ -149,9 +152,6 @@ private:
     void wr_spi(uint8_t data);
 #endif
 };
-
-extern bool sTouchPanelNothingTouched; // only one button handling in loop each touching of local display
-extern bool sTouchPanelSliderIsMoveTarget; // true if slider was touched by DOWN event
 
 #if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
 void handleTouchPanelEvents();

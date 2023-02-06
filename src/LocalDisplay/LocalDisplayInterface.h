@@ -36,6 +36,8 @@
 #ifndef _LOCAL_DISPLAY_INTERFACE_H
 #define _LOCAL_DISPLAY_INTERFACE_H
 
+#define FONT_8X12 // Font size used here
+
 /*
  * Local touch generates a local touch down or touch up event for BlueDisplay event handler, if not on button or slider.
  * I.e. localTouchEvent is then filled with data.
@@ -63,7 +65,7 @@
 #endif
 
 #include "Colors.h" // for color16_t
-#include "fonts.h"
+#include "fonts.hpp"
 #include "GUIHelper.h"
 
 #include <stdint.h>

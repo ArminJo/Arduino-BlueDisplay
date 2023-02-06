@@ -252,15 +252,15 @@ void computePeriodFrequency(void) {
                     // found and search for next slope
                     tIntegrateValueForTotalPeriods = tIntegrateValue;
 #endif
-                tCount++;
-                if (tCount == 0) {
-                    // set start position for TRIGGER_MODE_FREE, TRIGGER_MODE_EXTERN or delayed trigger.
-                    tStartPositionForPulsPause = i;
-                } else if (tCount == 1) {
-                    // first complete period (pulse + pause) is detected here
-                    MeasurementControl.PeriodSecond = getMicrosFromHorizontalDisplayValue(i - tFirstEndPositionForPulsPause, 1);
-                }
-                tCountPosition = i;
+                    tCount++;
+                    if (tCount == 0) {
+                        // set start position for TRIGGER_MODE_FREE, TRIGGER_MODE_EXTERN or delayed trigger.
+                        tStartPositionForPulsPause = i;
+                    } else if (tCount == 1) {
+                        // first complete period (pulse + pause) is detected here
+                        MeasurementControl.PeriodSecond = getMicrosFromHorizontalDisplayValue(i - tFirstEndPositionForPulsPause, 1);
+                    }
+                    tCountPosition = i;
 #if !defined(AVR)
                 }
 #endif
@@ -511,14 +511,14 @@ const char StringTemperature[] PROGMEM = "Temp";
 const char StringVRefint[] PROGMEM = "VRef";
 const char StringVBattDiv2[] PROGMEM = "\xBD" "VBatt";
 #if defined(AVR)
-const char *const ADCInputMUXChannelStrings[] = { StringChannel0, StringChannel1, StringChannel2, StringChannel3, StringChannel4,
-        StringTemperature, StringVRefint };
+const char *const ADCInputMUXChannelStrings[] = {StringChannel0, StringChannel1, StringChannel2, StringChannel3, StringChannel4,
+    StringTemperature, StringVRefint};
 #else
 #if defined(STM32F30X)
 const char *const ADCInputMUXChannelStrings[ADC_CHANNEL_COUNT] = { StringChannel2, StringChannel3, StringChannel4,
         StringTemperature, StringVBattDiv2, StringVRefint };
-uint8_t const ADCInputMUXChannels[] = { ADC_CHANNEL_2, ADC_CHANNEL_3, ADC_CHANNEL_4,
-ADC_CHANNEL_TEMPSENSOR, ADC_CHANNEL_VBAT, ADC_CHANNEL_VREFINT };
+uint8_t const ADCInputMUXChannels[] = { ADC_CHANNEL_2, ADC_CHANNEL_3, ADC_CHANNEL_4, ADC_CHANNEL_TEMPSENSOR, ADC_CHANNEL_VBAT,
+        ADC_CHANNEL_VREFINT };
 #else
 const char * const ADCInputMUXChannelStrings[] = {StringChannel0, StringChannel1, StringChannel2, StringChannel3,
     StringTemperature, StringVRefint};
@@ -567,8 +567,8 @@ void initDSOGUI(void) {
     TouchButtonSingleshot.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, START_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
             F("Singleshot"), TEXT_SIZE_14, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doStartSingleshot);
 #else
-    TouchButtonSingleshot.init(BUTTON_WIDTH_6_POS_4, tPosY, BUTTON_WIDTH_3, START_PAGE_BUTTON_HEIGHT,
-    COLOR_GUI_CONTROL, F("Singleshot"), TEXT_SIZE_14, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doStartSingleshot);
+    TouchButtonSingleshot.init(BUTTON_WIDTH_6_POS_4, tPosY, BUTTON_WIDTH_3, START_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
+            F("Singleshot"), TEXT_SIZE_14, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doStartSingleshot);
 #endif
 
 // 2. row
@@ -590,10 +590,9 @@ void initDSOGUI(void) {
 // 4. row
     tPosY += 2 * START_PAGE_ROW_INCREMENT;
 #if !defined(AVR)
-// Button for show FFT - only for Start and Chart pages
-    TouchButtonFFT.init(0, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, 0, "FFT",
-    TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH, DisplayControl.ShowFFT,
-            &doShowFFT);
+// Button for show FFT - only for Start and Chart pages. Invisible if running.
+    TouchButtonFFT.init(0, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, 0, "FFT", TEXT_SIZE_22,
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH, DisplayControl.ShowFFT, &doShowFFT);
 #endif
 
 // Button for settings page
@@ -661,8 +660,8 @@ void initDSOGUI(void) {
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, (DisplayControl.DatabufferPreTriggerDisplaySize != 0),
             &doShowPretriggerValuesOnOff);
 #else
-    TouchButtonShowPretriggerValuesOnOff.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT,
-            0, "Show\nPretrigger", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN,
+    TouchButtonShowPretriggerValuesOnOff.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, 0, "Show\nPretrigger",
+            TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN,
             (DisplayControl.DatabufferPreTriggerDisplaySize != 0), &doShowPretriggerValuesOnOff);
 #endif
 #endif
@@ -692,8 +691,8 @@ void initDSOGUI(void) {
     SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "Min/Max\nmode", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, true,
             &doMinMaxMode);
 #  else
-    TouchButtonMinMaxMode.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "Min/Max\nmode", TEXT_SIZE_11,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH, true, &doMinMaxMode);
+    TouchButtonMinMaxMode.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "Min/Max\nmode",
+            TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, true, &doMinMaxMode);
 #  endif
 #endif
 
@@ -728,8 +727,8 @@ void initDSOGUI(void) {
             COLOR_GUI_SOURCE_TIMEBASE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doADCReference);
 #else
 // Button for more-settings pages
-    TouchButtonDSOMoreSettings.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_5,
-    COLOR_GUI_CONTROL, "More", TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doShowMoreSettingsPage);
+    TouchButtonDSOMoreSettings.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_5, COLOR_GUI_CONTROL, "More",
+            TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doShowMoreSettingsPage);
 
     /***************************
      * More Settings page
@@ -737,8 +736,8 @@ void initDSOGUI(void) {
 // 1. row
     tPosY = 0;
 // Button for voltage calibration
-    TouchButtonCalibrateVoltage.init(0, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_4,
-    COLOR_GUI_SOURCE_TIMEBASE, "Calibrate U", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doVoltageCalibration);
+    TouchButtonCalibrateVoltage.init(0, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, COLOR_GUI_SOURCE_TIMEBASE, "Calibrate U",
+            TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doVoltageCalibration);
 // 2. row
     tPosY += SETTINGS_PAGE_ROW_INCREMENT;
 // Button for system info
@@ -776,7 +775,7 @@ void initDSOGUI(void) {
      * Backlight slider
      */
     TouchSliderBacklight.init(0, 0, SLIDER_DEFAULT_BAR_WIDTH, BACKLIGHT_MAX_BRIGHTNESS_VALUE, BACKLIGHT_MAX_BRIGHTNESS_VALUE, sCurrentBacklightPercent,
-    COLOR16_BLUE, COLOR16_GREEN, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doBacklightSlider);
+    COLOR16_WHITE, COLOR16_GREEN, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doBacklightSlider);
 #endif
 
 }
@@ -789,7 +788,7 @@ void activateChartGui(void) {
     TouchButtonSingleshot.activate();
     TouchButtonStartStopDSOMeasurement.activate();
     TouchButtonSettingsPage.activate();
-#if !defined(AVR)
+#if !defined(ARDUINO)
     TouchButtonFFT.activate();
 #endif
 
@@ -841,8 +840,8 @@ void redrawDisplay() {
 #if defined(AVR)
             drawDataBuffer(DataBufferControl.DataBufferDisplayStart, COLOR_DATA_HOLD, DisplayControl.EraseColor);
 #else
-            drawDataBuffer(DataBufferControl.DataBufferDisplayStart, REMOTE_DISPLAY_WIDTH, COLOR_DATA_HOLD, 0,
-            DRAW_MODE_REGULAR, MeasurementControl.isEffectiveMinMaxMode);
+            drawDataBuffer(DataBufferControl.DataBufferDisplayStart, REMOTE_DISPLAY_WIDTH, COLOR_DATA_HOLD, 0, DRAW_MODE_REGULAR,
+                    MeasurementControl.isEffectiveMinMaxMode);
 #endif
             printInfo();
         } else if (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS) {
@@ -878,8 +877,7 @@ void drawStartPage(void) {
 
 // Hints
 #if !defined(AVR)
-    BlueDisplay1.drawText(BUTTON_WIDTH_3, TEXT_SIZE_11_ASCEND, "\xABScale\xBB", TEXT_SIZE_11, COLOR16_YELLOW,
-    COLOR_BACKGROUND_DSO);
+    BlueDisplay1.drawText(BUTTON_WIDTH_3, TEXT_SIZE_11_ASCEND, "\xABScale\xBB", TEXT_SIZE_11, COLOR16_YELLOW, COLOR_BACKGROUND_DSO);
 #endif
     BlueDisplay1.drawText(BUTTON_WIDTH_3, BUTTON_HEIGHT_4_LINE_4 + BUTTON_DEFAULT_SPACING + TEXT_SIZE_22_ASCEND,
             F("\xABScroll\xBB"), TEXT_SIZE_22, COLOR16_GREEN, COLOR_BACKGROUND_DSO);
@@ -960,8 +958,8 @@ void drawDSOSettingsPage(void) {
 #if !defined(AVR)
 void drawDSOMoreSettingsPage(void) {
 // do not clear screen here since gui is refreshed periodically while DSO is running
-    BDButton::deactivateAllButtons();
-    BDSlider::deactivateAllSliders();
+    BDButton::deactivateAll();
+    BDSlider::deactivateAll();
 //1. Row
     TouchButtonCalibrateVoltage.drawButton();
     TouchButtonBack.drawButton();
@@ -1293,36 +1291,15 @@ void startDSOSettingsPage(void) {
  * Switch between upper info line short/long/off
  */
 void doSwitchInfoModeOnTouchUp(struct TouchEvent *const aTouchPosition) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
-// first check for buttons
-    if (!LocalTouchButton::checkAllButtons(aTouchPosition->TouchPosition.PositionX, aTouchPosition->TouchPosition.PositionY)) {
-#endif
     if (DisplayControl.DisplayPage == DISPLAY_PAGE_CHART) {
         // Wrap display mode
-//        uint8_t tOldMode = DisplayControl.showInfoMode;
         uint8_t tNewMode = DisplayControl.showInfoMode + 1;
         if (tNewMode > INFO_MODE_LONG_INFO) {
             tNewMode = INFO_MODE_NO_INFO;
         }
         DisplayControl.showInfoMode = tNewMode;
         redrawDisplay();
-
-//        if (tNewMode == INFO_MODE_NO_INFO) {
-//            if (MeasurementControl.isRunning) {
-//                // erase former info line
-//                clearInfo(tOldMode);
-//            } else {
-//                redrawDisplay();
-//            }
-//        } else {
-//            // erase former info line
-//            clearInfo(tOldMode);
-//            printInfo();
-//        }
     }
-#if defined(SUPPORT_LOCAL_DISPLAY)
-    }
-#endif
 }
 
 /*
@@ -1410,7 +1387,7 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
 #if !defined(AVR)
             if (aSwipeInfo->TouchStartY > BUTTON_HEIGHT_4_LINE_3 + TEXT_SIZE_22) {
 #endif
-            tIsError = scrollChart(-aSwipeInfo->TouchDeltaX);
+                tIsError = scrollChart(-aSwipeInfo->TouchDeltaX);
 #if !defined(AVR)
             } else {
                 // scale
@@ -1567,7 +1544,7 @@ void doChannelSelect(BDButton *aTheTouchedButton, int16_t aValue) {
  */
 void doChartHistory(BDButton *aTheTouchedButton, int16_t aValue) {
     DisplayControl.showHistory = aValue;
-    if (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS) {
+    if (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS || DisplayControl.DisplayPage == DISPLAY_PAGE_START) {
         aTheTouchedButton->drawButton();
     }
 
@@ -1750,12 +1727,11 @@ void doShowSystemInfoPage(BDButton *aTheTouchedButton, int16_t aValue) {
  */
 void doShowFFT(BDButton *aTheTouchedButton, int16_t aValue) {
     DisplayControl.ShowFFT = aValue;
-    aTheTouchedButton->setValue(aValue);
-
+    if (DisplayControl.DisplayPage == DISPLAY_PAGE_START) {
+        // Show on Start page page
+        aTheTouchedButton->drawButton();
+    }
     if (MeasurementControl.isRunning) {
-        if (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS) {
-            aTheTouchedButton->drawButton();
-        }
         if (aValue) {
             // initialize FFTDisplayBuffer
             memset(&DisplayBufferFFT[0], REMOTE_DISPLAY_HEIGHT - 1, sizeof(DisplayBufferFFT));

@@ -1544,8 +1544,8 @@ void createGUI() {
 void drawGui() {
     DisplayControl.DisplayMode = DISPLAY_MODE_SHOW_MAIN_GUI;
     LocalDisplay.clearDisplay(COLOR_BACKGROUND_DSO);
-    LocalTouchButton::deactivateAllButtons();
-    LocalTouchSlider::deactivateAllSliders();
+    LocalTouchButton::deactivateAll();
+    LocalTouchSlider::deactivateAll();
 
     TouchButtonStartStop.drawButton();
     TouchButtonBack_Singleshot.drawButton();
@@ -1562,8 +1562,8 @@ void drawGui() {
 
 void drawSettingsGui() {
 
-    LocalTouchButton::deactivateAllButtons();
-    LocalTouchSlider::deactivateAllSliders();
+    LocalTouchButton::deactivateAll();
+    LocalTouchSlider::deactivateAll();
 
     // here the back button
     TouchButtonBack_Singleshot.drawButton();
@@ -1581,7 +1581,7 @@ void drawSettingsGui() {
  */
 void activatePartOfGui() {
 // first deactivate all buttons
-    LocalTouchButton::deactivateAllButtons();
+    LocalTouchButton::deactivateAll();
 
     TouchButtonStartStop.activate();
     TouchButtonBack_Singleshot.activate();

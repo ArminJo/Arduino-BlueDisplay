@@ -35,7 +35,6 @@ typedef uint8_t BDSliderHandle_t;
 #  else
 typedef uint16_t BDSliderHandle_t;
 #  endif
-class BDSlider;
 #endif
 
 /** @addtogroup Gui_Library
@@ -50,7 +49,6 @@ class BDSlider;
  * @{
  */
 
-
 // A copy from BDSlider.h for documentation
 //static const int FLAG_SLIDER_VERTICAL = 0x00;
 //static const int FLAG_SLIDER_VERTICAL_SHOW_NOTHING = 0x00;
@@ -61,7 +59,6 @@ class BDSlider;
 //static const int FLAG_SLIDER_VALUE_BY_CALLBACK = 0x10;  // If set, bar (+ ASCII) value will be set by callback handler, not by touch
 //static const int FLAG_SLIDER_IS_ONLY_OUTPUT = 0x20;     // is equivalent to slider aOnChangeHandler NULL at init
 //#define LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK 0x80 // Use pointer to index in slider list instead of pointer to this in callback
-
 /** @} */
 
 #define SLIDER_DEFAULT_VALUE_COLOR          COLOR16_BLUE
@@ -75,11 +72,6 @@ class BDSlider;
 #define SLIDER_DEFAULT_THRESHOLD_VALUE      100
 
 #define SLIDER_MAX_DISPLAY_VALUE            LOCAL_DISPLAY_WIDTH //! maximum value which can be displayed
-// return values for checkAllSliders()
-#ifndef NOT_TOUCHED
-#define NOT_TOUCHED false
-#endif
-#define SLIDER_TOUCHED 4
 /**
  * @name SliderErrorCodes
  * @{
@@ -104,73 +96,93 @@ public:
 #if !defined(ARDUINO)
     ~LocalTouchSlider();
 #endif
+    void init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength, uint16_t aThresholdValue,
+            int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags,
+            void (*aOnChangeHandler)(LocalTouchSlider*, uint16_t));
+    void deinit(); // Dummy to be more compatible with BDButton
+    void activate();
+    void deactivate();
 
-    /*
-     * Static functions
-     */
+    void initSliderColors(uint16_t aSliderColor, uint16_t aBarColor, uint16_t aBarThresholdColor, uint16_t aBarBackgroundColor,
+            uint16_t aCaptionColor, uint16_t aValueColor, uint16_t aValueCaptionBackgroundColor);
+
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
     static LocalTouchSlider* getLocalSliderFromBDSliderHandle(BDSliderHandle_t aSliderHandleToSearchFor);
     static void createAllLocalSlidersAtRemote();
 #endif
 
+    // Defaults
     static void setDefaults(uintForPgmSpaceSaving aDefaultTouchBorder, uint16_t aDefaultSliderColor, uint16_t aDefaultBarColor,
             uint16_t aDefaultBarThresholdColor, uint16_t aDefaultBarBackgroundColor, uint16_t aDefaultCaptionColor,
             uint16_t aDefaultValueColor, uint16_t aDefaultValueCaptionBackgroundColor);
     static void setDefaultSliderColor(uint16_t aDefaultSliderColor);
     static void setDefaultBarColor(uint16_t aDefaultBarColor);
-    static bool checkAllSliders(unsigned int aTouchPositionX, unsigned int aTouchPositionY);
-    static void deactivateAllSliders();
-    static void activateAllSliders();
+    void setDefaultBarThresholdColor(color16_t aDefaultBarThresholdColor);
 
     /*
-     * Member functions
+     * Basic touch functions
      */
-    void init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength, uint16_t aThresholdValue,
-            int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags,
-            void (*aOnChangeHandler)(LocalTouchSlider*, uint16_t));
-    void deinit(); // Dummy to be more compatible with BDButton
+    bool isTouched(uint16_t aTouchPositionX, uint16_t aTouchPositionY);
+    void performTouchAction(uint16_t aTouchPositionX, uint16_t aTouchPositionY);
 
-    void initSliderColors(uint16_t aSliderColor, uint16_t aBarColor, uint16_t aBarThresholdColor, uint16_t aBarBackgroundColor,
-            uint16_t aCaptionColor, uint16_t aValueColor, uint16_t aValueCaptionBackgroundColor);
+    /*
+     * Functions using the list of all sliders
+     */
+    static void activateAll();
+    static void deactivateAll();
 
-    void drawSlider();
-    bool checkSlider(uint16_t aPositionX, uint16_t aPositionY);
-    void drawBar();
-    void drawBorder();
+    static LocalTouchSlider* find(unsigned int aTouchPositionX, unsigned int aTouchPositionY);
+    static LocalTouchSlider* findAndAction(unsigned int aTouchPositionX, unsigned int aTouchPositionY);
+    static bool checkAllSliders(unsigned int aTouchPositionX, unsigned int aTouchPositionY);
 
-    void activate();
-    void deactivate();
-
+    // Position
     void setPosition(int16_t aPositionX, int16_t aPositionY);
     uint16_t getPositionXRight() const;
     uint16_t getPositionYBottom() const;
 
-    void setBarBackgroundColor(uint16_t aBarBackgroundColor);
-    void setValueAndCaptionBackgroundColor(uint16_t aValueCaptionBackgroundColor);
-    void setValueColor(uint16_t aValueColor);
-    void setCaptionColors(uint16_t aCaptionColor, uint16_t aValueCaptionBackgroundColor);
-    void setValueStringColors(uint16_t aValueStringColor, uint16_t aValueStringCaptionBackgroundColor);
+    // Draw
+    void drawSlider();
+    void drawBorder();
+    void drawBar(); // Used internally
+
+    // Color
     void setSliderColor(uint16_t sliderColor);
-    void setBarColor(uint16_t barColor);
-    void setBarThresholdColor(uint16_t barThresholdColor);
+    void setBarColor(uint16_t aBarColor);
+    void setBarThresholdColor(uint16_t aBarThresholdColor);
+    void setBarBackgroundColor(uint16_t aBarBackgroundColor);
+
+    void setValueColor(uint16_t aValueColor);
+    void setValueStringColors(uint16_t aValueStringColor, uint16_t aValueStringCaptionBackgroundColor);
+    void setCaptionColors(uint16_t aCaptionColor, uint16_t aValueCaptionBackgroundColor);
+    void setValueAndCaptionBackgroundColor(uint16_t aValueCaptionBackgroundColor); // in setCaptionProperties()
+
     uint16_t getBarColor() const;
 
-    void setValue(int16_t aCurrentValue);
-    void setValueAndDraw(int16_t aCurrentValue);
-    void setValueAndDrawBar(int16_t aCurrentValue);
-    int16_t getCurrentValue() const;
-
+    // Caption
     void setCaption(const char *aCaption);
-    void printCaption();
-    int printValue();
-    int printValue(const char *aValueString);
-    void setXOffsetValue(int16_t aXOffsetValue);
+    // Dummy stub to compatible with BDSliders
+    void setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositionFlags, uint8_t aCaptionMargin, color16_t aCaptionColor,
+            color16_t aValueCaptionBackgroundColor); // Uses setCaptionColors() and sets only aCaptionColor and aValueCaptionBackgroundColor
+    void printCaption(); // Used internally
 
-    // Dummy stubs to compatible with BDSliders
-    void setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPosition, uint8_t aCaptionMargin, color16_t aCaptionColor,
-            color16_t aCaptionBackgroundColor);
-    void setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPrintValuePosition, uint8_t aPrintValueMargin,
-            color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor);
+    // Value
+    void setValue(int16_t aValue);
+    void setValueAndDrawBar(int16_t aValue);
+
+    int printValue(const char *aValueString);
+    void setXOffsetValue(int16_t aXOffsetValue); // Set offset for printValue
+    // Dummy stub to compatible with BDSliders
+    void setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPrintValuePositionFlags, uint8_t aPrintValueMargin,
+            color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor); // Uses setValueStringColors() and sets only aPrintValueColor and aPrintValueBackgroundColor
+    int16_t getValue() const;
+    int printValue(); // Used internally
+
+    // Deprecated
+    void setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor)
+            __attribute__ ((deprecated ("Renamed to setDefaultBarThresholdColor")));
+    void setValueAndDraw(int16_t aValue) __attribute__ ((deprecated ("Renamed to setValueAndDrawBar")));
+    static void activateAllSliders() __attribute__ ((deprecated ("Renamed to activateAll")));
+    static void deactivateAllSliders() __attribute__ ((deprecated ("Renamed to deactivateAll")));
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
     LocalTouchSlider(BDSlider *aBDSliderPtr); // Required for creating a local slider for an existing aBDSlider at aBDSlider::init
@@ -210,10 +222,8 @@ public:
     uint8_t mTouchBorder; // extension of touch region
     uint8_t mFlags;
 
-    // the value as provided by touch
-    uint16_t mActualTouchValue;
-    // This value can be different from mActualTouchValue and is provided by callback handler
-    uint16_t mActualValue;
+    uint16_t mActualTouchValue; // The value as provided by touch
+    uint16_t mValue; // This value can be different from mActualTouchValue and is provided by callback handler
 
     // Colors
     uint16_t mSliderColor;

@@ -260,7 +260,7 @@ void initDisplay(void) {
     BUTTON_HEIGHT_4_DYN_LINE_2 - sSliderWidth - BUTTON_VERTICAL_SPACING_DYN, sSliderWidth, tUSSliderLength, 99, 0, COLOR16_WHITE,
     COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT | FLAG_SLIDER_SHOW_VALUE, NULL);
     SliderShowUSDistance.setScaleFactor(100.0 / tUSSliderLength);
-    SliderShowUSDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR16_BLACK,
+    SliderShowUSDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR16_BLACK,
             COLOR16_WHITE);
 
     BlueDisplay1.debug("XWidth1=", BlueDisplay1.mCurrentDisplaySize.XWidth);

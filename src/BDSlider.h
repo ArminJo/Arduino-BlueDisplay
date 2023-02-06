@@ -49,15 +49,27 @@ static const int FLAG_SLIDER_IS_HORIZONTAL = 0x04;
 static const int FLAG_SLIDER_IS_INVERSE = 0x08;         // is equivalent to negative slider length at init
 static const int FLAG_SLIDER_VALUE_BY_CALLBACK = 0x10;  // If set, bar (+ ASCII) value will be set by callback handler, not by touch
 static const int FLAG_SLIDER_IS_ONLY_OUTPUT = 0x20;     // is equivalent to slider aOnChangeHandler NULL at init
-#define LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK 0x80 // Use pointer to index in slider list instead of pointer to this in callback
+// LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK is set, when we have a local and a remote slider, i.e. SUPPORT_REMOTE_AND_LOCAL_DISPLAY is defined.
+// Then only the remote slider pointer is used as callback parameter to enable easy comparison of this parameter with a fixed slider.
+#define LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK 0x80
 
-// Flags for slider caption position
+// Flags for slider value and caption position
+#define FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT_BELOW   0x00
+#define FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT         0x00
+#define FLAG_SLIDER_VALUE_CAPTION_ALIGN_RIGHT        0x01
+#define FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE       0x02
+#define FLAG_SLIDER_VALUE_CAPTION_BELOW              0x00
+#define FLAG_SLIDER_VALUE_CAPTION_ABOVE              0x04
+#define FLAG_SLIDER_VALUE_TAKE_DEFAULT_MARGIN        0x08 // supported since BlueDisplay App 4.3.2
+
 static const int FLAG_SLIDER_CAPTION_ALIGN_LEFT_BELOW = 0x00;
 static const int FLAG_SLIDER_CAPTION_ALIGN_LEFT = 0x00;
 static const int FLAG_SLIDER_CAPTION_ALIGN_RIGHT = 0x01;
 static const int FLAG_SLIDER_CAPTION_ALIGN_MIDDLE = 0x02;
 static const int FLAG_SLIDER_CAPTION_BELOW = 0x00;
 static const int FLAG_SLIDER_CAPTION_ABOVE = 0x04;
+
+#define SLIDER_DEFAULT_VALUE_MARGIN 4 // is defined as mRPCView.mRequestedCanvasHeight / 60 -> for a height of 240 we get 4
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
 #include "LocalGUI/LocalTouchSlider.h"
@@ -77,75 +89,72 @@ extern BDSliderHandle_t sLocalSliderIndex;
 class BDSlider {
 public:
 
-    static void resetAllSliders();
-    static void activateAllSliders();
-    static void deactivateAllSliders();
-
     // Constructors
     BDSlider();
-#if defined(SUPPORT_LOCAL_DISPLAY)
-    BDSlider(BDSliderHandle_t aSliderHandle, LocalTouchSlider *aLocalSliderPointer);
-#endif
 
-    /**
-     * @brief initialization with all parameters except BarBackgroundColor
-     * @param aPositionX determines upper left corner
-     * @param aPositionY determines upper left corner
-     * @param aBarWidth width of bar (and border) in pixel
-     * @param aBarLength size of slider bar in pixel = maximum slider value
-     * @param aThresholdValue value - if bigger, then color of bar changes from BarColor to BarBackgroundColor
-     * @param aInitalValue
-     * @param aSliderColor color of slider frame
-     * @param aBarColor
-     * @param aOptions see #FLAG_SLIDER_SHOW_BORDER etc.
-     * @param aOnChangeHandler - if NULL no update of bar is done on touch
-     */
     void init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth, int16_t aBarLength, int16_t aThresholdValue,
             int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
-            void (*aOnChangeHandler)(BDSlider *, uint16_t));
+            void (*aOnChangeHandler)(BDSlider*, uint16_t));
+    void deinit(); // is defined as dummy if SUPPORT_LOCAL_DISPLAY is not active
+    void activate();
+    void deactivate();
 
+    // Defaults
+    void setDefaultBarThresholdColor(color16_t aDefaultBarThresholdColor);
+
+    // TODO !!! Possible memory leak !!!
+    static void resetAll();
+
+    /*
+     * Functions using the list of all sliders
+     */
+    static void activateAll();
+    static void deactivateAll();
+
+    // Position
     void setPosition(int16_t aPositionX, int16_t aPositionY);
 
+    // Draw
     void drawSlider();
     void drawBorder();
+
+    // Color
+    void setBarColor(color16_t aBarColor);
+    void setBarThresholdColor(color16_t aBarThresholdColor);
+    void setBarBackgroundColor(color16_t aBarBackgroundColor);
+
+    // Caption
+    void setCaption(const char *aCaption);
+    void setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositionFlags, uint8_t aCaptionMargin, color16_t aCaptionColor,
+            color16_t aCaptionBackgroundColor);
+
+    // Value
     void setValue(int16_t aCurrentValue);
     void setValueAndDrawBar(int16_t aCurrentValue);
     void setValue(int16_t aCurrentValue, bool doDrawBar);
-    void setBarColor(color16_t aBarColor);
-    void setBarThresholdColor(color16_t aBarThresholdColor);
-    void setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor);
-    void setBarBackgroundColor(color16_t aBarBackgroundColor);
 
-    void setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPosition, uint8_t aCaptionMargin, color16_t aCaptionColor,
-            color16_t aCaptionBackgroundColor);
-    void setCaption(const char *aCaption);
+    void printValue(const char *aValueString);
     void setValueUnitString(const char *aValueUnitString);
     void setValueFormatString(const char *aValueFormatString);
-    void setPrintValueProperties(uint8_t aPrintValueSize, uint8_t aPrintValuePosition, uint8_t aPrintValueMargin,
+    void setPrintValueProperties(uint8_t aPrintValueSize, uint8_t aPrintValuePositionFlags, uint8_t aPrintValueMargin,
             color16_t aPrintValueColor, color16_t aPrintValueBackgroundColor);
-    void printValue(const char *aValueString);
+
     /*
      * Scale factor of 2 means, that the slider is virtually 2 times larger than displayed
      */
     void setScaleFactor(float aScaleFactor);
     void setValueScaleFactor(float aScaleFactorValue); // calls setScaleFactor( 1/aScaleFactorValue);
 
-    void activate();
-    void deactivate();
-
     BDSliderHandle_t mSliderHandle;
 
-    void deinit();// is defined as dummy if SUPPORT_LOCAL_DISPLAY is not active
-
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    int printValue();
-    void setXOffsetValue(int16_t aXOffsetValue);
-
-    int16_t getCurrentValue() const;
-    uint16_t getPositionXRight() const;
-    uint16_t getPositionYBottom() const;
     LocalTouchSlider * mLocalSliderPointer;
 #endif
+
+    void setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor)  __attribute__ ((deprecated ("Renamed to setDefaultBarThresholdColor")));
+    static void resetAllSliders() __attribute__ ((deprecated ("Renamed to resetAll")));
+    static void activateAllSliders() __attribute__ ((deprecated ("Renamed to activateAll")));
+    static void deactivateAllSliders() __attribute__ ((deprecated ("Renamed to deactivateAll")));
 
 private:
 };
