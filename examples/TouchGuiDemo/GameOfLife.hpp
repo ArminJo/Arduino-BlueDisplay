@@ -156,7 +156,7 @@ void playGameOfLife(void) {
 void drawGameOfLife(void) {
     uint_fast16_t tPosX = 0;
     for (uint_fast8_t x = 0; x < GAME_OF_LIFE_X_SIZE; x++) {
-#if LOCAL_DISPLAY_HEIGHT > 0xFF
+#if DISPLAY_HEIGHT > 0xFF
         uint_fast16_t tPosY = 0;
 #else
         uint_fast8_t tPosY = 0;
@@ -198,7 +198,7 @@ void ClearScreenAndDrawGameOfLifeGrid(void) {
     Display.clearDisplay(drawcolor[EMPTY_CELL_COLOR]);
     uint_fast16_t tPosX = 0;
     for (uint_fast8_t x = 0; x < GAME_OF_LIFE_X_SIZE; x++) {
-#if LOCAL_DISPLAY_HEIGHT > 0xFF
+#if DISPLAY_HEIGHT > 0xFF
         uint_fast16_t tPosY = 0;
 #else
         uint_fast8_t tPosY = 0;

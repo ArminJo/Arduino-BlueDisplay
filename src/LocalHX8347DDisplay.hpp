@@ -27,5 +27,10 @@
 #define USE_HX8347D
 #include "LocalDisplay/LocalDisplayInterface.hpp" // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
 #include "LocalDisplay/ADS7846.hpp"     // Must be after the local display implementation since it uses e.g. LOCAL_DISPLAY_HEIGHT
+#include "LocalDisplay/LocalEventHelper.hpp"
+
+#if defined(SUPPORT_LOCAL_LONG_TOUCH_DOWN_DETECTION) || defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+#include "EventHandler.hpp"
+#endif
 
 #endif // _LOCAL_DISPLAY_HPP

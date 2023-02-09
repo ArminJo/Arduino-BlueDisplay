@@ -217,7 +217,7 @@ public:
     void setScreenOrientationLock(uint8_t aLockMode);
 
     void drawPixel(uint16_t aXPos, uint16_t aYPos, color16_t aColor);
-    void drawCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor, uint16_t aStrokeWidth);
+    void drawCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor, uint16_t aStrokeWidth = 1);
     void fillCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor);
     void drawRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor, uint16_t aStrokeWidth);
     void drawRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth, int16_t aHeight, color16_t aColor, uint16_t aStrokeWidth);
@@ -322,6 +322,7 @@ public:
     void drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString, float aInitialValue);
+#endif
 
     // On non AVR platforms __FlashStringHelper is reduced to char
     void drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString);
@@ -334,7 +335,7 @@ public:
             float aInitialValue);
 
     // Not yet implemented    void getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const __FlashStringHelper *aPGMShortPromptString);
-#endif
+
     void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis);
 
     struct XYSize mRequestedDisplaySize; // contains requested display size

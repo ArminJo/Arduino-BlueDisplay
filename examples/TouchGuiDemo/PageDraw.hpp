@@ -80,12 +80,12 @@ static void doDrawColor(Button *aTheTouchedButton, int16_t aValue) {
 void drawLine(const bool aNewStart, unsigned int color) {
     static unsigned int last_x = 0, last_y = 0;
     if (aNewStart) {
-        LocalDisplay.drawPixel(TouchPanel.getActualX(), TouchPanel.getActualY(), color);
+        LocalDisplay.drawPixel(TouchPanel.getCurrentX(), TouchPanel.getCurrentY(), color);
     } else {
-        LocalDisplay.drawLine(last_x, last_y, TouchPanel.getActualX(), TouchPanel.getActualY(), color);
+        LocalDisplay.drawLine(last_x, last_y, TouchPanel.getCurrentX(), TouchPanel.getCurrentY(), color);
     }
-    last_x = TouchPanel.getActualX();
-    last_y = TouchPanel.getActualY();
+    last_x = TouchPanel.getCurrentX();
+    last_y = TouchPanel.getCurrentY();
 }
 #endif
 
@@ -136,7 +136,7 @@ void loopDrawPage(void) {
         if (TouchPanel.ADS7846TouchActive && sTouchObjectTouched == PANEL_TOUCHED) {
             drawLine(TouchPanel.wasJustTouched(), sDrawColor);
         }
-        printTPData();
+        printLocalTouchPanelData();
 //    checkAndHandleTouchPanelEvents(); // we know it is called at the loop which called us
 #else
     checkAndHandleEvents();

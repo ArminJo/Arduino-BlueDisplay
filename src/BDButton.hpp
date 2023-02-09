@@ -49,7 +49,7 @@ BDButton::BDButton(BDButtonHandle_t aButtonHandle) { // @suppress("Class members
     mButtonHandle = aButtonHandle;
 }
 
-BDButton::BDButton(BDButton const &aButton) {
+BDButton::BDButton(BDButton const &aButton) { // @suppress("Class members should be properly initialized")
     mButtonHandle = aButton.mButtonHandle;
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr = aButton.mLocalButtonPtr;

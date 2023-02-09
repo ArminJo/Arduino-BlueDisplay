@@ -137,7 +137,7 @@ void printRGB(const uint16_t aColor, uint16_t aXPos, const uint16_t aYPos) {
  * Show touch panel raw and processed data in the first line
  */
 void printTPData(void) {
-    sprintf(StringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i", TouchPanel.getActualX(), TouchPanel.getRawX(), TouchPanel.getActualY(),
+    sprintf(StringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i", TouchPanel.getCurrentX(), TouchPanel.getRawX(), TouchPanel.getCurrentY(),
             TouchPanel.getRawY(), TouchPanel.getPressure());
     LocalDisplay.drawText(20, 2, StringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
 }

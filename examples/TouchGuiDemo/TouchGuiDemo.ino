@@ -57,11 +57,16 @@
 #define LOCAL_GUI_FEEDBACK_TONE_PIN 2
 #define DISABLE_REMOTE_DISPLAY  // Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display
 #define SUPPORT_LOCAL_DISPLAY   // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
+#define SUPPORT_LOCAL_LONG_TOUCH_DOWN_DETECTION
 #include "LocalHX8347DDisplay.hpp" // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
+#define DISPLAY_HEIGHT LOCAL_DISPLAY_HEIGHT // Use local size for whole application
+#define DISPLAY_WIDTH  LOCAL_DISPLAY_WIDTH
 #include "GUIHelper.hpp"        // Must be included before LocalGUI. For TEXT_SIZE_11, getLocalTextSize() etc.
 #include "LocalGUI.hpp"         // Includes the sources for LocalTouchButton etc.
 #else
 #include "BlueDisplay.hpp"         // Includes the sources for LocalTouchButton etc.
+#define DISPLAY_HEIGHT 240 // Use same size as local display
+#define DISPLAY_WIDTH  320
 void initDisplay(void);
 #endif
 
@@ -99,7 +104,7 @@ Button TouchButtonBack;
 
 #include "Chart.hpp"
 #if defined(SUPPORT_LOCAL_DISPLAY) && !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-void printTPData(void); // required in PageDraw.hpp and GuiDemo.hpp
+void printLocalTouchPanelData(void); // required in PageDraw.hpp and GuiDemo.hpp
 #endif
 #include "PageDraw.hpp"
 #include "GuiDemo.hpp"
@@ -197,7 +202,7 @@ void loop() {
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
 void initDisplay(void) {
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, LOCAL_DISPLAY_WIDTH, LOCAL_DISPLAY_HEIGHT);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalTouchButton::createAllLocalButtonsAtRemote(); // Local buttons already exists, so recreate the remote ones
 #else
@@ -206,28 +211,13 @@ void initDisplay(void) {
 }
 #endif
 
-#if defined(SUPPORT_LOCAL_DISPLAY) && !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+#if defined(SUPPORT_LOCAL_DISPLAY)
 //show touchpanel data
-void printTPData(void) {
-    sprintf(sStringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getActualX(), TouchPanel.getRawX(), TouchPanel.getActualY(),
+void printLocalTouchPanelData(void) {
+    sprintf(sStringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getCurrentX(), TouchPanel.getRawX(), TouchPanel.getCurrentY(),
             TouchPanel.getRawY(), TouchPanel.getPressure(), sTouchObjectTouched);
     LocalDisplay.drawText(30, 2, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
 }
-
-#ifdef DEBUG
-void doDebug(TouchButton * const aTheTouchedButton, int aValue) {
-    /*
-     * Debug button pressed
-     */
-    uint8_t * stackptr = (uint8_t *) malloc(4); // use stackptr temporarily
-    uint8_t * heapptr = stackptr;// save value of heap pointer
-    free(stackptr);
-    stackptr = (uint8_t *) (SP);
-    sprintf(StringBuffer, "TB=%02u TS=%02u CH=%02u Stack=%04u Heap=%04u", sizeof *aTheTouchedButton,
-            sizeof TouchSliderBacklight, sizeof ChartExample, (unsigned int) stackptr, (unsigned int) heapptr);
-    LocalDisplay.drawText(1, DISPLAY_HEIGHT - (3 * FONT_HEIGHT) - 1, StringBuffer, 1, COLOR_BLACK, BACKGROUND_COLOR);
-}
-#endif
 #endif
 
 #ifdef RTC_EXISTS

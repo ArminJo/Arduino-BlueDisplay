@@ -1013,6 +1013,10 @@ float adjustFloatWithScaleFactor(float aValue, int aScaleFactor) {
 #define CHART_1_LENGTH 120
 #define CHART_2_LENGTH 140
 #define CHART_3_LENGTH 180
+#if !defined(DISPLAY_HEIGHT)
+#define DISPLAY_HEIGHT_IS_DEFINED_LOCALLY
+#define DISPLAY_HEIGHT 240
+#endif
 void showChartDemo(void) {
     Chart ChartExample;
 
@@ -1035,7 +1039,7 @@ void showChartDemo(void) {
     ChartExample.disableXLabel();
     ChartExample.disableYLabel();
     ChartExample.initChartColors(COLOR16_RED, COLOR16_RED, CHART_DEFAULT_GRID_COLOR, COLOR16_RED, COLOR16_WHITE);
-    ChartExample.initChart(5, LOCAL_DISPLAY_HEIGHT - 20, CHART_1_LENGTH, 90, 2, CHART_DISPLAY_GRID, 20, 20);
+    ChartExample.initChart(5, DISPLAY_HEIGHT - 20, CHART_1_LENGTH, 90, 2, CHART_DISPLAY_GRID, 20, 20);
     ChartExample.drawAxesAndGrid();
 
     char *tRandomByteFillPointer = (char*) tChartBufferPtr;
@@ -1073,7 +1077,7 @@ void showChartDemo(void) {
 
     ChartExample.initXLabelInt(0, 12, 1, 2);
     ChartExample.initYLabelInt(-20, 20, 20 / 15, 3);
-    ChartExample.initChart(170, LOCAL_DISPLAY_HEIGHT - 20, CHART_2_LENGTH, 88, 2, CHART_DISPLAY_GRID, 30, 15);
+    ChartExample.initChart(170, DISPLAY_HEIGHT - 20, CHART_2_LENGTH, 88, 2, CHART_DISPLAY_GRID, 30, 15);
     ChartExample.drawAxesAndGrid();
     ChartExample.initChartColors(COLOR16_RED, COLOR16_BLUE, COLOR16_GREEN, COLOR16_BLACK, COLOR16_WHITE);
     ChartExample.drawChartData(tChartBufferPtr, CHART_2_LENGTH, CHART_MODE_LINE);
@@ -1104,6 +1108,10 @@ void showChartDemo(void) {
 
     free(tChartBufferPtr);
 }
+
+#if defined(DISPLAY_HEIGHT_IS_DEFINED_LOCALLY)
+#undef DISPLAY_HEIGHT
+#endif
 
 /** @} */
 /** @} */

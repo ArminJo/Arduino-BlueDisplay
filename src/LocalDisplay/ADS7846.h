@@ -89,17 +89,12 @@ extern const char ADS7846ChannelChars[ADS7846_CHANNEL_COUNT];
 // Channel number to text mapping
 extern unsigned char ADS7846ChannelMapping[ADS7846_CHANNEL_COUNT];
 
-#define NO_TOUCH                    0
-#define BUTTON_TOUCHED              1
-#define SLIDER_TOUCHED              2
-#define PANEL_TOUCHED               3 // We have a touch down, but not on a touch object
-extern uint8_t sTouchObjectTouched; // only one button handling in loop each touching of local display
-
 class ADS7846 {
 public:
 
-    struct XYPosition mTouchActualPosition; // calibrated (screen) position
-    struct XYPosition mTouchLastPosition;   // for move detection
+    struct XYPosition mCurrentTouchPosition; // calibrated (screen) position
+    struct XYPosition mLastTouchPosition;    // for suppressing of pseudo or micro moves for generating of move event and for touch up event position
+    struct XYPosition mTouchDownPosition;    // Required for move, long touch down and swipe
     uint8_t mPressure; // touch panel pressure can be 0 or >= MIN_REASONABLE_PRESSURE
 
 #if defined(AVR)
@@ -127,8 +122,8 @@ public:
 
     uint16_t getRawX(void);
     uint16_t getRawY(void);
-    uint16_t getActualX(void);
-    uint16_t getActualY(void);
+    uint16_t getCurrentX(void);
+    uint16_t getCurrentY(void);
 
     uint16_t readChannel(uint8_t channel, bool use12Bit, bool useDiffMode, uint8_t numberOfReadingsToIntegrate);
 
@@ -143,6 +138,7 @@ public:
 private:
     struct XYPosition mTouchActualPositionRaw; // raw pos (touch panel)
     struct XYPosition mTouchLastCalibratedPositionRaw; // last calibrated raw pos - to avoid calibrating the same position twice
+
     CAL_MATRIX tp_matrix; //calibrate matrix
     bool setCalibration(CAL_POINT *lcd, CAL_POINT *tp);
     void calibrate(void);
@@ -152,12 +148,6 @@ private:
     void wr_spi(uint8_t data);
 #endif
 };
-
-#if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-void handleTouchPanelEvents();
-void checkAndHandleTouchPanelEvents();
-#endif
-
 extern ADS7846 TouchPanel; // The instance provided by the class itself
 
 #endif //_ADS7846_H

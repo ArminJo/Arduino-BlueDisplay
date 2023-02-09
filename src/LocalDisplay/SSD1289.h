@@ -19,6 +19,13 @@
  * @{
  */
 
+// Landscape format
+#define LOCAL_DISPLAY_HEIGHT    240
+#define LOCAL_DISPLAY_WIDTH     320
+// Portrait format
+//#define LOCAL_DISPLAY_HEIGHT    320
+//#define LOCAL_DISPLAY_WIDTH     240
+
 extern uint8_t sCurrentBacklightPercent;
 extern uint8_t sLastBacklightPercentBeforeDimming; //! for state of backlight before dimming
 extern int sLCDDimDelay; //actual dim delay

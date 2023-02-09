@@ -43,7 +43,7 @@
 
 #if defined(AVR)
 // Data buffer size (must be small enough to leave appr. 7 % (144 Byte) for stack
-#define DATABUFFER_SIZE (3*REMOTE_DISPLAY_WIDTH) //960
+#define DATABUFFER_SIZE (3*DISPLAY_WIDTH) //960
 #else
 #if defined(STM32F303xC)
 #define DATABUFFER_SIZE_FACTOR 9
@@ -52,8 +52,8 @@
 #endif
 #endif
 
-#define DISPLAY_VALUE_FOR_ZERO (REMOTE_DISPLAY_HEIGHT - 1)
-//#define DISPLAY_VALUE_FOR_ZERO (REMOTE_DISPLAY_HEIGHT - 2) // Zero line is not exactly at bottom of display to improve readability
+#define DISPLAY_VALUE_FOR_ZERO (DISPLAY_HEIGHT - 1)
+//#define DISPLAY_VALUE_FOR_ZERO (DISPLAY_HEIGHT - 2) // Zero line is not exactly at bottom of display to improve readability
 
 /*
  * CHANNEL
@@ -168,7 +168,7 @@ extern const char *const ChannelDivByButtonStrings[];
 #endif
 
 extern const float TimebaseExactDivValuesMicros[] PROGMEM;
-#define HORIZONTAL_LINE_LABELS_CAPION_X (REMOTE_DISPLAY_WIDTH - TEXT_SIZE_11_WIDTH * 4)
+#define HORIZONTAL_LINE_LABELS_CAPION_X (DISPLAY_WIDTH - TEXT_SIZE_11_WIDTH * 4)
 /*
  * OFFSET
  */
@@ -236,7 +236,7 @@ extern const float TimebaseExactDivValuesMicros[] PROGMEM;
 #define START_PAGE_ROW_INCREMENT BUTTON_HEIGHT_4_256_LINE_2
 #define START_PAGE_BUTTON_HEIGHT BUTTON_HEIGHT_4_256
 
-#define SINGLESHOT_PPRINT_VALUE_X (REMOTE_DISPLAY_WIDTH - TEXT_SIZE_11_WIDTH)
+#define SINGLESHOT_PPRINT_VALUE_X (DISPLAY_WIDTH - TEXT_SIZE_11_WIDTH)
 #define SETTINGS_PAGE_INFO_Y (BUTTON_HEIGHT_5_256_LINE_5 - (TEXT_SIZE_11_DECEND + 1))
 #else
 #if defined(SUPPORT_LOCAL_DISPLAY)

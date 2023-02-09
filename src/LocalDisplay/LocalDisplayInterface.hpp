@@ -203,7 +203,9 @@ uint16_t LocalDisplayInterface::drawChar(uint16_t aPositionX, uint16_t aPosition
 }
 
 /**
- * Draw text with upper left at aPositionX, aPositionY
+ * Draw text with character upper left at aPositionX, aPositionY
+ * Interpretation of aPositionY is different from the BlueDisplay functions, which use the aPositionY as baseline position,
+ *    so use getTextAscend(<aTextSize>)) for aPositionX to start at the upper display border.
  * @param aPositionX left position
  * @param aPositionY upper position
  *
@@ -226,6 +228,11 @@ uint16_t LocalDisplayInterface::drawText(uint16_t aPositionX, uint16_t aPosition
 }
 
 #if defined (AVR)
+uint16_t LocalDisplayInterface::drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
+        color16_t aTextColor, color16_t aBackgroundColor) {
+    return drawTextPGM(aPositionX, aPositionY, (const char *)aPGMString, aFontSize, aTextColor, aBackgroundColor);
+}
+
 uint16_t LocalDisplayInterface::drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aText, uint8_t aFontSize,
         uint16_t aTextColor, uint16_t aBackgroundColor, uint16_t aNumberOfCharacters) {
 

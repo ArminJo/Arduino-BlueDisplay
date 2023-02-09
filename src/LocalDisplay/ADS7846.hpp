@@ -28,11 +28,13 @@
 #ifndef _ADS7846_HPP
 #define _ADS7846_HPP
 
-#if defined(AVR)
 #include "ADS7846.h"
+#include "EventHandler.h"
+#include "LocalEventHelper.h"
+
+#if defined(AVR)
 void ADS7846_IO_initalize(void);
 #else
-#include "ADS7846.h"
 #include "STM32TouchScreenDriver.h"
 #endif
 
@@ -40,7 +42,6 @@ ADS7846 TouchPanel; // The instance provided by the class itself
 
 #define TOUCH_DELAY_AFTER_READ_MILLIS 3
 #define TOUCH_DEBOUNCE_DELAY_MILLIS 10 // wait for debouncing in ISR - minimum 8 ms
-#define TOUCH_SWIPE_RESOLUTION_MILLIS 20
 
 const char StringPosZ1[] PROGMEM = "Z Pos 1";
 const char StringPosZ2[] PROGMEM = "Z Pos 2";
@@ -132,15 +133,9 @@ void ADS7846::init(void) {
     mTouchActualPositionRaw.PositionY = 0;
     mTouchLastCalibratedPositionRaw.PositionX = 0;
     mTouchLastCalibratedPositionRaw.PositionY = 0;
-    mTouchLastPosition.PositionX = 0;
-    mTouchLastPosition.PositionY = 0;
-    mTouchActualPosition.PositionX = 0;
-    mTouchActualPosition.PositionY = 0;
+//    mTouchActualPosition.PositionX = 0;
+//    mTouchActualPosition.PositionY = 0;
     mPressure = 0;
-
-#if defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-    localTouchEvent.EventType = EVENT_NO_EVENT;
-#endif
 }
 
 bool ADS7846::setCalibration(CAL_POINT *aTargetValues, CAL_POINT *aRawValues) {
@@ -221,7 +216,7 @@ void ADS7846::readCalibration(CAL_MATRIX *aMatrix) {
     aMatrix->f = HAL_RTCEx_BKUPRead(&RTCHandle, RTC_BKP_DR7);
     aMatrix->div = HAL_RTCEx_BKUPRead(&RTCHandle, RTC_BKP_DR8);
 }
-#endif
+#endif // defined(AVR)
 
 /**
  * touch panel calibration routine
@@ -268,16 +263,16 @@ void ADS7846::doCalibration(bool aCheckRTC)
 #if defined(AVR)
         LocalDisplay.drawTextPGM((LOCAL_DISPLAY_WIDTH / 2) - 50, (LOCAL_DISPLAY_HEIGHT / 2) - 10, PSTR("Calibration"), 1,
                 COLOR16_BLACK, COLOR16_WHITE);
-        // Wait for touch release
-        do {
-            readData();
-        } while (getPressure() >= MIN_REASONABLE_PRESSURE);
 #else
         LocalDisplay.drawText((LOCAL_DISPLAY_WIDTH / 2) - 50, (LOCAL_DISPLAY_HEIGHT / 2) - 10, PSTR("Calibration"), 1,
                 COLOR16_BLACK, COLOR16_WHITE);
 #endif
+        // Wait for touch release
+        do {
+            readData();
+        } while (getPressure() >= MIN_REASONABLE_PRESSURE);
 
-        // Draw next point
+        // Draw current point
         LocalDisplay.drawCircle(tReferencePoints[i].x, tReferencePoints[i].y, 2, COLOR16_BLACK);
         LocalDisplay.drawCircle(tReferencePoints[i].x, tReferencePoints[i].y, 5, COLOR16_BLACK);
         LocalDisplay.drawCircle(tReferencePoints[i].x, tReferencePoints[i].y, 10, COLOR16_RED);
@@ -350,7 +345,7 @@ void ADS7846::initAndCalibrateOnPress()
     if (getPressure() >= MIN_REASONABLE_PRESSURE) {
         doCalibration(aEEPROMAdress, false); // Don't check EEPROM for calibration data
     } else {
-        doCalibration(aEEPROMAdress, true); // Ccheck EEPROM for calibration data
+        doCalibration(aEEPROMAdress, true); // Check EEPROM for calibration data
     }
 #else
     if (getPressure() >= MIN_REASONABLE_PRESSURE) {
@@ -379,7 +374,7 @@ void ADS7846::calibrate(void) {
         } else if (x >= LOCAL_DISPLAY_WIDTH) {
             x = LOCAL_DISPLAY_WIDTH - 1;
         }
-        mTouchActualPosition.PositionX = x;
+        mCurrentTouchPosition.PositionX = x;
     }
 
     // calculate y position
@@ -393,7 +388,7 @@ void ADS7846::calibrate(void) {
         } else if (y >= LOCAL_DISPLAY_HEIGHT) {
             y = LOCAL_DISPLAY_HEIGHT - 1;
         }
-        mTouchActualPosition.PositionY = y;
+        mCurrentTouchPosition.PositionY = y;
     }
 }
 
@@ -405,70 +400,17 @@ uint16_t ADS7846::getRawY(void) {
     return mTouchActualPositionRaw.PositionY;
 }
 
-uint16_t ADS7846::getActualX(void) {
-    return mTouchActualPosition.PositionX;
+uint16_t ADS7846::getCurrentX(void) {
+    return mCurrentTouchPosition.PositionX;
 }
 
-uint16_t ADS7846::getActualY(void) {
-    return mTouchActualPosition.PositionY;
+uint16_t ADS7846::getCurrentY(void) {
+    return mCurrentTouchPosition.PositionY;
 }
 
 uint8_t ADS7846::getPressure(void) {
     return mPressure;
 }
-
-uint8_t sTouchObjectTouched; // only one button handling in loop each touching of local display
-
-#include "LocalGUI/LocalTouchButton.h"
-#include "LocalGUI/LocalTouchSlider.h"
-
-#if !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-/**
- * Handles down and up events by calling checkAllButtons and checkAllSliders
- * No suppression of micro moves using mTouchLastPosition here!
- */
-void handleTouchPanelEvents() {
-    if (!TouchPanel.ADS7846TouchActive) {
-        /**
-         * No touch here, reset flags
-         */
-        sTouchObjectTouched = NO_TOUCH;
-    } else {
-        auto tPositionX = TouchPanel.getActualX();
-        auto tPositionY = TouchPanel.getActualY();
-
-        /*
-         * Check if button or slider is touched.
-         * Check button first in order to give priority to buttons which are overlapped by sliders.
-         * Remember which is pressed first and "stay" there.
-         */
-        // Check button only once at a new touch, check autorepeat buttons always to create autorepeat timing
-        if (sTouchObjectTouched == NO_TOUCH || sTouchObjectTouched == BUTTON_TOUCHED) {
-            if (LocalTouchButton::checkAllButtons(tPositionX, tPositionY, sTouchObjectTouched == BUTTON_TOUCHED)) {
-                sTouchObjectTouched = BUTTON_TOUCHED;
-            }
-        }
-        // Check slider only once at a new touch, or always if initially touched
-        if (sTouchObjectTouched == NO_TOUCH || sTouchObjectTouched == SLIDER_TOUCHED) {
-            if (LocalTouchSlider::checkAllSliders(tPositionX, tPositionY)) {
-                sTouchObjectTouched = SLIDER_TOUCHED;
-            }
-        }
-        if (sTouchObjectTouched == NO_TOUCH) {
-            // initially no object was touched
-            sTouchObjectTouched = PANEL_TOUCHED;
-        }
-    }
-}
-
-/**
- * Reads touch panel data and handles down and up events by calling checkAllButtons and checkAllSliders
- */
-void checkAndHandleTouchPanelEvents() {
-    TouchPanel.readData();
-    handleTouchPanelEvents();
-}
-#endif // !defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
 
 #if defined(AVR)
 /**
@@ -520,8 +462,12 @@ void ADS7846::readData(void) {
             mTouchActualPositionRaw.PositionY = y;
             calibrate();
             if (!ADS7846TouchActive) {
-                // here switch from not active to active
-                ADS7846TouchStart = true;
+                /*
+                 * Here we have a touch down event
+                 */
+                mTouchDownPosition.PositionX = x;
+                mTouchDownPosition.PositionY = y;
+                ADS7846TouchStart = true; // flag is only reset externally by call of wasJustTouched()
             }
             ADS7846TouchActive = true;
         }
@@ -760,38 +706,38 @@ void ADS7846_IO_initalize(void) {
     pinMode(MISO_PIN, INPUT);
     digitalWriteFast(MISO_PIN, HIGH);
     //pull-up
-#ifdef IRQ_PIN
+#  ifdef IRQ_PIN
         pinMode(IRQ_PIN, INPUT);
         digitalWriteFast(IRQ_PIN, HIGH); //pull-up
-#endif
-#ifdef BUSY_PIN
+#  endif
+#  ifdef BUSY_PIN
         pinMode(BUSY_PIN, INPUT);
         digitalWriteFast(BUSY_PIN, HIGH); //pull-up
-#endif
+#  endif
 
-#if !defined(SOFTWARE_SPI)
+#  if !defined(SOFTWARE_SPI)
     //SS has to be output or input with pull-up
-# if (defined(__AVR_ATmega1280__) || \
+#    if (defined(__AVR_ATmega1280__) || \
       defined(__AVR_ATmega1281__) || \
       defined(__AVR_ATmega2560__) || \
       defined(__AVR_ATmega2561__))     //--- Arduino Mega ---
 #  define SS_PORTBIT (0) //PB0
-# elif (defined(__AVR_ATmega644__) || \
+#    elif (defined(__AVR_ATmega644__) || \
         defined(__AVR_ATmega644P__))   //--- Arduino 644 ---
 #  define SS_PORTBIT (4) //PB4
-# else                                 //--- Arduino Uno ---
+#    else                                 //--- Arduino Uno ---
 #  define SS_PORTBIT (2) //PB2
-# endif
+#    endif
     if (!(DDRB & (1 << SS_PORTBIT))) //SS is input
     {
         PORTB |= (1 << SS_PORTBIT); //pull-up on
     }
 
-#endif
+#  endif
 }
 
 uint8_t ADS7846::rd_spi(void) {
-#if defined(SOFTWARE_SPI)
+#  if defined(SOFTWARE_SPI)
     uint8_t bit, data;
 
     MOSI_LOW();
@@ -811,12 +757,12 @@ uint8_t ADS7846::rd_spi(void) {
     }
     return data;
 
-#else
+#  else
     SPDR = 0x00;
     while (!(SPSR & (1 << SPIF)))
         ;
     return SPDR;
-#endif
+#  endif
 }
 
 void ADS7846::wr_spi(uint8_t data) {
@@ -844,173 +790,7 @@ void ADS7846::wr_spi(uint8_t data) {
         ;
 #  endif
 }
+#endif // defined(AVR)
 
-#elif !defined(ARDUINO)
-/**
- * Callback routine for SysTick handler
- * Enabled at touch down at a rate of TOUCH_SWIPE_RESOLUTION_MILLIS (20ms)
- */
-void callbackADS7846MoveRecognition(void) {
-    int tLevel = ADS7846_getInteruptLineLevel();
-    if (!tLevel) {
-        // pressed - line input is low, touch still active
-        TouchPanel.readData(ADS7846_READ_OVERSAMPLING_DEFAULT);
-        localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchActualPosition;
-        localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
-        if (!TouchPanel.ADS7846TouchActive) {
-            // went inactive just while readRawData()
-            if (sTouchObjectTouched == PANEL_TOUCHED) {
-                // Generate touch up event if no button or slider was touched
-                localTouchEvent.EventType = EVENT_TOUCH_ACTION_UP;
-            }
-        } else {
-            /*
-             * Check if autorepeat button or slider is still touched.
-             * Check button first in order to give priority to buttons which are overlapped by sliders.
-             * Remember which is pressed first and "stay" there.
-             * !!! we are calling the autorepeat button and slider callbacks here in ISR context !!!
-             * Calling autorepeat button callback with event is too complicated,
-             * because the event is yet not aware of the class LocalTouchButtonAutorepeat required by
-             * the autorepeatTouchHandler(), which generates the timing, and therefore the callback crashes.
-             */
-            if (sTouchObjectTouched == BUTTON_TOUCHED) {
-                // Check autorepeat buttons only if slider was not touched before
-                LocalTouchButton::checkAllButtons(TouchPanel.mTouchActualPosition.PositionX,
-                        TouchPanel.mTouchActualPosition.PositionY, true);
-            } else if (sTouchObjectTouched == SLIDER_TOUCHED) {
-                LocalTouchSlider::checkAllSliders(TouchPanel.mTouchActualPosition.PositionX,
-                        TouchPanel.mTouchActualPosition.PositionY);
-            } else {
-                /*
-                 * Do not accept pseudo or micro moves as an event.
-                 * In the BlueDisplay app the threshold is set to mCurrentViewWidth / 100, which is 3 pixel here.
-                 */
-                if (abs(TouchPanel.mTouchLastPosition.PositionX - TouchPanel.mTouchActualPosition.PositionX) >= 3
-                        || abs(TouchPanel.mTouchLastPosition.PositionY - TouchPanel.mTouchActualPosition.PositionY) >= 3) {
-                    TouchPanel.mTouchLastPosition = TouchPanel.mTouchActualPosition;
-
-                    // Significant move here
-
-                    // avoid overwriting other (e.g long touch down) events
-                    if (localTouchEvent.EventType == EVENT_NO_EVENT) {
-                        localTouchEvent.EventType = EVENT_TOUCH_ACTION_MOVE;
-                    }
-                }
-            }
-            // restart timer
-            changeDelayCallback(&callbackADS7846MoveRecognition, TOUCH_SWIPE_RESOLUTION_MILLIS);
-        }
-    } else {
-        // line level switched to inactive but callback was not disabled
-        if (sTouchObjectTouched == PANEL_TOUCHED) {
-            // Generate touch up event if no button or slider was touched
-            localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchLastPosition;
-            localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
-            localTouchEvent.EventType = EVENT_TOUCH_ACTION_UP;
-        }
-        sTouchObjectTouched = NO_TOUCH;
-    }
-}
-
-extern void callbackPeriodicTouch(void); // from EventHandler
-
-/**
- * This handler is called on both edge of touch interrupt signal.
- * Actually the ADS7846 IRQ signal bounces on rising edge (going inactive).
- * This can happen up to 8 milliseconds after initial transition.
- */
-extern "C" void EXTI1_IRQHandler(void) {
-// wait for stable reading
-    delay(TOUCH_DEBOUNCE_DELAY_MILLIS);
-    bool tLevel = ADS7846_getInteruptLineLevel();
-    BSP_LED_Toggle (LED_GREEN_2); // GREEN RIGHT
-    if (!tLevel) {
-        /*
-         * touchDown event - line input is low
-         * Fill in the local event structure, which is read by checkAndHandleEvents()
-         */
-        TouchPanel.readData(ADS7846_READ_OVERSAMPLING_DEFAULT); // this disables interrupt for additional TOUCH_DELAY_AFTER_READ_MILLIS
-        TouchPanel.mTouchLastPosition = TouchPanel.mTouchActualPosition; // for move detection
-
-        /*
-         * Check if button or slider is touched
-         * Check button first in order to give priority to buttons which are overlapped by sliders
-         * Remember which is pressed first and "stay" there
-         * !!! We are calling the slider and button callback here in ISR context !!!
-         */
-        LocalTouchButton *tTouchedButton = LocalTouchButton::find(TouchPanel.mTouchActualPosition.PositionX,
-                TouchPanel.mTouchActualPosition.PositionY, false);
-        if (tTouchedButton != NULL) {
-            if (tTouchedButton->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
-                // Local autorepeat button callback, which is autorepeatTouchHandler() can not be called by event, so we must call it directly here
-                tTouchedButton->mOnTouchHandler(tTouchedButton, 0);
-            } else {
-                //Red/Green button handling
-                if (tTouchedButton->mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
-                    // Toggle value for Red/Green button, because we called findButton() and not checkButton() which would do the handling for us.
-                    tTouchedButton->mValue = !tTouchedButton->mValue;
-                    if (!(tTouchedButton->mFlags & FLAG_BUTTON_TYPE_MANUAL_REFRESH)) {
-#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
-                        tTouchedButton->mBDButtonPtr->setValueAndDraw(tTouchedButton->mValue); // Update also the remote button
-                        // local button refresh is done by event handler
-#endif
-                    }
-                }
-                /*
-                 * Create button event for processing by main loop in order to return from ISR
-                 */
-                localTouchEvent.EventType = EVENT_BUTTON_CALLBACK;
-                localTouchEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress = (void*) tTouchedButton->mOnTouchHandler;
-                localTouchEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0] = tTouchedButton->mValue; // we support only 16 bit values for buttons
-#if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
-                localTouchEvent.EventData.GuiCallbackInfo.ObjectIndex = tTouchedButton->mBDButtonPtr->mButtonHandle;
-#endif
-            }
-            sTouchObjectTouched = BUTTON_TOUCHED;
-
-        } else if (LocalTouchSlider::checkAllSliders(TouchPanel.mTouchActualPosition.PositionX,
-                TouchPanel.mTouchActualPosition.PositionY)) {
-            sTouchObjectTouched = SLIDER_TOUCHED;
-
-        } else {
-            // no button or slider touched -> plain touch down event
-            sTouchObjectTouched = PANEL_TOUCHED;
-
-            localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchActualPosition;
-            localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
-            localTouchEvent.EventType = EVENT_TOUCH_ACTION_DOWN;
-        }
-
-        if (TouchPanel.ADS7846TouchActive) {
-            TouchPanel.ADS7846TouchStart = true;
-            /*
-             * Enable move recognition by periodically reading actual position.
-             */
-            changeDelayCallback(&callbackADS7846MoveRecognition, TOUCH_SWIPE_RESOLUTION_MILLIS);
-        } else {
-            // line was active but values could not be read correctly (e.g. because of delay by higher prio interrupts)
-            BSP_LED_Toggle (LED_BLUE); // BLUE Back
-        }
-    } else {
-        /**
-         * Touch released here
-         */
-        changeDelayCallback(&callbackPeriodicTouch, DISABLE_TIMER_DELAY_VALUE); // disable periodic interrupts which can call handleTouchRelease
-        if (TouchPanel.ADS7846TouchActive) {
-            TouchPanel.ADS7846TouchActive = false;
-            if (sTouchObjectTouched == NO_TOUCH) {
-                // Generate touch up event if no button or slider was touched
-                localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mTouchLastPosition;
-                localTouchEvent.EventData.TouchEventInfo.TouchPointerIndex = 0;
-                localTouchEvent.EventType = EVENT_TOUCH_ACTION_UP;
-            }
-            sTouchObjectTouched = NO_TOUCH;
-        }
-    }
-    resetBacklightTimeout();
-// Clear the EXTI line pending bit and enable new interrupt on other edge
-    ADS7846_ClearITPendingBit();
-}
-#endif
 
 #endif //_ADS7846_HPP

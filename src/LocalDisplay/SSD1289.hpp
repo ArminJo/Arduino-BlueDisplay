@@ -443,7 +443,7 @@ void setDimdelay(int32_t aTimeMillis) {
  */
 void resetBacklightTimeout(void) {
     if (sLastBacklightPercentBeforeDimming != sCurrentBacklightPercent) {
-        setBrightness(sCurrentBacklightPercent);
+        setBrightness(sLastBacklightPercentBeforeDimming);
     }
     changeDelayCallback(&callbackLCDDimming, sLCDDimDelay);
 }
@@ -455,6 +455,7 @@ void resetBacklightTimeout(void) {
 void callbackLCDDimming(void) {
     if (sCurrentBacklightPercent > BACKLIGHT_DIM_VALUE) {
         PWM_BL_setOnRatio(BACKLIGHT_DIM_VALUE);
+        sCurrentBacklightPercent = BACKLIGHT_DIM_VALUE;
     }
 }
 

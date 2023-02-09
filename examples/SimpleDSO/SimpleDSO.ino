@@ -162,6 +162,8 @@
 /*
  * Settings to configure the BlueDisplay library and to reduce its size
  */
+#define DISPLAY_HEIGHT   256 // We use 8 bit resolution and have 256 different analog values
+#define DISPLAY_WIDTH    320 // Use the size of the local LCD screens available
 //#define BLUETOOTH_BAUD_RATE BAUD_115200  // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
 //#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 #define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
@@ -361,7 +363,7 @@ void initTimer2(void);
 void initDisplay(void) {
     BlueDisplay1.setFlagsAndSize(
             BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_LONG_TOUCH_ENABLE | BD_FLAG_ONLY_TOUCH_MOVE_DISABLE,
-            REMOTE_DISPLAY_WIDTH, REMOTE_DISPLAY_HEIGHT);
+            DISPLAY_WIDTH, DISPLAY_HEIGHT);
     BlueDisplay1.setCharacterMapping(0xD1, 0x21D1); // Ascending in UTF16 - for printInfo()
     BlueDisplay1.setCharacterMapping(0xD2, 0x21D3); // Descending in UTF16 - for printInfo()
     BlueDisplay1.setCharacterMapping(0xD4, 0x2227); // UP (logical AND) in UTF16
@@ -491,7 +493,7 @@ void setup() {
 
     DisplayControl.EraseColor = COLOR_BACKGROUND_DSO;
     DisplayControl.showHistory = false;
-    DisplayControl.DisplayPage = DISPLAY_PAGE_START;
+    DisplayControl.DisplayPage = DSO_PAGE_START;
     DisplayControl.showInfoMode = INFO_MODE_SHORT_INFO;
 
     //setACMode(!digitalReadFast(AC_DC_PIN));
@@ -566,7 +568,7 @@ void __attribute__((noreturn)) loop(void) {
                     if (sDoInfoOutput) {
                         sDoInfoOutput = false;
 
-                        if (DisplayControl.DisplayPage == DISPLAY_PAGE_CHART) {
+                        if (DisplayControl.DisplayPage == DSO_PAGE_CHART) {
                             if (!DisplayControl.showHistory) {
                                 // This enables slow display devices to skip frames
                                 BlueDisplay1.clearDisplayOptional(COLOR_BACKGROUND_DSO);
@@ -575,14 +577,14 @@ void __attribute__((noreturn)) loop(void) {
                             if (DisplayControl.showInfoMode != INFO_MODE_NO_INFO) {
                                 printInfo();
                             }
-                        } else if (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS) {
+                        } else if (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS) {
                             // refresh buttons
                             drawDSOSettingsPage();
-                        } else if (DisplayControl.DisplayPage == DISPLAY_PAGE_FREQUENCY) {
+                        } else if (DisplayControl.DisplayPage == DSO_PAGE_FREQUENCY) {
                             // refresh buttons
                             drawFrequencyGeneratorPage();
 #if !defined(AVR)
-                        } else if (DisplayControl.DisplayPage == DISPLAY_PAGE_MORE_SETTINGS) {
+                        } else if (DisplayControl.DisplayPage == DSO_PAGE_MORE_SETTINGS) {
                             // refresh buttons
                             drawDSOMoreSettingsPage();
 #endif
@@ -620,7 +622,7 @@ void __attribute__((noreturn)) loop(void) {
                         // handle trigger line
                         DisplayControl.TriggerLevelDisplayValue = getDisplayFromRawInputValue(MeasurementControl.RawTriggerLevel);
                         if (tLastTriggerDisplayValue
-                                != DisplayControl.TriggerLevelDisplayValue&& DisplayControl.DisplayPage == DISPLAY_PAGE_CHART) {
+                                != DisplayControl.TriggerLevelDisplayValue&& DisplayControl.DisplayPage == DSO_PAGE_CHART) {
                             clearTriggerLine(tLastTriggerDisplayValue);
                             drawTriggerLine();
                         }
@@ -698,7 +700,7 @@ void __attribute__((noreturn)) loop(void) {
                 /*
                  * Analyze mode here
                  */
-                if (sDoInfoOutput && DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS) {
+                if (sDoInfoOutput && DisplayControl.DisplayPage == DSO_PAGE_SETTINGS) {
                     sDoInfoOutput = false;
                     /*
                      * show VCC and Temp and stack
@@ -711,17 +713,17 @@ void __attribute__((noreturn)) loop(void) {
             /*
              * Handle Sub-Pages
              */
-            if (DisplayControl.DisplayPage == DISPLAY_PAGE_SETTINGS) {
+            if (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS) {
                 if (sBackButtonPressed) {
                     sBackButtonPressed = false;
-                    DisplayControl.DisplayPage = DISPLAY_PAGE_CHART;
+                    DisplayControl.DisplayPage = DSO_PAGE_CHART;
                     redrawDisplay();
                 }
-            } else if (DisplayControl.DisplayPage == DISPLAY_PAGE_FREQUENCY) {
+            } else if (DisplayControl.DisplayPage == DSO_PAGE_FREQUENCY) {
                 if (sBackButtonPressed) {
                     sBackButtonPressed = false;
                     stopFrequencyGeneratorPage();
-                    DisplayControl.DisplayPage = DISPLAY_PAGE_SETTINGS;
+                    DisplayControl.DisplayPage = DSO_PAGE_SETTINGS;
                     redrawDisplay();
                 } else {
                     //not required here, because is contains only checkAndHandleEvents()
@@ -744,8 +746,8 @@ void __attribute__((noreturn)) loop(void) {
  */
 void startAcquisition(void) {
     ADMUX = MeasurementControl.ADMUXChannel | MeasurementControl.ADCReferenceShifted; // it may be overwritten by getVoltage()
-    DataBufferControl.AcquisitionSize = REMOTE_DISPLAY_WIDTH;
-    DataBufferControl.DataBufferEndPointer = &DataBufferControl.DataBuffer[REMOTE_DISPLAY_WIDTH - 1];
+    DataBufferControl.AcquisitionSize = DISPLAY_WIDTH;
+    DataBufferControl.DataBufferEndPointer = &DataBufferControl.DataBuffer[DISPLAY_WIDTH - 1];
     if (MeasurementControl.StopRequested) {
         DataBufferControl.AcquisitionSize = DATABUFFER_SIZE;
         DataBufferControl.DataBufferEndPointer = &DataBufferControl.DataBuffer[DATABUFFER_SIZE - 1];
@@ -976,14 +978,14 @@ void acquireDataFast(void) {
          * 10-50us range. Data is stored directly as 16 bit value and not processed.
          * => we have only half number of samples (tLoopCount)
          */
-        if (DATABUFFER_SIZE < REMOTE_DISPLAY_WIDTH * 2) {
+        if (DATABUFFER_SIZE < DISPLAY_WIDTH * 2) {
             // In this configuration (for testing etc.) we have not enough space
-            // for DISPLAY_WIDTH 16 bit-values which need (REMOTE_DISPLAY_WIDTH * 2) bytes.
+            // for DISPLAY_WIDTH 16 bit-values which need (DISPLAY_WIDTH * 2) bytes.
             // The compiler will remove the code if the configuration does not hold ;-)
             tLoopCount = DATABUFFER_SIZE / 2;
-        } else if (tLoopCount > REMOTE_DISPLAY_WIDTH) {
+        } else if (tLoopCount > DISPLAY_WIDTH) {
             // Last measurement before stop, fill the whole buffer with 16 bit values
-            // During running measurements we know here (see if above) that we can get REMOTE_DISPLAY_WIDTH 16 bit values
+            // During running measurements we know here (see if above) that we can get DISPLAY_WIDTH 16 bit values
             tLoopCount = tLoopCount / 2;
         }
         *DataPointerFast++ = tUValue.byte.LowByte;
@@ -1078,7 +1080,7 @@ void acquireDataFast(void) {
     ADCSRA &= ~_BV(ADATE); // Disable auto-triggering
     MeasurementControl.RawValueMax = tValueMax;
     MeasurementControl.RawValueMin = tValueMin;
-    if (tIndex <= TIMEBASE_INDEX_ULTRAFAST_MODES && tLoopCount > REMOTE_DISPLAY_WIDTH) {
+    if (tIndex <= TIMEBASE_INDEX_ULTRAFAST_MODES && tLoopCount > DISPLAY_WIDTH) {
         // compensate for half sample count in last measurement in ultra fast mode
         tIntegrateValue *= 2;
         // set remaining of buffer to zero
@@ -1386,7 +1388,7 @@ void setInputRange(uint8_t aShiftValue, uint8_t aActiveAttenuatorValue) {
     }
     resetOffset();
 
-    if (MeasurementControl.isRunning && DisplayControl.DisplayPage == DISPLAY_PAGE_CHART) {
+    if (MeasurementControl.isRunning && DisplayControl.DisplayPage == DSO_PAGE_CHART) {
         //clear old grid, since it will be changed
         BlueDisplay1.clearDisplay();
     }
@@ -1512,16 +1514,16 @@ void computeAutoRange(void) {
 // ignore warnings since we know that now tPeakToPeak is positive
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
-    if (tPeakToPeak >= REMOTE_DISPLAY_HEIGHT * 2) {
+    if (tPeakToPeak >= DISPLAY_HEIGHT * 2) {
         tNewValueShift = 2;
-    } else if (tPeakToPeak >= REMOTE_DISPLAY_HEIGHT) {
+    } else if (tPeakToPeak >= DISPLAY_HEIGHT) {
 #pragma GCC diagnostic pop
         tNewValueShift = 1;
     } else if (MeasurementControl.AttenuatorValue > 0 && MeasurementControl.AttenuatorType >= ATTENUATOR_TYPE_ACTIVE_ATTENUATOR) {
         /*
          * only max value is relevant for attenuator switching!
          */
-        if (MeasurementControl.RawValueMax < ((REMOTE_DISPLAY_HEIGHT - (REMOTE_DISPLAY_HEIGHT / 10)) * 4) / ATTENUATOR_FACTOR) {
+        if (MeasurementControl.RawValueMax < ((DISPLAY_HEIGHT - (DISPLAY_HEIGHT / 10)) * 4) / ATTENUATOR_FACTOR) {
             // more than 10 percent below theoretical threshold -> switch attenuator to higher resolution
             tNewAttenuatorValue--;
             tNewValueShift = 2;
@@ -1717,7 +1719,7 @@ void doStartStopDSO(BDButton *aTheTouchedButton __attribute__((unused)), int16_t
          * Start here
          */
         BlueDisplay1.clearDisplay();
-        DisplayControl.DisplayPage = DISPLAY_PAGE_CHART;
+        DisplayControl.DisplayPage = DSO_PAGE_CHART;
         //DisplayControl.showInfoMode = true;
         activateChartGui();
         drawGridLinesWithHorizLabelsAndTriggerLine();
@@ -1734,7 +1736,7 @@ void doStartStopDSO(BDButton *aTheTouchedButton __attribute__((unused)), int16_t
  * returns false if display was successfully scrolled, true on error
  */
 bool scrollChart(int aScrollAmount) {
-    if (DisplayControl.DisplayPage != DISPLAY_PAGE_CHART) {
+    if (DisplayControl.DisplayPage != DSO_PAGE_CHART) {
         return true;
     }
     bool isError = false;
@@ -1752,7 +1754,7 @@ bool scrollChart(int aScrollAmount) {
             // Only half of data buffer is filled
             tMaxAddress = &DataBufferControl.DataBuffer[DATABUFFER_SIZE / 2];
         }
-        tMaxAddress = tMaxAddress - (REMOTE_DISPLAY_WIDTH / DisplayControl.XScale);
+        tMaxAddress = tMaxAddress - (DISPLAY_WIDTH / DisplayControl.XScale);
         if (DataBufferControl.DataBufferDisplayStart > tMaxAddress) {
             DataBufferControl.DataBufferDisplayStart = tMaxAddress;
             isError = true;
@@ -1803,11 +1805,11 @@ void drawRemainingDataBufferValues(void) {
     uint16_t tBufferIndex = DataBufferControl.DataBufferNextDrawIndex;
 
     while (DataBufferControl.DataBufferNextDrawPointer < DataBufferControl.DataBufferNextInPointer
-            && tBufferIndex < REMOTE_DISPLAY_WIDTH) {
+            && tBufferIndex < DISPLAY_WIDTH) {
         /*
          * clear old line
          */
-        if (tBufferIndex < REMOTE_DISPLAY_WIDTH - 1) {
+        if (tBufferIndex < DISPLAY_WIDTH - 1) {
             // fetch next value and clear line in advance
             tValueByte = DataBufferControl.DisplayBuffer[tBufferIndex];
             tNextValueByte = DataBufferControl.DisplayBuffer[tBufferIndex + 1];
@@ -1820,7 +1822,7 @@ void drawRemainingDataBufferValues(void) {
         tValueByte = *DataBufferControl.DataBufferNextDrawPointer++;
         DataBufferControl.DisplayBuffer[tBufferIndex] = tValueByte;
 
-        if (tBufferIndex != 0 && tBufferIndex <= REMOTE_DISPLAY_WIDTH - 1) {
+        if (tBufferIndex != 0 && tBufferIndex <= DISPLAY_WIDTH - 1) {
             // get last value and draw line
             tLastValueByte = DataBufferControl.DisplayBuffer[tBufferIndex - 1];
             BlueDisplay1.drawLineFastOneX(tBufferIndex - 1, tLastValueByte, tValueByte, COLOR_DATA_RUN);

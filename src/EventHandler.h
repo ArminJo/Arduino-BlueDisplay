@@ -2,7 +2,7 @@
  * EventHandler.h
  *
  *
- *  Copyright (C) 2014  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -27,6 +27,13 @@
 
 #include "Colors.h"
 
+/*
+ * If defined, registerDelayCallback() and changeDelayCallback() is used to control a timer for checking for
+ * auto repeats, moves and long touch.
+ * Otherwise the main loop has to call checkAndHandleTouchPanelEvents() to detect long touch.
+ * Move and swipe recognition is currently not implemented in ADS7846.hpp, if USE_TIMER_FOR_PERIODIC_LOCAL_TOUCH_CHECKS is not defined.
+ */
+//#define USE_TIMER_FOR_PERIODIC_LOCAL_TOUCH_CHECKS // Use registerDelayCallback() and changeDelayCallback() for periodic touch checks
 #if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
 //#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 #endif
@@ -38,30 +45,46 @@
 extern bool sBDEventJustReceived; // is set to true by handleEvent() and can be reset by main loop.
 extern unsigned long sMillisOfLastReceivedBDEvent; // is updated with millis() at each received event. Can be used for timeout detection.
 
-#define TOUCH_STANDARD_CALLBACK_PERIOD_MILLIS 20 // Period between callbacks while touched (a swipe is app 100 ms)
-#define TOUCH_STANDARD_LONG_TOUCH_TIMEOUT_MILLIS 800 // Millis after which a touch is classified as a long touch
-//
-#define TOUCH_SWIPE_THRESHOLD 10  // threshold for swipe detection to suppress long touch handler calling
-#define TOUCH_SWIPE_RESOLUTION_MILLIS 20
-
-#if defined(SUPPORT_LOCAL_DISPLAY) && defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
-extern struct BluetoothEvent localTouchEvent;
-#endif
-
 extern bool sDisableTouchUpOnce; // set normally by application if long touch action was made
 extern bool sDisableMoveEventsUntilTouchUpIsDone; // Skip all touch move and touch up events until touch is released
 
 extern struct BluetoothEvent remoteEvent;
 #if defined(AVR)
-// Is used for touch down events. If remoteEvent is not empty, it is used as buffer for next regular event to avoid overwriting of remoteEvent
+// Is used for touch down events and stores its position. If remoteEvent is not empty, it is used as buffer for next regular event to avoid overwriting of remoteEvent
 extern struct BluetoothEvent remoteTouchDownEvent;
+#endif
+#if defined(SUPPORT_LOCAL_DISPLAY) && defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
+extern struct BluetoothEvent localTouchEvent;
 #endif
 
 #if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
-extern struct TouchEvent sDownPosition;
-extern struct TouchEvent sCurrentPosition;
-extern struct TouchEvent sUpPosition;
+// Callbacks
+void registerTouchDownCallback(void (*aTouchDownCallback)(struct TouchEvent *aActualPositionPtr));
+void registerTouchMoveCallback(void (*aTouchMoveCallback)(struct TouchEvent *aActualPositionPtr));
+// Touch UP callback
+void registerTouchUpCallback(void (*aTouchUpCallback)(struct TouchEvent *aActualPositionPtr));
+void (* getTouchUpCallback(void))(struct TouchEvent * ); // returns current callback function
+void setTouchUpCallbackEnabled(bool aTouchUpCallbackEnabled);
+extern bool sTouchUpCallbackEnabled;
+#endif
+
+/*
+ * Long touch down stuff
+ */
+#define TOUCH_STANDARD_LONG_TOUCH_TIMEOUT_MILLIS 800 // Millis after which a touch is classified as a long touch
+extern void (*sLongTouchDownCallback)(struct TouchEvent*);
+extern uint32_t sLongTouchDownTimeoutMillis;
+
+#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
+extern struct TouchEvent sCurrentPosition; // for printEventTouchPositionData()
 extern bool sTouchIsStillDown;
+
+#  if !defined(ESP32)
+// Display X Y touch position on screen
+bool isDisplayXYValuesEnabled(void);
+void setDisplayXYValuesFlag(bool aEnableDisplay);
+void printEventTouchPositionData(int x, int y, color16_t aColor, color16_t aBackColor);
+#  endif
 #endif
 
 void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis);
@@ -69,10 +92,11 @@ bool delayMillisAndCheckForEvent(unsigned long aDelayMillis);
 
 void checkAndHandleEvents(void);
 
-void registerLongTouchDownCallback(void (*aLongTouchCallback)(struct TouchEvent *), uint16_t aLongTouchTimeoutMillis);
+void registerLongTouchDownCallback(void (*aLongTouchCallback)(struct TouchEvent*), uint16_t aLongTouchTimeoutMillis);
 
-void registerSwipeEndCallback(void (*aSwipeEndCallback)(struct Swipe *));
+void registerSwipeEndCallback(void (*aSwipeEndCallback)(struct Swipe*));
 void setSwipeEndCallbackEnabled(bool aSwipeEndCallbackEnabled);
+extern bool sSwipeEndCallbackEnabled;  // for temporarily disabling swipe callbacks
 
 void registerConnectCallback(void (*aConnectCallback)(void));
 void registerReorientationCallback(void (*aReorientationCallback)(void));
@@ -93,29 +117,10 @@ void registerSensorChangeCallback(uint8_t aSensorType, uint8_t aSensorRate, uint
 #define registerSimpleResizeCallback(aRedrawCallback) registerRedrawCallback(aRedrawCallback)
 #define getSimpleResizeAndConnectCallback() getRedrawCallback()
 
-#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
-void registerTouchDownCallback(void (*aTouchDownCallback)(struct TouchEvent *aActualPositionPtr));
-void registerTouchMoveCallback(void (*aTouchMoveCallback)(struct TouchEvent *aActualPositionPtr));
-void registerTouchUpCallback(void (*aTouchUpCallback)(struct TouchEvent *aActualPositionPtr));
-void setTouchUpCallbackEnabled(bool aTouchUpCallbackEnabled);
-void (* getTouchUpCallback(void))(struct TouchEvent * );
-#endif
-
-void handleLocalTouchUp(void);
-void callbackLongTouchDownTimeout(void);
-
-// for local autorepeat button or color picker
-void registerPeriodicTouchCallback(bool (*aPeriodicTouchCallback)(int, int), uint32_t aCallbackPeriodMillis);
-void setPeriodicTouchCallbackPeriod(uint32_t aCallbackPeriod);
-
-bool isDisplayXYValuesEnabled(void);
-void setDisplayXYValuesFlag(bool aEnableDisplay);
-void printEventTouchPositionData(int x, int y,  color16_t aColor,  color16_t aBackColor);
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-void handleEvent(struct BluetoothEvent *aEvent);
+void handleEvent(struct BluetoothEvent *aEvent); // may be called by plain C function
 #ifdef __cplusplus
 }
 #endif

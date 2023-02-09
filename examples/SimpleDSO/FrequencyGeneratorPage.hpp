@@ -261,7 +261,7 @@ void initFrequencyGeneratorPageGui() {
 
     // Range next
     tXPos = 0;
-    int tYPos = REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4 - BUTTON_HEIGHT_5 - BUTTON_DEFAULT_SPACING;
+    int tYPos = DISPLAY_HEIGHT - BUTTON_HEIGHT_4 - BUTTON_HEIGHT_5 - BUTTON_DEFAULT_SPACING;
     for (int i = 0; i < NUMBER_OF_FREQUENCY_RANGE_BUTTONS; ++i) {
         uint16_t tButtonColor = BUTTON_AUTO_RED_GREEN_FALSE_COLOR;
         if (i == BUTTON_INDEX_SELECTED_INITIAL) {
@@ -276,16 +276,16 @@ void initFrequencyGeneratorPageGui() {
 
     ActiveTouchButtonFrequencyRange = TouchButtonFrequencyRanges[BUTTON_INDEX_SELECTED_INITIAL];
 
-    TouchButtonFrequencyStartStop.init(0, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, 0, F("Start"),
+    TouchButtonFrequencyStartStop.init(0, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, 0, F("Start"),
             TEXT_SIZE_26, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sFrequencyInfo.isOutputEnabled,
             &doFrequencyGeneratorStartStop);
     TouchButtonFrequencyStartStop.setCaptionForValueTrue(F("Stop"));
 
-    TouchButtonGetFrequency.init(BUTTON_WIDTH_3_POS_2, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
+    TouchButtonGetFrequency.init(BUTTON_WIDTH_3_POS_2, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
     BUTTON_HEIGHT_4, COLOR16_BLUE, F("Hz..."), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetFrequency);
 
 #if defined(AVR)
-    TouchButtonWaveform.init(BUTTON_WIDTH_3_POS_3, REMOTE_DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
+    TouchButtonWaveform.init(BUTTON_WIDTH_3_POS_3, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
     BUTTON_HEIGHT_4, COLOR16_BLUE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, sFrequencyInfo.Waveform, &doWaveformMode);
     setWaveformButtonCaption();
 #endif
@@ -305,7 +305,7 @@ void drawFrequencyGeneratorPage(void) {
     BlueDisplay1.drawText(TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1"), TEXT_SIZE_11,
     COLOR16_BLUE, COLOR_BACKGROUND_FREQ);
 #if defined(AVR)
-    BlueDisplay1.drawText(REMOTE_DISPLAY_WIDTH - 5 * TEXT_SIZE_11_WIDTH,
+    BlueDisplay1.drawText(DISPLAY_WIDTH - 5 * TEXT_SIZE_11_WIDTH,
     FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1000"), TEXT_SIZE_11, COLOR16_BLUE,
     COLOR_BACKGROUND_FREQ);
 #else
@@ -428,7 +428,7 @@ void doSetFrequencyRange(BDButton *aTheTouchedButton, int16_t aInputRangeIndex) 
 
 #if defined(AVR)
 void setWaveformButtonCaption(void) {
-    TouchButtonWaveform.setCaptionPGM(getWaveformModePGMString(), (DisplayControl.DisplayPage == DISPLAY_PAGE_FREQUENCY));
+    TouchButtonWaveform.setCaptionPGM(getWaveformModePGMString(), (DisplayControl.DisplayPage == DSO_PAGE_FREQUENCY));
 }
 #endif
 

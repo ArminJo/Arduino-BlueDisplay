@@ -231,6 +231,7 @@ void BDSlider::setValueFormatString(const char *aValueFormatString) {
  * @param aPrintValuePositionFlags - default is FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_VALUE_CAPTION_BELOW
  *                                 see BDSlider.h Flags for slider caption position
  * @param aPrintValueMargin - default is (mRPCView.mRequestedCanvasHeight/60) or (BlueDisplay1.mCurrentDisplaySize.YHeight/60) - for 240 we get 4
+ *                            If caption is defined, then BlueDisplay1.mCurrentDisplaySize.YHeight/120 below caption
  * @param aPrintValueColor - default is COLOR16_BLACK
  * @param aPrintValueBackgroundColor - default is COLOR16_WHITE
  */

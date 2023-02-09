@@ -41,18 +41,6 @@
 #define STRING_BUFFER_STACK_SIZE 32 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE]" for ...PGM() functions.
 #define STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE 34 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG]" for debug(const char *aMessage,...) functions.
 
-
-// Landscape format
-#if !defined(LOCAL_DISPLAY_HEIGHT)
-#define LOCAL_DISPLAY_HEIGHT    DISPLAY_HALF_VGA_HEIGHT
-#endif
-#if !defined(LOCAL_DISPLAY_WIDTH)
-#define LOCAL_DISPLAY_WIDTH     DISPLAY_HALF_VGA_WIDTH
-#endif
-// Portrait format
-//#define LOCAL_DISPLAY_HEIGHT    DISPLAY_HALF_VGA_WIDTH
-//#define LOCAL_DISPLAY_WIDTH     DISPLAY_HALF_VGA_HEIGHT
-
 #if !defined(BACKGROUND_COLOR)
 #define BACKGROUND_COLOR        COLOR16_WHITE
 #endif

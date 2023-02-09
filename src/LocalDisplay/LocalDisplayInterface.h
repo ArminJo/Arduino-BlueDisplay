@@ -39,11 +39,6 @@
 #define FONT_8X12 // Font size used here
 
 /*
- * Local touch generates a local touch down or touch up event for BlueDisplay event handler, if not on button or slider.
- * I.e. localTouchEvent is then filled with data.
- */
-//#define LOCAL_DISPLAY_GENERATES_BD_EVENTS
-/*
  * If both macros are enabled, LocalGUI.hpp should be included and TouchButton and TouchSlider instead of BDButton and BDSlider used.
  */
 //#define DISABLE_REMOTE_DISPLAY // Allow only drawing on the locally attached display by suppress using Bluetooth serial by defining USART_isBluetoothPaired() to return constant false.
@@ -105,6 +100,8 @@ public:
     uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aText, uint8_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor, uint16_t aNumberOfCharacters = 0xFFFF);
 #if defined (AVR)
+    uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
+            color16_t aTextColor, color16_t aBackgroundColor);
     uint16_t drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aText, uint8_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor, uint16_t aNumberOfCharacters = 0xFFFF);
     uint16_t drawMLTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aMultiLineText, uint8_t aFontSize, uint16_t aTextColor,

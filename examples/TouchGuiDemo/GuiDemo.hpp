@@ -32,7 +32,7 @@
 // Must defined after including GameOfLife.hhp, since this #undefine Button etc.
 #if !defined(Button)
 #define BUTTON_IS_DEFINED_LOCALLY
-#  if defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
+#  if defined(SUPPORT_ONLY_LOCAL_DISPLAY)
 // Only local display must be supported, so TouchButton, etc is sufficient
 #define Button              LocalTouchButton
 #define AutorepeatButton    LocalTouchButtonAutorepeat
@@ -63,6 +63,8 @@ void createDemoButtonsAndSliders(void);
  * Global button handler for Chart, GameOfLife, Settings, Calibration and Back button
  */
 void doGuiDemoButtons(Button *aTheTouchedButton, int16_t aValue);
+
+void LongTouchDownHandlerGUIDemo(struct TouchEvent *const aTouchPosition);
 
 /**
  * GUIDemo menu stuff
@@ -163,6 +165,7 @@ void startGuiDemo(void) {
     showGuiDemoMenu();
     tGameOfLifeByteArray = new uint8_t[GAME_OF_LIFE_X_SIZE][GAME_OF_LIFE_Y_SIZE]; // One cell requires one byte
     sMillisOfLastLoop = millis();
+    registerLongTouchDownCallback(&LongTouchDownHandlerGUIDemo, TOUCH_STANDARD_LONG_TOUCH_TIMEOUT_MILLIS);
 }
 
 void loopGuiDemo(void) {
@@ -236,6 +239,8 @@ void loopGuiDemo(void) {
 }
 
 void stopGuiDemo(void) {
+    registerLongTouchDownCallback(NULL, 0);
+
     delete[] tGameOfLifeByteArray;
     // free buttons
     for (unsigned int i = 0; i < sizeof(TouchButtonsGuiDemo) / sizeof(TouchButtonsGuiDemo[0]); ++i) {
@@ -300,59 +305,31 @@ void createDemoButtonsAndSliders(void) {
 // self moving sliders COLOR16_WHITE is bar background color for slider without border
     TouchSliderActionWithoutBorder.init(180, BUTTON_HEIGHT_4_LINE_2 - 10, 20, ACTION_SLIDER_MAX, ACTION_SLIDER_MAX, 0,
             COLOR16_WHITE, COLOR16_YELLOW, FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    TouchSliderActionWithoutBorder.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, SLIDER_DEFAULT_VALUE_MARGIN, COLOR16_BLUE,
-            BACKGROUND_COLOR);
+    TouchSliderActionWithoutBorder.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE,
+            SLIDER_DEFAULT_VALUE_MARGIN, COLOR16_BLUE, COLOR_DEMO_BACKGROUND);
 
     TouchSliderAction.init(180 + 2 * 20 + BUTTON_DEFAULT_SPACING, BUTTON_HEIGHT_4_LINE_2 - 10, 20, ACTION_SLIDER_MAX,
     ACTION_SLIDER_MAX, 0, COLOR16_BLUE, COLOR16_YELLOW,
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
-    TouchSliderAction.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, SLIDER_DEFAULT_VALUE_MARGIN, COLOR16_BLUE, BACKGROUND_COLOR);
+    TouchSliderAction.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, SLIDER_DEFAULT_VALUE_MARGIN,
+            COLOR16_BLUE, COLOR_DEMO_BACKGROUND);
 
 #pragma GCC diagnostic pop
+}
+
+void LongTouchDownHandlerGUIDemo(struct TouchEvent *const aTouchPosition) {
+#if defined(SUPPORT_ONLY_LOCAL_DISPLAY)
+    Display.drawText(0, 0, F("Long touch down detected"), TEXT_SIZE_11, COLOR16_RED, COLOR_DEMO_BACKGROUND);
+#else
+    Display.drawText(0, TEXT_SIZE_11_ASCEND, F("Long touch down detected"), TEXT_SIZE_11, COLOR16_RED, COLOR_DEMO_BACKGROUND);
+#endif
+    Display.drawCircle(aTouchPosition->TouchPosition.PositionX, aTouchPosition->TouchPosition.PositionY, 4, COLOR16_RED);
 }
 
 void doGuiDemoButtons(Button *aTheTouchedButton, int16_t aValue) {
     Button::deactivateAll();
     Slider::deactivateAll();
-    // BD button has an operator == defined
-    if (*aTheTouchedButton == TouchButtonChartDemo) {
-        // Chart button pressed
-        showCharts();
-        return;
-    }
 
-#if defined(SUPPORT_LOCAL_DISPLAY)
-    if (*aTheTouchedButton == TouchButtonCalibration) {
-        //Calibration Button pressed -> calibrate touch panel
-#  if defined(AVR)
-        TouchPanel.doCalibration(TP_EEPROMADDR, false);
-#  else
-        TouchPanel.doCalibration(false);
-#  endif
-        return;
-    }
-
-    if (*aTheTouchedButton == TouchButtonFont) {
-        showFont();
-        return;
-    }
-#endif
-
-    if (*aTheTouchedButton == TouchButtonGameOfLife) {
-        // Game of Life button pressed
-        showGameOfLifeSettings();
-        mCurrentApplication = APPLICATION_GAME_OF_LIFE;
-        return;
-    }
-    if (*aTheTouchedButton == TouchButtonDemoSettings) {
-        // Settings button pressed
-        showSettings();
-        return;
-    }
-    if (*aTheTouchedButton == TouchButtonDrawDemo) {
-        startDrawPage();
-        mCurrentApplication = APPLICATION_DRAW;
-    }
     if (*aTheTouchedButton == TouchButtonBack) {
         // Back button pressed
         if (showingGameOfLife) {
@@ -362,8 +339,42 @@ void doGuiDemoButtons(Button *aTheTouchedButton, int16_t aValue) {
                 stopDrawPage();
             }
             showGuiDemoMenu();
+            // Enable long touch down callback again for main menu page
+            registerLongTouchDownCallback(&LongTouchDownHandlerGUIDemo, TOUCH_STANDARD_LONG_TOUCH_TIMEOUT_MILLIS);
         }
-        return;
+    } else {
+        registerLongTouchDownCallback(NULL, 0); // disable long touch down callback
+
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    if (*aTheTouchedButton == TouchButtonCalibration) {
+        //Calibration Button pressed -> calibrate touch panel
+#  if defined(AVR)
+        TouchPanel.doCalibration(TP_EEPROMADDR, false);
+#  else
+        TouchPanel.doCalibration(false);
+#  endif
+    } else if (*aTheTouchedButton == TouchButtonFont) {
+        showFont();
+    } else
+#endif
+
+        // BD button has an operator == defined
+        if (*aTheTouchedButton == TouchButtonChartDemo) {
+            // Chart button pressed
+            showCharts();
+        } else if (*aTheTouchedButton == TouchButtonGameOfLife) {
+            // Game of Life button pressed
+            showGameOfLifeSettings();
+            mCurrentApplication = APPLICATION_GAME_OF_LIFE;
+
+        } else if (*aTheTouchedButton == TouchButtonDemoSettings) {
+            // Settings button pressed
+            showSettings();
+
+        } else if (*aTheTouchedButton == TouchButtonDrawDemo) {
+            startDrawPage();
+            mCurrentApplication = APPLICATION_DRAW;
+        }
     }
 }
 
@@ -381,10 +392,10 @@ void createGameOfLifeGUI() {
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_VALUE_CAPTION_BELOW | FLAG_SLIDER_VALUE_BY_CALLBACK,
             &doGameOfLifeSpeed);
     TouchSliderGameOfLifeSpeed.setCaptionProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, 2, COLOR16_RED,
-            BACKGROUND_COLOR);
+            COLOR_DEMO_BACKGROUND);
     TouchSliderGameOfLifeSpeed.setCaption("Gol-Speed");
     TouchSliderGameOfLifeSpeed.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, 4 + TEXT_SIZE_11,
-            COLOR16_BLUE, BACKGROUND_COLOR);
+            COLOR16_BLUE, COLOR_DEMO_BACKGROUND);
 
     TouchButtonGameOfLifeDying.init(0, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_2, BUTTON_HEIGHT_4, 0, F("Show\ndying"), TEXT_SIZE_22,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, GameOfLifeShowDying, &doGameOfLifeDying);

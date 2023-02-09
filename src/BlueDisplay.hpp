@@ -953,17 +953,18 @@ void BlueDisplay::drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const ch
 #  endif
     sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPositionX, aPositionY, tTextLength, (uint8_t*) tStringBuffer);
 }
+#endif // defined(AVR)
 
 uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
         color16_t aTextColor, color16_t aBackgroundColor) {
     uint16_t tRetValue = 0;
-    char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-    uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, aPGMString);
-    tRetValue = aPositionX + tTextLength * getTextWidth(aTextSize);
 #  if defined(SUPPORT_LOCAL_DISPLAY)
     tRetValue = LocalDisplay.drawTextPGM(aPositionX, aPositionY - getTextAscend(aTextSize), tPGMString, aTextSize, aTextColor,
             aBackgroundColor);
 #  endif
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+    uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, aPGMString);
+    tRetValue = aPositionX + tTextLength * getTextWidth(aTextSize);
     sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aTextSize, aTextColor, aBackgroundColor,
             tTextLength, (uint8_t*) tStringBuffer);
     return tRetValue;
@@ -990,9 +991,8 @@ void BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const __Fla
     tRetValue = LocalDisplay.drawTextPGM(aPositionX, aPositionY - getTextAscend(aTextSize), tPGMString, tTextLength, COLOR16_BLACK,
             COLOR16_WHITE);
 #  endif
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPositionX, aPositionY, tTextLength, (uint8_t*) tStringBuffer);
+    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPositionX, aPositionY, tTextLength, (uint8_t*) tStringBuffer);
 }
-#endif // defined(AVR)
 
 /***************************************************************************************************************************************************
  *
@@ -1084,15 +1084,6 @@ void BlueDisplay::getNumberWithShortPromptPGM(void (*aNumberHandler)(float), con
     }
 }
 
-void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString) {
-    if (USART_isBluetoothPaired()) {
-        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        uint8_t tShortPromptLength = _clipAndCopyPGMString(tStringBuffer, aPGMShortPromptString);
-        sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 1, aNumberHandler, tShortPromptLength,
-                (uint8_t*) tStringBuffer);
-    }
-}
-
 void BlueDisplay::getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString,
         float aInitialValue) {
     if (USART_isBluetoothPaired()) {
@@ -1106,6 +1097,16 @@ void BlueDisplay::getNumberWithShortPromptPGM(void (*aNumberHandler)(float), con
         floatToShortArray.floatValue = aInitialValue;
         sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 3, aNumberHandler, floatToShortArray.shortArray[0],
                 floatToShortArray.shortArray[1], tShortPromptLength, (uint8_t*) tStringBuffer);
+    }
+}
+#endif
+
+void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString) {
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+        uint8_t tShortPromptLength = _clipAndCopyPGMString(tStringBuffer, aPGMShortPromptString);
+        sendUSARTArgsAndByteBuffer(FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT, 1, aNumberHandler, tShortPromptLength,
+                (uint8_t*) tStringBuffer);
     }
 }
 
@@ -1123,7 +1124,6 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
                 floatToShortArray.shortArray[1], tShortPromptLength, (uint8_t*) tStringBuffer);
     }
 }
-#endif
 
 /***************************************************************************************************************************************************
  *
