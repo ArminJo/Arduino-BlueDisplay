@@ -1205,9 +1205,9 @@ void setChannelButtonsCaption(void) {
     for (uint_fast8_t i = 0; i < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR; ++i) {
         if (MeasurementControl.AttenuatorType == ATTENUATOR_TYPE_FIXED_ATTENUATOR) {
 //            TouchButtonAutoOffsetMode.setCaptionFromStringArrayPGM(ChannelDivByButtonStrings, i); // requires 16 butes more
-            TouchButtonChannels[i].setCaptionPGM(ChannelDivByButtonStrings[i]);
+            TouchButtonChannels[i].setCaption((const __FlashStringHelper *)ChannelDivByButtonStrings[i]);
         } else {
-            TouchButtonChannels[i].setCaptionPGM(ADCInputMUXChannelStrings[i]);
+            TouchButtonChannels[i].setCaption((const __FlashStringHelper *)ADCInputMUXChannelStrings[i]);
         }
     }
 }
@@ -1226,7 +1226,7 @@ void setSlopeButtonCaption(void) {
 }
 
 void setTriggerModeButtonCaption(void) {
-    TouchButtonTriggerMode.setCaptionFromStringArrayPGM(sTriggerModeButtonCaptionStringArray, MeasurementControl.TriggerMode,
+    TouchButtonTriggerMode.setCaptionFromStringArray((const __FlashStringHelper *const *)sTriggerModeButtonCaptionStringArray, MeasurementControl.TriggerMode,
             (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
@@ -1238,19 +1238,19 @@ void setAutoRangeModeAndButtonCaption(bool aNewAutoRangeMode) {
     } else {
         tCaption = AutoRangeButtonStringManual;
     }
-    TouchButtonAutoRangeOnOff.setCaptionPGM(tCaption, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonAutoRangeOnOff.setCaption((const __FlashStringHelper *)tCaption, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
 void setAutoOffsetButtonCaption(void) {
-    TouchButtonAutoOffsetMode.setCaptionFromStringArrayPGM(sAutoOffsetButtonCaptionStringArray, MeasurementControl.OffsetMode,
+    TouchButtonAutoOffsetMode.setCaptionFromStringArray((const __FlashStringHelper *const *)sAutoOffsetButtonCaptionStringArray, MeasurementControl.OffsetMode,
             (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
 void setACModeButtonCaption(void) {
     if (MeasurementControl.ChannelIsACMode) {
-        TouchButtonAcDc.setCaptionPGM(PSTR("AC"));
+        TouchButtonAcDc.setCaption(F("AC"));
     } else {
-        TouchButtonAcDc.setCaptionPGM(PSTR("DC"));
+        TouchButtonAcDc.setCaption(F("DC"));
     }
 }
 
@@ -1270,7 +1270,7 @@ void setReferenceButtonCaption(void) {
     } else {
         tCaption = ReferenceButton1_1V;
     }
-    TouchButtonADCReference.setCaptionPGM(tCaption, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonADCReference.setCaption((const __FlashStringHelper *)tCaption, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 #endif
 
@@ -1520,7 +1520,7 @@ void doChannelSelect(BDButton *aTheTouchedButton, int16_t aValue) {
                     //reset caption of 4. button to "Ch 3"
                     tCaptionIndex = NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR;
                 }
-                TouchButtonChannelSelect.setCaptionPGM(ADCInputMUXChannelStrings[tCaptionIndex]);
+                TouchButtonChannelSelect.setCaption((const __FlashStringHelper *)ADCInputMUXChannelStrings[tCaptionIndex]);
             }
         }
         setChannel(tNewChannelValue);

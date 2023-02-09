@@ -115,20 +115,20 @@ void cycleWaveformMode() {
     setWaveformMode(sFrequencyInfo.Waveform + 1);
 }
 
-const char* cycleWaveformModePGMString() {
+const __FlashStringHelper* cycleWaveformModePGMString() {
     cycleWaveformMode();
     return getWaveformModePGMString();
 }
 
-const char* getWaveformModePGMString() {
-    const char *tResultString;
-    tResultString = PSTR("Square");
+const __FlashStringHelper* getWaveformModePGMString() {
+    const __FlashStringHelper *tResultString;
+    tResultString = F("Square");
     if (sFrequencyInfo.Waveform == WAVEFORM_SINE) {
-        tResultString = PSTR("Sine");
+        tResultString = F("Sine");
     } else if (sFrequencyInfo.Waveform == WAVEFORM_TRIANGLE) {
-        tResultString = PSTR("Triangle");
+        tResultString = F("Triangle");
     } else if (sFrequencyInfo.Waveform == WAVEFORM_SAWTOOTH) {
-        tResultString = PSTR("Sawtooth");
+        tResultString = F("Sawtooth");
     }
     return tResultString;
 }

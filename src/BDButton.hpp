@@ -130,6 +130,54 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
 #endif
 }
 
+void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
+        const __FlashStringHelper *aPGMCaption, uint16_t aCaptionSize, uint8_t aFlags, int16_t aValue,
+        void (*aOnTouchHandler)(BDButton*, int16_t)) {
+#if !defined (AVR)
+    init(aPositionX, aPositionY, aWidthX, aHeightY, aButtonColor, reinterpret_cast<const char*>(aPGMCaption), aCaptionSize, aFlags, aValue,
+            aOnTouchHandler);
+#else
+
+    BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
+
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+        uint8_t tCaptionLength = _clipAndCopyPGMString(tStringBuffer, aPGMCaption);
+
+#if __SIZEOF_POINTER__ == 4
+        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 11, tButtonNumber, aPositionX, aPositionY, aWidthX, aHeightY,
+                aButtonColor, aCaptionSize, aFlags, aValue, aOnTouchHandler, (reinterpret_cast<uint32_t>(aOnTouchHandler) >> 16),
+                tCaptionLength, tStringBuffer);
+#else
+        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 10, tButtonNumber, aPositionX, aPositionY, aWidthX, aHeightY,
+                aButtonColor, aCaptionSize, aFlags, aValue, aOnTouchHandler, tCaptionLength, tStringBuffer);
+#endif
+    }
+    mButtonHandle = tButtonNumber;
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    /*
+     * Allocate a local button here to be displayed locally
+     */
+    if (aFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
+#  if defined(DISABLE_REMOTE_DISPLAY)
+        mLocalButtonPtr = new LocalTouchButtonAutorepeat();
+#  else
+        mLocalButtonPtr = new LocalTouchButtonAutorepeat(this);
+#  endif
+    } else {
+#  if defined(DISABLE_REMOTE_DISPLAY)
+        mLocalButtonPtr = new LocalTouchButton();
+#  else
+        mLocalButtonPtr = new LocalTouchButton(this);
+#  endif
+    }
+    // Cast required here. At runtime the right pointer is returned because of FLAG_USE_BDBUTTON_FOR_CALLBACK
+    mLocalButtonPtr->init(aPositionX, aPositionY, aWidthX, aHeightY, aButtonColor, aPGMCaption, aCaptionSize,
+            aFlags | LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK, aValue, reinterpret_cast<void (*)(LocalTouchButton*, int16_t)> (aOnTouchHandler));
+#endif // defined(SUPPORT_LOCAL_DISPLAY)
+#endif // !defined (AVR)
+}
+
 /*
  * This function deletes the last BDButton initialized by BDButton::init() simply by decreasing sLocalButtonIndex by one.
  * So next BDButton::init() uses the same button on the remote side again.
@@ -174,6 +222,18 @@ void BDButton::setCaptionForValueTrue(const char *aCaption) {
     sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_SET_CAPTION_FOR_VALUE_TRUE, 1, mButtonHandle, strlen(aCaption), aCaption);
 }
 
+void BDButton::setCaptionForValueTrue(const __FlashStringHelper *aPGMCaption) {
+#if defined (AVR)
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+        uint8_t tCaptionLength = _clipAndCopyPGMString(tStringBuffer, aPGMCaption);
+        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_SET_CAPTION_FOR_VALUE_TRUE, 1, mButtonHandle, tCaptionLength, tStringBuffer);
+    }
+#else
+    setCaptionForValueTrue(reinterpret_cast<const char*>(aPGMCaption));
+#endif
+}
+
 void BDButton::setCaption(const char *aCaption, bool doDrawButton) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->setCaption(aCaption);
@@ -189,9 +249,34 @@ void BDButton::setCaption(const char *aCaption, bool doDrawButton) {
         sendUSARTArgsAndByteBuffer(tFunctionCode, 1, mButtonHandle, strlen(aCaption), aCaption);
     }
 }
+void BDButton::setCaption(const __FlashStringHelper *aPGMCaption, bool doDrawButton) {
+#if defined (AVR)
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+        uint8_t tCaptionLength = _clipAndCopyPGMString(tStringBuffer, aPGMCaption);
+        uint8_t tFunctionCode = FUNCTION_BUTTON_SET_CAPTION;
+        if (doDrawButton) {
+            tFunctionCode = FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON;
+        }
+        sendUSARTArgsAndByteBuffer(tFunctionCode, 1, mButtonHandle, tCaptionLength, tStringBuffer);
+    }
+#else
+    setCaption(reinterpret_cast<const char*>(aPGMCaption), doDrawButton);
+#endif
+}
 
-void BDButton::setCaptionFromStringArray(const char *const aCaptionStringArrayPtr[], uint8_t aStringIndex, bool doDrawButton) {
+void BDButton::setCaptionFromStringArray(const char *const *aCaptionStringArrayPtr, uint8_t aStringIndex, bool doDrawButton) {
     setCaption(aCaptionStringArrayPtr[aStringIndex], doDrawButton);
+}
+
+void BDButton::setCaptionFromStringArray(const __FlashStringHelper *const *aPGMCaptionStringArrayPtr, uint8_t aStringIndex,
+        bool doDrawButton) {
+#if defined(AVR)
+        __FlashStringHelper *tPGMCaption = (__FlashStringHelper*) pgm_read_word(&aPGMCaptionStringArrayPtr[aStringIndex]);
+        setCaption(tPGMCaption, doDrawButton);
+    #else
+        setCaptionFromStringArray((const char *const *)aPGMCaptionStringArrayPtr,aStringIndex,doDrawButton);
+#endif
 }
 
 void BDButton::setValue(int16_t aValue, bool doDrawButton) {
@@ -275,7 +360,6 @@ void BDButton::deactivate() {
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 2, mButtonHandle, SUBFUNCTION_BUTTON_RESET_ACTIVE);
 }
-
 
 /*
  * Static functions
@@ -398,78 +482,6 @@ void BDButton::deactivateAll() {
 //    mButtonHandle = tButtonNumber;
 //}
 
-#if defined(F) && defined(ARDUINO)
-void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
-        const __FlashStringHelper *aPGMCaption, uint16_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-        void (*aOnTouchHandler)(BDButton*, int16_t)) {
-
-    BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
-
-    if (USART_isBluetoothPaired()) {
-        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        uint8_t tCaptionLength = _clipAndCopyPGMString(tStringBuffer, aPGMCaption);
-
-#if __SIZEOF_POINTER__ == 4
-        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 11, tButtonNumber, aPositionX, aPositionY, aWidthX, aHeightY,
-                aButtonColor, aCaptionSize, aFlags, aValue, aOnTouchHandler, (reinterpret_cast<uint32_t>(aOnTouchHandler) >> 16),
-                tCaptionLength, tStringBuffer);
-#else
-        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 10, tButtonNumber, aPositionX, aPositionY, aWidthX, aHeightY,
-                aButtonColor, aCaptionSize, aFlags, aValue, aOnTouchHandler, tCaptionLength, tStringBuffer);
-#endif
-    }
-    mButtonHandle = tButtonNumber;
-#if defined(SUPPORT_LOCAL_DISPLAY)
-    /*
-     * Allocate a local button here to be displayed locally
-     */
-    if (aFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
-#  if defined(DISABLE_REMOTE_DISPLAY)
-        mLocalButtonPtr = new LocalTouchButtonAutorepeat();
-#  else
-        mLocalButtonPtr = new LocalTouchButtonAutorepeat(this);
-#  endif
-    } else {
-#  if defined(DISABLE_REMOTE_DISPLAY)
-        mLocalButtonPtr = new LocalTouchButton();
-#  else
-        mLocalButtonPtr = new LocalTouchButton(this);
-#  endif
-    }
-    // Cast required here. At runtime the right pointer is returned because of FLAG_USE_BDBUTTON_FOR_CALLBACK
-    mLocalButtonPtr->init(aPositionX, aPositionY, aWidthX, aHeightY, aButtonColor, aPGMCaption, aCaptionSize,
-            aFlags | LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK, aValue, reinterpret_cast<void (*)(LocalTouchButton*, int16_t)> (aOnTouchHandler));
-
-#endif
-}
-
-/*
- * Sets caption for value true (green button) if different from false (red button) caption
- */
-
-void BDButton::setCaptionForValueTrue(const __FlashStringHelper *aPGMCaption) {
-    if (USART_isBluetoothPaired()) {
-        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        uint8_t tCaptionLength = _clipAndCopyPGMString(tStringBuffer, aPGMCaption);
-        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_SET_CAPTION_FOR_VALUE_TRUE, 1, mButtonHandle, tCaptionLength, tStringBuffer);
-    }
-}
-/*
- * sets only caption
- */
-void BDButton::setCaption(const __FlashStringHelper *aPGMCaption, bool doDrawButton) {
-    if (USART_isBluetoothPaired()) {
-        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        uint8_t tCaptionLength = _clipAndCopyPGMString(tStringBuffer, aPGMCaption);
-        uint8_t tFunctionCode = FUNCTION_BUTTON_SET_CAPTION;
-        if (doDrawButton) {
-            tFunctionCode = FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON;
-        }
-        sendUSARTArgsAndByteBuffer(tFunctionCode, 1, mButtonHandle, tCaptionLength, tStringBuffer);
-    }
-}
-#endif // defined(F)
-
 #if defined(AVR)
 void BDButton::setCaptionPGMForValueTrue(const char *aPGMCaption) {
     setCaptionForValueTrue((const __FlashStringHelper*) aPGMCaption);
@@ -488,7 +500,6 @@ void BDButton::setCaptionFromStringArrayPGM(const char *const aPGMCaptionStringA
 
 void BDButton::setCaptionPGM(const char *aPGMCaption, bool doDrawButton) {
     setCaption(reinterpret_cast<const __FlashStringHelper*>(aPGMCaption), doDrawButton);
-
 }
 
 #endif // defined(AVR)

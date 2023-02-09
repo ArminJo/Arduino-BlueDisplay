@@ -227,18 +227,13 @@ uint16_t LocalDisplayInterface::drawText(uint16_t aPositionX, uint16_t aPosition
     return tPositionX;
 }
 
+uint16_t LocalDisplayInterface::drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString,
+        uint16_t aFontSize, color16_t aTextColor, color16_t aBackgroundColor, uint16_t aNumberOfCharacters) {
 #if defined (AVR)
-uint16_t LocalDisplayInterface::drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
-        color16_t aTextColor, color16_t aBackgroundColor) {
-    return drawTextPGM(aPositionX, aPositionY, (const char *)aPGMString, aFontSize, aTextColor, aBackgroundColor);
-}
-
-uint16_t LocalDisplayInterface::drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aText, uint8_t aFontSize,
-        uint16_t aTextColor, uint16_t aBackgroundColor, uint16_t aNumberOfCharacters) {
-
     uint16_t tPositionX = aPositionX;
-    auto tNumberOfCharacters = strnlen_P(aText, aNumberOfCharacters);
-    char tChar = pgm_read_byte(aText++);
+    const char *tPGMString = reinterpret_cast<const char*>(aPGMString);
+    auto tNumberOfCharacters = strnlen_P(tPGMString, aNumberOfCharacters);
+    char tChar = pgm_read_byte(tPGMString++);
     uint8_t tFontScaleFactor = getFontScaleFactorFromTextSize(aFontSize);
 
     while (tNumberOfCharacters-- != 0) {
@@ -246,11 +241,14 @@ uint16_t LocalDisplayInterface::drawTextPGM(uint16_t aPositionX, uint16_t aPosit
         if (tPositionX > LOCAL_DISPLAY_WIDTH) {
             break;
         }
-        tChar = pgm_read_byte(aText++);
+        tChar = pgm_read_byte(tPGMString++);
     }
     return tPositionX;
-}
+#else
+    return drawText(aPositionX, aPositionY, reinterpret_cast<const char*>(aPGMString), aFontSize, aTextColor, aBackgroundColor);
 #endif
+
+}
 
 /**
  *
@@ -259,8 +257,8 @@ uint16_t LocalDisplayInterface::drawTextPGM(uint16_t aPositionX, uint16_t aPosit
  *
  * @return aPositiony for next text
  */
-uint16_t LocalDisplayInterface::drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aMultiLineText,
-        uint8_t aFontSize, uint16_t aTextColor, uint16_t aBackgroundColor) {
+uint16_t LocalDisplayInterface::drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aMultiLineText, uint8_t aFontSize,
+        uint16_t aTextColor, uint16_t aBackgroundColor, bool isPGMText) {
     uint16_t tPositionX = aPositionX;
     uint16_t tPositionY = aPositionY;
 
@@ -276,10 +274,19 @@ uint16_t LocalDisplayInterface::drawMLText(uint16_t aPositionX, uint16_t aPositi
 
     uint16_t tMaximumNumberOfCharsInOneLine = (LOCAL_DISPLAY_WIDTH - aPositionX) / (FONT_WIDTH * tFontScaleFactor);
     const char *tWordStartPointer = tPointerToCurrentChar;
-    while (*tPointerToCurrentChar != '\0' && (tPositionY + tEffectiveFontHeight < LOCAL_DISPLAY_HEIGHT)) {
-        tChar = *tPointerToCurrentChar++;
+    while ((tPositionY + tEffectiveFontHeight) < LOCAL_DISPLAY_HEIGHT) {
+#if defined(AVR)
+        if (isPGMText) {
+            tChar = pgm_read_byte(tPointerToCurrentChar++);
+        } else
+#endif
+        {
+            tChar = *tPointerToCurrentChar++;
+        }
 
-        if (tChar == '\n') {
+        if (tChar == '\0') {
+            break; // end of string
+        } else if (tChar == '\n') {
             // new line -> update position and optionally clear line
             tPositionX = aPositionX;
             tPositionY += tEffectiveFontHeight + 1;
@@ -344,80 +351,13 @@ uint16_t LocalDisplayInterface::drawMLText(uint16_t aPositionX, uint16_t aPositi
     return tPositionY;
 }
 
-#if defined (AVR)
-uint16_t LocalDisplayInterface::drawMLTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aMultiLineText,
+uint16_t LocalDisplayInterface::drawMLText(uint16_t aStartX, uint16_t aStartY, const __FlashStringHelper *aPGMMultiLineText,
         uint8_t aFontSize, uint16_t aTextColor, uint16_t aBackgroundColor) {
-    return drawMLTextPGM(aPositionX, aPositionY, LOCAL_DISPLAY_WIDTH - 1, LOCAL_DISPLAY_HEIGHT - 1, aMultiLineText,
-            aFontSize, aTextColor, aBackgroundColor);
-}
-
-uint16_t LocalDisplayInterface::drawMLTextPGM(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY,
-        const char *aMultiLineText, uint8_t aFontSize, uint16_t aTextColor, uint16_t aBackgroundColor) {
-    uint16_t x = aStartX, y = aStartY, wlen, llen;
-    char c;
-    PGM_P wstart;
-    uint8_t tFontScaleFactor = getFontScaleFactorFromTextSize(aFontSize);
-
-    fillRect(aStartX, aStartY, aEndX, aEndY, aBackgroundColor);
-
-    llen = (aEndX - aStartX) / (FONT_WIDTH * tFontScaleFactor); //line len in chars
-    wstart = aMultiLineText;
-    c = pgm_read_byte(aMultiLineText++);
-    while ((c != 0) && (y < aEndY)) {
-        if (c == '\n') //new line
-                {
-            x = aStartX;
-            y += (FONT_HEIGHT * tFontScaleFactor) + 1;
-            c = pgm_read_byte(aMultiLineText++);
-            continue;
-        } else if (c == '\r') //skip
-                {
-            c = pgm_read_byte(aMultiLineText++);
-            continue;
-        }
-
-        if (c == ' ') //start of a new word
-                {
-            wstart = aMultiLineText;
-            if (x == aStartX) //do nothing
-                    {
-                c = pgm_read_byte(aMultiLineText++);
-                continue;
-            }
-        }
-
-        if (c) {
-            if ((x + (FONT_WIDTH * tFontScaleFactor)) > aEndX) //new line
-                    {
-                if (c == ' ') //do not start with space
-                        {
-                    x = aStartX;
-                    y += (FONT_HEIGHT * tFontScaleFactor) + 1;
-                } else {
-                    wlen = (aMultiLineText - wstart);
-                    if (wlen > llen) //word too long
-                            {
-                        x = aStartX;
-                        y += (FONT_HEIGHT * tFontScaleFactor) + 1;
-                        if (y < aEndY) {
-                            x = drawChar(x, y, c, tFontScaleFactor, aTextColor, aBackgroundColor);
-                        }
-                    } else {
-                        fillRect(x - (wlen * FONT_WIDTH * tFontScaleFactor), y, aEndX, (y + (FONT_HEIGHT * tFontScaleFactor)),
-                                aBackgroundColor); //clear word
-                        x = aStartX;
-                        y += (FONT_HEIGHT * tFontScaleFactor) + 1;
-                        aMultiLineText = wstart;
-                    }
-                }
-            } else {
-                x = drawChar(x, y, c, tFontScaleFactor, aTextColor, aBackgroundColor);
-            }
-        }
-        c = pgm_read_byte(aMultiLineText++);
-    }
-
-    return x;
-}
+#if defined (AVR)
+    return drawMLText(aStartX, aStartY, reinterpret_cast<const char*>(aPGMMultiLineText), aFontSize, aTextColor, aBackgroundColor, true); // Is PGM text
+#else
+    return drawMLText(aStartX, aStartY, reinterpret_cast<const char*>(aPGMMultiLineText), aFontSize, aTextColor, aBackgroundColor);
 #endif // defined (AVR)
+}
+
 #endif // _LOCAL_DISPLAY_INTERFACE_HPP

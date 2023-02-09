@@ -134,6 +134,7 @@
 #define SUPPORT_ONLY_TEXT_SIZE_11_AND_22  // Saves 248 bytes program memory
 #define DISABLE_REMOTE_DISPLAY  // Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display
 #define SUPPORT_LOCAL_DISPLAY   // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
+#define FONT_8X12               // Font size used here
 #include "LocalHX8347DDisplay.hpp" // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
 #include "LocalGUI.hpp"         // Includes the sources for LocalTouchButton etc.
 
@@ -1555,6 +1556,9 @@ void drawGui() {
     TouchButtonLeft.drawButton();
     TouchButtonRight.drawButton();
 
+    // this test the MLText function :-), but cost 380 bytes :-(
+    LocalDisplay.drawMLText(10, BUTTON_HEIGHT_4_LINE_2 + 34, F("Welcome to\nArduino DSO"), TEXT_SIZE_22, COLOR16_BLUE, COLOR16_NO_BACKGROUND);
+
     // Just show the buttons, do not activate them
     TouchButtonLeft.deactivate();
     TouchButtonRight.deactivate();
@@ -1687,9 +1691,9 @@ void doTimeBaseDisplayScroll(LocalTouchButton *const aTheTouchedButton __attribu
 void doTriggerAutoOnOff(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.TriggerValuesAutomatic = (!MeasurementControl.TriggerValuesAutomatic);
     if (MeasurementControl.TriggerValuesAutomatic) {
-        TouchButtonAutoTriggerOnOff.setCaptionPGM(AutoTriggerButtonStringAuto);
+        TouchButtonAutoTriggerOnOff.setCaption((const __FlashStringHelper *)AutoTriggerButtonStringAuto);
     } else {
-        TouchButtonAutoTriggerOnOff.setCaptionPGM(AutoTriggerButtonStringManual);
+        TouchButtonAutoTriggerOnOff.setCaption((const __FlashStringHelper *)AutoTriggerButtonStringManual);
     }
     TouchButtonAutoTriggerOnOff.drawButton();
 }
@@ -1700,9 +1704,9 @@ void doTriggerAutoOnOff(LocalTouchButton *const aTheTouchedButton __attribute__(
 void doTriggerSlope(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.TriggerSlopeRising = (!MeasurementControl.TriggerSlopeRising);
     if (MeasurementControl.TriggerSlopeRising) {
-        TouchButtonSlope.setCaptionPGM(SlopeButtonStringAscending);
+        TouchButtonSlope.setCaption((const __FlashStringHelper *)SlopeButtonStringAscending);
     } else {
-        TouchButtonSlope.setCaptionPGM(SlopeButtonStringDecending);
+        TouchButtonSlope.setCaption((const __FlashStringHelper *)SlopeButtonStringDecending);
     }
     TouchButtonSlope.drawButton();
 }
@@ -1713,9 +1717,9 @@ void doTriggerSlope(LocalTouchButton *const aTheTouchedButton __attribute__((unu
 void doAutoOffsetOnOff(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.OffsetAutomatic = !MeasurementControl.OffsetAutomatic;
     if (MeasurementControl.OffsetAutomatic) {
-        TouchButtonAutoOffsetOnOff.setCaptionPGM(AutoOffsetButtonStringAuto);
+        TouchButtonAutoOffsetOnOff.setCaption((const __FlashStringHelper *)AutoOffsetButtonStringAuto);
     } else {
-        TouchButtonAutoOffsetOnOff.setCaptionPGM(AutoOffsetButtonString0);
+        TouchButtonAutoOffsetOnOff.setCaption((const __FlashStringHelper *)AutoOffsetButtonString0);
         // disable auto offset
         MeasurementControl.ValueOffset = 0;
     }
@@ -1725,9 +1729,9 @@ void doAutoOffsetOnOff(LocalTouchButton *const aTheTouchedButton __attribute__((
 void doRangeMode(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.RangeAutomatic = !MeasurementControl.RangeAutomatic;
     if (MeasurementControl.RangeAutomatic) {
-        TouchButtonAutoRangeOnOff.setCaptionPGM(AutoRangeButtonStringAuto);
+        TouchButtonAutoRangeOnOff.setCaption((const __FlashStringHelper *)AutoRangeButtonStringAuto);
     } else {
-        TouchButtonAutoRangeOnOff.setCaptionPGM(AutoRangeButtonStringManual);
+        TouchButtonAutoRangeOnOff.setCaption((const __FlashStringHelper *)AutoRangeButtonStringManual);
     }
     TouchButtonAutoRangeOnOff.drawButton();
 }
@@ -1743,10 +1747,10 @@ void doADCReference(LocalTouchButton *const aTheTouchedButton __attribute__((unu
 #else
         tReference = INTERNAL;
 #endif
-        TouchButtonADCReference.setCaptionPGM(ReferenceButton1_1V);
+        TouchButtonADCReference.setCaption((const __FlashStringHelper *)ReferenceButton1_1V);
     } else {
         tReference = DEFAULT;
-        TouchButtonADCReference.setCaptionPGM(ReferenceButton5_0V);
+        TouchButtonADCReference.setCaption((const __FlashStringHelper *)ReferenceButton5_0V);
     }
     setReference(tReference);
     TouchButtonADCReference.drawButton();
@@ -1836,7 +1840,7 @@ void doDisplayMode(LocalTouchButton *const aTheTouchedButton __attribute__((unus
  */
 void doSettings(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     // convert singleshot to back button - no color change needed :-)
-    TouchButtonBack_Singleshot.setCaptionPGM(ButtonStringBack);
+    TouchButtonBack_Singleshot.setCaption((const __FlashStringHelper *)ButtonStringBack);
     if (!MeasurementControl.IsRunning) {
         LocalDisplay.clearDisplay(COLOR_BACKGROUND_DSO);
     }
@@ -1853,7 +1857,7 @@ void doTriggerSingleshot(LocalTouchButton *const aTheTouchedButton __attribute__
          * Here, this button is the back button of the settings page!
          */
         TouchSliderBacklight.deactivate();
-        TouchButtonBack_Singleshot.setCaptionPGM(ButtonStringSingleshot);
+        TouchButtonBack_Singleshot.setCaption((const __FlashStringHelper *)ButtonStringSingleshot);
         if (MeasurementControl.IsRunning) {
             DisplayControl.DisplayMode = DISPLAY_MODE_CHART;
             LocalDisplay.clearDisplay(COLOR_BACKGROUND_DSO);
@@ -1937,7 +1941,7 @@ void doChartHistory(LocalTouchButton *const aTheTouchedButton __attribute__((unu
     if (DisplayControl.EraseColorIndex > 2) {
         DisplayControl.EraseColorIndex = 0;
     }
-    TouchButtonChartHistory.setCaptionPGM(ChartHistoryButtonStrings[DisplayControl.EraseColorIndex]);
+    TouchButtonChartHistory.setCaption((const __FlashStringHelper *)ChartHistoryButtonStrings[DisplayControl.EraseColorIndex]);
     DisplayControl.EraseColor = EraseColors[DisplayControl.EraseColorIndex];
     if (DisplayControl.DisplayMode == DISPLAY_MODE_SHOW_MAIN_GUI) {
         // show new caption

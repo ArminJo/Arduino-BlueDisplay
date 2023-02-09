@@ -66,8 +66,8 @@ extern const char FrequencyRangeChars[4]; // see FrequencyRangeIndex above
 
 void setWaveformMode(uint8_t aNewMode);
 void cycleWaveformMode();
-const char * cycleWaveformModePGMString();
-const char * getWaveformModePGMString();
+const __FlashStringHelper* cycleWaveformModePGMString();
+const __FlashStringHelper* getWaveformModePGMString();
 float getPeriodMicros();
 
 void setNormalizedFrequencyAndFactor(float aFrequency);

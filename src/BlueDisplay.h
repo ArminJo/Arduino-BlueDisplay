@@ -75,26 +75,15 @@
 #    define strncpy_P(dest, src, size) strncpy((dest), (src), (size))
 #    endif
 #  endif
-#else
-#  if !defined(PROGMEM)
-#  define PROGMEM
-#  endif
-
-#  if !defined(PGM_P)
-#  define PGM_P const char *
-#  endif
-
-#  if !defined(PSTR)
-#  define PSTR(str) (str)
-#  endif
-
-#  if !defined(F)
-#  define F(str) (str)
-#  endif
-
-#  ifndef __FlashStringHelper
-#  define __FlashStringHelper char
-#  endif
+#elif !defined(PROGMEM)
+#define PROGMEM
+#define PGM_P  const char *
+#define PSTR(str) (str)
+#ifdef __cplusplus
+class __FlashStringHelper;
+#define F(string_literal) (reinterpret_cast<const __FlashStringHelper *>(PSTR(string_literal)))
+#endif
+#define _SFR_BYTE(n) (n)
 #endif
 
 #include "Colors.h"
@@ -226,20 +215,25 @@ public:
     uint16_t drawChar(uint16_t aPositionX, uint16_t aPositionY, char aChar, uint16_t aCharSize, color16_t aCharacterColor,
             color16_t aBackgroundColor);
     void drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr);
+    void drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString);
     uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor);
-    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aTextSize, color16_t aTextColor,
+    uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
+            color16_t aTextColor, color16_t aBackgroundColor);
+    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor);
+    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
+            color16_t aTextColor, color16_t aBackgroundColor);
 
-    uint16_t drawByte(uint16_t aPositionX, uint16_t aPositionY, int8_t aByte, uint16_t aTextSize = TEXT_SIZE_11,
+    uint16_t drawByte(uint16_t aPositionX, uint16_t aPositionY, int8_t aByte, uint16_t aFontSize = TEXT_SIZE_11,
             color16_t aFGColor =
             COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
-    uint16_t drawUnsignedByte(uint16_t aPositionX, uint16_t aPositionY, uint8_t aUnsignedByte, uint16_t aTextSize = TEXT_SIZE_11,
+    uint16_t drawUnsignedByte(uint16_t aPositionX, uint16_t aPositionY, uint8_t aUnsignedByte, uint16_t aFontSize = TEXT_SIZE_11,
             color16_t aFGColor = COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
-    uint16_t drawShort(uint16_t aPositionX, uint16_t aPositionY, int16_t aShort, uint16_t aTextSize = TEXT_SIZE_11,
+    uint16_t drawShort(uint16_t aPositionX, uint16_t aPositionY, int16_t aShort, uint16_t aFontSize = TEXT_SIZE_11,
             color16_t aFGColor =
             COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
-    uint16_t drawLong(uint16_t aPositionX, uint16_t aPositionY, int32_t aLong, uint16_t aTextSize = TEXT_SIZE_11,
+    uint16_t drawLong(uint16_t aPositionX, uint16_t aPositionY, int32_t aLong, uint16_t aFontSize = TEXT_SIZE_11,
             color16_t aFGColor =
             COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
 
@@ -304,7 +298,10 @@ public:
 
     void getNumber(void (*aNumberHandler)(float));
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const char *aShortPromptString);
+    void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString);
     void getNumberWithShortPrompt(void (*aNumberHandler)(float), const char *aShortPromptString, float aInitialValue);
+    void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
+            float aInitialValue);
     // Not yet implemented
     //    void getText(void (*aTextHandler)(const char *));
     //    void getTextWithShortPrompt(void (*aTextHandler)(const char *), const char *aShortPromptString);
@@ -317,26 +314,16 @@ public:
 
 #if defined(AVR)
     // On non AVR platforms PGM functions are reduced to plain functions
-    uint16_t drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString, uint16_t aTextSize, color16_t aTextColor,
+    uint16_t drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString, uint16_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor);
     void drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString, float aInitialValue);
 #endif
 
-    // On non AVR platforms __FlashStringHelper is reduced to char
-    void drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString);
-    uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
-            color16_t aTextColor, color16_t aBackgroundColor);
-    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aTextSize,
-            color16_t aTextColor, color16_t aBackgroundColor);
-    void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString);
-    void getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
-            float aInitialValue);
-
     // Not yet implemented    void getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const __FlashStringHelper *aPGMShortPromptString);
 
-    void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aTextSize, uint16_t aPeriodMillis);
+    void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aFontSize, uint16_t aPeriodMillis);
 
     struct XYSize mRequestedDisplaySize; // contains requested display size
     struct XYSize mCurrentDisplaySize; // contains real host display size. Is initialized at connection build up and updated at reorientation and redraw event.
@@ -397,8 +384,8 @@ float getTemperature(void);
 /*
  * Version 4.0.0
  * - Major refactoring, many bug fixes and seamless support of local display.
- * - All *Rel*() functions now have signed delta parameters. Fixed bug in drawLineRelWithThickness() for local display.
- * - Improved handling of local display and fixed bugs in drawLineRelWithThickness() and Button list for local display.
+ * - All *Rel*() functions now have signed delta parameters.
+ * - Fixed bugs in drawLineRelWithThickness() and Button list for local display.
  * - Added debug(const __FlashStringHelper *aStringPtr).
  * - Added bool delay(AndCheckForEvent().
  *
@@ -445,7 +432,7 @@ float getTemperature(void);
  * Version 1.2.0
  * - Use type `Print *` instead of `Stream *`.
  * - New function `initSerial()`
- * - Changed parameter aTextSize to uint16_t also for AVR specific functions.
+ * - Changed parameter aFontSize to uint16_t also for AVR specific functions.
  *
  * This old version numbers corresponds to the version of the BlueDisplay app
  * Version 3.7

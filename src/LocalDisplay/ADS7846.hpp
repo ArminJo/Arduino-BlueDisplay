@@ -260,13 +260,8 @@ void ADS7846::doCalibration(bool aCheckRTC)
          * Clear screen
          */
         LocalDisplay.clearDisplay(COLOR16_WHITE);
-#if defined(AVR)
-        LocalDisplay.drawTextPGM((LOCAL_DISPLAY_WIDTH / 2) - 50, (LOCAL_DISPLAY_HEIGHT / 2) - 10, PSTR("Calibration"), 1,
+        LocalDisplay.drawText((LOCAL_DISPLAY_WIDTH / 2) - 50, (LOCAL_DISPLAY_HEIGHT / 2) - 10, F("Calibration"), 1,
                 COLOR16_BLACK, COLOR16_WHITE);
-#else
-        LocalDisplay.drawText((LOCAL_DISPLAY_WIDTH / 2) - 50, (LOCAL_DISPLAY_HEIGHT / 2) - 10, PSTR("Calibration"), 1,
-                COLOR16_BLACK, COLOR16_WHITE);
-#endif
         // Wait for touch release
         do {
             readData();

@@ -264,7 +264,13 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
 
 # Revision History
-### Version 3.0.3 - work in progress
+
+### Version 4.0.0
+- Major refactoring, many bug fixes and seamless support of local display.
+- All `*Rel*()` functions now have signed delta parameters.
+- Fixed bugs in `drawLineRelWithThickness()` and button list for local display.
+- Added `debug(const __FlashStringHelper *aStringPtr)`.
+- Added `bool delay(AndCheckForEvent()`.
 
 ### Version 3.0.2
 - Added function setPosition() for sliders.

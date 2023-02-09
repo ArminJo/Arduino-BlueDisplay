@@ -36,31 +36,9 @@
 #ifndef _LOCAL_DISPLAY_INTERFACE_H
 #define _LOCAL_DISPLAY_INTERFACE_H
 
-#define FONT_8X12 // Font size used here
-
-/*
- * If both macros are enabled, LocalGUI.hpp should be included and TouchButton and TouchSlider instead of BDButton and BDSlider used.
- */
-//#define DISABLE_REMOTE_DISPLAY // Allow only drawing on the locally attached display by suppress using Bluetooth serial by defining USART_isBluetoothPaired() to return constant false.
-//#define SUPPORT_LOCAL_DISPLAY  // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
-#if !defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY) && defined(SUPPORT_LOCAL_DISPLAY) && !defined(DISABLE_REMOTE_DISPLAY)
-# define SUPPORT_REMOTE_AND_LOCAL_DISPLAY // Both displays used simultaneously. Definition is used internally to avoid #if defined(SUPPORT_LOCAL_DISPLAY) && !defined(DISABLE_REMOTE_DISPLAY)
-#endif
-
-#if !defined(SUPPORT_ONLY_REMOTE_DISPLAY) && !defined(SUPPORT_LOCAL_DISPLAY) && !defined(DISABLE_REMOTE_DISPLAY)
-# define SUPPORT_ONLY_REMOTE_DISPLAY
-#endif
-
-#if !defined(SUPPORT_ONLY_LOCAL_DISPLAY) && defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
-# define SUPPORT_ONLY_LOCAL_DISPLAY
-#endif
-
-#if !defined(SUPPORT_LOCAL_DISPLAY)
-#warning SUPPORT_LOCAL_DISPLAY is not defined but LocalDisplayInterface is included (by LocalGUI.hpp?)! Is this really intended?
-#endif
+#include "BlueDisplay.h" // for __FlashStringHelper, SUPPORT_REMOTE_AND_LOCAL_DISPLAY etc.
 
 #include "Colors.h" // for color16_t
-#include "fonts.hpp"
 #include "GUIHelper.h"
 
 #include <stdint.h>
@@ -99,18 +77,12 @@ public:
             color16_t aBackgroundColor);
     uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aText, uint8_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor, uint16_t aNumberOfCharacters = 0xFFFF);
-#if defined (AVR)
     uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
-            color16_t aTextColor, color16_t aBackgroundColor);
-    uint16_t drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aText, uint8_t aFontSize, color16_t aTextColor,
-            color16_t aBackgroundColor, uint16_t aNumberOfCharacters = 0xFFFF);
-    uint16_t drawMLTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aMultiLineText, uint8_t aFontSize, uint16_t aTextColor,
-            uint16_t aBackgroundColor);
-    uint16_t drawMLTextPGM(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, const char *aMultiLineText,
-            uint8_t aFontSize, uint16_t aTextColor, uint16_t aBackgroundColor);
-#endif
+            color16_t aTextColor, color16_t aBackgroundColor, uint16_t aNumberOfCharacters = 0xFFFF);
     uint16_t drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aMultiLineText, uint8_t aFontSize, uint16_t aTextColor,
-            uint16_t aBackgroundColor);
+            uint16_t aBackgroundColor, bool isPGMText = false);
+    uint16_t drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMMultiLineText, uint8_t aFontSize,
+            uint16_t aTextColor, uint16_t aBackgroundColor);
 
 };
 

@@ -23,8 +23,9 @@
  */
 #define LOCAL_GUI_FEEDBACK_TONE_PIN 2
 #define SUPPORT_ONLY_TEXT_SIZE_11_AND_22  // Saves 248 bytes program memory
-#define DISABLE_REMOTE_DISPLAY   // Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display
-#define SUPPORT_LOCAL_DISPLAY      // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
+#define DISABLE_REMOTE_DISPLAY  // Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display
+#define SUPPORT_LOCAL_DISPLAY   // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
+#define FONT_8X12               // Font size used here
 #include "LocalHX8347DDisplay.hpp" // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
 #include "LocalGUI.hpp"            // Includes the sources for LocalTouchButton etc.
 

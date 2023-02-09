@@ -58,6 +58,7 @@
 #define DISABLE_REMOTE_DISPLAY  // Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display
 #define SUPPORT_LOCAL_DISPLAY   // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
 #define SUPPORT_LOCAL_LONG_TOUCH_DOWN_DETECTION
+#define FONT_8X12               // Font size used here
 #include "LocalHX8347DDisplay.hpp" // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
 #define DISPLAY_HEIGHT LOCAL_DISPLAY_HEIGHT // Use local size for whole application
 #define DISPLAY_WIDTH  LOCAL_DISPLAY_WIDTH

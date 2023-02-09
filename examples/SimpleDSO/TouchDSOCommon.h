@@ -26,21 +26,6 @@
 #ifndef _TOUCH_DSO_COMMON_H
 #define _TOUCH_DSO_COMMON_H
 
-#if ! defined(__AVR__)
-// No PROGMEM on ARM
-#define PROGMEM
-#define __FlashStringHelper char
-#define setCaptionPGM setCaption
-#define setCaptionFromStringArrayPGM setCaptionFromStringArray
-#define drawTextPGM drawText
-#  if !defined(F)
-#define F(a) a
-#  endif
-#  if !defined(PSTR)
-#define PSTR(a) a
-#  endif
-#endif
-
 #if defined(AVR)
 // Data buffer size (must be small enough to leave appr. 7 % (144 Byte) for stack
 #define DATABUFFER_SIZE (3*DISPLAY_WIDTH) //960

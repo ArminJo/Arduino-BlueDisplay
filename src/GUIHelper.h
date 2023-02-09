@@ -29,6 +29,8 @@
 
 #include <stdint.h>
 
+#include "LayoutHelper.h"
+
 /***************************
  * Origin 0.0 is upper left
  **************************/

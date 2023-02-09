@@ -428,7 +428,7 @@ void doSetFrequencyRange(BDButton *aTheTouchedButton, int16_t aInputRangeIndex) 
 
 #if defined(AVR)
 void setWaveformButtonCaption(void) {
-    TouchButtonWaveform.setCaptionPGM(getWaveformModePGMString(), (DisplayControl.DisplayPage == DSO_PAGE_FREQUENCY));
+    TouchButtonWaveform.setCaption(getWaveformModePGMString(), (DisplayControl.DisplayPage == DSO_PAGE_FREQUENCY));
 }
 #endif
 

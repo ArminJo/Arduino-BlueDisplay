@@ -554,11 +554,7 @@ void doADS7846Channels(Button *aTheTouchedButton, int16_t aValue) {
     uint16_t tPosY = 30;
     // draw text
     for (uint8_t i = 0; i < 8; ++i) {
-#if defined (AVR)
-        Display.drawTextPGM(90, tPosY, (char*) ADS7846ChannelStrings[i], TEXT_SIZE_22, COLOR16_RED, COLOR_DEMO_BACKGROUND);
-#else
-        Display.drawText(90, tPosY, (char*) ADS7846ChannelStrings[i], TEXT_SIZE_22, COLOR16_RED, COLOR_DEMO_BACKGROUND);
-#endif
+        Display.drawText(90, tPosY, (const __FlashStringHelper *) ADS7846ChannelStrings[i], TEXT_SIZE_22, COLOR16_RED, COLOR_DEMO_BACKGROUND);
         tPosY += TEXT_SIZE_22_HEIGHT;
     }
     TouchButtonBack.drawButton();

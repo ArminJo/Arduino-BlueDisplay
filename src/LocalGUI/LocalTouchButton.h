@@ -94,11 +94,9 @@ public:
     int8_t init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
             const char *aCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(LocalTouchButton*, int16_t));
-#ifdef AVR
     int8_t init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
             const __FlashStringHelper *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
             void (*aOnTouchHandler)(LocalTouchButton*, int16_t));
-#endif
     void deinit(); // Dummy to be more compatible with BDButton
     void activate();
     void deactivate();
@@ -146,8 +144,10 @@ public:
 
     // Caption
     void drawCaption();
-    void setCaptionForValueTrue(const char *aCaption);
     void setCaption(const char *aCaption, bool doDrawButton = false);
+    void setCaption(const __FlashStringHelper *aPGMCaption, bool doDrawButton = false);
+    void setCaptionForValueTrue(const char *aCaption);
+    void setCaptionForValueTrue(const __FlashStringHelper *aCaption);
     void setCaptionAndDraw(const char *aCaption);
 
     // Value
@@ -169,8 +169,6 @@ public:
     bool isAutorepeatButton();
 
 #ifdef AVR
-    void setCaptionPGM(const char *aCaption);
-    void setCaptionPGMForValueTrue(const char *aCaption);
     uint8_t getCaptionLength(char *aCaptionPointer);
 #  if defined(DEBUG)
     void toString(char *aStringBuffer) const;
