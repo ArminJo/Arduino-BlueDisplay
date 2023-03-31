@@ -51,6 +51,13 @@ Connecting the Arduino with an USB cable to your smartphone requires an USB-OTG 
 - Hex and ASCII output of received Bluetooth data at log level verbose.
 - Debug messages as toasts.
 
+## Local graphic support
+- [Thick line](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/src/LocalGUI/ThickLine.hpp) with Bresenham.
+- Touch button + slider implementations for HX8347D and SSD1289 controller.
+- Local event support for ADS7846 resistive touch controller.
+- Local and remote displays can be used simultaneously and are synchonized when possible.
+
+
 <br/>
 
 # Installation

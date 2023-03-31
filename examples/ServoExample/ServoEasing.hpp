@@ -9,7 +9,7 @@
  *
  *  The AVR Servo library supports only one timer, which means not more than 12 servos are supported using this library.
  *
- *  Copyright (C) 2019-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2019-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of ServoEasing https://github.com/ArminJo/ServoEasing.
@@ -1035,7 +1035,7 @@ void ServoEasing::easeTo(float aTargetDegreeOrMicrosecond) {
 
 /**
  * Blocking move without interrupt
- * @param aMicrosecondsOrUnits  For servos connected to a PCA9685 assume units, else assume microseconds
+ * @param aTargetDegreeOrMicrosecond  For servos connected to a PCA9685 assume units, else assume microseconds
  * @param aDegreesPerSecond     Can range from 1 to the physically maximum value of 450
  */
 void ServoEasing::easeTo(int aTargetDegreeOrMicrosecond, uint_fast16_t aDegreesPerSecond) {
@@ -2293,23 +2293,47 @@ void setSpeedForAllServos(uint_fast16_t aDegreesPerSecond) {
 
 #if defined(va_arg)
 /**
- * Sets the ServoEasingNextPositionArray[] of the first aNumberOfServos to the specified values
+ * Sets the ServoEasingNextPositionArray[] of the first aNumberOfServos to the specified integer values
  */
-void setDegreeForAllServos(uint_fast8_t aNumberOfServos, va_list *aDegreeValues) {
+void setIntegerDegreeForAllServos(uint_fast8_t aNumberOfServos, va_list *aDegreeValues) {
     for (uint_fast8_t tServoIndex = 0; tServoIndex < aNumberOfServos; ++tServoIndex) {
         ServoEasing::ServoEasingNextPositionArray[tServoIndex] = va_arg(*aDegreeValues, int);
+    }
+}
+/**
+ * Sets the ServoEasingNextPositionArray[] of the first aNumberOfServos to the specified float values
+ */
+void setFloatDegreeForAllServos(uint_fast8_t aNumberOfServos, va_list *aDegreeValues) {
+    for (uint_fast8_t tServoIndex = 0; tServoIndex < aNumberOfServos; ++tServoIndex) {
+        ServoEasing::ServoEasingNextPositionArray[tServoIndex] = va_arg(*aDegreeValues, double);
     }
 }
 #endif
 
 #if defined(va_start)
 /**
- * Sets the ServoEasingNextPositionArray[] of the first aNumberOfServos to the specified values
+ * Sets the ServoEasingNextPositionArray[] of the first aNumberOfServos to the specified integer values
  */
 void setDegreeForAllServos(uint_fast8_t aNumberOfServos, ...) {
     va_list aDegreeValues;
     va_start(aDegreeValues, aNumberOfServos);
-    setDegreeForAllServos(aNumberOfServos, &aDegreeValues);
+    setIntegerDegreeForAllServos(aNumberOfServos, &aDegreeValues);
+    va_end(aDegreeValues);
+}
+
+void setIntegerDegreeForAllServos(uint_fast8_t aNumberOfServos, ...) {
+    va_list aDegreeValues;
+    va_start(aDegreeValues, aNumberOfServos);
+    setIntegerDegreeForAllServos(aNumberOfServos, &aDegreeValues);
+    va_end(aDegreeValues);
+}
+/**
+ * Sets the ServoEasingNextPositionArray[] of the first aNumberOfServos to the specified float values
+ */
+void setFloatDegreeForAllServos(uint_fast8_t aNumberOfServos, ...) {
+    va_list aDegreeValues;
+    va_start(aDegreeValues, aNumberOfServos);
+    setFloatDegreeForAllServos(aNumberOfServos, &aDegreeValues);
     va_end(aDegreeValues);
 }
 #endif
@@ -2706,7 +2730,7 @@ bool ServoEasing::InitializeAndCheckI2CConnection(Stream *aSerial) // Print has 
 #if defined(__AVR__)
 bool checkI2CConnection(uint8_t aI2CAddress, Print *aSerial) // Print instead of Stream saves 95 bytes flash
 #else
-bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial) // Print has no flush()
+bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial) // Print has no flush(), so we must take Stream
 #endif
         {
 

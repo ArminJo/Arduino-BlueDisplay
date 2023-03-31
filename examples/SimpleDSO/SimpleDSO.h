@@ -26,8 +26,11 @@
 #include "TouchDSOCommon.h"
 
 // Internal version
-#define VERSION_DSO "3.2"
+#define VERSION_DSO "3.3"
 /*
+ * Version 3.3 - 02/2023
+ * - Compatible to new BlueDisplay library version.
+ *
  * Version 3.2 - 11/2019
  * - Clear data buffer at start and at switching inputs.
  * - Multiline button caption.

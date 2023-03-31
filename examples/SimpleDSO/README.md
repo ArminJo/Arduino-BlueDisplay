@@ -1,11 +1,23 @@
-# [Arduino-Simple-DSO](https://github.com/ArminJo/Arduino-Simple-DSO)
-### [Version 3.2](https://github.com/ArminJo/Arduino-Simple-DSO/releases)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Build Status](https://github.com/ArminJo/Arduino-Simple-DSO/workflows/TestCompile/badge.svg)](https://github.com/ArminJo/Arduino-Simple-DSO/actions)
-![Hit Counter](https://visitor-badge.laobi.icu/badge?page_id=ArminJo_Arduino-Arduino-Simple-DSO)
+<div align = center>
 
-## SUMMARY
+# [Arduino-Simple-DSO](https://github.com/ArminJo/Arduino-Simple-DSO)
 This DSO needs only a standard Arduino-Uno or Arduino-Nano, a HC-05 Bluetooth module or a micro USB OTG cable / adapter, a few resistors and capacitators and this software.
+
+[![Badge License: GPLv3](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0)
+ &nbsp; &nbsp;
+[![Badge Version](https://img.shields.io/github/v/release/ArminJo/Arduino-Simple-DSO?include_prereleases&color=yellow&logo=DocuSign&logoColor=white)](https://github.com/ArminJo/Arduino-Simple-DSO/releases/latest)
+ &nbsp; &nbsp;
+[![Badge Commits since latest](https://img.shields.io/github/commits-since/ArminJo/Arduino-Simple-DSO/latest?color=yellow)](https://github.com/ArminJo/Arduino-Simple-DSO/commits/master)
+ &nbsp; &nbsp;
+[![Badge Build Status](https://github.com/ArminJo/Arduino-Simple-DSO/workflows/LibraryBuild/badge.svg)](https://github.com/ArminJo/Arduino-Simple-DSO/actions)
+ &nbsp; &nbsp;
+![Badge Hit Counter](https://visitor-badge.laobi.icu/badge?page_id=ArminJo_Arduino-Simple-DSO)
+<br/>
+
+</div>
+
+<br/>
+
 
 | Simple DSO with no attenuator on breadboard | DSO Chart screen |
 | :-: | :-: |
@@ -184,6 +196,9 @@ The captured signal was generated with a STM32F303 DAC and the DSO input range w
 | ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/ArduinoDSO_simple.jpg) | ![DSO with passive attenuator on breadboard](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/ArduinoDSO.jpg) |
 
 # Revision History
+### Version 3.3 - 02/2023
+- Compatible to new BlueDisplay library version.
+
 ### Version 3.2 - 11/2019
 - Clear data buffer at start and at switching inputs.
 - Multiline button caption.
