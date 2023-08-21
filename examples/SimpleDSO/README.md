@@ -62,7 +62,7 @@ You can load the library with *Tools -> Manage Libraries...* or *Ctrl+Shift+I*. 
 
 Optional for Bluetooth connection
 6. HC-05 Bluetooth module
-7. Shottky diode e.g. BAT42
+7. Schottky diode e.g. BAT42
 
 # INSTRUCTIONS FOR USE
 The DSO software has 4 pages.
