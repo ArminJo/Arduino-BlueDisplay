@@ -1205,9 +1205,9 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
     BDSlider::deactivateAll();
 }
 
-#if __has_include("ADCUtils.h")
-#include "ADCUtils.h" // This may set ADC_UTILS_ARE_AVAILABLE
-#endif
+//#if __has_include("ADCUtils.h") // This is not discovered by Arduino AVR compiler, if contained in a hpp file (8/2023)
+#include "ADCUtils.h"
+//#endif
 #if defined(ADC_UTILS_ARE_AVAILABLE)
 /*
  * The next include is for just one BlueDisplay function printVCCAndTemperaturePeriodically().
@@ -1227,7 +1227,7 @@ void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aY
         char tVCCString[6];
         char tTempString[6];
 
-        float tTemp = getTemperature();
+        float tTemp = getCPUTemperature();
         dtostrf(tTemp, 4, 1, tTempString);
 
         float tVCCvoltage = getVCCVoltage();
@@ -1243,7 +1243,7 @@ uint16_t __attribute__((weak)) readADCChannelWithReferenceOversample(uint8_t aCh
         uint8_t aReference __attribute__((unused)), uint8_t aOversampleExponent __attribute__((unused))) {
     return 0;
 }
-float __attribute__((weak)) getTemperature() {
+float __attribute__((weak)) getCPUTemperature() {
     return 0.0;
 }
 float __attribute__((weak)) getVCCVoltage() {

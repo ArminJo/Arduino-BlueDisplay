@@ -271,6 +271,8 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
 
 # Revision History
+### Version 4.0.1
+- Minor changes and updated 3. party libs.
 
 ### Version 4.0.0
 - Major refactoring, many bug fixes and seamless support of local display.
@@ -337,25 +339,32 @@ Initial Arduino library version
 
 # Old Revision History corresponding to the Android BlueDisplay App
 ### V 3.7
-Handling of no input for getNumber.
-Slider setScaleFactor() does not scale the actual value, mostly delivered as initial value at init().
+- Handling of no input for getNumber.
+- Slider setScaleFactor() does not scale the actual value, mostly delivered as initial value at init().
+
 ### V 3.6
-connect, reconnect and autoconnect improved/added. Improved debug() command. Simplified Red/Green button handling.
+- connect, reconnect and autoconnect improved/added. Improved debug() command. Simplified Red/Green button handling.
+
 ### V 3.5
-Slider scaling changed and unit value added.
+- Slider scaling changed and unit value added.
+
 ### V 3.4
-Timeout for data messages. Get number initial value fixed.
-Bug autorepeat button in conjunction with UseUpEventForButtons fixed.
+- Timeout for data messages. Get number initial value fixed.
+- Bug autorepeat button in conjunction with UseUpEventForButtons fixed.
+
 ### V 3.3
-Fixed silent tone bug for Android Lollipop and other bugs. Multiline text /r /n handling.
-Android time accessible on Arduino. Debug messages as toasts. Changed create button.
-Slider values scalable. GUI multi touch.Hex and ASCII output of received Bluetooth data at log level verbose.
+- Fixed silent tone bug for Android Lollipop and other bugs. Multiline text /r /n handling.
+- Android time accessible on Arduino. Debug messages as toasts. Changed create button.
+- Slider values scalable. GUI multi touch.Hex and ASCII output of received Bluetooth data at log level verbose.
+
 ### V 3.2
-Improved tone and fullscreen handling. Internal refactoring. Bugfixes and minor improvements.
+- Improved tone and fullscreen handling. Internal refactoring. Bugfixes and minor improvements.
+
 ### V 3.1
-Local display of received and sent commands for debug purposes.
+- Local display of received and sent commands for debug purposes.
+
 ### V 3.0
-Android sensor accessible by Arduino.
+- Android sensor accessible by Arduino.
 
 # CI
 The library examples are tested with GitHub Actions for the following boards:

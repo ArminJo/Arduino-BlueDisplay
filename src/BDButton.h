@@ -140,8 +140,8 @@ public:
     void setCaption(const __FlashStringHelper *aPGMCaption, bool doDrawButton = false);
     void setCaptionForValueTrue(const char *aCaption);
     void setCaptionForValueTrue(const __FlashStringHelper *aCaption);
-    void setCaptionFromStringArray(const char *const *aCaptionStringArrayPtr, uint8_t aStringIndex, bool doDrawButton);
-    void setCaptionFromStringArray(const __FlashStringHelper *const *aCaptionStringArrayPtr, uint8_t aStringIndex, bool doDrawButton);
+    void setCaptionFromStringArray(const char *const *aCaptionStringArrayPtr, uint8_t aStringIndex, bool doDrawButton = false);
+    void setCaptionFromStringArray(const __FlashStringHelper *const *aCaptionStringArrayPtr, uint8_t aStringIndex, bool doDrawButton = false);
 
 #if defined(AVR)
     void setCaptionPGM(const char *aPGMCaption, bool doDrawButton = false) __attribute__ ((deprecated ("Use setCaptionForValueTrue(const __FlashStringHelper *aCaption,...) with cast")));

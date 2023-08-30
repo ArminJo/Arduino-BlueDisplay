@@ -348,7 +348,6 @@ void clearDisplayedChart(uint8_t *aDisplayBufferPtr);
 void drawRemainingDataBufferValues(void);
 
 //Hardware support section
-float getTemperature(void);
 void setVCCValue(void);
 inline void setPrescaleFactor(uint8_t aFactor);
 void setADCReferenceShifted(uint8_t aReferenceShifted);
@@ -2101,7 +2100,7 @@ void printTriggerInfo(void) {
  */
 void printVCCAndTemperature(void) {
     if (!MeasurementControl.isRunning) {
-        float tTemp = getTemperature();
+        float tTemp = getCPUTemperature();
         dtostrf(tTemp, 4, 1, &sStringBuffer[40]);
 
         setVCCValue();
