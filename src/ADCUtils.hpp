@@ -692,6 +692,19 @@ float getCPUTemperature(void) {
     void ADCUtilsDummyToAvoidBFDAssertions(){
         ;
     }
+
+#else // defined(ADC_UTILS_ARE_AVAILABLE)
+// Dummy definition of functions defined in ADCUtils to compile examples without errors
+uint16_t readADCChannelWithReferenceOversample(uint8_t aChannelNumber __attribute__((unused)),
+        uint8_t aReference __attribute__((unused)), uint8_t aOversampleExponent __attribute__((unused))) {
+    return 0;
+}
+float getCPUTemperature() {
+    return 0.0;
+}
+float getVCCVoltage() {
+    return 0.0;
+}
 #endif // defined(ADC_UTILS_ARE_AVAILABLE)
 
 #if defined(LOCAL_DEBUG)

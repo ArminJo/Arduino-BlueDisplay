@@ -323,8 +323,6 @@ public:
 
     // Not yet implemented    void getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const __FlashStringHelper *aPGMShortPromptString);
 
-    void printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aFontSize, uint16_t aPeriodMillis);
-
     struct XYSize mRequestedDisplaySize; // contains requested display size
     struct XYSize mCurrentDisplaySize; // contains real host display size. Is initialized at connection build up and updated at reorientation and redraw event.
     struct XYSize mMaxDisplaySize; // contains max display size.  Is initialized at connection build up and updated at reorientation event.

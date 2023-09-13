@@ -102,7 +102,7 @@ public:
     // Defaults
     void setDefaultBarThresholdColor(color16_t aDefaultBarThresholdColor);
 
-    // TODO !!! Possible memory leak !!!
+    // !!! Possible memory leak !!!
     static void resetAll();
 
     /*

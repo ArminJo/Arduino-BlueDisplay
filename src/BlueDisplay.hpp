@@ -588,7 +588,7 @@ uint16_t BlueDisplay::drawLong(uint16_t aPositionX, uint16_t aPositionY, int32_t
  * for writeString implementation
  */
 void BlueDisplay::setWriteStringSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
-bool aClearOnNewScreen) {
+        bool aClearOnNewScreen) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     printSetOptions(getFontScaleFactorFromTextSize(aPrintSize), aPrintColor, aPrintBackgroundColor, aClearOnNewScreen);
 #endif
@@ -1204,57 +1204,6 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
     BDButton::deactivateAll();
     BDSlider::deactivateAll();
 }
-
-//#if __has_include("ADCUtils.h") // This is not discovered by Arduino AVR compiler, if contained in a hpp file (8/2023)
-#include "ADCUtils.h"
-//#endif
-#if defined(ADC_UTILS_ARE_AVAILABLE)
-/*
- * The next include is for just one BlueDisplay function printVCCAndTemperaturePeriodically().
- */
-#include "ADCUtils.hpp"
-/*
- * Show temperature and VCC voltage
- */
-void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos, uint16_t aYPos, uint16_t aFontSize, uint16_t aPeriodMillis) {
-    static unsigned long sMillisOfLastVCCInfo = 0;
-    uint32_t tMillis = millis();
-
-    if ((tMillis - sMillisOfLastVCCInfo) >= aPeriodMillis) {
-        sMillisOfLastVCCInfo = tMillis;
-
-        char tDataBuffer[18];
-        char tVCCString[6];
-        char tTempString[6];
-
-        float tTemp = getCPUTemperature();
-        dtostrf(tTemp, 4, 1, tTempString);
-
-        float tVCCvoltage = getVCCVoltage();
-        dtostrf(tVCCvoltage, 4, 2, tVCCString);
-
-        sprintf_P(tDataBuffer, PSTR("%s volt %s\xB0" "C"), tVCCString, tTempString); // \xB0 is degree character
-        drawText(aXPos, aYPos, tDataBuffer, aFontSize, COLOR16_BLACK, COLOR16_WHITE);
-    }
-}
-#else // defined(ADC_UTILS_ARE_AVAILABLE)
-// Dummy definition of functions defined in ADCUtils to compile examples without errors
-uint16_t __attribute__((weak)) readADCChannelWithReferenceOversample(uint8_t aChannelNumber __attribute__((unused)),
-        uint8_t aReference __attribute__((unused)), uint8_t aOversampleExponent __attribute__((unused))) {
-    return 0;
-}
-float __attribute__((weak)) getCPUTemperature() {
-    return 0.0;
-}
-float __attribute__((weak)) getVCCVoltage() {
-    return 0.0;
-}
-
-void BlueDisplay::printVCCAndTemperaturePeriodically(uint16_t aXPos __attribute__((unused)), uint16_t aYPos __attribute__((unused)),
-        uint16_t aFontSize __attribute__((unused)), uint16_t aPeriodMillis __attribute__((unused))) {
-// not implemented if ADCUtils.hpp are not available
-}
-#endif // defined(ADC_UTILS_ARE_AVAILABLE)
 
 /*****************************************************************************
  * Display and drawing tests

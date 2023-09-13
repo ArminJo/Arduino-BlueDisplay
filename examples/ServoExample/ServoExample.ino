@@ -45,6 +45,7 @@
 //#define USE_SIMPLE_SERIAL                 // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 //#define USE_USB_SERIAL                    // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
 #include "BlueDisplay.hpp"
+#include "BlueDisplayUtils.hpp" // for printVCCAndTemperaturePeriodically()
 
 #if defined(ESP32)
 #define HORIZONTAL_SERVO_PIN     5 // Compatible with ServoEasing
@@ -267,12 +268,12 @@ void loop() {
             // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.
             if (!BlueDisplay1.isConnectionEstablished()) {
 #  endif
-            Serial.print(F("Move to H="));
-            Serial.print(tNewHorizontal);
-            Serial.print(F(" V="));
-            Serial.print(tNewVertical);
-            Serial.print(F(" S="));
-            Serial.println(tSpeed);
+                Serial.print(F("Move to H="));
+                Serial.print(tNewHorizontal);
+                Serial.print(F(" V="));
+                Serial.print(tNewVertical);
+                Serial.print(F(" S="));
+                Serial.println(tSpeed);
 #  if !defined(USE_SERIAL1) && !defined(ESP32)
             }
 #  endif
@@ -296,7 +297,7 @@ void loop() {
         /*
          * Print VCC and temperature each second
          */
-        BlueDisplay1.printVCCAndTemperaturePeriodically(sCurrentDisplayWidth / 4, sTextSize, sTextSize,
+        printVCCAndTemperaturePeriodically(BlueDisplay1, sCurrentDisplayWidth / 4, sTextSize, sTextSize,
         VCC_INFO_PERIOD_MILLIS);
     }
 #endif

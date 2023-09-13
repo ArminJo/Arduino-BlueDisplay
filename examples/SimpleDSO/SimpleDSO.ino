@@ -176,6 +176,7 @@
 #include "LocalDisplay/digitalWriteFast.h"
 #include "FrequencyGeneratorPage.hpp" // include sources
 #include "TouchDSOGui.hpp" // include sources
+#include "ADCUtils.hpp" // for getVCCVoltage()
 
 /**********************
  * Buttons
