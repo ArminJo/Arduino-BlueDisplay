@@ -53,7 +53,7 @@ LocalDisplayInterface::~LocalDisplayInterface() { // Destructor requires up to 6
 uint16_t LocalDisplayInterface::drawChar(uint16_t aPositionX, uint16_t aPositionY, char aChar, uint8_t aFontScaleFactor,
         uint16_t aCharacterColor, uint16_t aBackgroundColor) {
 
-#if !defined(AVR)
+#if !defined(__AVR__)
     /*
      * check if a draw in routine which uses setArea() is already executed
      */
@@ -91,7 +91,7 @@ uint16_t LocalDisplayInterface::drawChar(uint16_t aPositionX, uint16_t aPosition
 #ifdef FONT_END7F
     aChar = aChar & 0x7F;  // mask highest bit
 #endif
-#if defined(AVR)
+#if defined(__AVR__)
 #if FONT_WIDTH <= 8
     tFontRawPointer = &font_PGM[(aChar - FONT_START) * (8 * FONT_HEIGHT / 8)];
 #elif FONT_WIDTH <= 16
@@ -125,7 +125,7 @@ uint16_t LocalDisplayInterface::drawChar(uint16_t aPositionX, uint16_t aPosition
             setArea(aPositionX, aPositionY, (aPositionX + FONT_WIDTH - 1), (aPositionY + FONT_HEIGHT - 1));
             drawStart();
             for (uint8_t i = FONT_HEIGHT; i != 0; i--) {
-#if defined(AVR)
+#if defined(__AVR__)
 #  if FONT_WIDTH <= 8
                 tFontRawData = pgm_read_byte(tFontRawPointer);
                 tFontRawPointer += 1;
@@ -163,7 +163,7 @@ uint16_t LocalDisplayInterface::drawChar(uint16_t aPositionX, uint16_t aPosition
                     (aPositionY + (FONT_HEIGHT * aFontScaleFactor) - 1));
             drawStart();
             for (uint8_t tFontLine = FONT_HEIGHT; tFontLine != 0; tFontLine--) {
-#if defined(AVR)
+#if defined(__AVR__)
 #  if FONT_WIDTH <= 8
                 tFontRawData = pgm_read_byte(tFontRawPointer);
                 tFontRawPointer += 1;
@@ -195,7 +195,7 @@ uint16_t LocalDisplayInterface::drawChar(uint16_t aPositionX, uint16_t aPosition
         }
     }
 
-#if !defined(AVR)
+#if !defined(__AVR__)
     sDrawLock = 0;
 # endif
 
@@ -275,7 +275,7 @@ uint16_t LocalDisplayInterface::drawMLText(uint16_t aPositionX, uint16_t aPositi
     uint16_t tMaximumNumberOfCharsInOneLine = (LOCAL_DISPLAY_WIDTH - aPositionX) / (FONT_WIDTH * tFontScaleFactor);
     const char *tWordStartPointer = tPointerToCurrentChar;
     while ((tPositionY + tEffectiveFontHeight) < LOCAL_DISPLAY_HEIGHT) {
-#if defined(AVR)
+#if defined(__AVR__)
         if (isPGMText) {
             tChar = pgm_read_byte(tPointerToCurrentChar++);
         } else

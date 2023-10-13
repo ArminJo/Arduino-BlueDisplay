@@ -32,7 +32,7 @@
 #include "EventHandler.h"
 #include "LocalEventHelper.h"
 
-#if defined(AVR)
+#if defined(__AVR__)
 void ADS7846_IO_initalize(void);
 #else
 #include "STM32TouchScreenDriver.h"
@@ -61,7 +61,7 @@ unsigned char ADS7846ChannelMapping[] = { 3, 4, 1, 5, 0, 7, 2, 6 };
 // to start quick if backup battery was not assembled or empty
 const CAL_MATRIX sInitalMatrix = { 320300, -1400, -52443300, -3500, 237700, -21783300, 1857905 };
 
-#if defined(AVR)
+#if defined(__AVR__)
 //#define SOFTWARE_SPI
 #ifdef __AVR_ATmega32U4__
 #define SOFTWARE_SPI
@@ -114,7 +114,7 @@ const CAL_MATRIX sInitalMatrix = { 320300, -1400, -52443300, -3500, 237700, -217
 
 #define CLK_HIGH()      digitalWriteFast(CLK_PIN, HIGH)
 #define CLK_LOW()       digitalWriteFast(CLK_PIN, LOW)
-#endif // defined(AVR)
+#endif // defined(__AVR__)
 
 //-------------------- Constructor --------------------
 
@@ -169,7 +169,7 @@ bool ADS7846::setCalibration(CAL_POINT *aTargetValues, CAL_POINT *aRawValues) {
     return true;
 }
 
-#if defined(AVR)
+#if defined(__AVR__)
 bool ADS7846::writeCalibration(uint16_t eeprom_addr) {
     if (tp_matrix.div != 0) {
         eeprom_write_byte((uint8_t*) eeprom_addr++, 0x55);
@@ -216,13 +216,13 @@ void ADS7846::readCalibration(CAL_MATRIX *aMatrix) {
     aMatrix->f = HAL_RTCEx_BKUPRead(&RTCHandle, RTC_BKP_DR7);
     aMatrix->div = HAL_RTCEx_BKUPRead(&RTCHandle, RTC_BKP_DR8);
 }
-#endif // defined(AVR)
+#endif // defined(__AVR__)
 
 /**
  * touch panel calibration routine
  * On my MI0283QT calibration points must be touched quick and hard to get good results
  */
-#if defined(AVR)
+#if defined(__AVR__)
 void ADS7846::doCalibration(uint16_t aEEPROMAdress, bool aCheckEEPROM)
 #else
 void ADS7846::doCalibration(bool aCheckRTC)
@@ -231,7 +231,7 @@ void ADS7846::doCalibration(bool aCheckRTC)
     CAL_POINT tReferencePoints[3] = { CAL_POINT1, CAL_POINT2, CAL_POINT3 }; // calibration point positions
     CAL_POINT tRawPoints[3];
 
-#if defined(AVR)
+#if defined(__AVR__)
     //calibration data in EEPROM?
     if (readCalibration(aEEPROMAdress) && aCheckEEPROM) {
         return;
@@ -273,7 +273,7 @@ void ADS7846::doCalibration(bool aCheckRTC)
         LocalDisplay.drawCircle(tReferencePoints[i].x, tReferencePoints[i].y, 10, COLOR16_RED);
 
         // wait for touch to become active
-#if defined(AVR)
+#if defined(__AVR__)
         delay(100);
         do {
             readData();
@@ -299,7 +299,7 @@ void ADS7846::doCalibration(bool aCheckRTC)
         LocalDisplay.fillCircle(tReferencePoints[i].x, tReferencePoints[i].y, 2, COLOR16_RED);
         tRawPoints[i].x = getRawX();
         tRawPoints[i].y = getRawY();
-#if defined(AVR)
+#if defined(__AVR__)
         delay(1000);
 #else
         delay(1000);
@@ -310,7 +310,7 @@ void ADS7846::doCalibration(bool aCheckRTC)
     setCalibration(tReferencePoints, tRawPoints);
 
     if (tp_matrix.div != 0) {
-#if defined(AVR)
+#if defined(__AVR__)
         //save calibration matrix and flag for valid data
         writeCalibration(aEEPROMAdress);
         // Wait for touch release
@@ -328,7 +328,7 @@ void ADS7846::doCalibration(bool aCheckRTC)
 /*
  * Init Touch panel and calibrate it, if it is pressed (at startup)
  */
-#if defined(AVR)
+#if defined(__AVR__)
 void ADS7846::initAndCalibrateOnPress(uint16_t aEEPROMAdress)
 #else
 void ADS7846::initAndCalibrateOnPress()
@@ -336,7 +336,7 @@ void ADS7846::initAndCalibrateOnPress()
         {
     init();
     TouchPanel.readData();
-#if defined(AVR)
+#if defined(__AVR__)
     if (getPressure() >= MIN_REASONABLE_PRESSURE) {
         doCalibration(aEEPROMAdress, false); // Don't check EEPROM for calibration data
     } else {
@@ -407,7 +407,7 @@ uint8_t ADS7846::getPressure(void) {
     return mPressure;
 }
 
-#if defined(AVR)
+#if defined(__AVR__)
 /**
  * We do a 8 times oversampling here
  */
@@ -525,7 +525,7 @@ uint16_t ADS7846::readChannel(uint8_t channel, bool use12Bit, bool useDiffMode, 
     return tRetValue / numberOfReadingsToIntegrate;
 }
 
-#else // defined(AVR)
+#else // defined(__AVR__)
     void ADS7846::readData(void) {
         readData(ADS7846_READ_OVERSAMPLING_DEFAULT);
     }
@@ -674,7 +674,7 @@ uint16_t ADS7846::readChannel(uint8_t channel, bool use12Bit, bool useDiffMode, 
 
         return tRetValue / numberOfReadingsToIntegrate;
     }
-#endif // defined(AVR)
+#endif // defined(__AVR__)
 
 /**
  * Can be called by main loops
@@ -691,7 +691,7 @@ bool ADS7846::wasJustTouched(void) {
 
 //-------------------- Private --------------------
 
-#if defined(AVR)
+#if defined(__AVR__)
 void ADS7846_IO_initalize(void) {
     //init pins
     pinMode(ADS7846_CS_PIN, OUTPUT);
@@ -785,7 +785,7 @@ void ADS7846::wr_spi(uint8_t data) {
         ;
 #  endif
 }
-#endif // defined(AVR)
+#endif // defined(__AVR__)
 
 
 #endif //_ADS7846_HPP

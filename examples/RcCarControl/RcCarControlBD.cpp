@@ -31,7 +31,7 @@
 #define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 //#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 #include "BlueDisplay.hpp"
-#if defined(AVR)
+#if defined(__AVR__)
 #include "BlueDisplayUtils.hpp" // for printVCCAndTemperaturePeriodically()
 #endif
 
@@ -353,7 +353,7 @@ void BDloop() {
         resetOutputs();
     }
 
-#if defined(AVR)
+#if defined(__AVR__)
     /*
      * Print VCC and temperature each second
      */

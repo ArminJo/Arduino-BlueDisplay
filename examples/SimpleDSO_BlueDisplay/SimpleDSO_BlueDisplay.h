@@ -1,5 +1,5 @@
 /*
- * SimpleDSO.h
+ * SimpleDSO_BlueDisplay.h
  *
  *  Copyright (C) 2015-2023  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
@@ -20,8 +20,8 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
-#ifndef _SIMPLE_TOUCHSCREEN_DSO_H
-#define _SIMPLE_TOUCHSCREEN_DSO_H
+#ifndef _SIMPLE_DSO_BLUEDISPLAY_H
+#define _SIMPLE_DSO_BLUEDISPLAY_H
 
 #include "TouchDSOCommon.h"
 
@@ -245,7 +245,7 @@ void clearSingleshotMarker();
 extern "C" void INT0_vect();
 
 // for printf etc.
-#if defined(AVR)
+#if defined(__AVR__)
 #define SIZEOF_STRINGBUFFER 50
 #else
 #define SIZEOF_STRINGBUFFER 240
@@ -256,4 +256,4 @@ extern BDButton TouchButtonBack;
 // global flag for page control. Is evaluated by calling loop or page and set by buttonBack handler
 extern bool sBackButtonPressed;
 
-#endif // _SIMPLE_TOUCHSCREEN_DSO_H
+#endif // _SIMPLE_DSO_BLUEDISPLAY_H

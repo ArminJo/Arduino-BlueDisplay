@@ -348,7 +348,7 @@ void doGuiDemoButtons(Button *aTheTouchedButton, int16_t aValue) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     if (*aTheTouchedButton == TouchButtonCalibration) {
         //Calibration Button pressed -> calibrate touch panel
-#  if defined(AVR)
+#  if defined(__AVR__)
         TouchPanel.doCalibration(TP_EEPROMADDR, false);
 #  else
         TouchPanel.doCalibration(false);

@@ -292,7 +292,7 @@ void loop() {
         }
     }
 
-#if defined(AVR)
+#if defined(__AVR__)
     if (BlueDisplay1.isConnectionEstablished()) {
         /*
          * Print VCC and temperature each second

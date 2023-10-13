@@ -208,7 +208,7 @@ int8_t LocalTouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t
 int8_t LocalTouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
         const __FlashStringHelper *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
         void (*aOnTouchHandler)(LocalTouchButton*, int16_t)) {
-#if defined(AVR)
+#if defined(__AVR__)
     mWidthX = aWidthX;
     mHeightY = aHeightY;
     mCaptionColor = sDefaultCaptionColor;
@@ -536,7 +536,7 @@ void LocalTouchButton::activateAll() {
     }
 }
 
-#if defined(AVR)
+#if defined(__AVR__)
 /*
  * Not used yet
  */
@@ -571,7 +571,7 @@ uint8_t LocalTouchButton::getCaptionLength(char *aCaptionPointer) {
 #endif
 
 void LocalTouchButton::setCaptionForValueTrue(const char *aCaption) {
-#if defined(AVR)
+#if defined(__AVR__)
     mFlags &= ~LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
 #endif
     mCaptionForTrue = aCaption;
@@ -590,7 +590,7 @@ void LocalTouchButton::setCaptionForValueTrue(const __FlashStringHelper *aPGMCap
  * Set caption
  */
 void LocalTouchButton::setCaption(const char *aCaption, bool doDrawButton) {
-#if defined(AVR)
+#if defined(__AVR__)
     mFlags &= ~LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
 #endif
     mCaption = aCaption;

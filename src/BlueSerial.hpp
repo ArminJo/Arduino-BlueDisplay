@@ -369,7 +369,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
 
 #endif // defined(ARDUINO)
 
-#if defined(AVR)
+#if defined(__AVR__)
 
 #  if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
 #include "LocalDisplay/digitalWriteFast.h"
@@ -533,7 +533,7 @@ ISR(USART1_RX_vect) {
     }
 #endif // USE_SIMPLE_SERIAL
 
-#elif !defined(ARDUINO) && (defined(STM32F303xC) || defined(STM32F103xB)) // defined(AVR)
+#elif !defined(ARDUINO) && (defined(STM32F303xC) || defined(STM32F103xB)) // defined(__AVR__)
 
 #include "BlueSerial.h"
 #include "BlueDisplay.h"

@@ -37,7 +37,7 @@
 #include "LocalGUI/LocalTouchSlider.h"
 #include "BDSlider.h"
 
-#if defined(AVR)
+#if defined(__AVR__)
 #define failParamMessage(wrongParam,message) void()
 #endif
 

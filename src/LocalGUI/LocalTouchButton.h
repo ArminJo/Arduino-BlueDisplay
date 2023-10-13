@@ -34,7 +34,7 @@
 #if !defined(DISABLE_REMOTE_DISPLAY)
 class BDButton;
 
-#  if defined(AVR)
+#  if defined(__AVR__)
 typedef uint8_t BDButtonHandle_t;
 #  else
 typedef uint16_t BDButtonHandle_t;

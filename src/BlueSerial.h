@@ -205,5 +205,5 @@ void setUART_BD_BaudRate(uint32_t aBaudRate);
 void sendUSARTBufferSimple(uint8_t * aParameterBufferPointer, size_t aParameterBufferLength,
         uint8_t * aDataBufferPointer, size_t aDataBufferLength);
 
-#endif // defined(AVR)
+#endif // defined(__AVR__)
 #endif // _BLUESERIAL_H

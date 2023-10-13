@@ -1,5 +1,5 @@
 /*
- * SimpleDSO.cpp
+ * SimpleDSO_BlueDisplay.cpp
  *
  *  Copyright (C) 2015-2023  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
@@ -172,7 +172,7 @@
 #endif
 #include "BlueDisplay.hpp"
 
-#include "SimpleDSO.h"
+#include "SimpleDSO_BlueDisplay.h"
 #include "LocalDisplay/digitalWriteFast.h"
 #include "FrequencyGeneratorPage.hpp" // include sources
 #include "TouchDSOGui.hpp" // include sources
@@ -259,7 +259,7 @@ extern volatile unsigned long timer0_millis;
  */
 #define TRIGGER_WAIT_NUMBER_OF_SAMPLES 3300 // Number of samples (<=112us) used for detecting the trigger condition
 #define ADC_CYCLES_PER_CONVERSION 13
-#define SCALE_CHANGE_DELAY_MILLIS 2000
+#define RANGE_CHANGE_DELAY_MILLIS 2000
 
 #define ADC_MAX_CONVERSION_VALUE (1024 -1) // 10 bit
 #define ATTENUATOR_FACTOR 10
@@ -521,7 +521,7 @@ void setup() {
 /************************************************************************
  * main loop - 32 microseconds
  ************************************************************************/
-// noreturn saves 56 byte program memory!
+// noreturn saves 56 byte program memory! but no stack
 void __attribute__((noreturn)) loop(void) {
     uint32_t sMillisOfLastInfoOutput;
 
@@ -583,7 +583,7 @@ void __attribute__((noreturn)) loop(void) {
                         } else if (DisplayControl.DisplayPage == DSO_PAGE_FREQUENCY) {
                             // refresh buttons
                             drawFrequencyGeneratorPage();
-#if !defined(AVR)
+#if !defined(__AVR__)
                         } else if (DisplayControl.DisplayPage == DSO_PAGE_MORE_SETTINGS) {
                             // refresh buttons
                             drawDSOMoreSettingsPage();
@@ -1536,7 +1536,7 @@ void computeAutoRange(void) {
          * wait n-milliseconds before switch to higher resolution (lower index)
          */
         uint32_t tActualMillis = millis();
-        if (tActualMillis - MeasurementControl.TimestampLastRangeChange > SCALE_CHANGE_DELAY_MILLIS) {
+        if (tActualMillis - MeasurementControl.TimestampLastRangeChange > RANGE_CHANGE_DELAY_MILLIS) {
             MeasurementControl.TimestampLastRangeChange = tActualMillis;
             setInputRange(tNewValueShift, tNewAttenuatorValue);
         }
@@ -2026,7 +2026,7 @@ void printInfo(bool aRecomputeValues) {
                 getFloatFromRawValue(MeasurementControl.RawValueAverage), tPrecision, getFloatFromRawValue(tValueDiff),
                 tBufferForPeriodAndFrequency, tUnitsPerGrid, tTimebaseUnitChar);
 #else
-#if defined(AVR)
+#if defined(__AVR__)
 
         sprintf_P(sStringBuffer, PSTR("%sV %sV  %5luHz %3u%cs"), tAverageStringBuffer, tP2PStringBuffer, tHertz,
                 tTimebaseUnitsPerGrid, tTimebaseUnitChar);

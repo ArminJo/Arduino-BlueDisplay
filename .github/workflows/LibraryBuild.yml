@@ -59,30 +59,30 @@ jobs:
             sketches-exclude: SimpleTouchScreenDSO,TouchGuiDemo # Too big
 
           - arduino-boards-fqbn: arduino:sam:arduino_due_x
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO,TwoButtons,TouchGuiDemo,BTModuleProgrammer,ShowSensorValues
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtons,TouchGuiDemo,BTModuleProgrammer,ShowSensorValues
 
           - arduino-boards-fqbn: MegaCore:avr:128:bootloader=no_bootloader,eeprom=keep,BOD=2v7,LTO=Os,clock=8MHz_internal
             platform-url: https://mcudude.github.io/MegaCore/package_MCUdude_MegaCore_index.json
             arduino-platform: arduino:avr,MegaCore:avr # gcc is taken from arduino:avr
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO,TwoButtons,TouchGuiDemo,ServoExample  # ServoEasing not available for Mega Core
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtons,TouchGuiDemo,ServoExample  # ServoEasing not available for Mega Core
 
           - arduino-boards-fqbn: esp8266:esp8266:huzzah:eesz=4M3M,xtal=80
             platform-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO,TwoButtons,BTModuleProgrammer
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtons,BTModuleProgrammer
 
           - arduino-boards-fqbn: esp32:esp32:featheresp32:FlashFreq=80
             platform-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO,TwoButtons,RcCarControl,BTModuleProgrammer,ServoExample
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtons,RcCarControl,BTModuleProgrammer,ServoExample
             build-properties: # the flags were put in compiler.cpp.extra_flags
               ShowSensorValues: -Wno-error=format-overflow # https://github.com/espressif/arduino-esp32/issues/7024
 
           - arduino-boards-fqbn: STMicroelectronics:stm32:GenF1:pnum=BLUEPILL_F103C8
             platform-url: https://raw.githubusercontent.com/stm32duino/BoardManagerFiles/main/package_stmicroelectronics_index.json
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO,TwoButtons,TouchGuiDemo # Comma separated list of example names to exclude in build
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtons,TouchGuiDemo # Comma separated list of example names to exclude in build
 
           - arduino-boards-fqbn: stm32duino:STM32F1:genericSTM32F103C # Roger Clark version
             platform-url: http://dan.drown.org/stm32duino/package_STM32duino_index.json
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO,TwoButtons,TouchGuiDemo,BTModuleProgrammer   # Comma separated list of example names to exclude in build
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtons,TouchGuiDemo,BTModuleProgrammer   # Comma separated list of example names to exclude in build
 
 #      fail-fast: false # false -> do not cancel all jobs / architectures if one job fails
 

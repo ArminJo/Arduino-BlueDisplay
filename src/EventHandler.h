@@ -49,7 +49,7 @@ extern bool sDisableTouchUpOnce; // set normally by application if long touch ac
 extern bool sDisableMoveEventsUntilTouchUpIsDone; // Skip all touch move and touch up events until touch is released
 
 extern struct BluetoothEvent remoteEvent;
-#if defined(AVR)
+#if defined(__AVR__)
 // Is used for touch down events and stores its position. If remoteEvent is not empty, it is used as buffer for next regular event to avoid overwriting of remoteEvent
 extern struct BluetoothEvent remoteTouchDownEvent;
 #endif

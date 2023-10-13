@@ -26,7 +26,7 @@
 #ifndef _TOUCH_DSO_COMMON_H
 #define _TOUCH_DSO_COMMON_H
 
-#if defined(AVR)
+#if defined(__AVR__)
 // Data buffer size (must be small enough to leave appr. 7 % (144 Byte) for stack
 #define DATABUFFER_SIZE (3*DISPLAY_WIDTH) //960
 #else
@@ -44,7 +44,7 @@
  * CHANNEL
  */
 #define MAX_ADC_EXTERNAL_CHANNEL 4 // 5 channels 0-4, since ADC5/PC5 is used for AC/DC switching
-#if defined(AVR)
+#if defined(__AVR__)
 #define ADC_CHANNEL_COUNT ((MAX_ADC_EXTERNAL_CHANNEL + 1) + 2) // The number of external and internal ADC channels
 #else
 #define START_ADC_CHANNEL_INDEX 0  // see also ChannelSelectButtonString
@@ -70,7 +70,7 @@ extern const char *const ChannelDivByButtonStrings[];
 #define TRIGGER_MODE_EXTERN 4
 #define TRIGGER_HYSTERESIS_FOR_MODE_MANUAL 4
 
-#if defined(AVR)
+#if defined(__AVR__)
 /*****************************
  * Timebase stuff
  *****************************/
@@ -197,7 +197,7 @@ extern const float TimebaseExactDivValuesMicros[] PROGMEM;
 #define INFO_UPPER_MARGIN (1 + TEXT_SIZE_11_ASCEND)
 #define INFO_LEFT_MARGIN 0
 
-#if defined(AVR)
+#if defined(__AVR__)
 #define FONT_SIZE_INFO_SHORT        TEXT_SIZE_18    // for 1 line info
 #define FONT_SIZE_INFO_LONG         TEXT_SIZE_11    // for 2 lines info
 #define FONT_SIZE_INFO_SHORT_ASC    TEXT_SIZE_18_ASCEND
@@ -263,7 +263,7 @@ extern const float TimebaseExactDivValuesMicros[] PROGMEM;
 
 extern uint8_t sLastPickerValue;
 
-#if defined(AVR)
+#if defined(__AVR__)
 extern BDButton TouchButtonADCReference;
 #else
 extern BDButton TouchButtonFFT;
@@ -339,7 +339,7 @@ void setOffsetAutomatic(bool aNewState);
 void setACMode(bool aNewACMode);
 int changeOffsetGridCount(int aValue);
 
-#if defined(AVR)
+#if defined(__AVR__)
 uint8_t changeRange(int8_t aChangeAmount);
 uint8_t changeTimeBaseValue(int8_t aChangeValue);
 #else
@@ -363,7 +363,7 @@ void drawMinMaxLines(void);
 void clearTriggerLine(uint8_t aTriggerLevelDisplayValue);
 void drawRunningOnlyPartOfGui(void);
 void activateChartGui(void);
-#if defined(AVR)
+#if defined(__AVR__)
 bool scrollChart(int aValue);
 uint8_t getDisplayFromRawInputValue(uint16_t aRawValue);
 void drawDataBuffer(uint8_t *aByteBuffer, uint16_t aColor, uint16_t aClearBeforeColor);
@@ -389,7 +389,7 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo);
 void doSetTriggerDelay(float aValue);
 
 // Button handler section
-#if defined(AVR)
+#if defined(__AVR__)
 void doADCReference(BDButton *aTheTouchedButton, int16_t aValue);
 #else
 void doShowPretriggerValuesOnOff(BDButton * aTheTouchedButton, int16_t aValue);
@@ -425,7 +425,7 @@ void doTriggerLevel(BDSlider *aTheTouchedSlider, uint16_t aValue);
 void doVoltagePicker(BDSlider *aTheTouchedSlider, uint16_t aValue);
 
 // Button caption section
-#if defined(AVR)
+#if defined(__AVR__)
 #else
 void setMinMaxModeButtonCaption(void);
 #endif
@@ -441,10 +441,10 @@ void setAutoOffsetButtonCaption(void);
 
 uint32_t getMicrosFromHorizontalDisplayValue(uint16_t aDisplayValueHorizontal, uint8_t aNumberOfPeriods);
 
-#if defined(AVR)
+#if defined(__AVR__)
 #else
 #endif
-#if !defined(AVR)
+#if !defined(__AVR__)
 #endif
 
 #endif // _TOUCH_DSO_COMMON_H

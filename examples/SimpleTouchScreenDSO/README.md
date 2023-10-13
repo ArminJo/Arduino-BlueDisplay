@@ -5,10 +5,6 @@ Simple DSO Software for Arduino Uno/MEGA with a Touchscreen Shield.
 
 [![Badge License: GPLv3](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0)
  &nbsp; &nbsp; 
-[![Badge Version](https://img.shields.io/github/v/release/ArminJo/SimpleTouchScreenDSO?include_prereleases&color=yellow&logo=DocuSign&logoColor=white)](https://github.com/ArminJo/SimpleTouchScreenDSO/releases/latest)
- &nbsp; &nbsp; 
-[![Badge Commits since latest](https://img.shields.io/github/commits-since/ArminJo/SimpleTouchScreenDSO/latest?color=yellow)](https://github.com/ArminJo/SimpleTouchScreenDSO/commits/master)
- &nbsp; &nbsp; 
 [![Badge Build Status](https://github.com/ArminJo/SimpleTouchScreenDSO/workflows/TestCompile/badge.svg)](https://github.com/ArminJo/SimpleTouchScreenDSO/actions)
  &nbsp; &nbsp; 
 ![Badge Hit Counter](https://visitor-badge.laobi.icu/badge?page_id=ArminJo_SimpleTouchScreenDSO)

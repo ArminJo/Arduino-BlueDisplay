@@ -33,7 +33,7 @@ uint8_t sLastPickerValue;
 /************************************************************************
  * Data analysis section
  ************************************************************************/
-#if !defined(AVR)
+#if !defined(__AVR__)
 /**
  * Get max and min for display and automatic triggering.
  */
@@ -82,7 +82,7 @@ void computeMinMax(void) {
 #endif
 
 void computePeriodFrequency(void) {
-#if defined(AVR)
+#if defined(__AVR__)
     /*
      * Scan data buffer (8 Bit display (!inverted!) values) for trigger conditions.
      * Assume that first value is the first valid after a trigger
@@ -168,7 +168,7 @@ void computePeriodFrequency(void) {
         tValue = *tDataBufferPointer;
 
         bool tValueGreaterCompareValue = (tValue > tActualCompareValue); // variable name is correct for rising slope!
-#if defined(AVR)
+#if defined(__AVR__)
         // Since all values are inverted Display values, we have to use just the inverted condition -> toggle compare result if (TriggerSlopeRising == true)
         tValueGreaterCompareValue = tValueGreaterCompareValue ^ MeasurementControl.TriggerSlopeRising;
 #else
@@ -184,7 +184,7 @@ void computePeriodFrequency(void) {
              * First wait for signal to go beyond hysteresis, then check for crossing trigger level
              */
             bool tValueLessThanTriggerForFirstPeriod = (tValue < tFirstTriggerLevel);
-#if defined(AVR)
+#if defined(__AVR__)
             // Since all values are inverted Display values, we have to use just the inverted condition -> toggle compare result if (TriggerSlopeRising == true)
             tValueLessThanTriggerForFirstPeriod = tValueLessThanTriggerForFirstPeriod ^ MeasurementControl.TriggerSlopeRising;
 #else
@@ -218,7 +218,7 @@ void computePeriodFrequency(void) {
             // falling slope - wait for value above hysteresis value
             if (!tValueGreaterCompareValue) {
                 tTriggerStatus = TRIGGER_STATUS_AFTER_HYSTERESIS;
-#if defined(AVR)
+#if defined(__AVR__)
                 tActualCompareValue = getDisplayFromRawInputValue(MeasurementControl.RawTriggerLevel);
 #else
                 tActualCompareValue = MeasurementControl.RawTriggerLevel;
@@ -232,7 +232,7 @@ void computePeriodFrequency(void) {
              */
 
             if (tValueGreaterCompareValue) {
-#if defined(AVR)
+#if defined(__AVR__)
                 tTriggerStatus = TRIGGER_STATUS_START;
                 tActualCompareValue = getDisplayFromRawInputValue(MeasurementControl.RawTriggerLevelHysteresis);
 #else
@@ -261,12 +261,12 @@ void computePeriodFrequency(void) {
                         MeasurementControl.PeriodSecond = getMicrosFromHorizontalDisplayValue(i - tFirstEndPositionForPulsPause, 1);
                     }
                     tCountPosition = i;
-#if !defined(AVR)
+#if !defined(__AVR__)
                 }
 #endif
             }
         }
-#if !defined(AVR)
+#if !defined(__AVR__)
         if (MeasurementControl.isEffectiveMinMaxMode) {
             uint16_t tValueMin = *(tDataBufferPointer + DATABUFFER_MIN_OFFSET);
             tIntegrateValue += (tValue + tValueMin) / 2;
@@ -278,7 +278,7 @@ void computePeriodFrequency(void) {
 #endif
         tDataBufferPointer++;
     } // for
-#if !defined(AVR)
+#if !defined(__AVR__)
     /*
      * check for plausi of period values
      * allow delta of periods to be at least 1/8 period + 3
@@ -292,7 +292,7 @@ void computePeriodFrequency(void) {
     /*
      * compute period and frequency
      */
-#if defined(AVR)
+#if defined(__AVR__)
     if (tCount <= 0) {
 #else
     if (tCountPosition <= 0 || tCount <= 0 || !tReliableValue) {
@@ -302,7 +302,7 @@ void computePeriodFrequency(void) {
         MeasurementControl.PeriodMicros = 0;
         MeasurementControl.FrequencyHertz = 0;
     } else {
-#if defined(AVR)
+#if defined(__AVR__)
         tCountPosition -= tStartPositionForPulsPause;
         uint32_t tPeriodMicros = getMicrosFromHorizontalDisplayValue(tCountPosition, tCount);
         MeasurementControl.PeriodMicros = tPeriodMicros;
@@ -373,14 +373,14 @@ void setTriggerLevelAndHysteresis(int aRawTriggerValue, int aRawTriggerHysteresi
  * uses MeasurementControl.DisplayRangeIndex for getRawOffsetValueFromGridCount()
  */
 void setACMode(bool aNewACMode) {
-#if defined(AVR)
+#if defined(__AVR__)
     if (MeasurementControl.isRunning) {
         //clear old grid, since it will be changed
         BlueDisplay1.clearDisplay();
     }
 #endif
     MeasurementControl.isACMode = aNewACMode;
-#if defined(AVR)
+#if defined(__AVR__)
 // Allow manual setting of AC mode
     MeasurementControl.ChannelIsACMode = aNewACMode;
 
@@ -395,7 +395,7 @@ void setACMode(bool aNewACMode) {
     /*
      * Handle AC hardware switching
      */
-#if defined(AVR)
+#if defined(__AVR__)
     if (aNewACMode) {
         /*
          * AC mode here: Change AC_DC_BIAS_PIN pin to input
@@ -425,7 +425,7 @@ void setACMode(bool aNewACMode) {
     /*
      * New Offset for AC Mode
      */
-#if defined(AVR)
+#if defined(__AVR__)
 // must do it here after settings of flags and before drawing
     setACModeButtonCaption();
     if (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS) {
@@ -459,7 +459,7 @@ void clearInfo(uint8_t aOldMode) {
 /***********************************************************************
  * GUI initialization
  ***********************************************************************/
-#if defined(AVR)
+#if defined(__AVR__)
 BDButton TouchButtonADCReference;
 const char ReferenceButtonVCC[] PROGMEM = "Ref VCC";
 const char ReferenceButton1_1V[] PROGMEM = "Ref 1.1V";
@@ -510,7 +510,7 @@ const char StringChannel4[] PROGMEM = "Ch 4";
 const char StringTemperature[] PROGMEM = "Temp";
 const char StringVRefint[] PROGMEM = "VRef";
 const char StringVBattDiv2[] PROGMEM = "\xBD" "VBatt";
-#if defined(AVR)
+#if defined(__AVR__)
 const char *const ADCInputMUXChannelStrings[] = {StringChannel0, StringChannel1, StringChannel2, StringChannel3, StringChannel4,
     StringTemperature, StringVRefint};
 #else
@@ -563,7 +563,7 @@ void initDSOGUI(void) {
      ***************************/
 // 1. row
 // Button for Singleshot
-#if defined(AVR)
+#if defined(__AVR__)
     TouchButtonSingleshot.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, START_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL,
             F("Singleshot"), TEXT_SIZE_14, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doStartSingleshot);
 #else
@@ -589,7 +589,7 @@ void initDSOGUI(void) {
 
 // 4. row
     tPosY += 2 * START_PAGE_ROW_INCREMENT;
-#if !defined(AVR)
+#if !defined(__AVR__)
 // Button for show FFT - only for Start and Chart pages. Invisible if running.
     TouchButtonFFT.init(0, tPosY, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, 0, "FFT", TEXT_SIZE_22,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN_MANUAL_REFRESH, DisplayControl.ShowFFT, &doShowFFT);
@@ -629,7 +629,7 @@ void initDSOGUI(void) {
 // 2. row
     tPosY += SETTINGS_PAGE_ROW_INCREMENT;
 
-#if defined(AVR)
+#if defined(__AVR__)
 // Button for delay
     TouchButtonTriggerDelay.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "", TEXT_SIZE_11,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doPromptForTriggerDelay);
@@ -652,7 +652,7 @@ void initDSOGUI(void) {
 // 3. row
     tPosY += SETTINGS_PAGE_ROW_INCREMENT;
 
-#if !defined(AVR)
+#if !defined(__AVR__)
 // Button for pretrigger area show
 #if defined(SUPPORT_LOCAL_DISPLAY)
     TouchButtonShowPretriggerValuesOnOff.init(SLIDER_DEFAULT_BAR_WIDTH + 6, tPosY, BUTTON_WIDTH_3 - (SLIDER_DEFAULT_BAR_WIDTH + 6),
@@ -684,7 +684,7 @@ void initDSOGUI(void) {
 // 4. row
     tPosY += SETTINGS_PAGE_ROW_INCREMENT;
 
-#if !defined(AVR)
+#if !defined(__AVR__)
 // Button for min/max acquisition mode
 #  if defined(SUPPORT_LOCAL_DISPLAY)
     TouchButtonMinMaxMode.init(SLIDER_DEFAULT_BAR_WIDTH + 6, tPosY, BUTTON_WIDTH_3 - (SLIDER_DEFAULT_BAR_WIDTH + 6),
@@ -721,7 +721,7 @@ void initDSOGUI(void) {
             TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doAcDcMode);
     setACModeButtonCaption();
 
-#if defined(AVR)
+#if defined(__AVR__)
 // Button for reference voltage switching
     TouchButtonADCReference.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT,
             COLOR_GUI_SOURCE_TIMEBASE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doADCReference);
@@ -820,7 +820,7 @@ void redrawDisplay() {
             // refresh grid - not really needed, since after MILLIS_BETWEEN_INFO_OUTPUT it is done by loop
             drawGridLinesWithHorizLabelsAndTriggerLine();
             printInfo();
-#if !defined(AVR)
+#if !defined(__AVR__)
             TouchButtonChartHistoryOnOff.activate(); //???
             // initialize FFTDisplayBuffer
             memset(&DisplayBufferFFT[0], DISPLAY_HEIGHT - 1, sizeof(DisplayBufferFFT));
@@ -837,7 +837,7 @@ void redrawDisplay() {
             drawGridLinesWithHorizLabelsAndTriggerLine();
             drawMinMaxLines();
             // draw from last scroll position
-#if defined(AVR)
+#if defined(__AVR__)
             drawDataBuffer(DataBufferControl.DataBufferDisplayStart, COLOR_DATA_HOLD, DisplayControl.EraseColor);
 #else
             drawDataBuffer(DataBufferControl.DataBufferDisplayStart, DISPLAY_WIDTH, COLOR_DATA_HOLD, 0, DRAW_MODE_REGULAR,
@@ -861,7 +861,7 @@ void drawStartPage(void) {
 #endif
     TouchButtonStartStopDSOMeasurement.drawButton();
 // 4. Row
-#if !defined(AVR)
+#if !defined(__AVR__)
     TouchButtonFFT.drawButton();
     TouchButtonMainHome.drawButton();
 #endif
@@ -876,7 +876,7 @@ void drawStartPage(void) {
             COLOR_BACKGROUND_DSO);
 
 // Hints
-#if !defined(AVR)
+#if !defined(__AVR__)
     BlueDisplay1.drawText(SLIDER_DEFAULT_BAR_WIDTH + 6, BUTTON_HEIGHT_4 + TEXT_SIZE_22_ASCEND, "\xABScale\xBB", TEXT_SIZE_22, COLOR16_YELLOW, COLOR_BACKGROUND_DSO);
 #endif
     BlueDisplay1.drawText(BUTTON_WIDTH_3, BUTTON_HEIGHT_4_LINE_4 + BUTTON_DEFAULT_SPACING + TEXT_SIZE_22_ASCEND,
@@ -893,7 +893,7 @@ void drawDSOSettingsPage(void) {
     TouchButtonBack.drawButton();
 
 //2. Row
-#if defined(AVR)
+#if defined(__AVR__)
     TouchButtonTriggerDelay.drawButton();
 #endif
     TouchButtonTriggerMode.drawButton();
@@ -918,7 +918,7 @@ void drawDSOSettingsPage(void) {
     TouchButtonChannelSelect.setButtonColorAndDraw(tButtonColor);
 
 //3. Row
-#if !defined(AVR)
+#if !defined(__AVR__)
     TouchButtonShowPretriggerValuesOnOff.drawButton();
 #endif
     TouchButtonAutoRangeOnOff.drawButton();
@@ -930,7 +930,7 @@ void drawDSOSettingsPage(void) {
     TouchButtonChannelSelect.drawButton();
 
 // 4. Row
-#if !defined(AVR)
+#if !defined(__AVR__)
     TouchButtonMinMaxMode.drawButton();
 #endif
     TouchButtonAutoOffsetMode.drawButton();
@@ -948,14 +948,14 @@ void drawDSOSettingsPage(void) {
         TouchButtonAcDc.drawButton();
     }
 
-#if defined(AVR)
+#if defined(__AVR__)
     setReferenceButtonCaption(); // also draws the button for this page
 #else
     TouchButtonDSOMoreSettings.drawButton();
 #endif
 }
 
-#if !defined(AVR)
+#if !defined(__AVR__)
 void drawDSOMoreSettingsPage(void) {
 // do not clear screen here since gui is refreshed periodically while DSO is running
     BDButton::deactivateAll();
@@ -1018,7 +1018,7 @@ void drawRunningOnlyPartOfGui(void) {
     TouchButtonStartStopDSOMeasurement.drawButton();
 
 // 5. row
-#if !defined(AVR)
+#if !defined(__AVR__)
     TouchButtonFFT.drawButton();
 #endif
     TouchButtonSettingsPage.drawButton();
@@ -1028,7 +1028,7 @@ void clearTriggerLine(uint8_t aTriggerLevelDisplayValue) {
 // clear old line
     clearHorizontalLineAndRestoreGrid(aTriggerLevelDisplayValue);
 
-#if !defined(AVR)
+#if !defined(__AVR__)
     if (!MeasurementControl.isRunning) {
         // in analysis mode restore graph at old y position
         uint8_t *ScreenBufferPointer = &DisplayBuffer[0];
@@ -1058,7 +1058,7 @@ void drawTriggerLine(void) {
  */
 void drawMinMaxLines(void) {
 // draw max line
-#if defined(AVR)
+#if defined(__AVR__)
     uint8_t tValueDisplay;
 #else
     int tValueDisplay;
@@ -1093,7 +1093,7 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
     for (unsigned int tXPos = TIMING_GRID_WIDTH - 1; tXPos < DISPLAY_WIDTH; tXPos += TIMING_GRID_WIDTH) {
         BlueDisplay1.drawLineRel(tXPos, 0, 0, DISPLAY_HEIGHT, COLOR_GRID_LINES);
     }
-#if defined(AVR)
+#if defined(__AVR__)
     /*
      * drawHorizontalLineLabels
      * adjust the distance between the lines to the actual range which is also determined by the reference voltage
@@ -1254,7 +1254,7 @@ void setACModeButtonCaption(void) {
     }
 }
 
-#if defined(AVR)
+#if defined(__AVR__)
 void setTriggerDelayCaption(void) {
     strcpy_P(&sStringBuffer[0], PSTR("Trigger\nset delay"));
     if (MeasurementControl.TriggerDelayMode != TRIGGER_DELAY_NONE) {
@@ -1345,7 +1345,7 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
                 /*
                  * Horizontal swipe - Timebase -> use TouchDeltaX/64
                  */
-#if defined(AVR)
+#if defined(__AVR__)
                 int8_t tTouchDeltaXGrid = aSwipeInfo->TouchDeltaX / 64;
 #else
                 int tTouchDeltaXGrid = aSwipeInfo->TouchDeltaX / 64;
@@ -1356,11 +1356,11 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
                 }
             } else {
                 // Vertical swipe
-#if !defined(AVR)
+#if !defined(__AVR__)
                 int tTouchDeltaYGrid = aSwipeInfo->TouchDeltaY / 32;
 #endif
                 if (!MeasurementControl.RangeAutomatic) {
-#if defined(AVR)
+#if defined(__AVR__)
                     tIsError = changeRange(aSwipeInfo->TouchDeltaY / 64);
 #else
                     /*
@@ -1369,9 +1369,10 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
                     if (MeasurementControl.OffsetMode != OFFSET_MODE_0_VOLT) {
                         // decide which swipe to perform according to x position of swipe
                         if (aSwipeInfo->TouchStartX > BUTTON_WIDTH_3_POS_2) {
-                            //offset
+                            // Offset
                             tIsError = changeOffsetGridCount(tTouchDeltaYGrid);
                         } else {
+                            // Range
                             tIsError = changeDisplayRangeAndAdjustOffsetGridCount(tTouchDeltaYGrid / 2);
                         }
                     }
@@ -1384,7 +1385,7 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
             /*
              * Analyze Mode -> scroll or scale
              */
-#if !defined(AVR)
+#if !defined(__AVR__)
             if (aSwipeInfo->TouchStartY < LOCAL_DISPLAY_HEIGHT / 2) {
                 tIsError = changeXScale(aSwipeInfo->TouchDeltaX / 64);
             } else
@@ -1441,7 +1442,7 @@ void doTriggerMode(BDButton *aTheTouchedButton, int16_t aValue) {
     if (tNewMode > TRIGGER_MODE_EXTERN) {
         tNewMode = TRIGGER_MODE_AUTOMATIC;
         MeasurementControl.TriggerMode = tNewMode;
-#if defined(AVR)
+#if defined(__AVR__)
         noInterrupts();
         if (EIMSK != 0) {
             // Release waiting for external trigger
@@ -1468,7 +1469,7 @@ void doOffsetMode(BDButton *aTheTouchedButton, int16_t aValue) {
         // switch back from Mode Manual to mode 0 volt and set range mode to automatic
         MeasurementControl.OffsetMode = OFFSET_MODE_0_VOLT;
         setAutoRangeModeAndButtonCaption(true);
-#if defined(AVR)
+#if defined(__AVR__)
         MeasurementControl.OffsetValue = 0;
 #else
         setOffsetGridCountAccordingToACMode();
@@ -1569,7 +1570,7 @@ void doStartSingleshot(BDButton *aTheTouchedButton, int16_t aValue) {
     MeasurementControl.RawValueMax = 0;
     MeasurementControl.RawValueMin = 0;
 
-#if defined(AVR)
+#if defined(__AVR__)
     BlueDisplay1.clearDisplay();
     drawGridLinesWithHorizLabelsAndTriggerLine();
     printSingleshotMarker();
@@ -1620,7 +1621,7 @@ void doVoltagePicker(BDSlider *aTheTouchedSlider, uint16_t aValue) {
     int tYpos = DISPLAY_VALUE_FOR_ZERO - sLastPickerValue;
     clearHorizontalLineAndRestoreGrid(tYpos);
 
-#if !defined(AVR)
+#if !defined(__AVR__)
     if (!MeasurementControl.isRunning) {
         // restore graph
         uint8_t *ScreenBufferPointer = &DisplayBuffer[0];
@@ -1646,7 +1647,7 @@ void doVoltagePicker(BDSlider *aTheTouchedSlider, uint16_t aValue) {
     sLastPickerValue = aValue;
 
     float tVoltage = getFloatFromDisplayValue(tValue);
-#if defined(AVR)
+#if defined(__AVR__)
     dtostrf(tVoltage, 4, 2, sStringBuffer);
     sStringBuffer[4] = 'V';
     sStringBuffer[5] = '\0';
@@ -1664,7 +1665,7 @@ void doVoltagePicker(BDSlider *aTheTouchedSlider, uint16_t aValue) {
     BlueDisplay1.drawText(SLIDER_VPICKER_INFO_X, tYPos, sStringBuffer, FONT_SIZE_INFO_SHORT, COLOR16_BLACK, COLOR_INFO_BACKGROUND);
 }
 
-#if defined(AVR)
+#if defined(__AVR__)
 /*
  * Request delay value as number
  */
@@ -1787,7 +1788,7 @@ void doADS7846TestOnOff(BDButton *aTheTouchedButton, int16_t aValue) {
 #endif
 
 uint32_t getMicrosFromHorizontalDisplayValue(uint16_t aDisplayValueHorizontal, uint8_t aNumberOfPeriods) {
-#if defined(AVR)
+#if defined(__AVR__)
     // values in TimebaseExactDivValuesMicros are guaranteed to be multiple of 31 if index is greater than 4
     uint32_t tMicros = aDisplayValueHorizontal * pgm_read_float(&TimebaseExactDivValuesMicros[MeasurementControl.TimebaseIndex]);
 #else

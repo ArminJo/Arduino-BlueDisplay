@@ -42,7 +42,7 @@
  */
 
 #include <Arduino.h>
-#if defined(AVR) && defined(TCCR1A)
+#if defined(__AVR__) && defined(TCCR1A)
 
 #include "Waveforms.h"
 
@@ -458,4 +458,4 @@ void computeSineTableValues(uint8_t aSineTable[], unsigned int aNumber) {
         tRadian += tRadianDelta;
     }
 }
-#endif // defined(AVR) && defined(TCCR1A)
+#endif // defined(__AVR__) && defined(TCCR1A)

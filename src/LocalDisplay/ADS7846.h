@@ -97,7 +97,7 @@ public:
     struct XYPosition mTouchDownPosition;    // Required for move, long touch down and swipe
     uint8_t mPressure; // touch panel pressure can be 0 or >= MIN_REASONABLE_PRESSURE
 
-#if defined(AVR)
+#if defined(__AVR__)
     bool ADS7846TouchActive = false; // is true as long as touch lasts
     bool ADS7846TouchStart = false; // is true once for every touch is reset by call to
 #else
@@ -111,7 +111,7 @@ public:
     uint8_t getPressure(void);
     bool wasJustTouched(void);
 
-#if defined(AVR)
+#if defined(__AVR__)
     void doCalibration(uint16_t eeprom_addr, bool check_eeprom);
     void initAndCalibrateOnPress(uint16_t eeprom_addr);
 #else
@@ -127,7 +127,7 @@ public:
 
     uint16_t readChannel(uint8_t channel, bool use12Bit, bool useDiffMode, uint8_t numberOfReadingsToIntegrate);
 
-#if defined(AVR)
+#if defined(__AVR__)
     bool writeCalibration(uint16_t eeprom_addr);
     bool readCalibration(uint16_t eeprom_addr);
 #else
@@ -143,7 +143,7 @@ private:
     bool setCalibration(CAL_POINT *lcd, CAL_POINT *tp);
     void calibrate(void);
 
-#if defined(AVR)
+#if defined(__AVR__)
     uint8_t rd_spi(void);
     void wr_spi(uint8_t data);
 #endif

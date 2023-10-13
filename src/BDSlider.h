@@ -75,7 +75,7 @@ static const int FLAG_SLIDER_CAPTION_ABOVE = 0x04;
 #include "LocalGUI/LocalTouchSlider.h"
 #endif
 
-#if defined(AVR)
+#if defined(__AVR__)
 typedef uint8_t BDSliderHandle_t;
 #else
 typedef uint16_t BDSliderHandle_t;

@@ -38,7 +38,7 @@
 #ifndef _FREQUENCY_GENERATOR_PAGE_HPP
 #define _FREQUENCY_GENERATOR_PAGE_HPP
 
-#if defined(AVR)
+#if defined(__AVR__)
 #include "FrequencyGeneratorPage.h"
 #endif
 
@@ -48,7 +48,7 @@ static void (*sLastRedrawCallback)(void);
 
 #define COLOR_BACKGROUND_FREQ COLOR16_WHITE
 
-#if defined(AVR)
+#if defined(__AVR__)
 #define TIMER_PRESCALER_64 0x03
 #define TIMER_PRESCALER_MASK 0x07
 #endif
@@ -67,7 +67,7 @@ static void (*sLastRedrawCallback)(void);
 /*
  * Direct frequency + range buttons
  */
-#if defined(AVR)
+#if defined(__AVR__)
 const uint16_t FixedFrequencyButtonCaptions[NUMBER_OF_FIXED_FREQUENCY_BUTTONS] PROGMEM
 = { 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000 };
 
@@ -133,7 +133,7 @@ void doGetFrequency(BDButton *aTheTouchedButton, int16_t aValue);
 bool setWaveformFrequencyAndPrintValues();
 
 void printFrequencyAndPeriod();
-#if defined(AVR)
+#if defined(__AVR__)
 void setWaveformButtonCaption(void);
 void initTimer1ForCTC(void);
 #endif
@@ -143,7 +143,7 @@ void initTimer1ForCTC(void);
  ***********************/
 
 void initFrequencyGenerator(void) {
-#if defined(AVR)
+#if defined(__AVR__)
     initTimer1ForCTC();
 #else
     Synth_Timer_initialize(4711);
@@ -183,7 +183,7 @@ void startFrequencyGeneratorPage(void) {
     sLastRedrawCallback = getRedrawCallback();
     registerRedrawCallback(&drawFrequencyGeneratorPage);
 
-#if !defined(AVR)
+#if !defined(__AVR__)
     Synth_Timer_Start();
 #endif
 }
@@ -205,7 +205,7 @@ void stopFrequencyGeneratorPage(void) {
     TouchButtonFrequencyStartStop.deinit();
     TouchButtonGetFrequency.deinit();
     TouchSliderFrequency.deinit();
-#  if defined(AVR)
+#  if defined(__AVR__)
     TouchButtonWaveform.deinit();
 #  endif
 #endif
@@ -230,7 +230,7 @@ void initFrequencyGeneratorPageGui() {
      */
     uint16_t tXPos = 0;
     uint16_t tFrequency;
-#if defined(AVR)
+#if defined(__AVR__)
     // captions are in PGMSPACE
     const uint16_t *tFrequencyCaptionPtr = &FixedFrequencyButtonCaptions[0];
     for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS; ++i) {
@@ -251,7 +251,7 @@ void initFrequencyGeneratorPageGui() {
 #endif
 
         tXPos += BUTTON_WIDTH_10 + BUTTON_DEFAULT_SPACING_QUARTER;
-#if defined(AVR)
+#if defined(__AVR__)
         tFrequencyCaptionPtr++;
 #endif
     }
@@ -284,7 +284,7 @@ void initFrequencyGeneratorPageGui() {
     TouchButtonGetFrequency.init(BUTTON_WIDTH_3_POS_2, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
     BUTTON_HEIGHT_4, COLOR16_BLUE, F("Hz..."), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetFrequency);
 
-#if defined(AVR)
+#if defined(__AVR__)
     TouchButtonWaveform.init(BUTTON_WIDTH_3_POS_3, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
     BUTTON_HEIGHT_4, COLOR16_BLUE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, sFrequencyInfo.Waveform, &doWaveformMode);
     setWaveformButtonCaption();
@@ -304,7 +304,7 @@ void drawFrequencyGeneratorPage(void) {
 
     BlueDisplay1.drawText(TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1"), TEXT_SIZE_11,
     COLOR16_BLUE, COLOR_BACKGROUND_FREQ);
-#if defined(AVR)
+#if defined(__AVR__)
     BlueDisplay1.drawText(DISPLAY_WIDTH - 5 * TEXT_SIZE_11_WIDTH,
     FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1000"), TEXT_SIZE_11, COLOR16_BLUE,
     COLOR_BACKGROUND_FREQ);
@@ -340,7 +340,7 @@ void drawFrequencyGeneratorPage(void) {
 
     TouchButtonFrequencyStartStop.drawButton();
     TouchButtonGetFrequency.drawButton();
-#if defined(AVR)
+#if defined(__AVR__)
     TouchButtonWaveform.drawButton();
 #endif
 
@@ -426,14 +426,14 @@ void doSetFrequencyRange(BDButton *aTheTouchedButton, int16_t aInputRangeIndex) 
     }
 }
 
-#if defined(AVR)
+#if defined(__AVR__)
 void setWaveformButtonCaption(void) {
     TouchButtonWaveform.setCaption(getWaveformModePGMString(), (DisplayControl.DisplayPage == DSO_PAGE_FREQUENCY));
 }
 #endif
 
 void doWaveformMode(BDButton *aTheTouchedButton, int16_t aValue) {
-#if defined(AVR)
+#if defined(__AVR__)
     cycleWaveformMode();
     setWaveformButtonCaption();
 #endif
@@ -477,13 +477,13 @@ void doFrequencyGeneratorStartStop(BDButton *aTheTouchedButton, int16_t aValue) 
     sFrequencyInfo.isOutputEnabled = aValue;
     if (aValue) {
         // Start timer
-#if !defined(AVR)
+#if !defined(__AVR__)
         Synth_Timer_Start();
 #endif
         setWaveformFrequencyAndPrintValues();
     } else {
         // Stop timer
-#if defined(AVR)
+#if defined(__AVR__)
         stopWaveform();
 #else
         Synth_Timer_Stop();
@@ -498,7 +498,7 @@ void printFrequencyAndPeriod() {
 
     float tPeriodMicros;
 
-#if defined(AVR)
+#if defined(__AVR__)
     dtostrf(sFrequencyInfo.FrequencyNormalizedTo_1_to_1000, 9, 3, &sStringBuffer[20]);
     sprintf_P(sStringBuffer, PSTR("%s%cHz"), &sStringBuffer[20], FrequencyRangeChars[sFrequencyInfo.FrequencyRangeIndex]);
 
@@ -520,7 +520,7 @@ void printFrequencyAndPeriod() {
         tUnitChar = 'm';
     }
 
-#if defined(AVR)
+#if defined(__AVR__)
     dtostrf(tPeriodMicros, 10, 3, &sStringBuffer[20]);
     sprintf_P(sStringBuffer, PSTR("%s%cs"), &sStringBuffer[20], tUnitChar);
 #else
@@ -554,7 +554,7 @@ bool setWaveformFrequencyAndPrintValues() {
     return tErrorOrClippingHappend;
 }
 
-#if !defined(AVR)
+#if !defined(__AVR__)
 // content for AVR is in Waveforms.cpp
 
 #define WAVEFORM_SQUARE     0
@@ -643,6 +643,6 @@ bool setWaveformFrequencyFromNormalizedValues() {
 float getPeriodMicros() {
     return sFrequencyInfo.ControlValue.DividerInt / 36.0f;
 }
-#endif // !defined(AVR)
+#endif // !defined(__AVR__)
 
 #endif // _FREQUENCY_GENERATOR_PAGE_HPP

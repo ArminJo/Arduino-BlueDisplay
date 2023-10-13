@@ -245,7 +245,7 @@ public:
 
     void debugMessage(const char *aStringPtr);
     void debug(const char *aStringPtr);
-#if defined(AVR)
+#if defined(__AVR__)
     void debug(const __FlashStringHelper *aPGMString);
 #endif
     void debug(uint8_t aByte);
@@ -312,7 +312,7 @@ public:
 
     void setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSensorRate, uint8_t aFilterFlag);
 
-#if defined(AVR)
+#if defined(__AVR__)
     // On non AVR platforms PGM functions are reduced to plain functions
     uint16_t drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString, uint16_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor);

@@ -165,7 +165,7 @@ union ByteShortLongFloatUnion {
 struct GuiCallback {
     uint16_t ObjectIndex; // To find associated local button or slider
     uint16_t Free;
-#if defined(AVR)
+#if defined(__AVR__)
     void * CallbackFunctionAddress;
     void * CallbackFunctionAddress_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
 #else
@@ -187,7 +187,7 @@ struct IntegerInfoCallback {
     uint8_t SubFunction;
     uint8_t ByteInfo;
     uint16_t ShortInfo;
-#if defined(AVR)
+#if defined(__AVR__)
     void * CallbackFunctionAddress;
     void * CallbackFunctionAddress_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
 #else

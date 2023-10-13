@@ -24,6 +24,8 @@ Available as [Arduino library "BlueDisplay"](https://www.arduinolibraries.info/l
 
 </div>
 
+#### If you find this library useful, please give it a star.
+
 <br/>
 
 
@@ -131,7 +133,7 @@ These macros must be defined in your program **before** the line `#include <Blue
 Modify them by enabling / disabling them, or change the values if applicable.
 
 | Name | Default value | Description |
-|-|-|-|
+|-|-:|-|
 | `BLUETOOTH_BAUD_RATE` | 9600 | Change this, if you have [reprogrammed](https://github.com/ArminJo/Arduino-BlueDisplay#btmoduleprogrammer) the HC05 module for another baud rate e.g.115200. |
 | `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | Disables basic touch events like down, move and up. Saves up to 620 bytes program memory and 36 bytes RAM. |
 | `USE_SIMPLE_SERIAL` | disabled | Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise. |
@@ -378,5 +380,3 @@ The library examples are tested with GitHub Actions for the following boards:
 
 ## Requests for modifications / extensions
 Please write me a PM including your motivation/problem if you need a modification or an extension.
-
-#### If you find this library useful, please give it a star.

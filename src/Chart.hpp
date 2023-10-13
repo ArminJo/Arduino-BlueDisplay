@@ -338,7 +338,7 @@ void Chart::drawXAxis(bool aClearLabelsBefore) {
                 snprintf(tLabelStringBuffer, sizeof tLabelStringBuffer, "%d", tValue);
                 tValue += tIncrementValue;
             } else {
-#if defined(AVR)
+#if defined(__AVR__)
                 dtostrf(tValueFloat, mXMinStringWidth, mXNumVarsAfterDecimal, tLabelStringBuffer);
 
 #else
@@ -468,7 +468,7 @@ void Chart::drawYAxis(const bool aClearLabelsBefore) {
                 snprintf(tLabelStringBuffer, sizeof tLabelStringBuffer, "%ld", tValue);
                 tValue += mYLabelIncrementValue.IntValue;
             } else {
-#if defined(AVR)
+#if defined(__AVR__)
                 dtostrf(tValueFloat, mXMinStringWidth, mXNumVarsAfterDecimal, tLabelStringBuffer);
 
 #else
