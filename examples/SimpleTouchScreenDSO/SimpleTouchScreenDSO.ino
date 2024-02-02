@@ -132,11 +132,11 @@
  */
 #define LOCAL_GUI_FEEDBACK_TONE_PIN 2
 #define SUPPORT_ONLY_TEXT_SIZE_11_AND_22  // Saves 248 bytes program memory
-#define DISABLE_REMOTE_DISPLAY  // Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display
-#define SUPPORT_LOCAL_DISPLAY   // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
-#define FONT_8X12               // Font size used here
-#include "LocalHX8347DDisplay.hpp" // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
-#include "LocalGUI.hpp"         // Includes the sources for LocalTouchButton etc.
+#define DISABLE_REMOTE_DISPLAY      // Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display
+#define SUPPORT_LOCAL_DISPLAY       // Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands!
+#define FONT_8X12                   // Font size used here
+#include "LocalHX8347DDisplay.hpp"  // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
+#include "LocalGUI.hpp"             // Includes the sources for LocalTouchButton etc.
 
 #ifdef USE_RTC
 #ifdef __cplusplus
@@ -508,7 +508,7 @@ uint16_t DebugValue4;
 /*
  * a string buffer for any purpose...
  */
-char sStringBuffer[40] __attribute__((section(".noinit")));
+char sLCDRowStringBuffer[40] __attribute__((section(".noinit")));
 // 40 is #character per screen line (TFTDisplay.getWidth() / TEXT_SIZE_11_WIDTH)
 // safety net - array overflow will overwrite only DisplayBuffer
 
@@ -2263,10 +2263,10 @@ void printInfo() {
     tTimebaseUnitsPerGrid = TimebaseDivPrintValues[MeasurementControl.TimebaseIndex];
 
     // First line
-    sprintf_P(sStringBuffer, PSTR("%3u%cs %c C%c %s %s %s %sV %sV %c"), tTimebaseUnitsPerGrid, tTimebaseUnitChar, tSlopeChar,
+    sprintf_P(sLCDRowStringBuffer, PSTR("%3u%cs %c C%c %s %s %s %sV %sV %c"), tTimebaseUnitsPerGrid, tTimebaseUnitChar, tSlopeChar,
             MeasurementControl.ADCInputMUXChannelChar, tMinStringBuffer, tAverageStringBuffer, tMaxStringBuffer, tP2PStringBuffer,
             tTriggerStringBuffer, tReferenceChar);
-    LocalDisplay.drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, COLOR_INFO_BACKGROUND);
+    LocalDisplay.drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN, sLCDRowStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, COLOR_INFO_BACKGROUND);
 
     /*
      * Period and frequency
@@ -2282,22 +2282,22 @@ void printInfo() {
         tPeriodUnitChar = 'm';
     }
 
-    sprintf_P(sStringBuffer, PSTR(" %5lu%cs  %5luHz"), tMicrosPeriod, tPeriodUnitChar, tHertz);
+    sprintf_P(sLCDRowStringBuffer, PSTR(" %5lu%cs  %5luHz"), tMicrosPeriod, tPeriodUnitChar, tHertz);
     if (tMicrosPeriod >= 1000) {
         // format nicely - 44 bytes
         // set separator for thousands
-        sStringBuffer[0] = sStringBuffer[1];
-        sStringBuffer[1] = sStringBuffer[2];
-        sStringBuffer[2] = THOUSANDS_SEPARATOR;
+        sLCDRowStringBuffer[0] = sLCDRowStringBuffer[1];
+        sLCDRowStringBuffer[1] = sLCDRowStringBuffer[2];
+        sLCDRowStringBuffer[2] = THOUSANDS_SEPARATOR;
     }
     if (tHertz >= 1000) {
         // set separator for thousands
-        sStringBuffer[9] = sStringBuffer[10];
-        sStringBuffer[10] = sStringBuffer[11];
-        sStringBuffer[11] = THOUSANDS_SEPARATOR;
+        sLCDRowStringBuffer[9] = sLCDRowStringBuffer[10];
+        sLCDRowStringBuffer[10] = sLCDRowStringBuffer[11];
+        sLCDRowStringBuffer[11] = THOUSANDS_SEPARATOR;
     }
 //	 44 bytes
-//	char * StringPointer = &sStringBuffer[2];
+//	char * StringPointer = &sLCDRowStringBuffer[2];
 //	char tChar;
 //	for (uint8_t i = 2; i > 0; i--) {
 //		tChar = *StringPointer;
@@ -2306,29 +2306,29 @@ void printInfo() {
 //		tReferenceChar = *StringPointer;
 //		*StringPointer-- = tChar;
 //		*StringPointer = tReferenceChar;
-//		StringPointer = &sStringBuffer[11];
+//		StringPointer = &sLCDRowStringBuffer[11];
 //	}
 
     // second line
-    LocalDisplay.drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + TEXT_SIZE_11 + INFO_LINE_SPACING, sStringBuffer, TEXT_SIZE_11,
+    LocalDisplay.drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + TEXT_SIZE_11 + INFO_LINE_SPACING, sLCDRowStringBuffer, TEXT_SIZE_11,
     COLOR16_BLACK, COLOR_INFO_BACKGROUND);
 }
 
 #if defined(DEBUG)
 //show touchpanel data
 void printTPData(bool aGuiTouched) {
-    sprintf_P(sStringBuffer, PSTR("X:%03i|%04i Y:%03i|%04i P:%03i"), TouchPanel.getX(), TouchPanel.getXraw(),
+    sprintf_P(sLCDRowStringBuffer, PSTR("X:%03i|%04i Y:%03i|%04i P:%03i"), TouchPanel.getX(), TouchPanel.getXraw(),
             TouchPanel.getY(), TouchPanel.getYraw(), TouchPanel.getPressure());
     uint16_t tColor = COLOR_BACKGROUND_DSO;
     if (aGuiTouched) {
         tColor = COLOR_GREEN;
     }
-    drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + 3 * TEXT_SIZE_11_HEIGHT, sStringBuffer, 1, COLOR16_BLACK, tColor);
+    drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + 3 * TEXT_SIZE_11_HEIGHT, sLCDRowStringBuffer, 1, COLOR16_BLACK, tColor);
 }
 
 void printDebugData() {
-    sprintf_P(sStringBuffer, PSTR("%5u,%5u,%5u,%5u"), DebugValue1, DebugValue2, DebugValue3, DebugValue4);
-    drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + 2 * TEXT_SIZE_11_HEIGHT, sStringBuffer, 1, COLOR16_BLACK, COLOR_BACKGROUND_DSO);
+    sprintf_P(sLCDRowStringBuffer, PSTR("%5u,%5u,%5u,%5u"), DebugValue1, DebugValue2, DebugValue3, DebugValue4);
+    drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + 2 * TEXT_SIZE_11_HEIGHT, sLCDRowStringBuffer, 1, COLOR16_BLACK, COLOR_BACKGROUND_DSO);
 }
 #endif
 
@@ -2537,9 +2537,9 @@ void showRTCTime() {
 //buf[3] is day of week
     if (RtcBuf[0] != sLastSecond) {
         sLastSecond = RtcBuf[0];
-        sprintf_P(sStringBuffer, PSTR("%02i.%02i.%04i %02i:%02i:%02i"), RtcBuf[4], RtcBuf[5], RtcBuf[6] + 2000, RtcBuf[2], RtcBuf[1],
+        sprintf_P(sLCDRowStringBuffer, PSTR("%02i.%02i.%04i %02i:%02i:%02i"), RtcBuf[4], RtcBuf[5], RtcBuf[6] + 2000, RtcBuf[2], RtcBuf[1],
                 RtcBuf[0]);
-        LocalDisplay.drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + 2 * 13, sStringBuffer, 11, COLOR16_RED, COLOR_BACKGROUND_DSO);
+        LocalDisplay.drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + 2 * 13, sLCDRowStringBuffer, 11, COLOR16_RED, COLOR_BACKGROUND_DSO);
     }
 }
 #endif

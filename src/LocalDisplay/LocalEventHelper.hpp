@@ -339,9 +339,9 @@ void handleLocalTouchUp() {
 
     if(!sDisableTouchUpOnce){
         if (sTouchObjectTouched == PANEL_TOUCHED) {
-            uint16_t tTouchDeltaX = TouchPanel.mLastTouchPosition.PositionX - TouchPanel.mTouchDownPosition.PositionX;
+            int16_t tTouchDeltaX = TouchPanel.mLastTouchPosition.PositionX - TouchPanel.mTouchDownPosition.PositionX;
             uint16_t tTouchDeltaXAbs = abs(tTouchDeltaX);
-            uint16_t tTouchDeltaY = TouchPanel.mLastTouchPosition.PositionY - TouchPanel.mTouchDownPosition.PositionY;
+            int16_t tTouchDeltaY = TouchPanel.mLastTouchPosition.PositionY - TouchPanel.mTouchDownPosition.PositionY;
             uint16_t tTouchDeltaYAbs = abs(tTouchDeltaY);
 
             if (sSwipeEndCallbackEnabled && (tTouchDeltaXAbs >= TOUCH_SWIPE_THRESHOLD || tTouchDeltaYAbs >= TOUCH_SWIPE_THRESHOLD)) {

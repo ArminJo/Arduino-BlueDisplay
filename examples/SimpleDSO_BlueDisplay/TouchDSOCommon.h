@@ -343,6 +343,7 @@ int changeOffsetGridCount(int aValue);
 uint8_t changeRange(int8_t aChangeAmount);
 uint8_t changeTimeBaseValue(int8_t aChangeValue);
 #else
+int changeDisplayRange(int aValue);
 int changeDisplayRangeAndAdjustOffsetGridCount(int aValue);
 int changeTimeBaseValue(int aChangeValue);
 bool changeXScale(int aValue);

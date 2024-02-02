@@ -2,7 +2,7 @@
  * EventHandler.h
  *
  *
- *  Copyright (C) 2014-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2024  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -36,6 +36,22 @@
 //#define USE_TIMER_FOR_PERIODIC_LOCAL_TOUCH_CHECKS // Use registerDelayCallback() and changeDelayCallback() for periodic touch checks
 #if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
 //#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#endif
+
+#if !defined(IS_STOP_REQUESTED)
+#define IS_STOP_REQUESTED               isStopRequested()
+#endif
+#if !defined(RETURN_IF_STOP)
+#define RETURN_IF_STOP                  if (isStopRequested()) return
+#endif
+#if !defined(BREAK_IF_STOP)
+#define BREAK_IF_STOP                   if (isStopRequested()) break
+#endif
+#if !defined(DELAY_AND_RETURN_IF_STOP)
+#define DELAY_AND_RETURN_IF_STOP(aDurationMillis)   if (delayMillisAndCheckForStop(aDurationMillis)) return
+#endif
+#if !defined(DELAY_UNTIL_EVENT)
+#define DELAY_UNTIL_EVENT(aDurationMillis)          delayMillisAndCheckForEvent(aDurationMillis)
 #endif
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
@@ -87,8 +103,10 @@ void printEventTouchPositionData(int x, int y, color16_t aColor, color16_t aBack
 #  endif
 #endif
 
+bool isStopRequested();
 void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis);
 bool delayMillisAndCheckForEvent(unsigned long aDelayMillis);
+bool delayMillisAndCheckForStop(uint16_t aDelayMillis);
 
 void checkAndHandleEvents(void);
 

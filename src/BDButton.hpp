@@ -269,7 +269,7 @@ void BDButton::setCaptionFromStringArray(const char *const *aCaptionStringArrayP
     setCaption(aCaptionStringArrayPtr[aStringIndex], doDrawButton);
 }
 
-void BDButton::setCaptionFromStringArray(const __FlashStringHelper *const *aPGMCaptionStringArrayPtr, uint8_t aStringIndex,
+void BDButton::setCaptionFromStringArray(const __FlashStringHelper* const* aPGMCaptionStringArrayPtr, uint8_t aStringIndex,
         bool doDrawButton) {
 #if defined(__AVR__)
         __FlashStringHelper *tPGMCaption = (__FlashStringHelper*) pgm_read_word(&aPGMCaptionStringArrayPtr[aStringIndex]);
@@ -488,7 +488,10 @@ void BDButton::setCaptionPGMForValueTrue(const char *aPGMCaption) {
 
 }
 
-void BDButton::setCaptionFromStringArrayPGM(const char *const aPGMCaptionStringArrayPtr[], uint8_t aStringIndex,
+/*
+ * deprecated: Use setCaptionFromStringArray((const __FlashStringHelper* const*) aCaptionStringArrayPtr,...) with this cast
+ */
+void BDButton::setCaptionFromStringArrayPGM(const char* const aPGMCaptionStringArrayPtr[], uint8_t aStringIndex,
         bool doDrawButton) {
 #if defined(__AVR__)
     __FlashStringHelper *tPGMCaption = (__FlashStringHelper*) pgm_read_word(&aPGMCaptionStringArrayPtr[aStringIndex]);

@@ -206,7 +206,7 @@ size_t getReceiveBytesAvailable() {
 /**
  * Check if a touch event has completely received by USART
  * Function is not synchronized because it should only be used by main thread
- * Will be called after each loop() (by Arduino Serial...) to process input data if available.
+ * Will be called after each Arduino loop() (by Arduino main() function, if serial available) to process input data if available.
  * Fills in the remoteEvent structure with BD event data from serial
  * EventType is set if event is complete
  */

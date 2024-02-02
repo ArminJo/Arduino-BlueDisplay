@@ -17,7 +17,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -286,8 +286,8 @@ void initGameOfLife(void) {
 
 void drawGenerationText(void) {
     //draw current sCurrentGameOfLifeGeneration
-    snprintf(sStringBuffer, sizeof sStringBuffer, "Gen.%3d", sCurrentGameOfLifeGeneration);
-    Display.drawText(0, TEXT_SIZE_11_ASCEND, sStringBuffer, TEXT_SIZE_11, COLOR16(50, 50, 50), drawcolor[DEAD_COLOR_INDEX]);
+    snprintf(sBDStringBuffer, sizeof sBDStringBuffer, "Gen.%3d", sCurrentGameOfLifeGeneration);
+    Display.drawText(0, TEXT_SIZE_11_ASCEND, sBDStringBuffer, TEXT_SIZE_11, COLOR16(50, 50, 50), drawcolor[DEAD_COLOR_INDEX]);
 }
 
 void test(void) {

@@ -26,6 +26,8 @@ Available as [Arduino library "BlueDisplay"](https://www.arduinolibraries.info/l
 
 #### If you find this library useful, please give it a star.
 
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/ArminJo/Arduino-BlueDisplay)
+
 <br/>
 
 

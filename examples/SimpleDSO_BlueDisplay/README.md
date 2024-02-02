@@ -16,6 +16,10 @@ This DSO needs only a standard Arduino-Uno or Arduino-Nano, a HC-05 Bluetooth mo
 
 </div>
 
+#### If you find this library useful, please give it a star.
+
+&#x1F30E; [Google Translate](https://translate.google.com/translate?sl=en&u=https://github.com/ArminJo/Arduino-Simple-DSO)
+
 <br/>
 
 
@@ -208,4 +212,3 @@ The captured signal was generated with a STM32F303 DAC and the DSO input range w
 - Value computation for ultra fast modes fixed.
 - millis() timer compensation formula fixed.
 - AC/DC button and info line handling improved.
-

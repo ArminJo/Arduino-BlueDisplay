@@ -145,7 +145,7 @@ int sTextSize;
 int sTextSizeVCC;
 
 // a string buffer for any purpose...
-char sStringBuffer[128];
+char sBDStringBuffer[128];
 
 void doSensorChange(uint8_t aSensorType, struct SensorCallback *aSensorCallbackInfo);
 
@@ -406,8 +406,8 @@ void BDloop() {
                         tSpeed = FOLLOWER_MAX_SPEED;
                     }
                     analogWrite(FORWARD_MOTOR_PWM_PIN, tSpeed);
-                    sprintf(sStringBuffer, "%3d", tSpeed);
-                    SliderVelocityBackward.printValue(sStringBuffer);
+                    sprintf(sBDStringBuffer, "%3d", tSpeed);
+                    SliderVelocityBackward.printValue(sBDStringBuffer);
                 }
 
             } else if (sDistanceCmFiltered < FOLLOWER_DISTANCE_MINIMUM_CENTIMETER) {
@@ -421,8 +421,8 @@ void BDloop() {
                     tSpeed = FOLLOWER_MAX_SPEED;
                 }
                 analogWrite(BACKWARD_MOTOR_PWM_PIN, tSpeed);
-                sprintf(sStringBuffer, "%3d", tSpeed);
-                SliderVelocityBackward.printValue(sStringBuffer);
+                sprintf(sBDStringBuffer, "%3d", tSpeed);
+                SliderVelocityBackward.printValue(sBDStringBuffer);
             } else {
                 /*
                  * Distance is in range
@@ -538,8 +538,8 @@ void processVerticalSensorValue(float tSensorValue) {
         /*
          * Print speed as value of bottom slider
          */
-        sprintf(sStringBuffer, "%3d", tSpeedValue);
-        SliderVelocityBackward.printValue(sStringBuffer);
+        sprintf(sBDStringBuffer, "%3d", tSpeedValue);
+        SliderVelocityBackward.printValue(sBDStringBuffer);
     }
 }
 

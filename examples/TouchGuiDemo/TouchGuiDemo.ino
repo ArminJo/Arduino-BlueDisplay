@@ -35,7 +35,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -71,7 +71,7 @@
 void initDisplay(void);
 #endif
 
-char sStringBuffer[32];
+char sBDStringBuffer[32];
 uint32_t sMillisOfLastLoop;
 
 /*
@@ -215,9 +215,9 @@ void initDisplay(void) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
 //show touchpanel data
 void printLocalTouchPanelData(void) {
-    sprintf(sStringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getCurrentX(), TouchPanel.getRawX(), TouchPanel.getCurrentY(),
+    sprintf(sBDStringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getCurrentX(), TouchPanel.getRawX(), TouchPanel.getCurrentY(),
             TouchPanel.getRawY(), TouchPanel.getPressure(), sTouchObjectTouched);
-    LocalDisplay.drawText(30, 2, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
+    LocalDisplay.drawText(30, 2, sBDStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
 }
 #endif
 

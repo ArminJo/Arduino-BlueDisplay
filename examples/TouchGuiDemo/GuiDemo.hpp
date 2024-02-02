@@ -16,7 +16,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -578,8 +578,8 @@ void ADS7846DisplayChannels(void) {
             tUse12BitMode = true;
         }
         tTemp = TouchPanel.readChannel(ADS7846ChannelMapping[i], tUse12BitMode, tUseDiffMode, 2);
-        snprintf(sStringBuffer, sizeof sStringBuffer, "%04u", tTemp);
-        Display.drawText(15, tPosY, sStringBuffer, TEXT_SIZE_22, COLOR16_RED, COLOR_DEMO_BACKGROUND);
+        snprintf(sBDStringBuffer, sizeof sBDStringBuffer, "%04u", tTemp);
+        Display.drawText(15, tPosY, sBDStringBuffer, TEXT_SIZE_22, COLOR16_RED, COLOR_DEMO_BACKGROUND);
         tPosY += TEXT_SIZE_22_HEIGHT;
     }
 }

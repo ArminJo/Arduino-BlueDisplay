@@ -750,13 +750,13 @@ void initDSOGUI(void) {
      */
 // make slider slightly visible
 // slider for voltage picker
-    TouchSliderVoltagePicker.init(SLIDER_VPICKER_POS_X, 0, SLIDER_BAR_WIDTH, DISPLAY_HEIGHT, DISPLAY_HEIGHT, 0,
-            COLOR16_WHITE, COLOR_VOLTAGE_PICKER_SLIDER, FLAG_SLIDER_VALUE_BY_CALLBACK, &doVoltagePicker);
+    TouchSliderVoltagePicker.init(SLIDER_VPICKER_POS_X, 0, SLIDER_BAR_WIDTH, DISPLAY_HEIGHT, DISPLAY_HEIGHT, 0, COLOR16_WHITE,
+            COLOR_VOLTAGE_PICKER_SLIDER, FLAG_SLIDER_VALUE_BY_CALLBACK, &doVoltagePicker);
     TouchSliderVoltagePicker.setBarBackgroundColor(COLOR_VOLTAGE_PICKER_SLIDER);
 
 // slider for trigger level
-    TouchSliderTriggerLevel.init(SLIDER_TLEVEL_POS_X, 0, SLIDER_BAR_WIDTH, DISPLAY_HEIGHT, DISPLAY_HEIGHT, 0,
-            COLOR16_WHITE, COLOR_TRIGGER_SLIDER, FLAG_SLIDER_VALUE_BY_CALLBACK, &doTriggerLevel);
+    TouchSliderTriggerLevel.init(SLIDER_TLEVEL_POS_X, 0, SLIDER_BAR_WIDTH, DISPLAY_HEIGHT, DISPLAY_HEIGHT, 0, COLOR16_WHITE,
+            COLOR_TRIGGER_SLIDER, FLAG_SLIDER_VALUE_BY_CALLBACK, &doTriggerLevel);
     TouchSliderTriggerLevel.setBarBackgroundColor(COLOR_TRIGGER_SLIDER);
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
@@ -877,7 +877,8 @@ void drawStartPage(void) {
 
 // Hints
 #if !defined(__AVR__)
-    BlueDisplay1.drawText(SLIDER_DEFAULT_BAR_WIDTH + 6, BUTTON_HEIGHT_4 + TEXT_SIZE_22_ASCEND, "\xABScale\xBB", TEXT_SIZE_22, COLOR16_YELLOW, COLOR_BACKGROUND_DSO);
+    BlueDisplay1.drawText(SLIDER_DEFAULT_BAR_WIDTH + 6, BUTTON_HEIGHT_4 + TEXT_SIZE_22_ASCEND, "\xABScale\xBB", TEXT_SIZE_22,
+            COLOR16_YELLOW, COLOR_BACKGROUND_DSO);
 #endif
     BlueDisplay1.drawText(BUTTON_WIDTH_3, BUTTON_HEIGHT_4_LINE_4 + BUTTON_DEFAULT_SPACING + TEXT_SIZE_22_ASCEND,
             F("\xABScroll\xBB"), TEXT_SIZE_22, COLOR16_GREEN, COLOR_BACKGROUND_DSO);
@@ -1205,9 +1206,9 @@ void setChannelButtonsCaption(void) {
     for (uint_fast8_t i = 0; i < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR; ++i) {
         if (MeasurementControl.AttenuatorType == ATTENUATOR_TYPE_FIXED_ATTENUATOR) {
 //            TouchButtonAutoOffsetMode.setCaptionFromStringArrayPGM(ChannelDivByButtonStrings, i); // requires 16 butes more
-            TouchButtonChannels[i].setCaption((const __FlashStringHelper *)ChannelDivByButtonStrings[i]);
+            TouchButtonChannels[i].setCaption((const __FlashStringHelper*) ChannelDivByButtonStrings[i]);
         } else {
-            TouchButtonChannels[i].setCaption((const __FlashStringHelper *)ADCInputMUXChannelStrings[i]);
+            TouchButtonChannels[i].setCaption((const __FlashStringHelper*) ADCInputMUXChannelStrings[i]);
         }
     }
 }
@@ -1226,8 +1227,8 @@ void setSlopeButtonCaption(void) {
 }
 
 void setTriggerModeButtonCaption(void) {
-    TouchButtonTriggerMode.setCaptionFromStringArray((const __FlashStringHelper *const *)sTriggerModeButtonCaptionStringArray, MeasurementControl.TriggerMode,
-            (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonTriggerMode.setCaptionFromStringArray((const __FlashStringHelper* const*) sTriggerModeButtonCaptionStringArray,
+            MeasurementControl.TriggerMode, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
 void setAutoRangeModeAndButtonCaption(bool aNewAutoRangeMode) {
@@ -1238,12 +1239,12 @@ void setAutoRangeModeAndButtonCaption(bool aNewAutoRangeMode) {
     } else {
         tCaption = AutoRangeButtonStringManual;
     }
-    TouchButtonAutoRangeOnOff.setCaption((const __FlashStringHelper *)tCaption, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonAutoRangeOnOff.setCaption((const __FlashStringHelper*) tCaption, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
 void setAutoOffsetButtonCaption(void) {
-    TouchButtonAutoOffsetMode.setCaptionFromStringArray((const __FlashStringHelper *const *)sAutoOffsetButtonCaptionStringArray, MeasurementControl.OffsetMode,
-            (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonAutoOffsetMode.setCaptionFromStringArray((const __FlashStringHelper* const*) sAutoOffsetButtonCaptionStringArray,
+            MeasurementControl.OffsetMode, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
 void setACModeButtonCaption(void) {
@@ -1364,19 +1365,18 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
                     tIsError = changeRange(aSwipeInfo->TouchDeltaY / 64);
 #else
                     /*
-                     * range manual. If offset not fixed, check if swipe in the right third of screen, then do changeOffsetGridCount()
+                     * Range manual. If offset not fixed, check if swipe in the right third of screen, then do changeOffsetGridCount()
                      */
-                    if (MeasurementControl.OffsetMode != OFFSET_MODE_0_VOLT) {
-                        // decide which swipe to perform according to x position of swipe
-                        if (aSwipeInfo->TouchStartX > BUTTON_WIDTH_3_POS_2) {
-                            // Offset
-                            tIsError = changeOffsetGridCount(tTouchDeltaYGrid);
-                        } else {
-                            // Range
-                            tIsError = changeDisplayRangeAndAdjustOffsetGridCount(tTouchDeltaYGrid / 2);
-                        }
+                    if (MeasurementControl.OffsetMode != OFFSET_MODE_0_VOLT && aSwipeInfo->TouchStartX > BUTTON_WIDTH_3_POS_2) {
+                        // Change offset
+                        tIsError = changeOffsetGridCount(tTouchDeltaYGrid);
+                    } else {
+                        // Change range
+                        tIsError = changeDisplayRange(tTouchDeltaYGrid / 2);
                     }
+
                 } else if (MeasurementControl.OffsetMode != OFFSET_MODE_0_VOLT) {
+                    // Change offset
                     tIsError = changeOffsetGridCount(tTouchDeltaYGrid);
 #endif
                 }
@@ -1521,7 +1521,7 @@ void doChannelSelect(BDButton *aTheTouchedButton, int16_t aValue) {
                     //reset caption of 4. button to "Ch 3"
                     tCaptionIndex = NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR;
                 }
-                TouchButtonChannelSelect.setCaption((const __FlashStringHelper *)ADCInputMUXChannelStrings[tCaptionIndex]);
+                TouchButtonChannelSelect.setCaption((const __FlashStringHelper*) ADCInputMUXChannelStrings[tCaptionIndex]);
             }
         }
         setChannel(tNewChannelValue);

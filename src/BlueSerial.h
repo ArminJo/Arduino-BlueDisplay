@@ -115,7 +115,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
 #if !defined(USE_SIMPLE_SERIAL)
 uint8_t getReceiveBufferByte(void);
 size_t getReceiveBytesAvailable(void);
-void serialEvent(void); // Is called by Arduino runtime
+void serialEvent(void); // Is called by Arduino runtime in main loop, if (Serial0_available && serialEvent && Serial0_available()) serialEvent();
 #endif
 
 #if defined(ARDUINO)
