@@ -1,5 +1,6 @@
 #######################################
-# Syntax coloring map for TouchButton,
+# Syntax coloring map for BlueDisplay,
+# BDButton, BDSlider, TouchButton,
 # TouchButtonAutorepeat and TouchSlider
 #######################################
 
@@ -95,26 +96,8 @@ getTextAscend	KEYWORD2
 getTextAscendMinusDescend	KEYWORD2
 getTextMiddle	KEYWORD2
 
-# Button stuff from BlueDisplay.h
-createButton	KEYWORD2
-createButtonPGM	KEYWORD2
-drawButton	KEYWORD2
-removeButton	KEYWORD2
-drawButtonCaption	KEYWORD2
-setButtonCaptionPGM	KEYWORD2
-setButtonCaption	KEYWORD2
-setButtonValue	KEYWORD2
-setButtonValueAndDraw	KEYWORD2
-setButtonColor	KEYWORD2
-setButtonColorAndDraw	KEYWORD2
-setButtonPosition	KEYWORD2
-setButtonAutorepeatTiming	KEYWORD2
-activateButton	KEYWORD2
-deactivateButton	KEYWORD2
-activateAllButtons	KEYWORD2
-deactivateAllButtons	KEYWORD2
-setButtonsGlobalFlags	KEYWORD2
-setButtonsTouchTone	KEYWORD2
+# Button and slider stuff from BlueDisplay.h
+clearDisplayAndDisableButtonsAndSliders	KEYWORD2
 
 # from BDButton.h
 resetAllButtons	KEYWORD2
@@ -140,21 +123,8 @@ setPosition	KEYWORD2
 setButtonAutorepeatTiming	KEYWORD2
 activate	KEYWORD2
 deactivate	KEYWORD2
-
-# Slider stuff from BlueDisplay.h
-createSlider	KEYWORD2
-drawSlider	KEYWORD2
-drawSliderBorder	KEYWORD2
-setSliderValueAndDrawBar	KEYWORD2
-setSliderColorBarThreshold	KEYWORD2
-setSliderColorBarBackground	KEYWORD2
-setSliderCaptionProperties	KEYWORD2
-setSliderCaption	KEYWORD2
-activateSlider	KEYWORD2
-deactivateSlider	KEYWORD2
-activateAllSliders	KEYWORD2
-deactivateAllSliders	KEYWORD2
-clearDisplayAndDisableButtonsAndSliders	KEYWORD2
+activateAll	KEYWORD2
+deactivateAll	KEYWORD2
 
 # from BDSlider.h
 resetAllSliders	KEYWORD2
@@ -179,6 +149,8 @@ setScaleFactor	KEYWORD2
 setValueScaleFactor	KEYWORD2
 activate	KEYWORD2
 deactivate	KEYWORD2
+activateAll	KEYWORD2
+deactivateAll	KEYWORD2
 
 # from BlueSerial.h
 sendUSARTArgs	KEYWORD2

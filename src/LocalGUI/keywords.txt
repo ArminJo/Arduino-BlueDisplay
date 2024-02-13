@@ -1,22 +1,23 @@
 #######################################
-# Syntax coloring map for TouchButton,
-# TouchButtonAutorepeat and TouchSlider
+# Syntax coloring map for LocalTouchButton,
+# LocalTouchButtonAutorepeat
+# and LocalTouchSlider
 #######################################
 
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
 
-TouchButton	KEYWORD1
-TouchSlider	KEYWORD1
-TouchButtonAutorepeat	KEYWORD1
+LocalTouchButton	KEYWORD1
+LocalTouchSlider	KEYWORD1
+LocalTouchButtonAutorepeat	KEYWORD1
 Chart	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-# from TouchButton
+# from LocalTouchButton
 init	KEYWORD2
 setDefaultTouchBorder	KEYWORD2
 setDefaultButtonColor	KEYWORD2
@@ -42,10 +43,10 @@ activate	KEYWORD2
 deactivate	KEYWORD2
 toString	KEYWORD2
 
-# from TouchButtonAutorepeat
+# from LocalTouchButtonAutorepeat
 setButtonAutorepeatTiming	KEYWORD2
 
-# from TouchSlider
+# from LocalTouchSlider
 init	KEYWORD2
 setDefaults	KEYWORD2
 checkAllSliders	KEYWORD2

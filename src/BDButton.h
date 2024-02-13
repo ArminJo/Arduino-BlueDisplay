@@ -71,7 +71,7 @@ typedef uint8_t BDButtonHandle_t;
 typedef uint16_t BDButtonHandle_t;
 #endif
 
-extern BDButtonHandle_t sLocalButtonIndex; // local button index counter used by BDButton.init() and BlueDisplay.createButton()
+extern BDButtonHandle_t sLocalButtonIndex; // local button index counter used by BDButton.init() and LocalTouchButton.createAllLocalButtonsAtRemote()
 
 #include "Colors.h"
 

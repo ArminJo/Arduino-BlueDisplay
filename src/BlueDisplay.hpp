@@ -840,14 +840,16 @@ void BlueDisplay::debug(float aFloat) {
 }
 
 /*
- * Maximum size of aMessage string is up to 30 character depending on content of aFloat.
+ * Maximum size of aMessage string is 12 character because 17 characters on content of aFloat.
  */
 void BlueDisplay::debug(const char *aMessage, float aFloat) {
     if (USART_isBluetoothPaired()) {
-        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE]; // 34 chars
 #if defined(__AVR__)
         strncpy(tStringBuffer, aMessage, (STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE - 22));
+        tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE - 22] = '\0'; // Terminate strings which are too long
         dtostrf(aFloat, 16, 7, &tStringBuffer[strlen(tStringBuffer)]);
+        tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE -1] = '\0'; // Terminate floats which are too long
 //    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%f", aMessage, (double)aFloat); // requires ca. 800 bytes more
 #else
         snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%f", aMessage, aFloat);
