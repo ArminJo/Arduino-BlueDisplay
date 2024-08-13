@@ -74,6 +74,7 @@ void setup() {
 #endif
 
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+    checkAndHandleEvents(); // this copies the display size and time from remote device
 
     delay(500);
     // Start the SoftAP
@@ -92,6 +93,8 @@ void setup() {
     // Set the callback function to handle the UDP packet
     udp.onPacket(handlePacket);
   }
+
+
 
     minutes_millis_last = millis() ; 
     
@@ -208,8 +211,13 @@ void loop() {
       update_minute_buffer();      
       minutes_millis_last=millis()+MINUTES_INTERVAL;
     }
-    plotGraph(minutes_buffer, minutes_dataArraySize, GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT, minutes_buffer_min, minutes_buffer_max);
+    uint16_t displayWidth = BlueDisplay1.getDisplayWidth();
+    uint16_t displayHeight = BlueDisplay1.getDisplayHeight();
+//    plotGraph(minutes_buffer, minutes_dataArraySize, GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT, minutes_buffer_min, minutes_buffer_max);
+//    checkAndHandleEvents();
+    plotGraph(minutes_buffer, minutes_dataArraySize, GRAPH_X, GRAPH_Y, displayWidth-GRAPH_X, displayHeight-GRAPH_Y, minutes_buffer_min, minutes_buffer_max);
     checkAndHandleEvents();
+
 
 //    delay(1000); // Update every 1 seconds
 //    delay(5000); // Update every 5 seconds
@@ -219,12 +227,11 @@ void loop() {
 
 void initDisplay(void) {
     // Initialize display size and flags
-    uint16_t displayWidth = BlueDisplay1.getDisplayWidth();
-    uint16_t displayHeight = BlueDisplay1.getDisplayHeight();    
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, DISPLAY_WIDTH,
-    DISPLAY_HEIGHT);
-  //  BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, displayWidth,
-  //  displayHeight);
+    uint16_t displayWidth = BlueDisplay1.getMaxDisplayWidth();
+    uint16_t displayHeight = BlueDisplay1.getMaxDisplayHeight();    
+    //BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, DISPLAY_WIDTH,
+//    DISPLAY_HEIGHT);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, displayWidth,displayHeight);
 
     // Initialize button position, size, colors etc.
 //    TouchButtonBlinkStartStop.init((DISPLAY_WIDTH - BUTTON_WIDTH_2) / 2, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_2,
@@ -239,6 +246,12 @@ void initDisplay(void) {
  * Function is called for resize + connect too
  */
 void drawGui(void) {
+    uint16_t displayWidth = BlueDisplay1.getMaxDisplayWidth();
+    uint16_t displayHeight = BlueDisplay1.getMaxDisplayHeight();    
+    //BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, DISPLAY_WIDTH,
+//    DISPLAY_HEIGHT);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, displayWidth,displayHeight);
+
     BlueDisplay1.clearDisplay(COLOR16_BLUE);
 //    TouchButtonBlinkStartStop.drawButton();
 }
