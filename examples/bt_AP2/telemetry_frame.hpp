@@ -8,3 +8,4 @@ struct telemetry_frame {
 #pragma pack(pop)
 
 bool new_packet = false ; // new packet flag
+uint32_t total_packets = 0 ; // packets count
