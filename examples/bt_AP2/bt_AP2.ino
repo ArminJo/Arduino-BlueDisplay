@@ -163,13 +163,6 @@ void plotGraph(float *data, uint16_t dataSize,uint16_t graphPosX,uint16_t graphP
   color16_t whiteColor = COLOR16_BLACK;
   color16_t grayColor =  COLOR16_BLUE;
 
-    sprintf(sStringBuffer,"%f", graph_min);    
-    BlueDisplay1.drawText(xStart, yStart+graphHeight-8, sStringBuffer,16, COLOR_FOREGROUND, COLOR_BACKGROUND);
-    BlueDisplay1.drawLine(xStart, yStart+graphHeight-1, graphWidth, yStart+graphHeight-1, COLOR16_RED);  //boundary
-
-    sprintf(sStringBuffer,"%f", graph_max);    
-    BlueDisplay1.drawText(xStart, yStart, sStringBuffer,16, COLOR_FOREGROUND, COLOR_BACKGROUND);
-    BlueDisplay1.drawLine(xStart, yStart, graphWidth, yStart, COLOR16_RED);  //boundary
 
 
   for (int i = startIndex; i < dataSize; i++) {
@@ -201,6 +194,21 @@ void plotGraph(float *data, uint16_t dataSize,uint16_t graphPosX,uint16_t graphP
       lastValid = false;
     }
   }
+    sprintf(sStringBuffer,"%f", graph_min);    
+    BlueDisplay1.drawText(xStart+graphWidth-16*8, yStart+graphHeight-8, sStringBuffer,16, COLOR_FOREGROUND, COLOR_BACKGROUND);
+    BlueDisplay1.drawLine(xStart, yStart+graphHeight-1, graphWidth, yStart+graphHeight-1, COLOR16_RED);  //boundary
+
+    sprintf(sStringBuffer,"%f", graph_max);    
+    BlueDisplay1.drawText(xStart+graphWidth-16*8, yStart, sStringBuffer,16, COLOR_FOREGROUND, COLOR_BACKGROUND);
+    BlueDisplay1.drawLine(xStart, yStart, graphWidth, yStart, COLOR16_RED);  //boundary
+
+    sprintf(sStringBuffer,"%f", data[dataSize-1]);    // get last data point
+    int nextValidY = yStart + graphHeight - (int)((data[dataSize-1] - graph_min) * yScale);
+
+    BlueDisplay1.drawText(xStart+graphWidth-16*8, nextValidY, sStringBuffer,16, COLOR_FOREGROUND, COLOR_BACKGROUND);
+    BlueDisplay1.drawLine(xStart, nextValidY, graphWidth, nextValidY, COLOR16_LIGHT_GREY);  //boundary
+
+
 }
 
 void loop() {
