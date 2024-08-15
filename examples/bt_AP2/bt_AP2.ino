@@ -1,4 +1,5 @@
 #include <stdlib.h>  // For rand()
+#include <stdbool.h> // for bitwise operations
 #include "wifi_settings.h"
 #include <BlueDisplay.hpp>
 #define COLOR_BACKGROUND COLOR16_WHITE
@@ -29,14 +30,7 @@ void handlePacket(AsyncUDPPacket packet);
 void DisplayDebug() {
     int displayWidth = BlueDisplay1.getDisplayWidth();
     int displayHeight = BlueDisplay1.getDisplayHeight();
-
-
     int x0 = 0;
-    
-//    int y0 = displayHeight +16 ; //
-//    int y1 = displayHeight +16*2; // 
-//    int y2 = displayHeight +16*3; // 
-//    int y3 = displayHeight +16*4; // 
 
     uint16_t y0 = 16 ; //  label 
     uint16_t y1 = 16*2; // resolution
@@ -49,7 +43,11 @@ void DisplayDebug() {
     // frame 
     BlueDisplay1.drawRect(x0, 0, 12*16, y3, COLOR_FOREGROUND,1);
 
+    if (graphComplete){
     BlueDisplay1.drawText(x0, y0, "    Voltage", 16, COLOR_FOREGROUND, COLOR_BACKGROUND);
+    } else {
+    BlueDisplay1.drawText(x0, y0, "   (Voltage)", 16, COLOR_FOREGROUND, COLOR_BACKGROUND); // indicate that graph drawing is not finished
+    }
     sprintf(sStringBuffer,"Res: x:%u, y:%u",displayWidth,displayHeight);
     BlueDisplay1.drawText(x0, y1, sStringBuffer,16,COLOR_FOREGROUND, COLOR_BACKGROUND);
 //    BlueDisplay1.drawText(x0, y1, "SSID: " + String(ssid),16,COLOR_FOREGROUND, COLOR_BACKGROUND);
@@ -234,7 +232,7 @@ void bufferLine(int x1, int y1, int x2, int y2, color16_t color) {
 }
 
 // Function to draw a line from the buffer and mark it as drawn - not clearing underneath
-void drawBufferedLineNoClr(int index) {
+void drawBufferedLineNoClr(uint16_t index) {
     if (index < lineBufferIndex && lineBuffer[index].color != DRAWN_MAGIC_NUMBER) {
         BlueDisplay1.drawLine(lineBuffer[index].x1, lineBuffer[index].y1, 
                               lineBuffer[index].x2, lineBuffer[index].y2, 
@@ -244,7 +242,7 @@ void drawBufferedLineNoClr(int index) {
 }
 
 // Function to draw a line from the buffer and mark it as drawn - clearing rect under the line (height is assumed to be graph height)
-void drawBufferedLineClr(int index) {
+void drawBufferedLineClr(uint16_t index) {
     if (index < lineBufferIndex && lineBuffer[index].color != DRAWN_MAGIC_NUMBER) {
         uint16_t x1 = lineBuffer[index].x1;
         uint16_t y1 = lineBuffer[index].y1;
@@ -286,6 +284,9 @@ void plotGraph_buffered(float *data, uint16_t dataSize, uint16_t graphPosX, uint
     currentLineIndex = 0; 
     graphComplete = false;
    // Reset the graph buffer completeness marker
+    lfsr = 1;  // Reset the LFSR to the initial seed value
+    linesDrawn = 0;  // Reset the lines drawn counter
+   
    
     // Store the graph height in the global variable
     globalGraphHeight = graphHeight;
@@ -390,7 +391,7 @@ void drawRandomLines(uint16_t numLinesToDraw) {
     }
 }
 
-// Function to draw a random subset of lines from the buffer
+// Function to draw a random subset of lines from the buffer not iterating to find number which was not drawn before
 void drawRandomLinesFast(uint16_t numLinesToDraw) {
     if (numLinesToDraw > lineBufferIndex) {
         numLinesToDraw = lineBufferIndex;  // Limit to available lines
@@ -421,6 +422,50 @@ void drawSequentialLines(int numLinesToDraw) {
     }
 }
 
+// Function to implement a 16-bit Galois LFSR
+uint16_t galoisLFSR(bool *wrapped) {
+    static uint16_t initialSeed = 1;  // Track the initial seed to detect wraparound
+    uint16_t lsb = lfsr & 1;  // Get the least significant bit
+    lfsr >>= 1;               // Shift the LFSR right by 1
+    if (lsb) {
+        // Apply the polynomial (0xB400 corresponds to the polynomial x^12 + x^11 + x^10 + x^4 + 1)
+//        lfsr ^= 0xB400 ;  // Use the full 16bit polynomial
+//        lfsr ^= 0xD008 ;  // Use the 12bit polynomial
+
+        lfsr ^= LFSR_POLYNOMIAL; // use polynomial defined in graph settings , matching the maximum possible width
+    }
+    // Check if the LFSR has wrapped around to the initial seed value
+    if (lfsr == initialSeed) {
+        *wrapped = true;
+    }
+    return lfsr ;
+}
+
+// Function to draw a specified number of lines based on the LFSR sequence
+void drawLinesUsingLFSR(int numLinesToDraw) {
+    uint16_t linesDrawn = 0;
+    bool wrapped = false;
+
+    while (linesDrawn < numLinesToDraw) {
+        uint16_t lineIndex = galoisLFSR(&wrapped); 
+        // Ensure the generated index is within the range of valid buffered lines
+        if (lineIndex < lineBufferIndex) {
+            drawBufferedLineClr(lineIndex-1);  // the range starts from and is never 0 1 so shift by 1.
+            linesDrawn++;
+        }
+        // Break if the LFSR has wrapped around to avoid infinite looping
+        if (wrapped) {
+        graphComplete = true;
+            break;
+        }
+        // break if more lines drawn than MAX_LINES possible
+        if (linesDrawn>MAX_LINES) {
+          graphComplete = true; 
+          break; 
+        }
+    }    
+}
+
 void loop() {
 //  struct telemetry_frame tframe ;
  //   BlueDisplay1.clearDisplay();
@@ -441,10 +486,19 @@ void loop() {
  
 
 //    drawSequentialLines(int numLinesToDraw)
-    if (!graphComplete) { drawSequentialLines(2);}
-    //if (!graphComplete) {drawRandomLinesFast(6); }
-    if (!graphComplete) {drawRandomLines(6); }
+//    if (!graphComplete) { drawSequentialLines(2);} // draws from left to right , sequential 
+    //if (!graphComplete) {drawRandomLinesFast(6); } // draws random lines , not caring if drawn random segment had been drawn before (fast to complete)
+//    if (!graphComplete) {drawRandomLines(8); }     // draw random lines, ensuring random number drawn hit the area not drawn before (high cpu but low bandwidth)
+
+    if (!graphComplete) {drawLinesUsingLFSR(8); }  // draw basing on LFSR generated looping sequence. 
+                                            // if the LFSR is not optimized for display width it will take a bit longer 
+                                            // by default 16bit LFSR iterating 65536 times is used, 
+                                            // if the iteration hits outside width of the graph, next number is drawn, increasing cpu time slightly
+                                            // generating next lfsr is ultra fast so this should not matter in real life application
+                                             
+
     checkAndHandleEvents();
+
 #ifdef GRAPH_TEST    
     delay(100); // Update delay (for testing purposes, remove it )
 //    delay(5000); // Update every 5 seconds
