@@ -38,19 +38,19 @@ void DisplayDebug() {
 //    int y2 = displayHeight +16*3; // 
 //    int y3 = displayHeight +16*4; // 
 
-    int y0 = 16 ; //
-    int y1 = 16*2; // 
-    int y2 = 16*3; // 
-    int y3 = 16*4; // 
-
+    uint16_t y0 = 16 ; //  label 
+    uint16_t y1 = 16*2; // resolution
+    uint16_t y2 = 16*3; // voltage
+    uint16_t y3 = 16*4; // IP
+    uint16_t y4 = 16*5; // total packets
 
     // Clear the rectangle under the debug window
     BlueDisplay1.fillRect(x0, 0, 12*16, y3, COLOR_BACKGROUND);
     // frame 
     BlueDisplay1.drawRect(x0, 0, 12*16, y3, COLOR_FOREGROUND,1);
 
-    BlueDisplay1.drawText(x0, y0, "ESP32 SoftAP", 16, COLOR_FOREGROUND, COLOR_BACKGROUND);
-    sprintf(sStringBuffer,"x:%u, y:%u",displayWidth,displayHeight);
+    BlueDisplay1.drawText(x0, y0, "    Voltage", 16, COLOR_FOREGROUND, COLOR_BACKGROUND);
+    sprintf(sStringBuffer,"Res: x:%u, y:%u",displayWidth,displayHeight);
     BlueDisplay1.drawText(x0, y1, sStringBuffer,16,COLOR_FOREGROUND, COLOR_BACKGROUND);
 //    BlueDisplay1.drawText(x0, y1, "SSID: " + String(ssid),16,COLOR_FOREGROUND, COLOR_BACKGROUND);
 
@@ -67,6 +67,10 @@ void DisplayDebug() {
        sprintf(sStringBuffer,"IP:%s", WiFi.softAPIP().toString());
        BlueDisplay1.drawText(x0, y3, sStringBuffer,16,COLOR_FOREGROUND, COLOR_BACKGROUND);
 
+    sprintf(sStringBuffer,"packets: %d", total_packets);
+    BlueDisplay1.drawText(x0, y4, sStringBuffer,16, COLOR_FOREGROUND, COLOR_BACKGROUND);
+
+
     //bluedisplay.flushDisplay();
 }
 
@@ -79,7 +83,7 @@ void setup() {
     Serial.begin(115200);
  //   Serial.println(StartMessage);
     initSerial("voltage");
-    Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
+    Serial.println("Start ESP32 BT-client with name \"voltage\"");
 #else
     initSerial();
 #endif
@@ -124,7 +128,7 @@ IRAM_ATTR void handlePacket(AsyncUDPPacket packet) {
   // Copy the UDP packet data to the pulse data variable
   memcpy((byte*)&tframe, packet.data(), sizeof(tframe));
   new_packet = true; 
-  
+  total_packets++; 
 }
 
 void update_minute_buffer () {
@@ -213,9 +217,7 @@ void plotGraph(float *data, uint16_t dataSize,uint16_t graphPosX,uint16_t graphP
     BlueDisplay1.drawLine(xStart, nextValidY, graphWidth, nextValidY, COLOR16_LIGHT_GREY);  //gray line with current data
     BlueDisplay1.drawText(xStart+graphWidth-16*8, nextValidY, sStringBuffer,16, COLOR_FOREGROUND, COLOR_BACKGROUND);
 
-
 }
-
 
 // Function to add a line to the buffer
 void bufferLine(int x1, int y1, int x2, int y2, color16_t color) {
@@ -231,7 +233,6 @@ void bufferLine(int x1, int y1, int x2, int y2, color16_t color) {
     }
 }
 
-
 // Function to draw a line from the buffer and mark it as drawn - not clearing underneath
 void drawBufferedLineNoClr(int index) {
     if (index < lineBufferIndex && lineBuffer[index].color != DRAWN_MAGIC_NUMBER) {
@@ -242,9 +243,8 @@ void drawBufferedLineNoClr(int index) {
     }
 }
 
-
 // Function to draw a line from the buffer and mark it as drawn - clearing rect under the line (height is assumed to be graph height)
-void drawBufferedLine(int index) {
+void drawBufferedLineClr(int index) {
     if (index < lineBufferIndex && lineBuffer[index].color != DRAWN_MAGIC_NUMBER) {
         uint16_t x1 = lineBuffer[index].x1;
         uint16_t y1 = lineBuffer[index].y1;
@@ -284,6 +284,8 @@ void plotGraph_buffered(float *data, uint16_t dataSize, uint16_t graphPosX, uint
     lineBufferIndex = 0;    
     // Reset the current line index for drawing the buffer
     currentLineIndex = 0; 
+    graphComplete = false;
+   // Reset the graph buffer completeness marker
    
     // Store the graph height in the global variable
     globalGraphHeight = graphHeight;
@@ -293,10 +295,12 @@ void plotGraph_buffered(float *data, uint16_t dataSize, uint16_t graphPosX, uint
     uint16_t xStart = graphPosX;
     uint16_t yStart = graphPosY;
 
-    int pointsToPlot = graphWidth;
+    int pointsToPlot = graphWidth-(LEGEND_LABEL_FONT_SIZE*LEGEND_LABEL_CHARS);
     int startIndex = dataSize > pointsToPlot ? dataSize - pointsToPlot : 0;
 
-    float xScale = (float)graphWidth / (float)(pointsToPlot - 1);
+    float xScale = (((float)graphWidth-(LEGEND_LABEL_FONT_SIZE*LEGEND_LABEL_CHARS)))/ (float)(pointsToPlot - 1);
+//    float xScale = (((float)graphWidth))/ (float)(pointsToPlot - 1);
+
     float yScale = (float)graphHeight / (graph_max - graph_min);
 
     int lastX = -1;
@@ -306,10 +310,10 @@ void plotGraph_buffered(float *data, uint16_t dataSize, uint16_t graphPosX, uint
     color16_t whiteColor = COLOR16_BLACK;
     color16_t grayColor = COLOR16_BLUE;
 
-    for (int i = startIndex; i < dataSize; i++) {
+    for (uint16_t i = startIndex; i < dataSize; i++) {
         if (!isnan(data[i])) {  // Check if the current data point is valid
-            int x = xStart + (int)((i - startIndex) * xScale);
-            int y = yStart + graphHeight - (int)((data[i] - graph_min) * yScale);
+            uint16_t x = xStart + (uint16_t)((i - startIndex) * xScale);
+            uint16_t y = yStart + graphHeight - (uint16_t)((data[i] - graph_min) * yScale);
 
             if (lastValid) {
                 bufferLine(lastX, lastY, x, y, whiteColor);  // Buffer the line instead of drawing it immediately
@@ -320,14 +324,14 @@ void plotGraph_buffered(float *data, uint16_t dataSize, uint16_t graphPosX, uint
             lastValid = true;
         } else {
             if (lastValid) {
-                int j = i + 1;
+                uint16_t j = i + 1;
                 while (j < dataSize && isnan(data[j])) {
                     j++;
                 }
 
                 if (j < dataSize) {
-                    int nextValidX = xStart + (int)((j - startIndex) * xScale);
-                    int nextValidY = yStart + graphHeight - (int)((data[j] - graph_min) * yScale);
+                    uint16_t nextValidX = xStart + (uint16_t)((j - startIndex) * xScale);
+                    uint16_t nextValidY = yStart + graphHeight - (uint16_t)((data[j] - graph_min) * yScale);
                     bufferLine(lastX, lastY, nextValidX, nextValidY, grayColor);  // Buffer the line for missing data
                 }
             }
@@ -336,13 +340,13 @@ void plotGraph_buffered(float *data, uint16_t dataSize, uint16_t graphPosX, uint
     }
 
     // Draw the axis boundaries and graph labels
-    sprintf(sStringBuffer, "%f", graph_min);    
-    BlueDisplay1.drawText(xStart + graphWidth - 16 * 8, yStart + graphHeight - 8, sStringBuffer, 16, COLOR_FOREGROUND, COLOR_BACKGROUND);
+    sprintf(sStringBuffer, "%.2f", graph_min);    
+    BlueDisplay1.drawText(xStart + graphWidth - (LEGEND_LABEL_FONT_SIZE*LEGEND_LABEL_CHARS), yStart + graphHeight - 8, sStringBuffer, 16, COLOR_FOREGROUND, COLOR_BACKGROUND);
 //    bufferLine(xStart, yStart + graphHeight - 1, xStart + graphWidth, yStart + graphHeight - 1, COLOR16_RED);
     BlueDisplay1.drawLine(xStart, yStart + graphHeight - 1, xStart + graphWidth, yStart + graphHeight - 1, COLOR16_RED);
 
-    sprintf(sStringBuffer, "%f", graph_max);    
-    BlueDisplay1.drawText(xStart + graphWidth - 16 * 8, yStart, sStringBuffer, 16, COLOR_FOREGROUND, COLOR_BACKGROUND);
+    sprintf(sStringBuffer, "%.2f", graph_max);    
+    BlueDisplay1.drawText(xStart + graphWidth - (LEGEND_LABEL_FONT_SIZE*LEGEND_LABEL_CHARS), yStart+LEGEND_LABEL_FONT_SIZE, sStringBuffer, 16, COLOR_FOREGROUND, COLOR_BACKGROUND);
 //    bufferLine(xStart, yStart, xStart + graphWidth, yStart, COLOR16_RED);
     BlueDisplay1.drawLine(xStart, yStart, xStart + graphWidth, yStart, COLOR16_RED);
 
@@ -352,9 +356,9 @@ void plotGraph_buffered(float *data, uint16_t dataSize, uint16_t graphPosX, uint
     BlueDisplay1.drawLine(xStart, lastDataY, xStart + graphWidth, lastDataY, COLOR_BACKGROUND);  // clear last data line
 
 
-    sprintf(sStringBuffer, "%f", data[dataSize - 1]);    // Get the last data point
+    sprintf(sStringBuffer, "%.2f", data[dataSize - 1]);    // Get the last data point
     lastDataY = yStart + graphHeight - (uint16_t)((data[dataSize - 1] - graph_min) * yScale);
-    BlueDisplay1.drawText(xStart + graphWidth - 16 * 8, lastDataY, sStringBuffer, 16, COLOR_FOREGROUND, COLOR_BACKGROUND);
+    BlueDisplay1.drawText(xStart + graphWidth - (LEGEND_LABEL_FONT_SIZE*LEGEND_LABEL_CHARS), lastDataY, sStringBuffer, 16, COLOR_FOREGROUND, COLOR_BACKGROUND);
 //    bufferLine(xStart, lastDataY, xStart + graphWidth, lastDataY, COLOR16_LIGHT_GREY);
     BlueDisplay1.drawLine(xStart, lastDataY, xStart + graphWidth, lastDataY, COLOR16_LIGHT_GREY);
 }
@@ -363,8 +367,9 @@ void plotGraph_buffered(float *data, uint16_t dataSize, uint16_t graphPosX, uint
 // Function to draw all lines from the buffer
 void drawAllBufferedLines() {
     for (int i = 0; i < lineBufferIndex; i++) {
-        drawBufferedLine(i);
+        drawBufferedLineClr(i);
     }
+    graphComplete = true;
 }
 
 // Function to draw a random subset of lines from the buffer
@@ -381,7 +386,7 @@ void drawRandomLines(uint16_t numLinesToDraw) {
             break;    // break if found
           }
         }
-        drawBufferedLine(randomIndex);
+        drawBufferedLineClr(randomIndex);
     }
 }
 
@@ -397,7 +402,7 @@ void drawRandomLinesFast(uint16_t numLinesToDraw) {
 //          if (lineBuffer[randomIndex].color != DRAWN_MAGIC_NUMBER) {
 //            break;    // break if found
 //          }       
-        drawBufferedLine(randomIndex);
+        drawBufferedLineClr(randomIndex);
     }
 }
 
@@ -406,10 +411,11 @@ void drawSequentialLines(int numLinesToDraw) {
     // Draw lines sequentially from the current position
     for (int i = 0; i < numLinesToDraw; i++) {
         if (currentLineIndex < lineBufferIndex) {
-            drawBufferedLine(currentLineIndex);
+            drawBufferedLineClr(currentLineIndex);
             currentLineIndex++;
         } else {
             // If we reach the end of the buffer, stop drawing
+            graphComplete = true;
             break;
         }
     }
@@ -429,19 +435,21 @@ void loop() {
     uint16_t displayWidth = BlueDisplay1.getDisplayWidth();
     uint16_t displayHeight = BlueDisplay1.getDisplayHeight();
 //    plotGraph(minutes_buffer, minutes_dataArraySize, GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT, minutes_buffer_min, minutes_buffer_max);
-    plotGraph_buffered(minutes_buffer, minutes_dataArraySize, GRAPH_X, GRAPH_Y, displayWidth-GRAPH_X, displayHeight-GRAPH_Y, minutes_buffer_min, minutes_buffer_max);
+    plotGraph_buffered(minutes_buffer, minutes_dataArraySize, GRAPH_X, GRAPH_Y, displayWidth-GRAPH_X,
+    displayHeight-(GRAPH_Y), minutes_buffer_min, minutes_buffer_max);
     }
  
 
 //    drawSequentialLines(int numLinesToDraw)
-    drawSequentialLines(4);
-//    drawRandomLines(4);
-    drawRandomLinesFast(4);
-
+    if (!graphComplete) { drawSequentialLines(2);}
+    //if (!graphComplete) {drawRandomLinesFast(6); }
+    if (!graphComplete) {drawRandomLines(6); }
     checkAndHandleEvents();
- //   delay(20); // Update delay
+#ifdef GRAPH_TEST    
+    delay(100); // Update delay (for testing purposes, remove it )
 //    delay(5000); // Update every 5 seconds
 //   delay(10000); // Update every 10 seconds
+#endif //#ifdef GRAPH_TEST
 
 }
 
@@ -473,7 +481,7 @@ void drawGui(void) {
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, displayWidth,displayHeight);
 
     BlueDisplay1.clearDisplay(COLOR16_BLUE);
-    plotGraph_buffered(minutes_buffer, minutes_dataArraySize, GRAPH_X, GRAPH_Y, displayWidth-GRAPH_X, displayHeight-GRAPH_Y, minutes_buffer_min, minutes_buffer_max);
+    plotGraph_buffered(minutes_buffer, minutes_dataArraySize, GRAPH_X, GRAPH_Y, displayWidth-GRAPH_X, displayHeight-(GRAPH_Y), minutes_buffer_min, minutes_buffer_max);
 
 //    TouchButtonBlinkStartStop.drawButton();
 }
