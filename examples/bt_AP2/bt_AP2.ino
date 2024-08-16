@@ -8,6 +8,8 @@
 //#define DISPLAY_HEIGHT 999
 #define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 
+//#define Serial0 Serial // for old IDF
+
 // a string buffer for any purpose...
 char sStringBuffer[128];
 
@@ -55,7 +57,7 @@ void DisplayDebug() {
 //    sprintf(sStringBuffer,"Status: %s", status);
 //    BlueDisplay1.drawText(x0, y2, sStringBuffer,16, COLOR_FOREGROUND, COLOR_BACKGROUND);
 
-    if(new_packet) {Serial.println(tframe.voltage_ADC0);}
+    if(new_packet) {Serial0.println(tframe.voltage_ADC0);}
     
     sprintf(sStringBuffer,"Voltage: %f", tframe.voltage_ADC0);
     BlueDisplay1.drawText(x0, y2, sStringBuffer,16, COLOR_FOREGROUND, COLOR_BACKGROUND);
@@ -73,15 +75,15 @@ void DisplayDebug() {
 }
 
 void setup() {
-    Serial.begin(115200);
 
     // Initialize BlueDisplay
 //    bluedisplay.begin("ESP32 BlueDisplay");
 #if defined(ESP32)
-    Serial.begin(115200);
+
+    Serial0.begin(115200);
  //   Serial.println(StartMessage);
     initSerial("voltage");
-    Serial.println("Start ESP32 BT-client with name \"voltage\"");
+    Serial0.println("Start ESP32 BT-client with name \"voltage\"");
 #else
     initSerial();
 #endif
@@ -89,9 +91,9 @@ void setup() {
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
     checkAndHandleEvents(); // this copies the display size and time from remote device
 
-    delay(500);
+    delay(200);
     // Start the SoftAP
-    Serial.println("Starting SoftAP...");
+    Serial0.println("Starting SoftAP...");
     WiFi.softAP(ssid, password, channel, hidden, max_connection, beacon_interval);
 //    WiFi.softAP(ssid, password);
 
@@ -101,7 +103,7 @@ void setup() {
     
   // Initialize the asyncUDP object
   if (udp.listenMulticast(multicastIP, multicastPort)) {
-    Serial.println("UDP listening");
+    Serial0.println("UDP listening");
   delay(500);
     // Set the callback function to handle the UDP packet
     udp.onPacket(handlePacket);
@@ -500,7 +502,7 @@ void loop() {
     checkAndHandleEvents();
 
 #ifdef GRAPH_TEST    
-    //delay(100); // Update delay (for testing purposes, remove it )
+    delay(100); // Update delay (for testing purposes, remove it )
 //    delay(5000); // Update every 5 seconds
 //   delay(10000); // Update every 10 seconds
 #endif //#ifdef GRAPH_TEST
