@@ -500,7 +500,7 @@ void loop() {
     checkAndHandleEvents();
 
 #ifdef GRAPH_TEST    
-    delay(100); // Update delay (for testing purposes, remove it )
+    //delay(100); // Update delay (for testing purposes, remove it )
 //    delay(5000); // Update every 5 seconds
 //   delay(10000); // Update every 10 seconds
 #endif //#ifdef GRAPH_TEST
