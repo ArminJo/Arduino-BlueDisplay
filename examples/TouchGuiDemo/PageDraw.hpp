@@ -1,12 +1,15 @@
 /*
- * PageDraw.cpp
+ *  PageDraw.cpp
  *
- *  Copyright (C) 2013-2023  Armin Joachimsmeyer
+ *  Select a color and draw pixels or lines by touching and moving on the screen.
+ *
+ *  Copyright (C) 2013-2024  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
+ *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of STMF3-Discovery-Demos https://github.com/ArminJo/STMF3-Discovery-Demos.
  *
- *  STMF3-Discovery-Demos is free software: you can redistribute it and/or modify
+ *  STMF3-Discovery-Demos + BlueDisplay are free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
@@ -23,19 +26,19 @@
 #ifndef _PAGE_DRAW_HPP
 #define _PAGE_DRAW_HPP
 
-/*
- * For programs, that must save memory when running on local display only
- */
 #if !defined(Button)
 #define BUTTON_IS_DEFINED_LOCALLY
 #  if defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
-// Only local display must be supported, so TouchButton, etc is sufficient
+/*
+ * For programs, that must save memory when running on local display only
+ * Only local display must be supported, so LocalTouchButton, etc. is sufficient
+ */
 #define Button              LocalTouchButton
 #define AutorepeatButton    LocalTouchButtonAutorepeat
 #define Slider              LocalTouchSlider
 #define Display             LocalDisplay
 #  else
-// Remote display must be served here, so use BD elements, they are aware of the existence of Local* objects and use them if SUPPORT_LOCAL_DISPLAY is enabled
+// Remote display is used here, so use BD elements, they are aware of the existence of Local* objects and use them if SUPPORT_LOCAL_DISPLAY is enabled
 #define Button              BDButton
 #define AutorepeatButton    BDButton
 #define Slider              BDSlider

@@ -1,25 +1,35 @@
 /*
- * TwoButtons.ino
+ * TwoButtonsOnLocalDisplay.cpp
  *
- *  Created on: 31.01.2012
- *      Author: Armin Joachimsmeyer
- *      Email:   armin.joachimsmeyer@gmx.de
- *      License: GPL v3 (http://www.gnu.org/licenses/gpl.html)
- *      Version: 1.0.0
- *
- *      Demo of the TouchButton lib
- *
- *      For Arduino Uno
+ *  Demo of creating two buttons on a local display
+ *      using the LocalTouchButton lib for Arduino Uno
  *      with mSD-Shield and MI0283QT Adapter from www.watterott.net
  *      and the ADS7846 and MI0283QT2 libs from
  *      https://github.com/watterott/mSD-Shield/downloads
  *
+ *  Copyright (C) 2012-2024  Armin Joachimsmeyer
+ *  armin.joachimsmeyer@gmail.com
+ *
+ *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *
+ *  BlueDisplay is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *
  */
-
 #include <Arduino.h>
 
 /*
- * Settings to configure the LocalTouchGUI library
+ * Settings to configure the LocalGUI library
  */
 #define LOCAL_GUI_FEEDBACK_TONE_PIN 2
 #define SUPPORT_ONLY_TEXT_SIZE_11_AND_22  // Saves 248 bytes program memory

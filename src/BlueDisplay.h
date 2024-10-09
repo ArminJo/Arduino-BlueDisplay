@@ -245,7 +245,7 @@ public:
 
     void debugMessage(const char *aStringPtr);
     void debug(const char *aStringPtr);
-#if defined(__AVR__)
+#if defined(F)
     void debug(const __FlashStringHelper *aPGMString);
 #endif
     void debug(uint8_t aByte);

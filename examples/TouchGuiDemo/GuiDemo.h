@@ -4,9 +4,10 @@
  *  Copyright (C) 2012-2023  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
+ *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of STMF3-Discovery-Demos https://github.com/ArminJo/STMF3-Discovery-Demos.
  *
- *  STMF3-Discovery-Demos is free software: you can redistribute it and/or modify
+ *  STMF3-Discovery-Demos + BlueDisplay are free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.

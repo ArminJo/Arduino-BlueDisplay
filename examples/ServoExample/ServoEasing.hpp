@@ -506,7 +506,6 @@ uint8_t ServoEasing::attachWithTrim(int aPin, int aTrimDegreeOrMicrosecond, int 
     return tReturnValue;
 }
 
-
 /*
  * Like attach, but keep end position values e.g. of last attach().
  * !!! Can only be used AFTER initial attach() and detach()!!!
@@ -542,9 +541,11 @@ uint8_t ServoEasing::reattach() {
     return mServoPin; // Sparkfun apollo3 Servo library has no return value for attach :-(
 #    else
     uint8_t tReturnValue = Servo::attach(mServoPin, MINIMUM_PULSE_WIDTH, MAXIMUM_PULSE_WIDTH);
-    _writeMicrosecondsOrUnits (mCurrentMicrosecondsOrUnits); // Start at the position of detach()
+    _writeMicrosecondsOrUnits(mCurrentMicrosecondsOrUnits); // Start at the position of detach()
     return tReturnValue;
 #    endif // defined(ARDUINO_ARCH_APOLLO3)
+#  else
+    return  mServoIndex;
 #  endif // defined(USE_SERVO_LIB)
 #endif // defined(USE_LEIGHTWEIGHT_SERVO_LIB)
 }
@@ -1848,7 +1849,7 @@ void ServoEasing::printDynamic(Print *aSerial, bool doExtendedOutput) {
 
 /**
  * Prints values which normally does NOT change from move to move.
- * @param aSerial The Print object on which to write, for Arduino you can use &Serial.
+ * @param aSerial The Print object on which to write, for Arduino. You can use &Serial.
  */
 void ServoEasing::printStatic(Print *aSerial) {
 

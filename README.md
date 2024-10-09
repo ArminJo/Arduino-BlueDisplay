@@ -20,7 +20,7 @@ Available as [Arduino library "BlueDisplay"](https://www.arduinolibraries.info/l
 
 [![Button Install](https://img.shields.io/badge/Install-brightgreen?logoColor=white&logo=GitBook)](https://www.ardu-badge.com/BlueDisplay)
  &nbsp; &nbsp;
-[![Button Changelog](https://img.shields.io/badge/Changelog-blue?logoColor=white&logo=AzureArtifacts)](https://github.com/ArminJo/Arduino-BlueDisplay#revision-history)
+[![Button Changelog](https://img.shields.io/badge/Changelog-blue?logoColor=white&logo=AzureArtifacts)](https://github.com/ArminJo/Arduino-BlueDisplay?tab=readme-ov-file#revision-history)
 
 </div>
 

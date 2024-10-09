@@ -636,7 +636,7 @@ void BlueDisplay::debug(const char *aStringPtr) {
     sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(aStringPtr), (uint8_t*) aStringPtr);
 }
 
-#if defined(__AVR__)
+#if defined(F)
 void BlueDisplay::debug(const __FlashStringHelper *aPGMString) {
     if (USART_isBluetoothPaired()) {
         char tStringBuffer[STRING_BUFFER_STACK_SIZE];
@@ -1174,7 +1174,7 @@ void BlueDisplay::setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSens
  * Utilities
  *
  **************************************************************************************************************************************************/
-#if defined(__AVR__)
+#if defined(F) && defined(ARDUINO)
 /*
  * Used internally
  */
