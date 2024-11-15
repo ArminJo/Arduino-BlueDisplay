@@ -142,8 +142,8 @@ void setup() {
         Serial.println(F("********************************"));
         Serial.println(F("Switch to JDY-31 mode by connecting pin 4 to ground or to pin 5."));
         Serial.println();
-        Serial.println(F("Now you have 5 seconds for releasing HC-05 module key, "
-                "which should be pressed at power up to enter program mode."));
+        Serial.println(F("Now you have 5 seconds for releasing HC-05 module key,"));
+        Serial.println(F("which should be pressed at power up to enter program mode (blink slow at 1/4 Hz)."));
         delay(5000);
     }
     Serial.println();

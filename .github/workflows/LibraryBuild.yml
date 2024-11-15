@@ -1,7 +1,7 @@
 # LibraryBuild.yml
 # Github workflow script to test compile all examples of an Arduino library repository.
 #
-# Copyright (C) 2020  Armin Joachimsmeyer
+# Copyright (C) 2020-2024  Armin Joachimsmeyer
 # https://github.com/ArminJo/Github-Actions
 #
 
@@ -94,7 +94,7 @@ jobs:
         uses: ArminJo/arduino-test-compile@master
         with:
           arduino-board-fqbn: ${{ matrix.arduino-boards-fqbn }}
-          arduino-platform: ${{ matrix.arduino-platform }}
+          arduino-platform: ${{ matrix.arduino-platform }} # for MegaCore
           platform-url: ${{ matrix.platform-url }}
           required-libraries: ${{ env.REQUIRED_LIBRARIES }}
           sketches-exclude: ${{ matrix.sketches-exclude }}

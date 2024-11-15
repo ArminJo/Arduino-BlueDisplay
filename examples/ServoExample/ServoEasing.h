@@ -24,11 +24,15 @@
 #ifndef _SERVO_EASING_H
 #define _SERVO_EASING_H
 
-#define VERSION_SERVO_EASING "3.3.0"
+#define VERSION_SERVO_EASING "3.4.0"
 #define VERSION_SERVO_EASING_MAJOR 3
-#define VERSION_SERVO_EASING_MINOR 3
+#define VERSION_SERVO_EASING_MINOR 4
 #define VERSION_SERVO_EASING_PATCH 0
 // The change log is at the bottom of the file
+
+#if defined(USE_LEIGHTWEIGHT_SERVO_LIB)
+#define USE_LIGHTWEIGHT_SERVO_LIBRARY // for backwards compatibility
+#endif
 
 /*
  * Macro to convert 3 version parts into an integer
@@ -68,17 +72,17 @@
 //#include <DummyServo.h>
 
 /*
- * If you have only one or two servos at pin 9 and/or 10 and an ATmega328, then you can save program memory by defining symbol `USE_LEIGHTWEIGHT_SERVO_LIB`.
+ * If you have only one or two servos at pin 9 and/or 10 and an ATmega328, then you can save program memory by defining symbol `USE_LIGHTWEIGHT_SERVO_LIBRARY`.
  * This saves 742 bytes program memory and 42 bytes RAM.
  * Using Lightweight Servo library (or PCA9685 servo expander) makes the servo pulse generating immune
  * to other libraries blocking interrupts for a longer time like SoftwareSerial, Adafruit_NeoPixel and DmxSimple.
  * If not using the Arduino IDE take care that Arduino Servo library sources are not compiled / included in the project.
  * Use of Lightweight Servo library disables use of regular servo library.
  */
-//#define USE_LEIGHTWEIGHT_SERVO_LIB
+//#define USE_LIGHTWEIGHT_SERVO_LIBRARY
 
-#if defined(USE_LEIGHTWEIGHT_SERVO_LIB) && !(defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328__))
-#error USE_LEIGHTWEIGHT_SERVO_LIB can only be activated for the Atmega328 CPU
+#if defined(USE_LIGHTWEIGHT_SERVO_LIBRARY) && !(defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328__) || defined (__AVR_ATmega328PB__) || defined(__AVR_ATmega2560__))
+#error USE_LIGHTWEIGHT_SERVO_LIBRARY can only be activated for the Atmega328 or ATmega2560 CPU
 #endif
 
 /*
@@ -117,14 +121,18 @@ __attribute__((weak)) extern void handleServoTimerInterrupt();
 #    endif
 
 #  else // defined(ESP32)
-#    if defined(USE_LEIGHTWEIGHT_SERVO_LIB)
+#    if defined(USE_LIGHTWEIGHT_SERVO_LIBRARY)
 #include "LightweightServo.h"
 #      if !defined(MAX_EASING_SERVOS)
+#        if defined(__AVR_ATmega2560__)
+#define MAX_EASING_SERVOS 3 // default value for Mega.
+#        else
 #define MAX_EASING_SERVOS 2 // default value for Uno etc.
+#        endif
 #      endif
 #    else
 #include <Servo.h>
-#    endif // !defined(USE_LEIGHTWEIGHT_SERVO_LIB)
+#    endif // !defined(USE_LIGHTWEIGHT_SERVO_LIBRARY)
 #  endif // defined(ESP32)
 #endif // defined(USE_SERVO_LIB)
 
@@ -428,11 +436,12 @@ extern const char *const easeTypeStrings[] PROGMEM;
 #define START_UPDATE_BY_INTERRUPT           true
 #define DO_NOT_START_UPDATE_BY_INTERRUPT    false
 
+#define mCurrentMicrosecondsOrUnits         mLastTargetMicrosecondsOrUnits // to be backwards compatible
 /*
  * Size is 46 bytes RAM per servo
  */
 class ServoEasing
-#if (!defined(USE_PCA9685_SERVO_EXPANDER) || defined(USE_SERVO_LIB)) && !defined(USE_LEIGHTWEIGHT_SERVO_LIB)
+#if (!defined(USE_PCA9685_SERVO_EXPANDER) || defined(USE_SERVO_LIB)) && !defined(USE_LIGHTWEIGHT_SERVO_LIBRARY)
         : public Servo
 #endif
 {
@@ -483,7 +492,7 @@ public:
     void setTrim(int aTrimDegreeOrMicrosecond, bool aDoWrite = false);
     void _setTrimMicrosecondsOrUnits(int aTrimMicrosecondsOrUnits, bool aDoWrite = false);
 
-#if !defined(DISABLE_MIN_AND_MAX_CONSTRAINTS)
+#if defined(ENABLE_MIN_AND_MAX_CONSTRAINTS)
     void setMaxConstraint(int aMaxDegreeOrMicrosecond);
     void setMinConstraint(int aMinDegreeOrMicrosecond);
     void setMinMaxConstraint(int aMinDegreeOrMicrosecond, int aMaxDegreeOrMicrosecond);
@@ -576,6 +585,7 @@ public:
 
     void synchronizeServosAndStartInterrupt(bool doUpdateByInterrupt);
 
+    int applyTrimAndreverseToTargetMicrosecondsOrUnits(int aTargetMicrosecondsOrUnits);
     void print(Print *aSerial, bool doExtendedOutput = true); // Print dynamic and static info
     void printDynamic(Print *aSerial, bool doExtendedOutput = true);
     void printStatic(Print *aSerial);
@@ -615,7 +625,7 @@ public:
      * Internally only microseconds (or units (= 4.88 us) if using PCA9685 expander) and not degree are used to speed up things.
      * Other expander or libraries can therefore easily be added.
      */
-    volatile int mCurrentMicrosecondsOrUnits; ///< set by write() and _writeMicrosecondsOrUnits(). Required as start for next move and to avoid unnecessary writes.
+    volatile int mLastTargetMicrosecondsOrUnits; ///< Only set by _writeMicrosecondsOrUnits() without trim and reverse applied. Required as start for next move and to avoid unnecessary writes.
     int mStartMicrosecondsOrUnits;  ///< Only used with millisAtStartMove to compute currentMicrosecondsOrUnits in update()
     int mEndMicrosecondsOrUnits;    ///< Only used once as last value if movement was finished to provide exact end position.
     int mDeltaMicrosecondsOrUnits;  ///< end - start
@@ -662,7 +672,7 @@ public:
      * For this case better use the attach function with 5 parameter.
      */
     bool mOperateServoReverse; ///< true -> direction is reversed
-#if !defined(DISABLE_MIN_AND_MAX_CONSTRAINTS)
+#if defined(ENABLE_MIN_AND_MAX_CONSTRAINTS)
     int mMaxMicrosecondsOrUnits; ///< Max value checked at _writeMicrosecondsOrUnits(), before trim and reverse is applied
     int mMinMicrosecondsOrUnits; ///< Min value checked at _writeMicrosecondsOrUnits(), before trim and reverse is applied
 #endif
@@ -768,6 +778,12 @@ bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial); // Print class ha
 #endif
 
 /*
+ * Version 3.4.0 - 10/2024
+ * - LightweightServo support for ATmega2560.
+ * - Renamed mCurrentMicrosecondsOrUnits to mLastTargetMicrosecondsOrUnits to make clear, that trim and reverse is NOT applied to this value.
+ * - Changed DISABLE_MIN_AND_MAX_CONSTRAINTS to ENABLE_MIN_AND_MAX_CONSTRAINTS. Constraint checking is now disabled by default.
+ * - candorgander fixed a bug in printEasingType() for non AVR platforms.
+ *
  * Version 3.3.0 - 08/2024
  * - Added functions `setEaseTo()`, `setEaseToD()`, `startEaseTo()` and `startEaseToD()` with first parameter as `unsigned int` to avoid compiler errors `call of overloaded 'startEaseTo(unsigned int...`.
  * - Added functions read() and readMicroseconds() to be compatible to Servo library.

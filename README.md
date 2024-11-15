@@ -32,7 +32,7 @@ Available as [Arduino library "BlueDisplay"](https://www.arduinolibraries.info/l
 
 
 # BlueDisplay library for Arduino
-With the BlueDisplay library you create the GUI for your application, e.g. **Graphics, Text, Buttons and Sliders** on the Arduino itself.<br/>
+With the BlueDisplay library you create the GUI for your application, e.g. **Graphics, Text, Buttons, Sliders and Charts** on the Arduino itself.<br/>
 **No Android programming required!**<br/>
 The Arduino is **connected via USB-cable or Bluetooth** with your smartphone / tablet, where the BlueDisplay app renders the GUI.
 **GUI callback, touch and sensor events** are sent back to the Arduino, where they can be handled.<br/>
@@ -190,6 +190,17 @@ More elaborated example to show more features of the BlueDisplay library.
 | ![Screenshot](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayExample.jpg) | ![Graphics test page](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayExample_Test.jpg) |
 | Fritzing schematic for BlueDisplay example | BlueDisplay example breadboard picture |
 | ![Fritzing board](extras/BlueDisplayBlink_Steckplatine.png) | ![Breadboard picture](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/Blink.jpg) |
+
+## TouchGuiDemo
+Demo of the GUI: LocalTouchButton, LocalTouchSlider and Chart as well as the programs Game of Life and Draw Lines.<br/>
+If a local display is attached, two additional pages, show font and ADS7846 A/D channels are enabled.
+| TouchGuiDemo main page | Chart page |
+| :-: | :-: |
+| ![TouchGuiDemo main page](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/TouchGuiDemoMainPage.bmp) | ![Chart page](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/ChartPage.bmp) |
+| Game Of Life start page | Game Of Life page |
+| ![Game Of Life start page](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/GameOfLifeStartPage.bmp) | ![Game Of Life page](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/GameOfLife.bmp) |
+| Draw page | Settings page |
+| ![Draw page](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/DrawPage.bmp) | ![Settings page](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/SettingsPage.bmp) |
 
 ## ShowSensorValues
 Shows the accelerometer and gyroscope values received from the smartphone both graphical and numerical.
