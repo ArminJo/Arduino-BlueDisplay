@@ -30,7 +30,7 @@
 
 /*
  * This library can be configured at compile time by the following options / macros:
- * For more details see: https://github.com/ArminJo/ServoEasing#compile-options--macros-for-this-library
+ * For more details see: https://github.com/ArminJo/ServoEasing?tab=readme-ov-file#compile-options--macros-for-this-library
  *
  * - USE_PCA9685_SERVO_EXPANDER         Enables the use of the PCA9685 I2C expander chip/board.
  * - USE_SERVO_LIB                      Use of PCA9685 normally disables use of regular servo library. You can force additional using of regular servo library by defining USE_SERVO_LIB.

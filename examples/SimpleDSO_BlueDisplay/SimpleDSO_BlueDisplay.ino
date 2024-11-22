@@ -166,9 +166,11 @@
 #define DISPLAY_WIDTH    320 // Use the size of the local LCD screens available
 //#define BLUETOOTH_BAUD_RATE BAUD_115200  // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
 //#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
-#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
-#if !defined(USE_SIMPLE_SERIAL)
-#error SimpleDSO works only with USE_SIMPLE_SERIAL activated, since the serial interrupts kill the DSO timing!
+//#define DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Implies DO_NOT_NEED_BASIC_TOUCH_EVENTS.
+//#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
+#define BD_USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+#if !defined(BD_USE_SIMPLE_SERIAL)
+#error SimpleDSO works only with BD_USE_SIMPLE_SERIAL activated, since the serial interrupts kill the DSO timing!
 #endif
 #include "BlueDisplay.hpp"
 
@@ -504,7 +506,13 @@ void setup() {
         BlueDisplay1.sendSync();
     }
 
-    // Register callback handler and check for connection
+    /*
+     * Register callback handler and wait for 300 ms if Bluetooth connection is still active.
+     * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth connection is most likely not active here.
+     *
+     * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
+     * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
+     */
     BlueDisplay1.initCommunication(&initDisplay, &redrawDisplay);
     registerSwipeEndCallback(&doSwipeEndDSO);
     registerTouchUpCallback(&doSwitchInfoModeOnTouchUp);
@@ -1654,7 +1662,7 @@ void doSetTriggerDelay(float aValue) {
         }
     }
     MeasurementControl.TriggerDelayMode = tTriggerDelayMode;
-    setTriggerDelayCaption();
+    setTriggerDelayText();
 }
 
 /*
@@ -1668,7 +1676,7 @@ void doADCReference(BDButton *aTheTouchedButton __attribute__((unused)), int16_t
         tNewReferenceShifted = (DEFAULT << REFS0);
     }
     setADCReferenceShifted(tNewReferenceShifted);
-    setReferenceButtonCaption();
+    setReferenceButtonText();
     if (!MeasurementControl.RangeAutomatic) {
         // set new grid values
         setInputRange(MeasurementControl.ShiftValue, MeasurementControl.AttenuatorValue);

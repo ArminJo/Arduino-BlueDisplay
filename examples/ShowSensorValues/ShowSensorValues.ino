@@ -62,8 +62,8 @@
  */
 //#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
 #define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
-//#define USE_SIMPLE_SERIAL                 // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
-//#define USE_USB_SERIAL                    // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
+//#define BD_USE_SIMPLE_SERIAL                 // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+//#define BD_USE_USB_SERIAL                    // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
 #include "BlueDisplay.hpp"
 
 // only one macro can be activated
@@ -157,15 +157,15 @@ void setup() {
 #endif
 
     /*
-     * Register callback handler and check for connection still established.
-     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
-     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
-     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
-     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     * Register callback handler and wait for 300 ms if Bluetooth connection is still active.
+     * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth connection is most likely not active here.
+     *
+     * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
+     * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 
-#if defined(USE_SERIAL1) || defined(ESP32) // USE_SERIAL1 may be defined in BlueSerial.h
+#if defined(BD_USE_SERIAL1) || defined(ESP32) // BD_USE_SERIAL1 may be defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
     || defined(SERIALUSB_PID)  || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_attiny3217)
@@ -176,7 +176,7 @@ void setup() {
     // Just to know which program is running on my Arduino
     Serial.println(StartMessage);
 #  endif
-#elif !defined(USE_SIMPLE_SERIAL)
+#elif !defined(BD_USE_SIMPLE_SERIAL)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
 #  if !(defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER) || defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER))
     if (!BlueDisplay1.isConnectionEstablished()) {

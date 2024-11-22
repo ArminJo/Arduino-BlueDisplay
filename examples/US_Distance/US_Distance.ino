@@ -33,7 +33,7 @@
  * Settings to configure the BlueDisplay library and to reduce its size
  */
 #define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
-//#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+//#define BD_USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 #include "BlueDisplay.hpp"
 
 #include "HCSR04.hpp"
@@ -104,15 +104,15 @@ void setup(void) {
 #endif
 
     /*
-     * Register callback handler and check for connection still established.
-     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
-     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
-     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
-     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     * Register callback handler and wait for 300 ms if Bluetooth connection is still active.
+     * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth connection is most likely not active here.
+     *
+     * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
+     * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
     BlueDisplay1.initCommunication(&handleConnectAndReorientation, &drawGui);
 
-#if defined(USE_SERIAL1) || defined(ESP32) // USE_SERIAL1 may be defined in BlueSerial.h
+#if defined(BD_USE_SERIAL1) || defined(ESP32) // BD_USE_SERIAL1 may be defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
     || defined(SERIALUSB_PID)  || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_attiny3217)
@@ -120,7 +120,7 @@ void setup(void) {
 #  endif
 // Just to know which program is running on my Arduino
     Serial.println(StartMessage);
-#elif !defined(USE_SIMPLE_SERIAL)
+#elif !defined(BD_USE_SIMPLE_SERIAL)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
     if (!BlueDisplay1.isConnectionEstablished()) {
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
@@ -146,9 +146,9 @@ void setup(void) {
 void loop(void) {
     getUSDistanceAsCentimeterWithCentimeterTimeout(DISTANCE_TIMEOUT_CM);
     auto tUSDistanceCentimeter = sUSDistanceCentimeter;
-#if ! defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1)
+#if ! defined(BD_USE_SIMPLE_SERIAL) || defined(BD_USE_SERIAL1)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
-#  if !defined(USE_SERIAL1) && !defined(ESP32)
+#  if !defined(BD_USE_SERIAL1) && !defined(ESP32)
     // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.
     if (!BlueDisplay1.isConnectionEstablished()) {
 #  endif
@@ -160,7 +160,7 @@ void loop(void) {
             Serial.print(sUSDistanceMicroseconds);
             Serial.println(" micro secounds.");
         }
-#  if !defined(USE_SERIAL1) && !defined(ESP32)
+#  if !defined(BD_USE_SERIAL1) && !defined(ESP32)
     }
 #  endif
 #endif
@@ -237,12 +237,18 @@ void loop(void) {
 void handleConnectAndReorientation(void) {
 //    tone(TONE_PIN, 1000, 50);
     // manage positions according to actual display size
-    int tCurrentDisplayWidth = BlueDisplay1.getMaxDisplayWidth();
-    int tCurrentDisplayHeight = BlueDisplay1.getMaxDisplayHeight();
+    int tCurrentDisplayWidth = BlueDisplay1.getCurrentDisplayWidth();
+    int tCurrentDisplayHeight = BlueDisplay1.getCurrentDisplayHeight();
     if (tCurrentDisplayWidth < tCurrentDisplayHeight) {
         // Portrait -> change to landscape 3/2 format
         tCurrentDisplayHeight = (tCurrentDisplayWidth / 3) * 2;
     }
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, tCurrentDisplayWidth,
+            tCurrentDisplayHeight);
+
+    /*
+     * Compute text sizes etc.
+     */
     sCaptionTextSize = tCurrentDisplayHeight / 4;
     // Position Caption at middle of screen
     sCaptionStartX = (tCurrentDisplayWidth - (getTextWidth(sCaptionTextSize) * strlen("Distance"))) / 2;
@@ -255,8 +261,6 @@ void handleConnectAndReorientation(void) {
     }
 
     sValueStartY = getTextAscend(sCaptionTextSize * 2) + sCaptionTextSize + sCaptionTextSize / 4;
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, tCurrentDisplayWidth,
-            tCurrentDisplayHeight);
 
     SliderShowDistance.init(0, sCaptionTextSize * 3, sCaptionTextSize / 4, tCurrentDisplayWidth, 199, 0, COLOR16_BLUE,
     COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);

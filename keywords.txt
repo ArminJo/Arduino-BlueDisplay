@@ -63,9 +63,6 @@ drawLineRelWithThickness	KEYWORD2
 
 drawChartByteBuffer	KEYWORD2
 
-getMaxDisplaySize	KEYWORD2
-getMaxDisplayWidth	KEYWORD2
-getMaxDisplayHeight	KEYWORD2
 getCurrentDisplaySize	KEYWORD2
 getCurrentDisplayWidth	KEYWORD2
 getCurrentDisplayHeight	KEYWORD2

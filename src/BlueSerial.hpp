@@ -38,7 +38,7 @@
 #  if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
 #include "LocalDisplay/digitalWriteFast.h"
 #  endif
-#  if !defined(USE_SIMPLE_SERIAL) && defined(USE_SERIAL1)
+#  if !defined(BD_USE_SIMPLE_SERIAL) && defined(BD_USE_SERIAL1)
 #define BDSerial Serial1
 #  else
 #define BDSerial Serial // Use Serial object throughout this file
@@ -51,7 +51,11 @@ BluetoothSerial SerialBT;
 #else
 
 // Other platforms
+#  if !defined(BD_USE_SIMPLE_SERIAL) && defined(BD_USE_SERIAL1)
+#define BDSerial Serial1
+#  else
 #define BDSerial Serial // Use Serial object throughout this file
+#  endif
 #endif
 
 /****************************************************************************
@@ -207,7 +211,7 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs
 /*********************************************
  * serialEvent() function for standard serial
  *********************************************/
-#if !defined(USE_SIMPLE_SERIAL)
+#if !defined(BD_USE_SIMPLE_SERIAL)
 #  if defined(ARDUINO)
 uint8_t getReceiveBufferByte() {
     return BDSerial.read();
@@ -279,7 +283,7 @@ void serialEvent(void) {
         }
     }
 }
-#endif // !defined(USE_SIMPLE_SERIAL)
+#endif // !defined(BD_USE_SIMPLE_SERIAL)
 
 /*********************************************************************
  *
@@ -305,7 +309,7 @@ void initSerial() {
  * Take BLUETOOTH_BAUD_RATE for initialization, otherwise use 9600
  */
 void initSerial() {
-#  if defined(USE_SIMPLE_SERIAL)
+#  if defined(BD_USE_SIMPLE_SERIAL)
 #    if defined BLUETOOTH_BAUD_RATE
     initSimpleSerial(BLUETOOTH_BAUD_RATE);
 #    else
@@ -317,18 +321,18 @@ void initSerial() {
 #    else
     BDSerial.begin(9600);
 #    endif
-#  endif // defined(USE_SIMPLE_SERIAL)
+#  endif // defined(BD_USE_SIMPLE_SERIAL)
 }
 
 /*
  * With explicit baud rate
  */
 void initSerial(uint32_t aBaudRate) {
-#  if defined(USE_SIMPLE_SERIAL)
+#  if defined(BD_USE_SIMPLE_SERIAL)
     initSimpleSerial(aBaudRate);
 #  else
     BDSerial.begin(aBaudRate);
-#  endif // defined(USE_SIMPLE_SERIAL)
+#  endif // defined(BD_USE_SIMPLE_SERIAL)
 }
 #endif // defined(ESP32)
 
@@ -337,7 +341,7 @@ void initSerial(uint32_t aBaudRate) {
  */
 void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParameterBufferLength, uint8_t *aDataBufferPointer,
         size_t aDataBufferLength) {
-#if !defined(USE_SIMPLE_SERIAL) || (!defined(UCSR1A) && !defined(UCSR0A))
+#if !defined(BD_USE_SIMPLE_SERIAL) || (!defined(UCSR1A) && !defined(UCSR0A))
     BDSerial.write(aParameterBufferPointer, aParameterBufferLength);
     BDSerial.write(aDataBufferPointer, aDataBufferLength);
 #else
@@ -378,7 +382,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
         aDataBufferPointer++;
         aDataBufferLength--;
     }
-#endif // USE_SIMPLE_SERIAL
+#endif // BD_USE_SIMPLE_SERIAL
 }
 
 #endif // defined(ARDUINO)
@@ -392,10 +396,10 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
 
 /**
  * ultra simple blocking USART send routine - works 100%!
- * Only defined for USE_SIMPLE_SERIAL
+ * Only defined for BD_USE_SIMPLE_SERIAL
  */
 void sendUSART(char aChar) {
-#if defined(USE_SIMPLE_SERIAL)
+#if defined(BD_USE_SIMPLE_SERIAL)
     // wait for buffer to become empty
 #  if defined(UCSR1A)
     // Use TX1 on MEGA and on Leonardo, which has no TX0
@@ -411,7 +415,7 @@ void sendUSART(char aChar) {
 #  endif
 #else
     BDSerial.write(aChar);
-#endif // USE_SIMPLE_SERIAL
+#endif // BD_USE_SIMPLE_SERIAL
 }
 
 void sendUSART(const char *aString) {
@@ -426,7 +430,7 @@ void sendUSART(const char *aString) {
  * Functions only valid for simple serial
  *
  *******************************************/
-#if defined(USE_SIMPLE_SERIAL)
+#if defined(BD_USE_SIMPLE_SERIAL)
 void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin) {
 #  if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
     setUsePairedPin(aUsePairedPin);
@@ -536,7 +540,7 @@ ISR(USART1_RX_vect) {
             }
         }
     }
-#endif // USE_SIMPLE_SERIAL
+#endif // BD_USE_SIMPLE_SERIAL
 
 #elif !defined(ARDUINO) && (defined(STM32F303xC) || defined(STM32F103xB)) // defined(__AVR__)
 
@@ -549,7 +553,7 @@ ISR(USART1_RX_vect) {
 #include <string.h> // for memcpy
 #include <stdarg.h>  // for varargs
 
-//#define USE_SIMPLE_SERIAL
+//#define BD_USE_SIMPLE_SERIAL
 
 DMA_HandleTypeDef DMA_UART_BD_TXHandle;
 DMA_HandleTypeDef DMA_UART_BD_RXHandle;
@@ -859,7 +863,7 @@ int getSendBufferFreeSpace(void) {
  */
 void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParameterBufferLength, uint8_t *aDataBufferPointer,
         size_t aDataBufferLength) {
-#ifdef USE_SIMPLE_SERIAL
+#if defined(BD_USE_SIMPLE_SERIAL)
     sendUSARTBufferSimple(aParameterBufferPointer, aParameterBufferLength, aDataBufferPointer, aDataBufferLength);
     return;
 #else
@@ -951,7 +955,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
  */
 void sendUSARTBuffer(uint8_t *aParameterBufferPointer, size_t aParameterBufferLength, uint8_t *aDataBufferPointer,
         size_t aDataBufferLength) {
-#ifdef USE_SIMPLE_SERIAL
+#if defined(BD_USE_SIMPLE_SERIAL)
     sendUSARTBufferSimple(aParameterBufferPointer, aParameterBufferLength, aDataBufferPointer, aDataBufferLength);
     return;
 #else
@@ -975,7 +979,7 @@ void sendUSARTBuffer(uint8_t *aParameterBufferPointer, size_t aParameterBufferLe
 #endif
 }
 
-#ifdef USE_SIMPLE_SERIAL
+#if defined(BD_USE_SIMPLE_SERIAL)
 /**
  * very simple blocking USART send routine - works 100%!
  */

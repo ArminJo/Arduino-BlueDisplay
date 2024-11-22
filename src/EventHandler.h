@@ -27,6 +27,10 @@
 
 #include "Colors.h"
 
+#if defined(DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS)
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Is implied by DO_NOT_NEED_BASIC_TOUCH_EVENTS
+#endif
+
 /*
  * If defined, registerDelayCallback() and changeDelayCallback() is used to control a timer for checking for
  * auto repeats, moves and long touch.
@@ -61,14 +65,12 @@
 extern bool sBDEventJustReceived; // is set to true by handleEvent() and can be reset by main loop.
 extern unsigned long sMillisOfLastReceivedBDEvent; // is updated with millis() at each received event. Can be used for timeout detection.
 
-extern bool sDisableTouchUpOnce; // set normally by application if long touch action was made
-extern bool sDisableMoveEventsUntilTouchUpIsDone; // Skip all touch move and touch up events until touch is released
-
 extern struct BluetoothEvent remoteEvent;
-#if defined(__AVR__)
+#if defined(__AVR__) && defined(BD_USE_SIMPLE_SERIAL)
 // Is used for touch down events and stores its position. If remoteEvent is not empty, it is used as buffer for next regular event to avoid overwriting of remoteEvent
 extern struct BluetoothEvent remoteTouchDownEvent;
 #endif
+
 #if defined(SUPPORT_LOCAL_DISPLAY) && defined(LOCAL_DISPLAY_GENERATES_BD_EVENTS)
 extern struct BluetoothEvent localTouchEvent;
 #endif
@@ -82,16 +84,8 @@ void registerTouchUpCallback(void (*aTouchUpCallback)(struct TouchEvent *aActual
 void (* getTouchUpCallback(void))(struct TouchEvent * ); // returns current callback function
 void setTouchUpCallbackEnabled(bool aTouchUpCallbackEnabled);
 extern bool sTouchUpCallbackEnabled;
-#endif
+extern bool sDisableMoveEventsUntilTouchUpIsDone; // Skip all touch move and touch up events until touch is released
 
-/*
- * Long touch down stuff
- */
-#define TOUCH_STANDARD_LONG_TOUCH_TIMEOUT_MILLIS 800 // Millis after which a touch is classified as a long touch
-extern void (*sLongTouchDownCallback)(struct TouchEvent*);
-extern uint32_t sLongTouchDownTimeoutMillis;
-
-#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
 extern struct TouchEvent sCurrentPosition; // for printEventTouchPositionData()
 extern bool sTouchIsStillDown;
 
@@ -103,23 +97,34 @@ void printEventTouchPositionData(int x, int y, color16_t aColor, color16_t aBack
 #  endif
 #endif
 
-bool isStopRequested();
+bool isStopRequested(void);
 void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis);
 bool delayMillisAndCheckForEvent(unsigned long aDelayMillis);
 bool delayMillisAndCheckForStop(uint16_t aDelayMillis);
 
 void checkAndHandleEvents(void);
 
+#if !defined(DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS)
+/*
+ * Long touch down stuff
+ */
+#define TOUCH_STANDARD_LONG_TOUCH_TIMEOUT_MILLIS 800 // Millis after which a touch is classified as a long touch
+extern void (*sLongTouchDownCallback)(struct TouchEvent*);
+extern uint32_t sLongTouchDownTimeoutMillis;
+extern bool sDisableTouchUpOnce; // set normally by application if long touch action was made
+
 void registerLongTouchDownCallback(void (*aLongTouchCallback)(struct TouchEvent*), uint16_t aLongTouchTimeoutMillis);
 
 void registerSwipeEndCallback(void (*aSwipeEndCallback)(struct Swipe*));
 void setSwipeEndCallbackEnabled(bool aSwipeEndCallbackEnabled);
 extern bool sSwipeEndCallbackEnabled;  // for temporarily disabling swipe callbacks
+#endif
 
 void registerConnectCallback(void (*aConnectCallback)(void));
-void registerReorientationCallback(void (*aReorientationCallback)(void));
 
+void registerReorientationCallback(void (*aReorientationCallback)(void));
 /*
+ * Redraw event is intended to redraw screen, if size of display changes.
  * Connect and reorientation always include a redraw
  */
 void registerRedrawCallback(void (*aRedrawCallback)(void));

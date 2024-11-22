@@ -168,7 +168,7 @@ void startGuiDemo(void) {
 
     createDemoButtonsAndSliders();
     showGuiDemoMenu();
-    tGameOfLifeByteArray = new uint8_t[GAME_OF_LIFE_X_SIZE][GAME_OF_LIFE_Y_SIZE]; // One cell requires one byte
+//    tGameOfLifeByteArray = new uint8_t[GAME_OF_LIFE_X_SIZE][GAME_OF_LIFE_Y_SIZE]; // One cell requires one byte
     sMillisOfLastLoop = millis();
     registerLongTouchDownCallback(&LongTouchDownHandlerGUIDemo, TOUCH_STANDARD_LONG_TOUCH_TIMEOUT_MILLIS);
 }
@@ -246,7 +246,6 @@ void loopGuiDemo(void) {
 void stopGuiDemo(void) {
     registerLongTouchDownCallback(NULL, 0);
 
-    delete[] tGameOfLifeByteArray;
     // free buttons
     for (unsigned int i = 0; i < sizeof(TouchButtonsGuiDemo) / sizeof(TouchButtonsGuiDemo[0]); ++i) {
         TouchButtonsGuiDemo[i]->deinit();
@@ -340,7 +339,9 @@ void doGuiDemoButtons(Button *aTheTouchedButton, int16_t aValue) {
         if (showingGameOfLife) {
             showGameOfLifeSettings();
         } else {
-            if (mCurrentApplication == APPLICATION_DRAW) {
+            if (mCurrentApplication == APPLICATION_GAME_OF_LIFE) {
+                stopGameOfLifePage();
+            } else if (mCurrentApplication == APPLICATION_DRAW) {
                 stopDrawPage();
             }
             showGuiDemoMenu();
@@ -370,6 +371,7 @@ void doGuiDemoButtons(Button *aTheTouchedButton, int16_t aValue) {
         } else if (*aTheTouchedButton == TouchButtonGameOfLife) {
             // Game of Life button pressed
             showGameOfLifeSettings();
+            startGameOfLifePage();
             mCurrentApplication = APPLICATION_GAME_OF_LIFE;
 
         } else if (*aTheTouchedButton == TouchButtonDemoSettings) {
@@ -397,7 +399,7 @@ void createGameOfLifeGUI() {
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_VALUE_CAPTION_BELOW | FLAG_SLIDER_VALUE_BY_CALLBACK,
             &doGameOfLifeSpeed);
     TouchSliderGameOfLifeSpeed.setCaptionProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, 2, COLOR16_RED,
-            COLOR_DEMO_BACKGROUND);
+    COLOR_DEMO_BACKGROUND);
     TouchSliderGameOfLifeSpeed.setCaption("Gol-Speed");
     TouchSliderGameOfLifeSpeed.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, 4 + TEXT_SIZE_11,
             COLOR16_BLUE, COLOR_DEMO_BACKGROUND);
@@ -583,8 +585,8 @@ void ADS7846DisplayChannels(void) {
             tUse12BitMode = true;
         }
         tTemp = TouchPanel.readChannel(ADS7846ChannelMapping[i], tUse12BitMode, tUseDiffMode, 2);
-        snprintf(sBDStringBuffer, sizeof sBDStringBuffer, "%04u", tTemp);
-        Display.drawText(15, tPosY, sBDStringBuffer, TEXT_SIZE_22, COLOR16_RED, COLOR_DEMO_BACKGROUND);
+        snprintf(sStringBuffer, sizeof sStringBuffer, "%04u", tTemp);
+        Display.drawText(15, tPosY, sStringBuffer, TEXT_SIZE_22, COLOR16_RED, COLOR_DEMO_BACKGROUND);
         tPosY += TEXT_SIZE_22_HEIGHT;
     }
 }

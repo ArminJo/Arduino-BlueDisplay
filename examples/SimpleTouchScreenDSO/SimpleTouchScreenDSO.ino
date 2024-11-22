@@ -1452,17 +1452,17 @@ void createGUI() {
 
     // Button for Singleshot (and settings/back)
     TouchButtonBack_Singleshot.init(BUTTON_WIDTH_3_POS_3, 0, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, COLOR_GUI_CONTROL,
-            ButtonStringSingleshot, TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE, 0,
+            ButtonStringSingleshot, TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE, 0,
             &doTriggerSingleshot);
 
 // big start stop button
     TouchButtonStartStop.init(BUTTON_WIDTH_3_POS_3, BUTTON_HEIGHT_4_LINE_2, BUTTON_WIDTH_3, 2 * BUTTON_HEIGHT_4 + BUTTON_SPACING,
     COLOR_GUI_CONTROL, PSTR("Start\nStop"), TEXT_SIZE_22,
-    LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE, 0, &doStartStop);
+    LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE, 0, &doStartStop);
 
     // Button for settings page
     TouchButtonSettings.init(BUTTON_WIDTH_3_POS_3, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, COLOR_GUI_CONTROL,
-            PSTR("Settings"), TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE, 0,
+            PSTR("Settings"), TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE, 0,
             &doSettings);
 
     // Buttons for timebase +/- -NO button beep. Beep is done by handler.
@@ -1478,13 +1478,13 @@ void createGUI() {
      */
 // Button for switching display mode
     TouchButtonDisplayMode.init(0, 0, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, COLOR_GUI_DISPLAY_CONTROL, PSTR("Display\nmode"),
-    TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE, 0, &doDisplayMode);
+    TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE, 0, &doDisplayMode);
 
 // Button for chart history (erase color)
     TouchButtonChartHistory.init(BUTTON_WIDTH_5_POS_3, BUTTON_HEIGHT_4_LINE_4,
     LOCAL_DISPLAY_WIDTH - (BUTTON_WIDTH_3_POS_2) - (BUTTON_WIDTH_5_POS_3), BUTTON_HEIGHT_4, COLOR_GUI_DISPLAY_CONTROL,
             ChartHistoryButtonStrings[0], TEXT_SIZE_11,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE, 0, &doChartHistory);
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE, 0, &doChartHistory);
 
     /*
      * Settings Page
@@ -1493,22 +1493,22 @@ void createGUI() {
     // Button for auto trigger on off
     TouchButtonAutoTriggerOnOff.init(BUTTON_WIDTH_3_POS_2, 0, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, COLOR_GUI_TRIGGER,
             AutoTriggerButtonStringAuto, TEXT_SIZE_11,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE, 0, &doTriggerAutoOnOff);
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE, 0, &doTriggerAutoOnOff);
 
     // Button for slope
     TouchButtonSlope.init(BUTTON_WIDTH_3_POS_2, BUTTON_HEIGHT_4_LINE_2, BUTTON_WIDTH_3, BUTTON_HEIGHT_4,
     COLOR_GUI_TRIGGER, SlopeButtonStringAscending, TEXT_SIZE_11,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE, 0, &doTriggerSlope);
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE, 0, &doTriggerSlope);
 
     // Button for range
     TouchButtonAutoRangeOnOff.init(BUTTON_WIDTH_3_POS_2, BUTTON_HEIGHT_4_LINE_3, BUTTON_WIDTH_3,
     BUTTON_HEIGHT_4, COLOR_GUI_TRIGGER, AutoRangeButtonStringAuto, TEXT_SIZE_11,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE, 0, &doRangeMode);
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE, 0, &doRangeMode);
 
     // Button for auto offset on off
     TouchButtonAutoOffsetOnOff.init(BUTTON_WIDTH_3_POS_2, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_3, BUTTON_HEIGHT_4,
     COLOR_GUI_TRIGGER, AutoOffsetButtonString0, TEXT_SIZE_11,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE, 0, &doAutoOffsetOnOff);
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE, 0, &doAutoOffsetOnOff);
 
     /*
      * 3. column
@@ -1521,7 +1521,7 @@ void createGUI() {
 // Button for reference voltage switching
     TouchButtonADCReference.init(BUTTON_WIDTH_3_POS_3, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_3, BUTTON_HEIGHT_4,
     COLOR_GUI_SOURCE_TIMEBASE, ReferenceButton5_0V, TEXT_SIZE_11,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE, 0, &doADCReference);
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE, 0, &doADCReference);
 
     /*
      * SLIDER
@@ -1691,9 +1691,9 @@ void doTimeBaseDisplayScroll(LocalTouchButton *const aTheTouchedButton __attribu
 void doTriggerAutoOnOff(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.TriggerValuesAutomatic = (!MeasurementControl.TriggerValuesAutomatic);
     if (MeasurementControl.TriggerValuesAutomatic) {
-        TouchButtonAutoTriggerOnOff.setCaption((const __FlashStringHelper *)AutoTriggerButtonStringAuto);
+        TouchButtonAutoTriggerOnOff.setText((const __FlashStringHelper *)AutoTriggerButtonStringAuto);
     } else {
-        TouchButtonAutoTriggerOnOff.setCaption((const __FlashStringHelper *)AutoTriggerButtonStringManual);
+        TouchButtonAutoTriggerOnOff.setText((const __FlashStringHelper *)AutoTriggerButtonStringManual);
     }
     TouchButtonAutoTriggerOnOff.drawButton();
 }
@@ -1704,9 +1704,9 @@ void doTriggerAutoOnOff(LocalTouchButton *const aTheTouchedButton __attribute__(
 void doTriggerSlope(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.TriggerSlopeRising = (!MeasurementControl.TriggerSlopeRising);
     if (MeasurementControl.TriggerSlopeRising) {
-        TouchButtonSlope.setCaption((const __FlashStringHelper *)SlopeButtonStringAscending);
+        TouchButtonSlope.setText((const __FlashStringHelper *)SlopeButtonStringAscending);
     } else {
-        TouchButtonSlope.setCaption((const __FlashStringHelper *)SlopeButtonStringDecending);
+        TouchButtonSlope.setText((const __FlashStringHelper *)SlopeButtonStringDecending);
     }
     TouchButtonSlope.drawButton();
 }
@@ -1717,9 +1717,9 @@ void doTriggerSlope(LocalTouchButton *const aTheTouchedButton __attribute__((unu
 void doAutoOffsetOnOff(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.OffsetAutomatic = !MeasurementControl.OffsetAutomatic;
     if (MeasurementControl.OffsetAutomatic) {
-        TouchButtonAutoOffsetOnOff.setCaption((const __FlashStringHelper *)AutoOffsetButtonStringAuto);
+        TouchButtonAutoOffsetOnOff.setText((const __FlashStringHelper *)AutoOffsetButtonStringAuto);
     } else {
-        TouchButtonAutoOffsetOnOff.setCaption((const __FlashStringHelper *)AutoOffsetButtonString0);
+        TouchButtonAutoOffsetOnOff.setText((const __FlashStringHelper *)AutoOffsetButtonString0);
         // disable auto offset
         MeasurementControl.ValueOffset = 0;
     }
@@ -1729,9 +1729,9 @@ void doAutoOffsetOnOff(LocalTouchButton *const aTheTouchedButton __attribute__((
 void doRangeMode(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     MeasurementControl.RangeAutomatic = !MeasurementControl.RangeAutomatic;
     if (MeasurementControl.RangeAutomatic) {
-        TouchButtonAutoRangeOnOff.setCaption((const __FlashStringHelper *)AutoRangeButtonStringAuto);
+        TouchButtonAutoRangeOnOff.setText((const __FlashStringHelper *)AutoRangeButtonStringAuto);
     } else {
-        TouchButtonAutoRangeOnOff.setCaption((const __FlashStringHelper *)AutoRangeButtonStringManual);
+        TouchButtonAutoRangeOnOff.setText((const __FlashStringHelper *)AutoRangeButtonStringManual);
     }
     TouchButtonAutoRangeOnOff.drawButton();
 }
@@ -1747,10 +1747,10 @@ void doADCReference(LocalTouchButton *const aTheTouchedButton __attribute__((unu
 #else
         tReference = INTERNAL;
 #endif
-        TouchButtonADCReference.setCaption((const __FlashStringHelper *)ReferenceButton1_1V);
+        TouchButtonADCReference.setText((const __FlashStringHelper *)ReferenceButton1_1V);
     } else {
         tReference = DEFAULT;
-        TouchButtonADCReference.setCaption((const __FlashStringHelper *)ReferenceButton5_0V);
+        TouchButtonADCReference.setText((const __FlashStringHelper *)ReferenceButton5_0V);
     }
     setReference(tReference);
     TouchButtonADCReference.drawButton();
@@ -1779,9 +1779,9 @@ void doChannelSelect(LocalTouchButton *const aTheTouchedButton __attribute__((un
         MeasurementControl.ADCInputMUXChannelChar = 0x30;
     }
     setMUX(tChannel); // this setsADCInputMUXChannel
-// set channel number in caption
+// set channel number in text
     ChannelSelectButtonString[CHANNEL_STRING_INDEX] = MeasurementControl.ADCInputMUXChannelChar;
-    TouchButtonChannelSelect.setCaptionAndDraw(ChannelSelectButtonString);
+    TouchButtonChannelSelect.setTextAndDraw(ChannelSelectButtonString);
 }
 
 /*
@@ -1840,7 +1840,7 @@ void doDisplayMode(LocalTouchButton *const aTheTouchedButton __attribute__((unus
  */
 void doSettings(LocalTouchButton *const aTheTouchedButton __attribute__((unused)), int16_t aValue __attribute__((unused))) {
     // convert singleshot to back button - no color change needed :-)
-    TouchButtonBack_Singleshot.setCaption((const __FlashStringHelper *)ButtonStringBack);
+    TouchButtonBack_Singleshot.setText((const __FlashStringHelper *)ButtonStringBack);
     if (!MeasurementControl.IsRunning) {
         LocalDisplay.clearDisplay(COLOR_BACKGROUND_DSO);
     }
@@ -1857,7 +1857,7 @@ void doTriggerSingleshot(LocalTouchButton *const aTheTouchedButton __attribute__
          * Here, this button is the back button of the settings page!
          */
         TouchSliderBacklight.deactivate();
-        TouchButtonBack_Singleshot.setCaption((const __FlashStringHelper *)ButtonStringSingleshot);
+        TouchButtonBack_Singleshot.setText((const __FlashStringHelper *)ButtonStringSingleshot);
         if (MeasurementControl.IsRunning) {
             DisplayControl.DisplayMode = DISPLAY_MODE_CHART;
             LocalDisplay.clearDisplay(COLOR_BACKGROUND_DSO);
@@ -1941,10 +1941,10 @@ void doChartHistory(LocalTouchButton *const aTheTouchedButton __attribute__((unu
     if (DisplayControl.EraseColorIndex > 2) {
         DisplayControl.EraseColorIndex = 0;
     }
-    TouchButtonChartHistory.setCaption((const __FlashStringHelper *)ChartHistoryButtonStrings[DisplayControl.EraseColorIndex]);
+    TouchButtonChartHistory.setText((const __FlashStringHelper *)ChartHistoryButtonStrings[DisplayControl.EraseColorIndex]);
     DisplayControl.EraseColor = EraseColors[DisplayControl.EraseColorIndex];
     if (DisplayControl.DisplayMode == DISPLAY_MODE_SHOW_MAIN_GUI) {
-        // show new caption
+        // show new Text
         TouchButtonChartHistory.drawButton();
     }
 }

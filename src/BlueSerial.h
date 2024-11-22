@@ -35,11 +35,13 @@
 #include <stddef.h>
 #endif
 
+#include "Colors.h"
+
 /*
  * Simple serial is a simple blocking serial version without receive buffer and other overhead.
  * Simple serial on the MEGA2560 uses USART1
  */
-//#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+//#define BD_USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 
 #if defined(SERIAL_PORT_HARDWARE1) // is defined for Arduino Due
 #define BOARD_HAVE_USART2 // they start counting with 0
@@ -47,20 +49,20 @@
 
 // If Serial1 is available, but you want to use direct connection by USB to your smartphone / tablet,
 // then you have to activate the next line
-//#define USE_USB_SERIAL
+//#define BD_USE_USB_SERIAL
 
 /*
  * Determine which serial to use.
- * - Use standard Serial if USE_USB_SERIAL is requested.
- * - Prefer the use of second USART, to have the standard Serial available for application (debug) use except for ATmega328P and PB.
+ * - Use standard Serial if BD_USE_USB_SERIAL is requested.
+ * - Prefer the use of second USART for BlueDisplay communication, to have the standard Serial available for application (debug) use except for ATmega328P and PB.
  * - Use Serial1 on stm32 if SERIAL_USB and USART1 is existent. If no SERIAL_USB existent, it requires USART2 to have Serial1 available.
  * - Use Serial1 on AVR if second USART is existent, as on the ATmega Boards.
  */
 // In some cores for ATmega328PB only ATmega328P is defined
-#if ! defined(USE_USB_SERIAL) && ! defined(__AVR_ATmega328P__) && ! defined(__AVR_ATmega328PB__) && ((defined(BOARD_HAVE_USART1) && defined(SERIAL_USB)) \
+#if ! defined(BD_USE_USB_SERIAL) && ! defined(__AVR_ATmega328P__) && ! defined(__AVR_ATmega328PB__) && ((defined(BOARD_HAVE_USART1) && defined(SERIAL_USB)) \
     || (defined(BOARD_HAVE_USART2) && ! defined(SERIAL_USB)) \
-    || defined(UBRR1H))
-#define USE_SERIAL1
+    || defined(UBRR1H) || /*BluePill*/(defined(USBD_USE_CDC) && defined(USART2)))
+#define BD_USE_SERIAL1
 #endif
 
 #define BAUD_STRING_4800 "4800"
@@ -112,7 +114,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
 /*
  * Functions only valid for standard serial
  */
-#if !defined(USE_SIMPLE_SERIAL)
+#if !defined(BD_USE_SIMPLE_SERIAL)
 uint8_t getReceiveBufferByte(void);
 size_t getReceiveBytesAvailable(void);
 void serialEvent(void); // Is called by Arduino runtime in main loop, if (Serial0_available && serialEvent && Serial0_available()) serialEvent();
@@ -137,7 +139,7 @@ void sendUSART(const char *aString);
 /*
  * Functions only valid for simple serial
  */
-#if defined(USE_SIMPLE_SERIAL)
+#if defined(BD_USE_SIMPLE_SERIAL)
 void initSimpleSerial(uint32_t aBaudRate);
 void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
 #endif

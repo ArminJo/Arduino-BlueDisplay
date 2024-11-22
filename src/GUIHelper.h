@@ -129,7 +129,7 @@ uint16_t getTextHeight(uint16_t aTextSize);
 uint16_t getTextWidth(uint16_t aTextSize);
 uint16_t getTextAscend(uint16_t aTextSize);
 uint16_t getTextAscendMinusDescend(uint16_t aTextSize);
-uint16_t getTextMiddle(uint16_t aTextSize);
+uint16_t getTextMiddleCorrection(uint16_t aTextSize);
 
 uint16_t getFontScaleFactorFromTextSize(uint16_t aTextSize);
 

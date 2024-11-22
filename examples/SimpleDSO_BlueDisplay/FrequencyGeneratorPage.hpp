@@ -68,7 +68,7 @@ static void (*sLastRedrawCallback)(void);
  * Direct frequency + range buttons
  */
 #if defined(__AVR__)
-const uint16_t FixedFrequencyButtonCaptions[NUMBER_OF_FIXED_FREQUENCY_BUTTONS] PROGMEM
+const uint16_t FixedFrequencyButtonTexts[NUMBER_OF_FIXED_FREQUENCY_BUTTONS] PROGMEM
 = { 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000 };
 
 // the compiler cannot optimize 2 occurrences of the same PROGMEM string :-(
@@ -80,7 +80,7 @@ const char StringMHz[] PROGMEM = "MHz";
 
 const char *RangeButtonStrings[5] = { StringmHz, StringHz, String10Hz, StringkHz, StringMHz };
 #else
-const uint16_t FixedFrequencyButtonCaptions[NUMBER_OF_FIXED_FREQUENCY_BUTTONS] = { 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000 };
+const uint16_t FixedFrequencyButtonTexts[NUMBER_OF_FIXED_FREQUENCY_BUTTONS] = { 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000 };
 const char *const RangeButtonStrings[5] = { "mHz", "Hz", "10Hz", "kHz", "MHz" };
 const char FrequencyRangeChars[4] = { 'm', ' ', 'k', 'M' };
 struct FrequencyInfoStruct sFrequencyInfo;
@@ -134,7 +134,7 @@ bool setWaveformFrequencyAndPrintValues();
 
 void printFrequencyAndPeriod();
 #if defined(__AVR__)
-void setWaveformButtonCaption(void);
+void setWaveformButtonText(void);
 void initTimer1ForCTC(void);
 #endif
 
@@ -225,20 +225,20 @@ void initFrequencyGeneratorPageGui() {
      * Fixed frequency buttons next.
      * Example of button handling without button objects.
      * We rely on button handles / ID's being simple integers and increasing by one for each init.
-     * We use a start button for initialization, which changes position, value and caption.
+     * We use a start button for initialization, which changes position, value and text.
      * We use the start button ID as start id for drawing all buttons.
      */
     uint16_t tXPos = 0;
     uint16_t tFrequency;
 #if defined(__AVR__)
-    // captions are in PGMSPACE
-    const uint16_t *tFrequencyCaptionPtr = &FixedFrequencyButtonCaptions[0];
+    // texts are in PGMSPACE
+    const uint16_t *tFrequencyTextPtr = &FixedFrequencyButtonTexts[0];
     for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS; ++i) {
-        tFrequency = pgm_read_word(tFrequencyCaptionPtr);
+        tFrequency = pgm_read_word(tFrequencyTextPtr);
         sprintf_P(sStringBuffer, PSTR("%u"), tFrequency);
 #else
     for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS; ++i) {
-        tFrequency = FixedFrequencyButtonCaptions[i];
+        tFrequency = FixedFrequencyButtonTexts[i];
         sprintf(sStringBuffer, "%u", tFrequency);
 #endif
 
@@ -252,7 +252,7 @@ void initFrequencyGeneratorPageGui() {
 
         tXPos += BUTTON_WIDTH_10 + BUTTON_DEFAULT_SPACING_QUARTER;
 #if defined(__AVR__)
-        tFrequencyCaptionPtr++;
+        tFrequencyTextPtr++;
 #endif
     }
 #if !defined(SUPPORT_LOCAL_DISPLAY)
@@ -279,7 +279,7 @@ void initFrequencyGeneratorPageGui() {
     TouchButtonFrequencyStartStop.init(0, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, 0, F("Start"),
             TEXT_SIZE_26, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sFrequencyInfo.isOutputEnabled,
             &doFrequencyGeneratorStartStop);
-    TouchButtonFrequencyStartStop.setCaptionForValueTrue(F("Stop"));
+    TouchButtonFrequencyStartStop.setTextForValueTrue(F("Stop"));
 
     TouchButtonGetFrequency.init(BUTTON_WIDTH_3_POS_2, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
     BUTTON_HEIGHT_4, COLOR16_BLUE, F("Hz..."), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetFrequency);
@@ -287,7 +287,7 @@ void initFrequencyGeneratorPageGui() {
 #if defined(__AVR__)
     TouchButtonWaveform.init(BUTTON_WIDTH_3_POS_3, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
     BUTTON_HEIGHT_4, COLOR16_BLUE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, sFrequencyInfo.Waveform, &doWaveformMode);
-    setWaveformButtonCaption();
+    setWaveformButtonText();
 #endif
 }
 
@@ -318,13 +318,13 @@ void drawFrequencyGeneratorPage(void) {
     // we know that the buttons handles are increasing numbers
 #if defined(SUPPORT_LOCAL_DISPLAY)
     for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1; ++i) {
-        // Generate strings each time buttons are drawn since only the pointer to caption is stored in button
-        sprintf(sStringBuffer, "%u", FixedFrequencyButtonCaptions[i]);
-        TouchButtonFixedFrequency[i]->setCaption(sStringBuffer);
+        // Generate strings each time buttons are drawn since only the pointer to text is stored in button
+        sprintf(sStringBuffer, "%u", FixedFrequencyButtonTexts[i]);
+        TouchButtonFixedFrequency[i]->setText(sStringBuffer);
         TouchButtonFixedFrequency[i]->drawButton();
     }
     // label last button 1k instead of 1000 which is too long
-    TouchButtonFixedFrequency[NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1]->setCaption("1k");
+    TouchButtonFixedFrequency[NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1]->setText("1k");
     TouchButtonFixedFrequency[NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1]->drawButton();
 #else
     BDButton tButton(TouchButtonFirstFixedFrequency);
@@ -427,15 +427,15 @@ void doSetFrequencyRange(BDButton *aTheTouchedButton, int16_t aInputRangeIndex) 
 }
 
 #if defined(__AVR__)
-void setWaveformButtonCaption(void) {
-    TouchButtonWaveform.setCaption(getWaveformModePGMString(), (DisplayControl.DisplayPage == DSO_PAGE_FREQUENCY));
+void setWaveformButtonText(void) {
+    TouchButtonWaveform.setText(getWaveformModePGMString(), (DisplayControl.DisplayPage == DSO_PAGE_FREQUENCY));
 }
 #endif
 
 void doWaveformMode(BDButton *aTheTouchedButton, int16_t aValue) {
 #if defined(__AVR__)
     cycleWaveformMode();
-    setWaveformButtonCaption();
+    setWaveformButtonText();
 #endif
 }
 

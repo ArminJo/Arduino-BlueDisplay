@@ -99,6 +99,6 @@ jobs:
           required-libraries: ${{ env.REQUIRED_LIBRARIES }}
           sketches-exclude: ${{ matrix.sketches-exclude }}
           build-properties: ${{ toJson(matrix.build-properties) }}
-#          build-properties: '{ "SimpleTouchScreenDSO": "-DUSE_SIMPLE_SERIAL" }'
+#          build-properties: '{ "SimpleTouchScreenDSO": "-DBD_USE_SIMPLE_SERIAL" }'
 #          debug-install: true
 #          debug-compile: true

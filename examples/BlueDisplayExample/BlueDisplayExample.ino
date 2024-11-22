@@ -7,7 +7,7 @@
  *  2. By slider
  *  3. By numeric keypad
  *
- *  Output of actual delay is numeric and by slider bar
+ *  Output of actual delay value is numeric and by slider bar
  *
  *  For handling time, the Arduino "time" library is used. You can install it also with "Tools -> Manage Libraries..." or "Ctrl+Shift+I" -> use "timekeeping" as filter string.
  *  The sources can also be found here: https://github.com/PaulStoffregen/Time
@@ -47,10 +47,12 @@
  * With 9600 baud, the minimal blink delay we observe is 200 ms because of the communication delay
  * of 8 * printDemoString(), which requires 8*24 ms -> 192 ms
  */
-//#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
-#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
-//#define USE_SIMPLE_SERIAL                 // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
-//#define USE_USB_SERIAL                    // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
+//#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate.
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events like down, move and up. Saves up to 620 bytes program memory and 36 bytes RAM.
+#define DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Implies DO_NOT_NEED_BASIC_TOUCH_EVENTS.
+//#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
+//#define BD_USE_SIMPLE_SERIAL                // Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise.
+//#define BD_USE_USB_SERIAL                   // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection to your smartphone / tablet.
 #include "BlueDisplay.hpp"
 
 #if defined(ESP32) || defined(ESP8266)
@@ -59,6 +61,7 @@
 
 #if defined(USE_C_TIME)
 #include "time.h"
+struct tm *sTimeInfo;
 #else
 #include "TimeLib.h"
 #endif
@@ -70,10 +73,6 @@
 
 #define COLOR_DEMO_BACKGROUND COLOR16_BLUE
 #define COLOR_CAPTION COLOR16_RED
-
-#if defined(USE_C_TIME)
-struct tm *sTimeInfo;
-#endif
 
 bool sConnected = false;
 bool doBlink = true;
@@ -113,9 +112,9 @@ void doDelay(BDSlider *aTheTouchedSlider, uint16_t aSliderValue);
  * Time functions
  */
 void printTime();
-void infoEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo);
+void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo);
 #if ! defined(USE_C_TIME)
-time_t requestTimeSync();
+time_t requestHostUnixTimestamp();
 #endif
 
 void printDemoString(void);
@@ -142,19 +141,19 @@ void setup() {
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
 #else
-    initSerial();
+    initSerial(); // On standard AVR platforms this results in Serial.begin(BLUETOOTH_BAUD_RATE) or Serial.begin(9600)
 #endif
 
     /*
-     * Register callback handler and check for connection still established.
-     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
-     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
-     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
-     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     * Register callback handler and wait for 300 ms if Bluetooth connection is still active.
+     * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth connection is most likely not active here.
+     *
+     * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
+     * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 
-#if defined(USE_SERIAL1) || defined(ESP32) // USE_SERIAL1 may be defined in BlueSerial.h
+#if defined(BD_USE_SERIAL1) || defined(ESP32) // BD_USE_SERIAL1 may be defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
     || defined(SERIALUSB_PID)  || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_attiny3217)
@@ -162,7 +161,7 @@ void setup() {
 #  endif
 // Just to know which program is running on my Arduino
     Serial.println(StartMessage);
-#elif !defined(USE_SIMPLE_SERIAL)
+#elif !defined(BD_USE_SIMPLE_SERIAL)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
     if (!BlueDisplay1.isConnectionEstablished()) {
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
@@ -238,7 +237,7 @@ void loop() {
         if (tMillis - sLastMilisOfTimePrinted > 1000) {
             sLastMilisOfTimePrinted = tMillis;
 #if defined(USE_C_TIME)
-            BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &infoEventCallback);
+            BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &getTimeEventCallback);
 #endif
             printTime();
         }
@@ -262,35 +261,37 @@ void initDisplay(void) {
 
 //    TouchButtonBDExampleBlinkStartStop.init(&ButtonStartStopInit, F("Start"), doBlink);
     TouchButtonBDExampleBlinkStartStop.init(30, 150, 140, 55, COLOR_DEMO_BACKGROUND, F("Start"), 44,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doBDExampleBlinkStartStop);
-    TouchButtonBDExampleBlinkStartStop.setCaptionForValueTrue(F("Stop"));
+    FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doBDExampleBlinkStartStop);
+    TouchButtonBDExampleBlinkStartStop.setTextForValueTrue(F("Stop"));
 
 //    TouchButtonValueDirect.init(&ButtonValueDirectInit, F("..."));
     TouchButtonValueDirect.init(210, 150, 90, 55, COLOR16_YELLOW, F("..."), 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetDelay);
 
     TouchButtonTest.init(BUTTON_WIDTH_4_POS_4, 0, BUTTON_WIDTH_4, BUTTON_HEIGHT_6, COLOR16_DARK_BLUE, "Test", TEXT_SIZE_22,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH, -1, &doTest);
+    FLAG_BUTTON_DO_BEEP_ON_TOUCH, -1, &doTest);
 
     TouchButtonBack.init(BUTTON_WIDTH_4_POS_4, 0, BUTTON_WIDTH_4, BUTTON_HEIGHT_6, COLOR16_RED, "Back", TEXT_SIZE_22,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH, -1, &doBack);
+    FLAG_BUTTON_DO_BEEP_ON_TOUCH, -1, &doBack);
 
     TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE, COLOR16_YELLOW, COLOR16_GREEN,
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_HORIZONTAL, &doDelay);
-    TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_VALUE_CAPTION_ALIGN_RIGHT, 4, COLOR16_RED, COLOR_DEMO_BACKGROUND);
+    TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_VALUE_CAPTION_ALIGN_RIGHT, 4, COLOR16_RED,
+    COLOR_DEMO_BACKGROUND);
     TouchSliderDelay.setCaption("Delay");
     TouchSliderDelay.setScaleFactor(10); // Slider is virtually 10 times larger
     TouchSliderDelay.setValueUnitString("ms");
 
-    TouchSliderDelay.setPrintValueProperties(TEXT_SIZE_22, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT, 4, COLOR16_WHITE, COLOR_DEMO_BACKGROUND);
+    TouchSliderDelay.setPrintValueProperties(TEXT_SIZE_22, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT, 4, COLOR16_WHITE,
+    COLOR_DEMO_BACKGROUND);
 
     // here we have received a new local timestamp
 #if defined(USE_C_TIME)
 // initialize sTimeInfo
-    sTimeInfo = localtime((const time_t*) &BlueDisplay1.mHostUnixTimestamp);
+    sTimeInfo = localtime((const time_t*) &BlueDisplay1.mHostUnixTimestamp); // getHostUnixTimestamp() does not work here!
 #else
     // Set function to call when time sync required (default: after 300 seconds)
-    setSyncProvider(requestTimeSync); // calls getInfo() immediately
-    setTime(BlueDisplay1.mHostUnixTimestamp);
+    setSyncProvider(requestHostUnixTimestamp); // calls getInfo() immediately
+    setTime(BlueDisplay1.getHostUnixTimestamp());
 #endif
 
     BlueDisplay1.debug(StartMessage);
@@ -315,7 +316,7 @@ void doBDExampleBlinkStartStop(BDButton *aTheTouchedButton __attribute__((unused
 }
 
 #if defined(USE_C_TIME)
-void infoEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
+void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
     if (aSubcommand == SUBFUNCTION_GET_INFO_LOCAL_TIME) {
         sTimeInfo = localtime((const time_t*) &aLongInfo.uint32Value);
     }
@@ -330,15 +331,9 @@ void printTime() {
 }
 
 #else
-/*
- * Is called every 5 minutes by default
- */
-time_t requestTimeSync() {
-    BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &infoEventCallback);
-    return 0; // the time will be sent later in response to getInfo
-}
-
-void infoEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
+void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
+    (void) aByteInfo;
+    (void) aShortInfo;
     if (aSubcommand == SUBFUNCTION_GET_INFO_LOCAL_TIME) {
         setTime(aLongInfo.uint32Value);
         // to prove that it is called every 5 minutes by default
@@ -346,11 +341,20 @@ void infoEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortIn
     }
 }
 
+/*
+ * Is called every 5 minutes by default
+ */
+time_t requestHostUnixTimestamp() {
+    BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &getTimeEventCallback);
+    return 0; // the time will be sent later in response to getInfo
+}
+
 void printTime() {
     // 1600 byte code size for time handling plus print
     sprintf_P(sStringBuffer, PSTR("%02d.%02d.%4d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(), second());
-    BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer, 11,
-    COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
+    BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer,
+            11,
+            COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
 }
 #endif
 

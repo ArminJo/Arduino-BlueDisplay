@@ -9,7 +9,7 @@
 
   This library is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
   Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public
@@ -141,10 +141,10 @@ int year(time_t t) { // the year for the given time
 
 /*============================================================================*/
 /* functions to convert to and from system time */
-/* These are for interfacing with time services and are not normally required in a sketch */
+/* These are for interfacing with time services and are not normally needed in a sketch */
 
-// leap year calulator expects year argument as years offset from 1970
-#define LEAP_YEAR(Y)     ( ((1970+Y)>0) && !((1970+Y)%4) && ( ((1970+Y)%100) || !((1970+Y)%400) ) )
+// leap year calculator expects year argument as years offset from 1970
+#define LEAP_YEAR(Y)     ( ((1970+(Y))>0) && !((1970+(Y))%4) && ( ((1970+(Y))%100) || !((1970+(Y))%400) ) )
 
 static  const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31}; // API starts months from 1, this array starts from 0
 
@@ -201,7 +201,7 @@ void breakTime(time_t timeInput, tmElements_t &tm){
   tm.Day = time + 1;     // day of month
 }
 
-time_t makeTime(tmElements_t &tm){
+time_t makeTime(const tmElements_t &tm){
 // assemble time elements into time_t
 // note year argument is offset from 1970 (see macros in time.h to convert to other formats)
 // previous version used full four digit year (or digits since 2000),i.e. 2009 was 2009 or 9
@@ -213,7 +213,7 @@ time_t makeTime(tmElements_t &tm){
   seconds= tm.Year*(SECS_PER_DAY * 365);
   for (i = 0; i < tm.Year; i++) {
     if (LEAP_YEAR(i)) {
-      seconds +=  SECS_PER_DAY;   // add extra days for leap years
+      seconds += SECS_PER_DAY;   // add extra days for leap years
     }
   }
 
@@ -235,25 +235,25 @@ time_t makeTime(tmElements_t &tm){
 /* Low level system time functions  */
 
 static uint32_t sysTime = 0;
-static uint32_t prevMillis = 0;
+uint32_t prevMillis = 0;
 static uint32_t nextSyncTime = 0;
 static timeStatus_t Status = timeNotSet;
 
 getExternalTime getTimePtr;  // pointer to external sync function
 //setExternalTime setTimePtr; // not used in this version
 
-#if defined(TIME_DRIFT_INFO)   // define this to get drift data
+#ifdef TIME_DRIFT_INFO   // define this to get drift data
 time_t sysUnsyncedTime = 0; // the time sysTime unadjusted by sync
 #endif
 
 
 time_t now() {
-	// calculate number of seconds passed since last call to now()
+    // calculate number of seconds passed since last call to now()
   while (millis() - prevMillis >= 1000) {
-		// millis() and prevMillis are both unsigned ints thus the subtraction will always be the absolute value of the difference
+        // millis() and prevMillis are both unsigned ints thus the subtraction will always be the absolute value of the difference
     sysTime++;
     prevMillis += 1000;
-#if defined(TIME_DRIFT_INFO)
+#ifdef TIME_DRIFT_INFO
     sysUnsyncedTime++; // this can be compared to the synced time to measure long term drift
 #endif
   }
@@ -272,7 +272,7 @@ time_t now() {
 }
 
 void setTime(time_t t) {
-#if defined(TIME_DRIFT_INFO)
+#ifdef TIME_DRIFT_INFO
  if(sysUnsyncedTime == 0)
    sysUnsyncedTime = t;   // store the time of the first call to set a valid Time
 #endif

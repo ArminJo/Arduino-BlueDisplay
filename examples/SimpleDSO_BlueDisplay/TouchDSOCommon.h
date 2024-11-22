@@ -425,20 +425,20 @@ void doDrawMode(BDButton * aTheTouchedButton, int16_t aValue);
 void doTriggerLevel(BDSlider *aTheTouchedSlider, uint16_t aValue);
 void doVoltagePicker(BDSlider *aTheTouchedSlider, uint16_t aValue);
 
-// Button caption section
+// Button text section
 #if defined(__AVR__)
 #else
-void setMinMaxModeButtonCaption(void);
+void setMinMaxModeButtonText(void);
 #endif
 
-void setSlopeButtonCaption(void);
-void setTriggerModeButtonCaption(void);
-void setAutoRangeModeAndButtonCaption(bool aNewAutoRangeMode);
-void setChannelButtonsCaption(void);
-void setReferenceButtonCaption(void);
-void setACModeButtonCaption(void);
-void setTriggerDelayCaption(void);
-void setAutoOffsetButtonCaption(void);
+void setSlopeButtonText(void);
+void setTriggerModeButtonText(void);
+void setAutoRangeModeAndButtonText(bool aNewAutoRangeMode);
+void setChannelButtonsText(void);
+void setReferenceButtonText(void);
+void setACModeButtonText(void);
+void setTriggerDelayText(void);
+void setAutoOffsetButtonText(void);
 
 uint32_t getMicrosFromHorizontalDisplayValue(uint16_t aDisplayValueHorizontal, uint8_t aNumberOfPeriods);
 

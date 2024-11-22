@@ -41,7 +41,7 @@
  * RECEIVE PROTOCOL USED:
  *
  * Touch/size message has 8 bytes:
- * 1 - Gross message length in bytes
+ * 1 - Gross message length in bytes including sync token (8)
  * 2 - Function code
  * 3 - X Position LSB
  * 4 - X Position MSB
@@ -74,19 +74,19 @@
  *********************/
 // eventType can be one of the following:
 //see also android.view.MotionEvent
-#define EVENT_TOUCH_ACTION_DOWN 0x00
-#define EVENT_TOUCH_ACTION_UP   0x01
-#define EVENT_TOUCH_ACTION_MOVE 0x02
-#define EVENT_TOUCH_ACTION_ERROR 0xFF
+#define EVENT_TOUCH_ACTION_DOWN     0x00
+#define EVENT_TOUCH_ACTION_UP       0x01
+#define EVENT_TOUCH_ACTION_MOVE     0x02
+#define EVENT_TOUCH_ACTION_ERROR    0xFF
 
 // connection event sent after (re)connecting from host
-#define EVENT_CONNECTION_BUILD_UP 0x10
+#define EVENT_CONNECTION_BUILD_UP   0x10
 // redraw event if canvas size was changed manually on host
 #define EVENT_REDRAW 0x11
 // reorientation event sent if orientation changed or requestMaxCanvasSize() was called
-#define EVENT_REORIENTATION 0x12
+#define EVENT_REORIENTATION         0x12
 // disconnect event sent if manually disconnected (does not cover out of range etc.)
-#define EVENT_DISCONNECT 0x14
+#define EVENT_DISCONNECT            0x14
 
 // command sizes
 #define TOUCH_COMMAND_MAX_DATA_SIZE 15
@@ -96,27 +96,27 @@
 #define EVENT_FIRST_CALLBACK_ACTION_CODE 0x20
 
 // GUI elements (button, slider, get number) callback codes
-#define EVENT_BUTTON_CALLBACK   0x20
-#define EVENT_SLIDER_CALLBACK   0x21
-#define EVENT_SWIPE_CALLBACK    0x22
+#define EVENT_BUTTON_CALLBACK           0x20
+#define EVENT_SLIDER_CALLBACK           0x21
+#define EVENT_SWIPE_CALLBACK            0x22
 #define EVENT_LONG_TOUCH_DOWN_CALLBACK  0x23
 
-#define EVENT_NUMBER_CALLBACK   0x28
-#define EVENT_INFO_CALLBACK     0x29
+#define EVENT_NUMBER_CALLBACK           0x28
+#define EVENT_INFO_CALLBACK             0x29
 
-#define EVENT_TEXT_CALLBACK     0x2C
+#define EVENT_TEXT_CALLBACK             0x2C
 
 // NOP used for synchronizing
-#define EVENT_NOP 0x2F
+#define EVENT_NOP                       0x2F
 
 // Sensor callback codes
 // Tag number is 0x30 + sensor type constant from android.hardware.Sensor
-#define EVENT_FIRST_SENSOR_ACTION_CODE 0x30
-#define EVENT_LAST_SENSOR_ACTION_CODE 0x3F
+#define EVENT_FIRST_SENSOR_ACTION_CODE      0x30
+#define EVENT_LAST_SENSOR_ACTION_CODE       0x3F
 
-#define EVENT_REQUESTED_DATA_CANVAS_SIZE 0x60
+#define EVENT_REQUESTED_DATA_CANVAS_SIZE    0x60
 
-#define EVENT_NO_EVENT 0xFF
+#define EVENT_NO_EVENT                      0xFF
 
 /*********************
  * Event structures
@@ -166,8 +166,8 @@ struct GuiCallback {
     uint16_t ObjectIndex; // To find associated local button or slider
     uint16_t Free;
 #if defined(__AVR__)
-    void * CallbackFunctionAddress;
-    void * CallbackFunctionAddress_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
+    void *CallbackFunctionAddress;
+    void *CallbackFunctionAddress_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
 #else
     void * CallbackFunctionAddress;
 #endif
@@ -188,8 +188,8 @@ struct IntegerInfoCallback {
     uint8_t ByteInfo;
     uint16_t ShortInfo;
 #if defined(__AVR__)
-    void * CallbackFunctionAddress;
-    void * CallbackFunctionAddress_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
+    void *CallbackFunctionAddress;
+    void *CallbackFunctionAddress_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1
 #else
     void * CallbackFunctionAddress;
 #endif
@@ -217,167 +217,176 @@ struct BluetoothEvent {
 /**********************
  * Data field types
  *********************/
-const int DATAFIELD_TAG_BYTE = 0x01;
-const int DATAFIELD_TAG_SHORT = 0x02;
-//const int DATAFIELD_TAG_INT = 0x03;
-//const int DATAFIELD_TAG_LONG = 0x04;
-//const int DATAFIELD_TAG_FLOAT = 0x05;
-//const int DATAFIELD_TAG_DOUBLE = 0x06;
-const int LAST_FUNCTION_TAG_DATAFIELD = 0x07;
+#define DATAFIELD_TAG_BYTE              0x01
+#define DATAFIELD_TAG_SHORT             0x02
+//#define DATAFIELD_TAG_INT             0x03
+//#define DATAFIELD_TAG_LONG            0x04
+//#define DATAFIE TAG_FLOAT             0x05
+//#define DATAFIELD_TAG_DOUBLE          0x06
+#define LAST_FUNCTION_TAG_DATAFIELD     0x07
 
 /**********************
  * Internal functions
  *********************/
-static const int INDEX_FIRST_FUNCTION_WITH_DATA = 0x60;
+#define INDEX_FIRST_FUNCTION_WITH_DATA  0x60
 
-static const int FUNCTION_GLOBAL_SETTINGS = 0x08;
+#define FUNCTION_GLOBAL_SETTINGS                        0x08
 // Sub functions for GLOBAL_SETTINGS
-static const int SUBFUNCTION_GLOBAL_SET_FLAGS_AND_SIZE = 0x00;
-static const int SUBFUNCTION_GLOBAL_SET_CODEPAGE = 0x01;
-static const int SUBFUNCTION_GLOBAL_SET_CHARACTER_CODE_MAPPING = 0x02;
-static const int SUBFUNCTION_GLOBAL_SET_LONG_TOUCH_DOWN_TIMEOUT = 0x08;
-static const int SUBFUNCTION_GLOBAL_SET_SCREEN_ORIENTATION_LOCK = 0x0C;
+#define SUBFUNCTION_GLOBAL_SET_FLAGS_AND_SIZE           0x00
+#define SUBFUNCTION_GLOBAL_SET_CODEPAGE                 0x01
+#define SUBFUNCTION_GLOBAL_SET_CHARACTER_CODE_MAPPING   0x02
+#define SUBFUNCTION_GLOBAL_SET_LONG_TOUCH_DOWN_TIMEOUT  0x08
+#define SUBFUNCTION_GLOBAL_SET_SCREEN_ORIENTATION_LOCK  0x0C
+#define SUBFUNCTION_GLOBAL_SET_SCREEN_BRIGHTNESS        0x0D
 
 // results in a reorientation (+redraw) callback
-static const int FUNCTION_REQUEST_MAX_CANVAS_SIZE = 0x09;
+#define FUNCTION_REQUEST_MAX_CANVAS_SIZE            0x09
 
 /**********************
  * Sensors
  *********************/
-static const int FUNCTION_SENSOR_SETTINGS = 0x0A;
+#define FUNCTION_SENSOR_SETTINGS                    0x0A
 
 /**********************
  * Miscellaneous functions
  *********************/
-static const int FUNCTION_GET_NUMBER = 0x0C;
-static const int FUNCTION_GET_TEXT = 0x0D;
-static const int FUNCTION_GET_INFO = 0x0E;
+#define FUNCTION_GET_NUMBER                         0x0C
+#define FUNCTION_GET_TEXT                           0x0D
+#define FUNCTION_GET_INFO                           0x0E
 // Sub functions for FUNCTION_GET_INFO
-static const int SUBFUNCTION_GET_INFO_LOCAL_TIME = 0x00;
-static const int SUBFUNCTION_GET_INFO_UTC_TIME = 0x01;
+#define SUBFUNCTION_GET_INFO_LOCAL_TIME             0x00
+#define SUBFUNCTION_GET_INFO_UTC_TIME               0x01
 
-static const int FUNCTION_PLAY_TONE = 0x0F;
+#define FUNCTION_PLAY_TONE                          0x0F
 
 // Function with variable data size
 // used for Sync
-const int FUNCTION_NOP = 0x7F;
+#define FUNCTION_NOP                                0x7F
 
 /**********************
  * Display functions
  *********************/
-const int FUNCTION_CLEAR_DISPLAY = 0x10;
-const int FUNCTION_DRAW_DISPLAY = 0x11;
-const int FUNCTION_CLEAR_DISPLAY_OPTIONAL = 0x12;
+#define FUNCTION_CLEAR_DISPLAY                      0x10
+#define FUNCTION_DRAW_DISPLAY                       0x11
+#define FUNCTION_CLEAR_DISPLAY_OPTIONAL             0x12
 // 3 parameter
-const int FUNCTION_DRAW_PIXEL = 0x14;
+#define FUNCTION_DRAW_PIXEL                         0x14
 // 6 parameter
-const int FUNCTION_DRAW_CHAR = 0x16;
+#define FUNCTION_DRAW_CHAR                          0x16
 // 5 parameter
-const int FUNCTION_DRAW_LINE_REL = 0x20;
-const int FUNCTION_DRAW_LINE = 0x21;
-const int FUNCTION_DRAW_RECT_REL = 0x24;
-const int FUNCTION_FILL_RECT_REL = 0x25;
-const int FUNCTION_DRAW_RECT = 0x26;
-const int FUNCTION_FILL_RECT = 0x27;
+#define FUNCTION_DRAW_LINE_REL                      0x20
+#define FUNCTION_DRAW_LINE                          0x21
+#define FUNCTION_DRAW_RECT_REL                      0x24
+#define FUNCTION_FILL_RECT_REL                      0x25
+#define FUNCTION_DRAW_RECT                          0x26
+#define FUNCTION_FILL_RECT                          0x27
 
-const int FUNCTION_DRAW_CIRCLE = 0x28;
-const int FUNCTION_FILL_CIRCLE = 0x29;
+#define FUNCTION_DRAW_CIRCLE                        0x28
+#define FUNCTION_FILL_CIRCLE                        0x29
 
-const int FUNCTION_DRAW_VECTOR_DEGREE = 0x2C;
-const int FUNCTION_DRAW_VECTOR_RADIAN = 0x2D;
+#define FUNCTION_DRAW_VECTOR_DEGREE                 0x2C
+#define FUNCTION_DRAW_VECTOR_RADIAN                 0x2D
 
-const int FUNCTION_WRITE_SETTINGS = 0x34;
+#define NUMBER_OF_SUPPORTED_LINES  16
+#define FUNCTION_LINE_SETTINGS                      0x30 // Sets the Stroke and Color of one of the 16 available Lines
+
+#define FUNCTION_WRITE_SETTINGS                     0x34
 // Flags for WRITE_SETTINGS
-const int FLAG_WRITE_SETTINGS_SET_SIZE_AND_COLORS_AND_FLAGS = 0x00;
-const int FLAG_WRITE_SETTINGS_SET_POSITION = 0x01;
-const int FLAG_WRITE_SETTINGS_SET_LINE_COLUMN = 0x02;
+#define FLAG_WRITE_SETTINGS_SET_SIZE_AND_COLORS_AND_FLAGS 0x00
+#define FLAG_WRITE_SETTINGS_SET_POSITION            0x01
+#define FLAG_WRITE_SETTINGS_SET_LINE_COLUMN         0x02
 
-const int INDEX_LAST_FUNCTION_WITHOUT_DATA = 0x5F;
+#define INDEX_LAST_FUNCTION_WITHOUT_DATA            0x5F
 // Function with variable data size
-const int FUNCTION_DRAW_STRING = 0x60;
-const int FUNCTION_DEBUG_STRING = 0x61;
-const int FUNCTION_WRITE_STRING = 0x62;
+#define FUNCTION_DRAW_STRING                        0x60
+#define FUNCTION_DEBUG_STRING                       0x61
+#define FUNCTION_WRITE_STRING                       0x62
 
-const int FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT = 0x64;
-const int FUNCTION_GET_TEXT_WITH_SHORT_PROMPT = 0x65;
+#define FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT       0x64
+#define FUNCTION_GET_TEXT_WITH_SHORT_PROMPT         0x65
 
-const int FUNCTION_DRAW_PATH = 0x68;
-const int FUNCTION_FILL_PATH = 0x69;
-const int FUNCTION_DRAW_CHART = 0x6A;
-const int FUNCTION_DRAW_CHART_WITHOUT_DIRECT_RENDERING = 0x6B;
+#define FUNCTION_DRAW_PATH                          0x68
+#define FUNCTION_FILL_PATH                          0x69
+#define FUNCTION_DRAW_CHART                                 0x6A // Chart index is coded in the upper 4 bits of Y start position
+#define FUNCTION_DRAW_CHART_WITHOUT_DIRECT_RENDERING        0x6B // To draw multiple charts (16 available) before rendering them
+#define FUNCTION_DRAW_SCALED_CHART                          0x6C // For chart implementation
+#define FUNCTION_DRAW_SCALED_CHART_WITHOUT_DIRECT_RENDERING 0x6D //
 
 /**********************
  * Button functions
  *********************/
-const int FUNCTION_BUTTON_DRAW = 0x40;
-//const int FUNCTION_BUTTON_DRAW_CAPTION = 0x41;
-const int FUNCTION_BUTTON_SETTINGS = 0x42;
+#define FUNCTION_BUTTON_DRAW 0x40
+//#define FUNCTION_BUTTON_DRAW_CAPTION              0x41
+#define FUNCTION_BUTTON_SETTINGS                    0x42
 // Flags for BUTTON_SETTINGS
-const int SUBFUNCTION_BUTTON_SET_BUTTON_COLOR = 0x00;
-const int SUBFUNCTION_BUTTON_SET_BUTTON_COLOR_AND_DRAW = 0x01;
-const int SUBFUNCTION_BUTTON_SET_CAPTION_COLOR = 0x02;
-const int SUBFUNCTION_BUTTON_SET_CAPTION_COLOR_AND_DRAW = 0x03;
-const int SUBFUNCTION_BUTTON_SET_VALUE = 0x04;
-const int SUBFUNCTION_BUTTON_SET_VALUE_AND_DRAW = 0x05;
-const int SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE = 0x06;
-const int SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE_AND_DRAW = 0x07;
-const int SUBFUNCTION_BUTTON_SET_POSITION = 0x08;
-const int SUBFUNCTION_BUTTON_SET_POSITION_AND_DRAW = 0x09;
-const int SUBFUNCTION_BUTTON_SET_ACTIVE = 0x10;
-const int SUBFUNCTION_BUTTON_RESET_ACTIVE = 0x11;
-const int SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING = 0x12;
+#define SUBFUNCTION_BUTTON_SET_BUTTON_COLOR         0x00
+#define SUBFUNCTION_BUTTON_SET_BUTTON_COLOR_AND_DRAW 0x01
+#define SUBFUNCTION_BUTTON_SET_TEXT_COLOR           0x02
+#define SUBFUNCTION_BUTTON_SET_TEXT_COLOR_AND_DRAW  0x03
+#define SUBFUNCTION_BUTTON_SET_VALUE                0x04
+#define SUBFUNCTION_BUTTON_SET_VALUE_AND_DRAW       0x05
+#define SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE      0x06
+#define SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE_AND_DRAW 0x07
+#define SUBFUNCTION_BUTTON_SET_POSITION             0x08
+#define SUBFUNCTION_BUTTON_SET_POSITION_AND_DRAW    0x09
+#define SUBFUNCTION_BUTTON_SET_ACTIVE               0x10
+#define SUBFUNCTION_BUTTON_RESET_ACTIVE             0x11
+#define SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING    0x12
 
-const int FUNCTION_BUTTON_REMOVE = 0x43;
+#define FUNCTION_BUTTON_REMOVE 0x43
 
 // static functions
-const int FUNCTION_BUTTON_ACTIVATE_ALL = 0x48;
-const int FUNCTION_BUTTON_DEACTIVATE_ALL = 0x49;
-const int FUNCTION_BUTTON_GLOBAL_SETTINGS = 0x4A;
-const int FUNCTION_BUTTON_DISABLE_AUTOREPEAT_UNTIL_END_OF_TOUCH = 0x4B;  // 2/2023 not yet implemented
+#define FUNCTION_BUTTON_ACTIVATE_ALL                0x48
+#define FUNCTION_BUTTON_DEACTIVATE_ALL              0x49
+#define FUNCTION_BUTTON_GLOBAL_SETTINGS             0x4A
+#define FUNCTION_BUTTON_DISABLE_AUTOREPEAT_UNTIL_END_OF_TOUCH 0x4B  // 2/2023 not yet implemented
 
 // Function with variable data size
-const int FUNCTION_BUTTON_CREATE = 0x70;
-const int FUNCTION_BUTTON_INIT = 0x70;
-const int FUNCTION_BUTTON_SET_CAPTION_FOR_VALUE_TRUE = 0x71;
-const int FUNCTION_BUTTON_SET_CAPTION = 0x72;
-const int FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON = 0x73;
+#define FUNCTION_BUTTON_CREATE                      0x70
+#define FUNCTION_BUTTON_INIT                        0x70
+#define FUNCTION_BUTTON_SET_CAPTION_FOR_VALUE_TRUE  0x71
+#define FUNCTION_BUTTON_SET_CAPTION                 0x72
+#define FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON 0x73
+#define FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE     0x71
+#define FUNCTION_BUTTON_SET_TEXT                    0x72
+#define FUNCTION_BUTTON_SET_TEXT_AND_DRAW_BUTTON    0x73
 
 /**********************
  * Slider functions
  *********************/
-static const int FUNCTION_SLIDER_CREATE = 0x50;
-static const int FUNCTION_SLIDER_INIT = 0x50;
-static const int FUNCTION_SLIDER_DRAW = 0x51;
-static const int FUNCTION_SLIDER_SETTINGS = 0x52;
-static const int FUNCTION_SLIDER_DRAW_BORDER = 0x53;
+#define FUNCTION_SLIDER_CREATE                      0x50
+#define FUNCTION_SLIDER_INIT                        0x50
+#define FUNCTION_SLIDER_DRAW                        0x51
+#define FUNCTION_SLIDER_SETTINGS                    0x52
+#define FUNCTION_SLIDER_DRAW_BORDER                 0x53
 
 // Flags for SLIDER_SETTINGS
-static const int SUBFUNCTION_SLIDER_SET_COLOR_THRESHOLD = 0x00;
-static const int SUBFUNCTION_SLIDER_SET_COLOR_BAR_BACKGROUND = 0x01;
-static const int SUBFUNCTION_SLIDER_SET_COLOR_BAR = 0x02;
-static const int SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR = 0x03;
-static const int SUBFUNCTION_SLIDER_SET_POSITION = 0x04;
-static const int SUBFUNCTION_SLIDER_SET_ACTIVE = 0x05;
-static const int SUBFUNCTION_SLIDER_RESET_ACTIVE = 0x06;
-static const int SUBFUNCTION_SLIDER_SET_SCALE_FACTOR = 0x07;
+#define SUBFUNCTION_SLIDER_SET_COLOR_THRESHOLD      0x00
+#define SUBFUNCTION_SLIDER_SET_COLOR_BAR_BACKGROUND 0x01
+#define SUBFUNCTION_SLIDER_SET_COLOR_BAR            0x02
+#define SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR   0x03
+#define SUBFUNCTION_SLIDER_SET_POSITION             0x04
+#define SUBFUNCTION_SLIDER_SET_ACTIVE               0x05
+#define SUBFUNCTION_SLIDER_RESET_ACTIVE             0x06
+#define SUBFUNCTION_SLIDER_SET_SCALE_FACTOR         0x07
 
-static const int SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES = 0x08;
-static const int SUBFUNCTION_SLIDER_SET_VALUE_STRING_PROPERTIES = 0x09;
+#define SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES   0x08
+#define SUBFUNCTION_SLIDER_SET_VALUE_STRING_PROPERTIES 0x09
 
-static const int SUBFUNCTION_SLIDER_SET_VALUE = 0x0C;
+#define SUBFUNCTION_SLIDER_SET_VALUE                0x0C
 
 // static slider functions
-static const int FUNCTION_SLIDER_ACTIVATE_ALL = 0x58;
-static const int FUNCTION_SLIDER_DEACTIVATE_ALL = 0x59;
-static const int FUNCTION_SLIDER_GLOBAL_SETTINGS = 0x5A;
+#define FUNCTION_SLIDER_ACTIVATE_ALL                0x58
+#define FUNCTION_SLIDER_DEACTIVATE_ALL              0x59
+#define FUNCTION_SLIDER_GLOBAL_SETTINGS             0x5A
 
 // Flags for SLIDER_BLOBAL_SETTINGS
-static const int SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD = 0x01;
+#define SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD 0x01
 
 // Function with variable data size
-const int FUNCTION_SLIDER_SET_CAPTION = 0x78;
-const int FUNCTION_SLIDER_PRINT_VALUE = 0x79;
-const int FUNCTION_SLIDER_SET_VALUE_UNIT_STRING = 0x7A;
-const int FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING = 0x7B;
+#define FUNCTION_SLIDER_SET_CAPTION                 0x78
+#define FUNCTION_SLIDER_PRINT_VALUE                 0x79
+#define FUNCTION_SLIDER_SET_VALUE_UNIT_STRING       0x7A
+#define FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING     0x7B
 
 #endif // _BLUEDISPLAYPROTOCOL_H

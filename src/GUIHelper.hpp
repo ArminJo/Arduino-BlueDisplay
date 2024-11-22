@@ -3,8 +3,13 @@
  *
  * Helper functions for text sizes etc.
  *
+ * Text Y position is baseline
+ * Text Y top position is position - ascend
+ * Text Y bottom position is position + descend
+ * Text Y middle position is position - ((ascend - descend) / 2) | see getTextMiddleCorrection()
  *
- *  Copyright (C) 2023  Armin Joachimsmeyer
+ *
+ *  Copyright (C) 2023-2024  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -29,20 +34,16 @@
 #include "GUIHelper.h"
 
 //#define SUPPORT_ONLY_TEXT_SIZE_11_AND_22
-
 /*
  * TextSize * 1,125 (* (1 + 1/8))
  */
 uint16_t getTextHeight(uint16_t aTextSize) {
+#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     if (aTextSize == 11) {
         return TEXT_SIZE_11_HEIGHT;
     }
-#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     return TEXT_SIZE_22_HEIGHT;
 #else
-    if (aTextSize == 22) {
-        return TEXT_SIZE_22_HEIGHT;
-    }
     return aTextSize + aTextSize / 8; // TextSize * 1,125
 #endif
 }
@@ -53,34 +54,29 @@ uint16_t getTextHeight(uint16_t aTextSize) {
  * Integer Formula (rounded): (TextSize *6)+4 / 10
  */
 uint16_t getTextWidth(uint16_t aTextSize) {
+#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     if (aTextSize == 11) {
         return TEXT_SIZE_11_WIDTH;
     }
-#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     return TEXT_SIZE_22_WIDTH;
 #else
-    if (aTextSize == 22) {
-        return TEXT_SIZE_22_WIDTH;
-    }
     return ((aTextSize * 6) + 4) / 10;
 #endif
 }
 
 /*
+ * The part of text above baseline
  * Formula for Monospace Font on Android
  * float: TextSize * 0.76
  * int: (TextSize * 195 + 128) >> 8
  */
-uint16_t getTextAscend(uint16_t aTextSize) {
+uint16_t getTextAscend(const uint16_t aTextSize) {
+#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     if (aTextSize == TEXT_SIZE_11) {
         return TEXT_SIZE_11_ASCEND;
     }
-#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     return TEXT_SIZE_22_ASCEND;
 #else
-    if (aTextSize == TEXT_SIZE_22) {
-        return TEXT_SIZE_22_ASCEND;
-    }
     uint32_t tRetvalue = aTextSize;
     tRetvalue = ((tRetvalue * 195) + 128) >> 8;
     return tRetvalue;
@@ -88,20 +84,18 @@ uint16_t getTextAscend(uint16_t aTextSize) {
 }
 
 /*
+ * The part of text below baseline
  * Formula for Monospace Font on Android
  * float: TextSize * 0.24
  * int: (TextSize * 61 + 128) >> 8
  */
 uint16_t getTextDecend(uint16_t aTextSize) {
+#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     if (aTextSize == TEXT_SIZE_11) {
         return TEXT_SIZE_11_DECEND;
     }
-#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     return TEXT_SIZE_22_DECEND;
 #else
-    if (aTextSize == TEXT_SIZE_22) {
-        return TEXT_SIZE_22_DECEND;
-    }
     uint32_t tRetvalue = aTextSize;
     tRetvalue = ((tRetvalue * 61) + 128) >> 8;
     return tRetvalue;
@@ -109,20 +103,14 @@ uint16_t getTextDecend(uint16_t aTextSize) {
 }
 /*
  * Ascend - Decent
- * is used to position text in the middle of a button
- * Formula for positioning:
- * Position = ButtonTop + (ButtonHeight + getTextAscendMinusDescend())/2
  */
 uint16_t getTextAscendMinusDescend(uint16_t aTextSize) {
+#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     if (aTextSize == TEXT_SIZE_11) {
         return TEXT_SIZE_11_ASCEND - TEXT_SIZE_11_DECEND;
     }
-#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     return TEXT_SIZE_22_ASCEND - TEXT_SIZE_22_DECEND;
 #else
-    if (aTextSize == TEXT_SIZE_22) {
-        return TEXT_SIZE_22_ASCEND - TEXT_SIZE_22_DECEND;
-    }
     uint32_t tRetvalue = aTextSize;
     tRetvalue = ((tRetvalue * 133) + 128) >> 8;
     return tRetvalue;
@@ -130,18 +118,21 @@ uint16_t getTextAscendMinusDescend(uint16_t aTextSize) {
 }
 
 /*
- * (Ascend -Decent)/2
+ * getTextMiddle is ((Ascend - Decent) / 2)
+ *
+ * It is used to position text in the middle of a button or line
+ * The text ascend is greater than the descend, so the middle of the text is above the Y position
+ * Correct it with YPosition + (getTextAscendMinusDescend() / 2) to get the YPosition lower
+ * Formula for positioning in the middle of a button:
+ * YPosition = ButtonTop + (ButtonHeight + getTextAscendMinusDescend())/2
  */
-uint16_t getTextMiddle(uint16_t aTextSize) {
+uint16_t getTextMiddleCorrection(uint16_t aTextSize) {
+#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     if (aTextSize == TEXT_SIZE_11) {
         return (TEXT_SIZE_11_ASCEND - TEXT_SIZE_11_DECEND) / 2;
     }
-#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     return (TEXT_SIZE_22_ASCEND - TEXT_SIZE_22_DECEND) / 2;
 #else
-    if (aTextSize == TEXT_SIZE_22) {
-        return (TEXT_SIZE_22_ASCEND - TEXT_SIZE_22_DECEND) / 2;
-    }
     uint32_t tRetvalue = aTextSize;
     tRetvalue = ((tRetvalue * 66) + 128) >> 8;
     return tRetvalue;
@@ -152,15 +143,12 @@ uint16_t getTextMiddle(uint16_t aTextSize) {
  * Fast divide by 11 for MI0283QT2 driver arguments
  */
 uint16_t getFontScaleFactorFromTextSize(uint16_t aTextSize) {
+#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     if (aTextSize <= 11) {
         return 1;
     }
-#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
     return 2;
 #else
-    if (aTextSize == 22) {
-        return 2;
-    }
     return aTextSize / 11;
 #endif
 }

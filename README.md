@@ -138,8 +138,10 @@ Modify them by enabling / disabling them, or change the values if applicable.
 |-|-:|-|
 | `BLUETOOTH_BAUD_RATE` | 9600 | Change this, if you have [reprogrammed](https://github.com/ArminJo/Arduino-BlueDisplay#btmoduleprogrammer) the HC05 module for another baud rate e.g.115200. |
 | `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | Disables basic touch events like down, move and up. Saves up to 620 bytes program memory and 36 bytes RAM. |
-| `USE_SIMPLE_SERIAL` | disabled | Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise. |
-| `USE_USB_SERIAL` | disabled | Activate it, if you want to force using **Serial** instead of **Serial1** for **direct USB cable connection** to your smartphone / tablet. This is only required on platforms, which have Serial1 available. |
+| `DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS` | disabled | Disables LongTouchDown and SwipeEnd events. Implies `DO_NOT_NEED_BASIC_TOUCH_EVENTS`. Saves up to 38 bytes program memory and 3 bytes RAM. |
+| `ONLY_CONNECT_EVENT_REQUIRED` | disabled | Disables reorientation, redraw and sensor-change events. Saves up to 50 bytes program memory and 4 bytes RAM. |
+| `BD_USE_SIMPLE_SERIAL` | disabled | Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise. |
+| `BD_USE_USB_SERIAL` | disabled | Activate it, if you want to force using **Serial** instead of **Serial1** for **direct USB cable connection** to your smartphone / tablet. This is only required on platforms, which have Serial1 available. |
 | `SUPPORT_LOCAL_DISPLAY` | disabled | Supports simultaneously drawing on the locally attached display. Not (yet) implemented for all commands! |
 | `DISABLE_REMOTE_DISPLAY` | disabled | Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display. Not (yet) implemented for all commands! |
 | `LOCAL_GUI_FEEDBACK_TONE_PIN` | disabled | If defined, local GUI library calls `tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 3000, 50)` on flags like FLAG_BUTTON_DO_BEEP_ON_TOUCH. |
@@ -159,6 +161,9 @@ Since the 2. parameter for setCharacterMapping is 16 bit, you cannot use charact
 ``` c++
     BlueDisplay1.setCharacterMapping(0x87, 0x2227); // mapping for unicode AND used as Forward symbol
     BlueDisplay1.setCharacterMapping(0x88, 0x2228); // mapping for unicode OR used as Backwards symbol
+    BlueDisplay1.setCharacterMapping(0x81, 0x03A9); // Omega in UTF16
+    0x03A9 is Omega, 0x0394 is Delta, 0x21B2 is Enter, 0x21E7 is Ascending, 0x21E9 is Descending in UTF16
+    0x2302 is Home, 0x2227 is UP (logical AND), 0x2228 is Down (logical OR), 0x2195 is UP/Down, 0x2103 is Degree Celsius in UTF16
 ```
 
 <br/>
@@ -266,8 +271,13 @@ The extras folder (in the Arduino IDE use "Sketch > Show Sketch Folder" (or Ctrl
 contains more schematics, breadboard layouts and pictures which may help you building the example projects.
 
 # Hints
+### Opening the apps menu
+For full screen applications, the app's menu is called by swiping horizontal from the left edge of the screen.
+Otherwise, you can call it by touching the area not occupied by the client application (black display area).
+
 ### Debugging
-If you need debugging, you must use the `debug()` functions since using `Serial.print()` etc. gives errors (we have only one serial port on the Arduino).
+If you need debugging, you can use the `debug()` functions or the old `Serial.print()` will do.<br/>
+Keep in mind that a message is shown for at least 500 ms, before another one is accepted.
 
 ```c++
 BlueDisplay1.debug("DoBlink=", doBlink);
@@ -275,8 +285,9 @@ BlueDisplay1.debug("DoBlink=", doBlink);
 The debug content will then show up as **toast** on your Android device and is stored in the log.
 Change the **log level** in the app to see more or less information of the BlueDisplay communication.
 
-### Connecting TX
-To enable programming of the Arduino while the HC-05 module is connected, use a diode (e.g. a BAT 42) to connect Arduino rx and HC-05 tx.
+### Connecting Arduino RX
+To enable programming of the Arduino while the HC-05 module is connected, use a Schottky diode 
+(e.g. a BAT 42) to connect **Arduino RX and HC-05 TX**.
 On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
                  |\ |
@@ -286,6 +297,12 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
 
 # Revision History
+### Version 4.1.0
+- Removed mMaxDisplaySize, because it was just a copy of CurrentDisplaySize.
+- Refactored and improved Chart.
+- Minor bug fixes.
+- Added a full screen example for 
+
 ### Version 4.0.1
 - Minor changes and updated 3. party libs.
 

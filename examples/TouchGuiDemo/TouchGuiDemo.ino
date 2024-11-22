@@ -30,9 +30,14 @@
 /*
  * Main switches for program
  */
+//#define TEST // enable development tests, requires AVRUtils from https://github.com/ArminJo/Arduino-Utils
 //#define DEBUG // enable debug button and debug output
 //#define RTC_EXISTS  //if a DS1307 is connected to the I2C bus
 #include <Arduino.h>
+
+#if defined(TEST)
+#include "AVRUtils.h"       // For initStackFreeMeasurement(), printRAMInfo()
+#endif
 
 /*
  * Enable this lines to run the demo locally
@@ -56,7 +61,8 @@
 void initDisplay(void);
 #endif
 
-char sBDStringBuffer[32];
+char sStringBuffer[32]; // Used in GameOfLife and GuiDemo, and provided by different main programs
+char *sBDStringBuffer = sStringBuffer;
 uint32_t sMillisOfLastLoop;
 
 #if !defined(Button)
@@ -104,7 +110,7 @@ void showRTCTime(void);
 void setRTCTime(uint8_t sec, uint8_t min, uint8_t hour, uint8_t dayOfWeek, uint8_t day, uint8_t month, uint16_t year);
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG)
 TouchButton TouchButtonDebug;
 void doDebug(TouchButton * const aTheTouchedButton, int aValue);
 #endif
@@ -125,6 +131,9 @@ void setRTCTime(uint8_t sec, uint8_t min, uint8_t hour, uint8_t dayOfWeek, uint8
 #endif
 
 void setup() {
+#if defined(TEST)
+    initStackFreeMeasurement();
+#endif
 
 #if defined(DEBUG)
     Serial.begin(115200);
@@ -155,11 +164,11 @@ void setup() {
     initSerial();
 #  endif
     /*
-     * Register callback handler and check for connection still established.
-     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
-     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
-     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
-     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     * Register callback handler and wait for 300 ms if Bluetooth connection is still active.
+     * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth connection is most likely not active here.
+     *
+     * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
+     * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
     BlueDisplay1.initCommunication(&initDisplay, NULL); // redraw is registered by startGuiDemo() called by initDisplay()
 #endif
@@ -169,6 +178,10 @@ void setup() {
     startGuiDemo();
 #endif
     Button::playFeedbackTone();
+
+#if defined(TEST)
+    printRAMInfo(&Serial); // Stack used is 126 bytes
+#endif
 }
 
 void loop() {
@@ -200,8 +213,8 @@ void initDisplay(void) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
 //show touchpanel data
 void printLocalTouchPanelData(void) {
-    sprintf(sBDStringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getCurrentX(), TouchPanel.getRawX(), TouchPanel.getCurrentY(),
-            TouchPanel.getRawY(), TouchPanel.getPressure(), sTouchObjectTouched);
+    sprintf(sBDStringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getCurrentX(), TouchPanel.getRawX(),
+            TouchPanel.getCurrentY(), TouchPanel.getRawY(), TouchPanel.getPressure(), sTouchObjectTouched);
     LocalDisplay.drawText(30, 2, sBDStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
 }
 #endif

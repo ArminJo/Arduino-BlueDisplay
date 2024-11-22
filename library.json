@@ -1,13 +1,13 @@
 {
   "name": "BlueDisplay",
-  "keywords": "Bluetooth, display, remote, graphics, GUI",
+  "version": "4.1.0",
   "description": "This library enables an Android smartphone or tablet to act as a graphical display for your Arduino.",
+  "keywords": "Bluetooth, display, remote, graphics, GUI",
+  "homepage": "https://github.com/ArminJo/Arduino-BlueDisplay",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ArminJo/Arduino-BlueDisplay"
+    "url": "https://github.com/ArminJo/Arduino-BlueDisplay.git"
   },
-  "version": "4.0.1",
-  "exclude": "pictures",
   "authors": {
     "name": "Armin Joachimsmeyer",
     "email": "armin.arduino@gmail.com",
@@ -15,12 +15,8 @@
   },
   "license": "GPL-3.0-or-later",
   "frameworks": "arduino",
-  "platforms": [
-    "atmelavr",
-    "atmelmegaavr",
-    "espressif8266",
-    "espressif32",
-    "ststm32"
-  ],
-    "headers": "BlueDisplay.h"
+  "platforms": ["atmelavr", "atmelmegaavr", "espressif8266", "espressif32", "ststm32"],
+  "headers": "BlueDisplay.h",
+  "examples": "examples/*/*.ino",
+  "export": {"exclude": [".github", "pictures"]}
 }

@@ -29,7 +29,7 @@
  * Settings to configure the BlueDisplay library and to reduce its size
  */
 #define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
-//#define USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+//#define BD_USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 #include "BlueDisplay.hpp"
 #if defined(__AVR__)
 #include "BlueDisplayUtils.hpp" // for printVCCAndTemperaturePeriodically()
@@ -194,10 +194,9 @@ void initDisplay(void) {
      */
     BlueDisplay1.debug("XWidth=", BlueDisplay1.mCurrentDisplaySize.XWidth);
     BlueDisplay1.debug("cWidth=", BlueDisplay1.getCurrentDisplayWidth());
-    BlueDisplay1.debug("mWidth=", BlueDisplay1.getMaxDisplayWidth());
 
-    sCurrentDisplayWidth = BlueDisplay1.getMaxDisplayWidth();
-    sCurrentDisplayHeight = BlueDisplay1.getMaxDisplayHeight();
+    sCurrentDisplayWidth = BlueDisplay1.getCurrentDisplayWidth();
+    sCurrentDisplayHeight = BlueDisplay1.getCurrentDisplayHeight();
     if (sCurrentDisplayWidth < sCurrentDisplayHeight) {
         // Portrait -> change to landscape 3/2 format
         sCurrentDisplayHeight = (sCurrentDisplayWidth / 3) * 2;
@@ -273,7 +272,7 @@ void initDisplay(void) {
      */
     TouchButtonRcCarStartStop.init(0, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN, COLOR16_BLUE, F("Start"),
             sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sRCCarStarted, &doRcCarStartStop);
-    TouchButtonRcCarStartStop.setCaptionForValueTrue(F("Stop"));
+    TouchButtonRcCarStartStop.setTextForValueTrue(F("Stop"));
 
     TouchButtonFollowerOnOff.init(BUTTON_WIDTH_4_DYN_POS_4, BUTTON_HEIGHT_4_DYN_LINE_2, BUTTON_WIDTH_4_DYN, BUTTON_HEIGHT_4_DYN,
     COLOR16_RED, F("Follow"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sFollowerMode,
@@ -313,15 +312,15 @@ void BDsetup() {
 #endif
 
     /*
-     * Register callback handler and check for connection still established.
-     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
-     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
-     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
-     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     * Register callback handler and wait for 300 ms if Bluetooth connection is still active.
+     * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth connection is most likely not active here.
+     *
+     * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
+     * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
     BlueDisplay1.initCommunication(&initDisplay, &drawGui, &initDisplay);
 
-#if defined(USE_SERIAL1) || defined(ESP32) // USE_SERIAL1 may be defined in BlueSerial.h
+#if defined(BD_USE_SERIAL1) || defined(ESP32) // BD_USE_SERIAL1 may be defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
     || defined(SERIALUSB_PID)  || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_attiny3217)
@@ -329,7 +328,7 @@ void BDsetup() {
 #  endif
 // Just to know which program is running on my Arduino
     Serial.println(StartMessage);
-#elif !defined(USE_SIMPLE_SERIAL)
+#elif !defined(BD_USE_SIMPLE_SERIAL)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
     if (!BlueDisplay1.isConnectionEstablished()) {
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \

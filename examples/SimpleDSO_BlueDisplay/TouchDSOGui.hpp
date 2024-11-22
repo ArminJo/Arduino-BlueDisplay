@@ -41,7 +41,7 @@ void computeMinMax(void) {
     uint16_t tMax, tMin;
 
     uint16_t *tDataBufferPointer = DataBufferControl.DataBufferDisplayStart
-            + adjustIntWithScaleFactor(DisplayControl.DatabufferPreTriggerDisplaySize, DisplayControl.XScale);
+            + Chart::reduceLongWithIntegerScaleFactor(DisplayControl.DatabufferPreTriggerDisplaySize, DisplayControl.XScale);
     if (DataBufferControl.DataBufferEndPointer <= tDataBufferPointer) {
         return;
     }
@@ -129,7 +129,7 @@ void computePeriodFrequency(void) {
      * For frequency use only max values!
      */
     uint16_t *tDataBufferPointer = DataBufferControl.DataBufferDisplayStart
-            + adjustIntWithScaleFactor(DisplayControl.DatabufferPreTriggerDisplaySize, DisplayControl.XScale);
+            + Chart::reduceLongWithIntegerScaleFactor(DisplayControl.DatabufferPreTriggerDisplaySize, DisplayControl.XScale);
     if (DataBufferControl.DataBufferEndPointer <= tDataBufferPointer) {
         return;
     }
@@ -427,7 +427,7 @@ void setACMode(bool aNewACMode) {
      */
 #if defined(__AVR__)
 // must do it here after settings of flags and before drawing
-    setACModeButtonCaption();
+    setACModeButtonText();
     if (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS) {
         // hide/show offset
         drawDSOSettingsPage();
@@ -491,7 +491,7 @@ const char sTriggerModeButtonStringManualTimeout[] PROGMEM = "Trigger\nman timeo
 const char sTriggerModeButtonStringManual[] PROGMEM = "Trigger\nman";
 const char sTriggerModeButtonStringFreeRunning[] PROGMEM = "Trigger\nfree";
 const char sTriggerModeButtonStringExternal[] PROGMEM = "Trigger\next";
-const char *const sTriggerModeButtonCaptionStringArray[] PROGMEM = {sTriggerModeButtonStringAuto,
+const char *const sTriggerModeButtonTextStringArray[] PROGMEM = {sTriggerModeButtonStringAuto,
     sTriggerModeButtonStringManualTimeout, sTriggerModeButtonStringManual, sTriggerModeButtonStringFreeRunning,
     sTriggerModeButtonStringExternal};
 
@@ -537,7 +537,7 @@ BDButton TouchButtonAutoOffsetMode;
 const char AutoOffsetButtonString0[] PROGMEM = "Offset\n0V";
 const char AutoOffsetButtonStringAuto[] PROGMEM = "Offset\nauto";
 const char AutoOffsetButtonStringMan[] PROGMEM = "Offset\nman";
-const char *const sAutoOffsetButtonCaptionStringArray[] PROGMEM = {AutoOffsetButtonString0, AutoOffsetButtonStringAuto,
+const char *const sAutoOffsetButtonTextStringArray[] PROGMEM = {AutoOffsetButtonString0, AutoOffsetButtonStringAuto,
     AutoOffsetButtonStringMan};
 
 BDButton TouchButtonAutoRangeOnOff;
@@ -620,7 +620,7 @@ void initDSOGUI(void) {
 // Button for slope
     TouchButtonSlope.init(BUTTON_WIDTH_3_POS_2, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "",
             TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doTriggerSlope);
-    setSlopeButtonCaption();
+    setSlopeButtonText();
 
 // Back button for sub pages
     TouchButtonBack.init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_CONTROL, F("Back"),
@@ -633,13 +633,13 @@ void initDSOGUI(void) {
 // Button for delay
     TouchButtonTriggerDelay.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "", TEXT_SIZE_11,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doPromptForTriggerDelay);
-    setTriggerDelayCaption();
+    setTriggerDelayText();
 #endif
 
 // Button for trigger mode
     TouchButtonTriggerMode.init(BUTTON_WIDTH_3_POS_2, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "",
             TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doTriggerMode);
-    setTriggerModeButtonCaption();
+    setTriggerModeButtonText();
 
 // Button for channel 0
     TouchButtonChannels[0].init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_6, SETTINGS_PAGE_BUTTON_HEIGHT,
@@ -669,12 +669,12 @@ void initDSOGUI(void) {
 // Button for AutoRange on off
     TouchButtonAutoRangeOnOff.init(BUTTON_WIDTH_3_POS_2, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "",
             TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doRangeMode);
-    setAutoRangeModeAndButtonCaption(true);
+    setAutoRangeModeAndButtonText(true);
 
 // Button for channel 2
     TouchButtonChannels[2].init(BUTTON_WIDTH_3_POS_3, tPosY, BUTTON_WIDTH_6, SETTINGS_PAGE_BUTTON_HEIGHT,
             BUTTON_AUTO_RED_GREEN_FALSE_COLOR, "", TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 2, &doChannelSelect);
-    setChannelButtonsCaption();
+    setChannelButtonsText();
 
 // Button for channel select
     TouchButtonChannelSelect.init(DISPLAY_WIDTH - BUTTON_WIDTH_6, tPosY, BUTTON_WIDTH_6, SETTINGS_PAGE_BUTTON_HEIGHT,
@@ -699,7 +699,7 @@ void initDSOGUI(void) {
 // Button for auto offset on, 0-Volt, manual
     TouchButtonAutoOffsetMode.init(BUTTON_WIDTH_3_POS_2, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "",
             TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doOffsetMode);
-    setAutoOffsetButtonCaption();
+    setAutoOffsetButtonText();
 
 #if defined(FUTURE)
 // Button for trigger line mode
@@ -719,7 +719,7 @@ void initDSOGUI(void) {
 // Button for AC / DC
     TouchButtonAcDc.init(BUTTON_WIDTH_3_POS_2, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, COLOR_GUI_TRIGGER, "",
             TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doAcDcMode);
-    setACModeButtonCaption();
+    setACModeButtonText();
 
 #if defined(__AVR__)
 // Button for reference voltage switching
@@ -950,7 +950,7 @@ void drawDSOSettingsPage(void) {
     }
 
 #if defined(__AVR__)
-    setReferenceButtonCaption(); // also draws the button for this page
+    setReferenceButtonText(); // also draws the button for this page
 #else
     TouchButtonDSOMoreSettings.drawButton();
 #endif
@@ -1200,20 +1200,20 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
 }
 
 /************************************************************************
- * Button caption section
+ * Button text section
  ************************************************************************/
-void setChannelButtonsCaption(void) {
+void setChannelButtonsText(void) {
     for (uint_fast8_t i = 0; i < NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR; ++i) {
         if (MeasurementControl.AttenuatorType == ATTENUATOR_TYPE_FIXED_ATTENUATOR) {
-//            TouchButtonAutoOffsetMode.setCaptionFromStringArrayPGM(ChannelDivByButtonStrings, i); // requires 16 butes more
-            TouchButtonChannels[i].setCaption((const __FlashStringHelper*) ChannelDivByButtonStrings[i]);
+//            TouchButtonAutoOffsetMode.setTextFromStringArrayPGM(ChannelDivByButtonStrings, i); // requires 16 butes more
+            TouchButtonChannels[i].setText((const __FlashStringHelper*) ChannelDivByButtonStrings[i]);
         } else {
-            TouchButtonChannels[i].setCaption((const __FlashStringHelper*) ADCInputMUXChannelStrings[i]);
+            TouchButtonChannels[i].setText((const __FlashStringHelper*) ADCInputMUXChannelStrings[i]);
         }
     }
 }
 
-void setSlopeButtonCaption(void) {
+void setSlopeButtonText(void) {
     uint8_t tChar;
     if (MeasurementControl.TriggerSlopeRising) {
         tChar = 'a'; // 0xD1; //ascending
@@ -1223,55 +1223,55 @@ void setSlopeButtonCaption(void) {
         SlopeButtonString[SLOPE_STRING_INDEX + 1] = 'e'; // for decending
     }
     SlopeButtonString[SLOPE_STRING_INDEX] = tChar;
-    TouchButtonSlope.setCaption(SlopeButtonString, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonSlope.setText(SlopeButtonString, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
-void setTriggerModeButtonCaption(void) {
-    TouchButtonTriggerMode.setCaptionFromStringArray((const __FlashStringHelper* const*) sTriggerModeButtonCaptionStringArray,
+void setTriggerModeButtonText(void) {
+    TouchButtonTriggerMode.setTextFromStringArray((const __FlashStringHelper* const*) sTriggerModeButtonTextStringArray,
             MeasurementControl.TriggerMode, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
-void setAutoRangeModeAndButtonCaption(bool aNewAutoRangeMode) {
+void setAutoRangeModeAndButtonText(bool aNewAutoRangeMode) {
     MeasurementControl.RangeAutomatic = aNewAutoRangeMode;
-    const char *tCaption;
+    const char *tText;
     if (MeasurementControl.RangeAutomatic) {
-        tCaption = AutoRangeButtonStringAuto;
+        tText = AutoRangeButtonStringAuto;
     } else {
-        tCaption = AutoRangeButtonStringManual;
+        tText = AutoRangeButtonStringManual;
     }
-    TouchButtonAutoRangeOnOff.setCaption((const __FlashStringHelper*) tCaption, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonAutoRangeOnOff.setText((const __FlashStringHelper*) tText, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
-void setAutoOffsetButtonCaption(void) {
-    TouchButtonAutoOffsetMode.setCaptionFromStringArray((const __FlashStringHelper* const*) sAutoOffsetButtonCaptionStringArray,
+void setAutoOffsetButtonText(void) {
+    TouchButtonAutoOffsetMode.setTextFromStringArray((const __FlashStringHelper* const*) sAutoOffsetButtonTextStringArray,
             MeasurementControl.OffsetMode, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
-void setACModeButtonCaption(void) {
+void setACModeButtonText(void) {
     if (MeasurementControl.ChannelIsACMode) {
-        TouchButtonAcDc.setCaption(F("AC"));
+        TouchButtonAcDc.setText(F("AC"));
     } else {
-        TouchButtonAcDc.setCaption(F("DC"));
+        TouchButtonAcDc.setText(F("DC"));
     }
 }
 
 #if defined(__AVR__)
-void setTriggerDelayCaption(void) {
+void setTriggerDelayText(void) {
     strcpy_P(&sStringBuffer[0], PSTR("Trigger\nset delay"));
     if (MeasurementControl.TriggerDelayMode != TRIGGER_DELAY_NONE) {
         printfTriggerDelay(&sStringBuffer[14], MeasurementControl.TriggerDelayMillisOrMicros);
     }
-    TouchButtonTriggerDelay.setCaption(sStringBuffer, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonTriggerDelay.setText(sStringBuffer, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
-void setReferenceButtonCaption(void) {
-    const char *tCaption;
+void setReferenceButtonText(void) {
+    const char *tText;
     if (MeasurementControl.ADCReferenceShifted == (DEFAULT << REFS0)) {
-        tCaption = ReferenceButtonVCC;
+        tText = ReferenceButtonVCC;
     } else {
-        tCaption = ReferenceButton1_1V;
+        tText = ReferenceButton1_1V;
     }
-    TouchButtonADCReference.setCaption((const __FlashStringHelper *)tCaption, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonADCReference.setText((const __FlashStringHelper *)tText, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 #endif
 
@@ -1431,7 +1431,7 @@ void doShowFrequencyPage(BDButton *aTheTouchedButton, int16_t aValue) {
 void doTriggerSlope(BDButton *aTheTouchedButton, int16_t aValue) {
     MeasurementControl.TriggerSlopeRising = (!MeasurementControl.TriggerSlopeRising);
     setTriggerLevelAndHysteresis(MeasurementControl.RawTriggerLevel, MeasurementControl.RawHysteresis);
-    setSlopeButtonCaption();
+    setSlopeButtonText();
 }
 
 /*
@@ -1452,11 +1452,11 @@ void doTriggerMode(BDButton *aTheTouchedButton, int16_t aValue) {
 #endif
     }
     MeasurementControl.TriggerMode = tNewMode;
-    setTriggerModeButtonCaption();
+    setTriggerModeButtonText();
 }
 
 void doRangeMode(BDButton *aTheTouchedButton, int16_t aValue) {
-    setAutoRangeModeAndButtonCaption(!MeasurementControl.RangeAutomatic);
+    setAutoRangeModeAndButtonText(!MeasurementControl.RangeAutomatic);
 }
 
 /*
@@ -1468,7 +1468,7 @@ void doOffsetMode(BDButton *aTheTouchedButton, int16_t aValue) {
     if (MeasurementControl.OffsetMode > OFFSET_MODE_MANUAL) {
         // switch back from Mode Manual to mode 0 volt and set range mode to automatic
         MeasurementControl.OffsetMode = OFFSET_MODE_0_VOLT;
-        setAutoRangeModeAndButtonCaption(true);
+        setAutoRangeModeAndButtonText(true);
 #if defined(__AVR__)
         MeasurementControl.OffsetValue = 0;
 #else
@@ -1476,12 +1476,12 @@ void doOffsetMode(BDButton *aTheTouchedButton, int16_t aValue) {
 
     } else if (MeasurementControl.OffsetMode == OFFSET_MODE_MANUAL) {
 // Offset mode manual implies range mode manual
-        aTheTouchedButton->setCaption(AutoOffsetButtonStringMan, true);
-        setAutoRangeModeAndButtonCaption(false);
+        aTheTouchedButton->setText(AutoOffsetButtonStringMan, true);
+        setAutoRangeModeAndButtonText(false);
         TouchButtonAutoRangeOnOff.deactivate();
 #endif
     }
-    setAutoOffsetButtonCaption();
+    setAutoOffsetButtonText();
 }
 
 /*
@@ -1497,7 +1497,7 @@ void doChannelSelect(BDButton *aTheTouchedButton, int16_t aValue) {
             MeasurementControl.ADMUXChannel = 0;
             MeasurementControl.isACMode = DSO_getACMode();
         }
-        aTheTouchedButton->setCaption(ADS7846ChannelStrings[MeasurementControl.ADMUXChannel]);
+        aTheTouchedButton->setText(ADS7846ChannelStrings[MeasurementControl.ADMUXChannel]);
 
     } else
 #endif
@@ -1506,7 +1506,7 @@ void doChannelSelect(BDButton *aTheTouchedButton, int16_t aValue) {
         uint8_t tNewChannelValue = aValue;
         if (tNewChannelValue > 20) {
             /*
-             * aValue > 20 means TouchButtonChannelSelect was pressed, so increment button caption here ( "Ch. 3", "Ch. 4", "Temp." , "VRef")
+             * aValue > 20 means TouchButtonChannelSelect was pressed, so increment button text here ( "Ch. 3", "Ch. 4", "Temp." , "VRef")
              */
             uint8_t tOldValue = MeasurementControl.ADMUXChannel;
             // if channel 3 is not selected, increment channel, otherwise select channel 3
@@ -1515,13 +1515,13 @@ void doChannelSelect(BDButton *aTheTouchedButton, int16_t aValue) {
                 tNewChannelValue = NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR;
             } else {
                 tNewChannelValue = tOldValue + 1;
-                uint8_t tCaptionIndex = tNewChannelValue;
+                uint8_t tTextIndex = tNewChannelValue;
                 if (tNewChannelValue >= ADC_CHANNEL_COUNT) {
                     tNewChannelValue = 0;
-                    //reset caption of 4. button to "Ch 3"
-                    tCaptionIndex = NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR;
+                    //reset text of 4. button to "Ch 3"
+                    tTextIndex = NUMBER_OF_CHANNELS_WITH_FIXED_ATTENUATOR;
                 }
-                TouchButtonChannelSelect.setCaption((const __FlashStringHelper*) ADCInputMUXChannelStrings[tCaptionIndex]);
+                TouchButtonChannelSelect.setText((const __FlashStringHelper*) ADCInputMUXChannelStrings[tTextIndex]);
             }
         }
         setChannel(tNewChannelValue);
@@ -1682,16 +1682,16 @@ void doShowPretriggerValuesOnOff(BDButton *aTheTouchedButton, int16_t aValue) {
     }
 }
 
-void setMinMaxModeButtonCaption(void) {
+void setMinMaxModeButtonText(void) {
     if (MeasurementControl.isMinMaxMode) {
-        TouchButtonMinMaxMode.setCaption("Min/Max\nmode");
+        TouchButtonMinMaxMode.setText("Min/Max\nmode");
     } else {
-        TouchButtonMinMaxMode.setCaption("Sample\nmode");
+        TouchButtonMinMaxMode.setText("Sample\nmode");
     }
 }
 
 /*
- * Sets only the flag and button caption
+ * Sets only the flag and button text
  */
 void doMinMaxMode(BDButton *aTheTouchedButton, int16_t aValue) {
     MeasurementControl.isMinMaxMode = !aValue; // toggle mode
@@ -1704,7 +1704,7 @@ void doMinMaxMode(BDButton *aTheTouchedButton, int16_t aValue) {
             changeTimeBase();
         }
     }
-    setMinMaxModeButtonCaption();
+    setMinMaxModeButtonText();
     TouchButtonMinMaxMode.setValueAndDraw(MeasurementControl.isMinMaxMode);
 }
 
@@ -1761,9 +1761,9 @@ void doDrawMode(BDButton *aTheTouchedButton, int16_t aValue) {
             MeasurementControl.isEffectiveMinMaxMode);
 // switch mode
     if (!DisplayControl.drawPixelMode) {
-        aTheTouchedButton->setCaption(DrawModeButtonStringPixel, true);
+        aTheTouchedButton->setText(DrawModeButtonStringPixel, true);
     } else {
-        aTheTouchedButton->setCaption(DrawModeButtonStringLine, true);
+        aTheTouchedButton->setText(DrawModeButtonStringLine, true);
     }
     DisplayControl.drawPixelMode = !DisplayControl.drawPixelMode;
 }

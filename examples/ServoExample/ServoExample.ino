@@ -41,9 +41,11 @@
  * Settings to configure the BlueDisplay library and to reduce its size
  */
 //#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
-#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
-//#define USE_SIMPLE_SERIAL                 // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
-//#define USE_USB_SERIAL                    // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#define DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Implies DO_NOT_NEED_BASIC_TOUCH_EVENTS.
+//#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
+//#define BD_USE_SIMPLE_SERIAL                 // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+//#define BD_USE_USB_SERIAL                    // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
 #include "BlueDisplay.hpp"
 #include "BlueDisplayUtils.hpp" // for printVCCAndTemperaturePeriodically()
 
@@ -196,15 +198,15 @@ void setup() {
     resetOutputs();
 
     /*
-     * Register callback handler and check for connection still established.
-     * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
-     * but the android app is not manually (re)connected to us, so we are definitely not connected here!
-     * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
-     * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
+     * Register callback handler and wait for 300 ms if Bluetooth connection is still active.
+     * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth connection is most likely not active here.
+     *
+     * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
+     * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
 
-#if defined(USE_SERIAL1) || defined(ESP32) // USE_SERIAL1 may be defined in BlueSerial.h
+#if defined(BD_USE_SERIAL1) || defined(ESP32) // BD_USE_SERIAL1 may be defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
     || defined(SERIALUSB_PID)  || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_attiny3217)
@@ -213,7 +215,7 @@ void setup() {
     // Just to know which program is running on my Arduino
     Serial.println(StartMessage);
     Serial.println(ServoInfoMessage);
-#elif !defined(USE_SIMPLE_SERIAL)
+#elif !defined(BD_USE_SIMPLE_SERIAL)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
     if (!BlueDisplay1.isConnectionEstablished()) {
 #  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
@@ -233,7 +235,7 @@ void setup() {
         /*
          * show border of area which can be reached by laser
          */
-#if !defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1) || defined(ESP32)
+#if !defined(BD_USE_SIMPLE_SERIAL) || defined(BD_USE_SERIAL1) || defined(ESP32)
         // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
         Serial.println(F("Not connected to BlueDisplay -> mark border of area and then do auto move."));
 #endif
@@ -265,9 +267,9 @@ void loop() {
             uint8_t tNewHorizontal = getRandomValue(&ServoHorizontalControl, &ServoHorizontal);
             uint8_t tNewVertical = getRandomValue(&ServoVerticalControl, &ServoVertical);
             int tSpeed = random(10, 90);
-#if !defined(USE_SIMPLE_SERIAL) || defined(USE_SERIAL1) || defined(ESP32)
+#if !defined(BD_USE_SIMPLE_SERIAL) || defined(BD_USE_SERIAL1) || defined(ESP32)
             // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
-#  if !defined(USE_SERIAL1) && !defined(ESP32)
+#  if !defined(BD_USE_SERIAL1) && !defined(ESP32)
             // If we do not use Serial1 for BlueDisplay communication, we must check if we are not connected and therefore Serial is available for info output.
             if (!BlueDisplay1.isConnectionEstablished()) {
 #  endif
@@ -277,7 +279,7 @@ void loop() {
                 Serial.print(tNewVertical);
                 Serial.print(F(" S="));
                 Serial.println(tSpeed);
-#  if !defined(USE_SERIAL1) && !defined(ESP32)
+#  if !defined(BD_USE_SERIAL1) && !defined(ESP32)
             }
 #  endif
 #endif
@@ -315,9 +317,9 @@ void initDisplay(void) {
     /*
      * handle display size
      */
-    sCurrentDisplayWidth = BlueDisplay1.getMaxDisplayWidth();
-    sCurrentDisplayHeight = BlueDisplay1.getMaxDisplayHeight();
-#if !defined(USE_SIMPLE_SERIAL) && (defined(USE_SERIAL1) || defined(ESP32))
+    sCurrentDisplayWidth = BlueDisplay1.getCurrentDisplayWidth();
+    sCurrentDisplayHeight = BlueDisplay1.getCurrentDisplayHeight();
+#if !defined(BD_USE_SIMPLE_SERIAL) && (defined(BD_USE_SERIAL1) || defined(ESP32))
     Serial.print("MaxDisplayWidth=");
     Serial.print(sCurrentDisplayWidth);
     Serial.print(" MaxDisplayHeight=");
@@ -340,7 +342,7 @@ void initDisplay(void) {
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sCurrentDisplayWidth,
             sCurrentDisplayHeight);
 
-#if !defined(USE_SIMPLE_SERIAL) && (defined(USE_SERIAL1) || defined(ESP32))
+#if !defined(BD_USE_SIMPLE_SERIAL) && (defined(BD_USE_SERIAL1) || defined(ESP32))
     Serial.print("RequestedDisplayWidth=");
     Serial.print(sCurrentDisplayWidth);
     Serial.print(" RequestedDisplayHeight=");
@@ -394,7 +396,7 @@ void initDisplay(void) {
             sCurrentDisplayHeight / 4,
             COLOR16_BLUE, "Start", sTextSize, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoSensorMove,
             &doServosStartStop);
-    TouchButtonServosStartStop.setCaptionForValueTrue(F("Stop"));
+    TouchButtonServosStartStop.setTextForValueTrue(F("Stop"));
 
     TouchButtonSetBias.init(sCurrentDisplayWidth - sCurrentDisplayWidth / 4,
             (sCurrentDisplayHeight - sCurrentDisplayHeight / 2) - sCurrentDisplayHeight / 32, sCurrentDisplayWidth / 4,
@@ -408,7 +410,7 @@ void initDisplay(void) {
             sCurrentDisplayHeight / 4 - sCurrentDisplayHeight / 16, sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4,
             COLOR16_BLUE, "Auto\nmove", sTextSize, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoAutoMove,
             &doEnableAutoMove);
-    TouchButtonAutoMove.setCaptionForValueTrue(F("Stop"));
+    TouchButtonAutoMove.setTextForValueTrue(F("Stop"));
 
     BlueDisplay1.debug(StartMessage);
     delay(2000);

@@ -58,8 +58,8 @@ char StringBuffer[128];
 // Increment to create a lot of different colors
 #define CAPTION_COLOR_INCREMENT             COLOR16(0x08,0x20,0x60)
 #define BUTTON_BACKGROUND_COLOR_INCREMENT   COLOR16(0x08,0x10,0x40)
-LocalTouchButtonAutorepeat TouchButtonCaptionAutorepeat;
-LocalTouchButton TouchButtonBackground;
+LocalTouchButtonAutorepeat TouchButtonTextColorAutorepeat;
+LocalTouchButton TouchButtonBackgroundColor;
 
 // Callback touch handler
 void doButtons(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
@@ -84,15 +84,15 @@ void setup() {
     TouchPanel.initAndCalibrateOnPress(TP_EEPROMADDR);
 
     // Create  2 buttons
-    int8_t tErrorValue = TouchButtonCaptionAutorepeat.init(20, 20, BUTTON_WIDTH, BUTTON_HEIGHT, COLOR16_RED, "Caption",
+    int8_t tErrorValue = TouchButtonTextColorAutorepeat.init(20, 20, BUTTON_WIDTH, BUTTON_HEIGHT, COLOR16_RED, "Text",
     TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doButtons);
-    TouchButtonCaptionAutorepeat.setButtonAutorepeatTiming(1000, 400, 5, 100);
+    TouchButtonTextColorAutorepeat.setButtonAutorepeatTiming(1000, 400, 5, 100);
 
-    tErrorValue += TouchButtonBackground.init(20, TouchButtonCaptionAutorepeat.getPositionYBottom() + BUTTON_SPACING,
+    tErrorValue += TouchButtonBackgroundColor.init(20, TouchButtonTextColorAutorepeat.getPositionYBottom() + BUTTON_SPACING,
     BUTTON_WIDTH, BUTTON_HEIGHT, COLOR16_RED, "Background", TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doButtons);
 
-    TouchButtonCaptionAutorepeat.drawButton();
-    TouchButtonBackground.drawButton();
+    TouchButtonTextColorAutorepeat.drawButton();
+    TouchButtonBackgroundColor.drawButton();
 
     if (tErrorValue != 0) {
         // Show Error
@@ -111,14 +111,14 @@ void loop() {
 
 void doButtons(LocalTouchButton *const aTheTouchedButton, int16_t aValue) {
     printRGB(aValue, 10, 200);
-    if (aTheTouchedButton == &TouchButtonCaptionAutorepeat) {
+    if (aTheTouchedButton == &TouchButtonTextColorAutorepeat) {
         aValue += CAPTION_COLOR_INCREMENT;
-        aTheTouchedButton->setCaptionColor(aValue);
+        aTheTouchedButton->setTextColor(aValue);
         aTheTouchedButton->setValue(aValue);
-        aTheTouchedButton->drawCaption();
+        aTheTouchedButton->drawText();
         return;
     }
-    if (aTheTouchedButton == &TouchButtonBackground) {
+    if (aTheTouchedButton == &TouchButtonBackgroundColor) {
         aValue += BUTTON_BACKGROUND_COLOR_INCREMENT;
         aTheTouchedButton->setButtonColor(aValue);
         aTheTouchedButton->setValue(aValue);
@@ -148,7 +148,7 @@ void printRGB(const uint16_t aColor, uint16_t aXPos, const uint16_t aYPos) {
  * Show touch panel raw and processed data in the first line
  */
 void printTPData(void) {
-    sprintf(StringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i", TouchPanel.getCurrentX(), TouchPanel.getRawX(), TouchPanel.getCurrentY(),
-            TouchPanel.getRawY(), TouchPanel.getPressure());
+    sprintf(StringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i", TouchPanel.getCurrentX(), TouchPanel.getRawX(),
+            TouchPanel.getCurrentY(), TouchPanel.getRawY(), TouchPanel.getPressure());
     LocalDisplay.drawText(20, 2, StringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
 }

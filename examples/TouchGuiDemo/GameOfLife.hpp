@@ -214,6 +214,13 @@ void ClearScreenAndDrawGameOfLifeGrid(void) {
     }
 }
 
+void startGameOfLifePage(){
+    tGameOfLifeByteArray = new uint8_t[GAME_OF_LIFE_X_SIZE][GAME_OF_LIFE_Y_SIZE]; // One cell requires one byte
+}
+void stopGameOfLifePage(){
+    delete[] tGameOfLifeByteArray;
+}
+
 /**
  * Switch color scheme from blue -> green -> red -> blue
  */
@@ -287,8 +294,8 @@ void initGameOfLife(void) {
 
 void drawGenerationText(void) {
     //draw current sCurrentGameOfLifeGeneration
-    snprintf(sBDStringBuffer, sizeof sBDStringBuffer, "Gen.%3d", sCurrentGameOfLifeGeneration);
-    Display.drawText(0, TEXT_SIZE_11_ASCEND, sBDStringBuffer, TEXT_SIZE_11, COLOR16(50, 50, 50), drawcolor[DEAD_COLOR_INDEX]);
+    snprintf(sStringBuffer, sizeof sStringBuffer, "Gen.%3d", sCurrentGameOfLifeGeneration);
+    Display.drawText(0, TEXT_SIZE_11_ASCEND, sStringBuffer, TEXT_SIZE_11, COLOR16(50, 50, 50), drawcolor[DEAD_COLOR_INDEX]);
 }
 
 void test(void) {

@@ -11,7 +11,7 @@
  *      LOCAL_DISPLAY_WIDTH
  *      LOCAL_DISPLAY_HEIGHT
  *
- *  Copyright (C) 2012-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2024  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -54,13 +54,13 @@
  * List for TouchButton(Autorepeat) objects
  */
 LocalTouchButton *LocalTouchButton::sButtonListStart = NULL; // Start of list of touch buttons, required for the *AllButtons functions
-color16_t LocalTouchButton::sDefaultCaptionColor = TOUCHBUTTON_DEFAULT_CAPTION_COLOR;
+color16_t LocalTouchButton::sDefaultTextColor = TOUCHBUTTON_DEFAULT_TEXT_COLOR;
 
 /**
  * Constructor - insert in list
  */
 LocalTouchButton::LocalTouchButton() { // @suppress("Class members should be properly initialized")
-    mCaptionForTrue = NULL; // moving this into init() costs 100 bytes
+    mTextForTrue = NULL; // moving this into init() costs 100 bytes
     mNextObject = NULL;
     if (sButtonListStart == NULL) {
         // first button
@@ -90,7 +90,7 @@ bool LocalTouchButton::operator!=(const LocalTouchButton &aButton) {
  * Required for creating a local button for an existing aBDButton at BDButton::init
  */
 LocalTouchButton::LocalTouchButton(BDButton *aBDButtonPtr) { // @suppress("Class members should be properly initialized")
-    mCaptionForTrue = NULL;
+    mTextForTrue = NULL;
     mBDButtonPtr = aBDButtonPtr;
     mNextObject = NULL;
     if (sButtonListStart == NULL) {
@@ -149,7 +149,7 @@ LocalTouchButton* LocalTouchButton::getLocalTouchButtonFromBDButtonHandle(BDButt
 
 /**
  * Is called once after reconnect, to build up a remote copy of all local buttons
- * Handles also mCaptionForTrue and autorepeat buttons
+ * Handles also mTextForTrue and autorepeat buttons
  */
 void LocalTouchButton::createAllLocalButtonsAtRemote() {
     if (USART_isBluetoothPaired()) {
@@ -160,17 +160,17 @@ void LocalTouchButton::createAllLocalButtonsAtRemote() {
             // cannot use BDButton.init since this allocates a new TouchButton
             sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 11, tButtonPointer->mBDButtonPtr->mButtonHandle,
                     tButtonPointer->mPositionX, tButtonPointer->mPositionY, tButtonPointer->mWidthX, tButtonPointer->mHeightY,
-                    tButtonPointer->mButtonColor, tButtonPointer->mCaptionSize, tButtonPointer->mFlags & ~(LOCAL_BUTTON_FLAG_MASK),
+                    tButtonPointer->mButtonColor, tButtonPointer->mTextSize, tButtonPointer->mFlags & ~(LOCAL_BUTTON_FLAG_MASK),
                     tButtonPointer->mValue, tButtonPointer->mOnTouchHandler,
-                    (reinterpret_cast<uint32_t>(tButtonPointer->mOnTouchHandler) >> 16), strlen(tButtonPointer->mCaption),
-                    tButtonPointer->mCaption);
-            if (tButtonPointer->mCaptionForTrue != NULL) {
-                tButtonPointer->setCaptionForValueTrue(tButtonPointer->mCaptionForTrue);
+                    (reinterpret_cast<uint32_t>(tButtonPointer->mOnTouchHandler) >> 16), strlen(tButtonPointer->mText),
+                    tButtonPointer->mText);
+            if (tButtonPointer->mTextForTrue != NULL) {
+                tButtonPointer->setTextForValueTrue(tButtonPointer->mTextForTrue);
             }
             if (tButtonPointer->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
                 LocalTouchButtonAutorepeat *tAutorepeatButtonPointer = (LocalTouchButtonAutorepeat*) tButtonPointer;
                 sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 7, tAutorepeatButtonPointer->mBDButtonPtr->mButtonHandle,
-                        SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING, tAutorepeatButtonPointer->mMillisFirstDelay,
+                SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING, tAutorepeatButtonPointer->mMillisFirstDelay,
                         tAutorepeatButtonPointer->mMillisFirstRate, tAutorepeatButtonPointer->mFirstCount,
                         tAutorepeatButtonPointer->mMillisSecondRate);
             }
@@ -184,19 +184,18 @@ void LocalTouchButton::createAllLocalButtonsAtRemote() {
 /**
  * Set parameters for touch button
  * @param aWidthX       if == 0 render only text no background box
- * @param aCaptionSize  if == 0 don't render anything, just check touch area -> transparent button ;-)
- * @param aFlags        Like FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE
+ * @param aTextSize  if == 0 don't render anything, just check touch area -> transparent button ;-)
+ * @param aFlags        Like FLAG_BUTTON_DO_BEEP_ON_TOUCH | LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE
  * @param aValue        true -> green, false -> red
  */
 int8_t LocalTouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
-        const char *aCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
-        void (*aOnTouchHandler)(LocalTouchButton*, int16_t)) {
+        const char *aText, uint8_t aTextSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(LocalTouchButton*, int16_t)) {
 
     mWidthX = aWidthX;
     mHeightY = aHeightY;
-    mCaptionColor = sDefaultCaptionColor;
-    mCaption = aCaption;
-    mCaptionSize = aCaptionSize;
+    mTextColor = sDefaultTextColor;
+    mText = aText;
+    mTextSize = aTextSize;
     mOnTouchHandler = aOnTouchHandler;
     mFlags = aFlags;
     mButtonColor = aButtonColor;
@@ -206,23 +205,23 @@ int8_t LocalTouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t
 }
 
 int8_t LocalTouchButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
-        const __FlashStringHelper *aPGMCaption, uint8_t aCaptionSize, uint8_t aFlags, int16_t aValue,
+        const __FlashStringHelper *aPGmText, uint8_t aTextSize, uint8_t aFlags, int16_t aValue,
         void (*aOnTouchHandler)(LocalTouchButton*, int16_t)) {
 #if defined(__AVR__)
     mWidthX = aWidthX;
     mHeightY = aHeightY;
-    mCaptionColor = sDefaultCaptionColor;
-    mCaption = reinterpret_cast<const char*>(aPGMCaption);
-    mCaptionSize = aCaptionSize;
+    mTextColor = sDefaultTextColor;
+    mText = reinterpret_cast<const char*>(aPGmText);
+    mTextSize = aTextSize;
     mOnTouchHandler = aOnTouchHandler;
-    mFlags = aFlags | LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
+    mFlags = aFlags | LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE;
     mButtonColor = aButtonColor;
     mValue = aValue;
 
     return setPosition(aPositionX, aPositionY);
 #else
-    return init(aPositionX, aPositionY, aWidthX, aHeightY, aButtonColor, reinterpret_cast<const char*>(aPGMCaption), aCaptionSize, aFlags, aValue,
-            aOnTouchHandler);
+    return init(aPositionX, aPositionY, aWidthX, aHeightY, aButtonColor, reinterpret_cast<const char*>(aPGmText), aTextSize, aFlags,
+            aValue, aOnTouchHandler);
 #endif
 }
 // Dummy to be more compatible with BDButton
@@ -252,8 +251,11 @@ int8_t LocalTouchButton::setPosition(uint16_t aPositionX, uint16_t aPositionY) {
     return tRetValue;
 }
 
-void LocalTouchButton::setDefaultCaptionColor(color16_t aDefaultCaptionColor) {
-    sDefaultCaptionColor = aDefaultCaptionColor;
+void LocalTouchButton::setDefaultCaptionColor(color16_t aDefaultTextColor) {
+    sDefaultTextColor = aDefaultTextColor;
+}
+void LocalTouchButton::setDefaultTextColor(color16_t aDefaultTextColor) {
+    sDefaultTextColor = aDefaultTextColor;
 }
 
 /**
@@ -263,7 +265,7 @@ void LocalTouchButton::drawButton() {
     setColorForRedGreenButton(mValue);
     // Draw rect
     LocalDisplay.fillRectRel(mPositionX, mPositionY, mWidthX, mHeightY, mButtonColor);
-    drawCaption();
+    drawText();
 }
 
 /**
@@ -277,93 +279,95 @@ void LocalTouchButton::removeButton(color16_t aBackgroundColor) {
 }
 
 /**
- * draws the caption of a button
- * @return 0 or error number #TOUCHBUTTON_ERROR_CAPTION_TOO_LONG etc.
+ * draws the text of a button
+ * @return 0 or error number #TOUCHBUTTON_ERROR_TEXT_TOO_LONG etc.
  */
 void LocalTouchButton::drawCaption() {
+    drawText();
+}
+void LocalTouchButton::drawText() {
     mFlags |= LOCAL_BUTTON_FLAG_IS_ACTIVE;
 
-    auto tCaption = mCaption;
+    auto tText = mText;
     if (mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
-        // Handle caption for red green button
-        if (mValue && mCaptionForTrue != NULL) {
-            tCaption = mCaptionForTrue;
+        // Handle text for red green button
+        if (mValue && mTextForTrue != NULL) {
+            tText = mTextForTrue;
         }
     }
-    if (mCaptionSize > 0) { // dont render anything if caption size == 0
-        if (tCaption != NULL) {
-            uint16_t tXCaptionPosition;
-            uint16_t tYCaptionPosition;
+    if (mTextSize > 0) { // dont render anything if text size == 0
+        if (tText != NULL) {
+            uint16_t tXTextPosition;
+            uint16_t tYTextPosition;
             /*
              * Simple 2 line handling
              * 1. position first string in the middle of the box
              * 2. draw second string just below
              */
-            auto tCaptionHeight = getTextHeight(mCaptionSize);
+            auto tTextHeight = getTextHeight(mTextSize);
             const char *tPosOfNewline;
-            size_t tStringlengthOfCaption;
+            size_t tStringlengthOfText;
 #if defined (AVR)
-            if (mFlags & LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE) {
-                tPosOfNewline = strchr_P(mCaption, '\n');
-                tStringlengthOfCaption = strlen_P(mCaption);
+            if (mFlags & LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE) {
+                tPosOfNewline = strchr_P(mText, '\n');
+                tStringlengthOfText = strlen_P(mText);
             } else {
-                tPosOfNewline = strchr(mCaption, '\n');
-                tStringlengthOfCaption = strlen(mCaption);
+                tPosOfNewline = strchr(mText, '\n');
+                tStringlengthOfText = strlen(mText);
             }
 #else
-            tPosOfNewline = strchr(tCaption, '\n');
-            tStringlengthOfCaption = strlen(tCaption);
+            tPosOfNewline = strchr(tText, '\n');
+            tStringlengthOfText = strlen(tText);
 #endif
-            size_t tStringlength = tStringlengthOfCaption;
+            size_t tStringlength = tStringlengthOfText;
             if (tPosOfNewline != NULL) {
-                // assume 2 lines of caption
-                tCaptionHeight = 2 * getTextHeight(mCaptionSize);
-                tStringlength = (tPosOfNewline - tCaption);
+                // assume 2 lines of Text
+                tTextHeight = 2 * getTextHeight(mTextSize);
+                tStringlength = (tPosOfNewline - tText);
             }
-            auto tLength = getTextWidth(mCaptionSize) * tStringlength;
+            auto tLength = getTextWidth(mTextSize) * tStringlength;
             // try to position the string in the middle of the box
             if (tLength >= mWidthX) {
                 // String too long here
-                tXCaptionPosition = mPositionX;
+                tXTextPosition = mPositionX;
             } else {
-                tXCaptionPosition = mPositionX + ((mWidthX - tLength) / 2);
+                tXTextPosition = mPositionX + ((mWidthX - tLength) / 2);
             }
 
-            if (tCaptionHeight >= mHeightY) {
+            if (tTextHeight >= mHeightY) {
                 // Font height to big
-                tYCaptionPosition = mPositionY;
+                tYTextPosition = mPositionY;
             } else {
-                tYCaptionPosition = mPositionY + ((mHeightY - tCaptionHeight) / 2);
+                tYTextPosition = mPositionY + ((mHeightY - tTextHeight) / 2);
             }
 #if defined (AVR)
-            if (mFlags & LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE) {
-                LocalDisplay.drawText(tXCaptionPosition, tYCaptionPosition, reinterpret_cast<const __FlashStringHelper*>(tCaption),
-                        mCaptionSize, mCaptionColor, mButtonColor, tStringlength);
+            if (mFlags & LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE) {
+                LocalDisplay.drawText(tXTextPosition, tYTextPosition, reinterpret_cast<const __FlashStringHelper*>(tText),
+                        mTextSize, mTextColor, mButtonColor, tStringlength);
             } else {
-                LocalDisplay.drawText(tXCaptionPosition, tYCaptionPosition, tCaption, mCaptionSize, mCaptionColor, mButtonColor,
+                LocalDisplay.drawText(tXTextPosition, tYTextPosition, tText, mTextSize, mTextColor, mButtonColor,
                         tStringlength);
             }
 #else
-            LocalDisplay.drawText(tXCaptionPosition, tYCaptionPosition, tCaption, mCaptionSize, mCaptionColor, mButtonColor,
-                    tStringlength);
+            LocalDisplay.drawText(tXTextPosition, tYTextPosition, tText, mTextSize, mTextColor, mButtonColor, tStringlength);
 #endif
             if (tPosOfNewline != NULL) {
                 // 2. line - position the string in the middle of the box again
-                tStringlength = tStringlengthOfCaption - tStringlength - 1;
-                tLength = getTextWidth(mCaptionSize) * tStringlength;
-                tXCaptionPosition = mPositionX + ((mWidthX - tLength) / 2);
+                tStringlength = tStringlengthOfText - tStringlength - 1;
+                tLength = getTextWidth(mTextSize) * tStringlength;
+                tXTextPosition = mPositionX + ((mWidthX - tLength) / 2);
 #if defined (AVR)
-                if (mFlags & LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE) {
-                    LocalDisplay.drawText(tXCaptionPosition, tYCaptionPosition + getTextHeight(mCaptionSize),
-                            (const __FlashStringHelper*) (tPosOfNewline + 1), mCaptionSize, mCaptionColor, mButtonColor,
+                if (mFlags & LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE) {
+                    LocalDisplay.drawText(tXTextPosition, tYTextPosition + getTextHeight(mTextSize),
+                            (const __FlashStringHelper*) (tPosOfNewline + 1), mTextSize, mTextColor, mButtonColor,
                             tStringlength);
                 } else {
-                    LocalDisplay.drawText(tXCaptionPosition, tYCaptionPosition + getTextHeight(mCaptionSize), (tPosOfNewline + 1),
-                            mCaptionSize, mCaptionColor, mButtonColor, tStringlength);
+                    LocalDisplay.drawText(tXTextPosition, tYTextPosition + getTextHeight(mTextSize), (tPosOfNewline + 1),
+                            mTextSize, mTextColor, mButtonColor, tStringlength);
                 }
 #else
-                LocalDisplay.drawText(tXCaptionPosition, tYCaptionPosition + getTextHeight(mCaptionSize), (tPosOfNewline + 1),
-                        mCaptionSize, mCaptionColor, mButtonColor, tStringlength);
+                LocalDisplay.drawText(tXTextPosition, tYTextPosition + getTextHeight(mTextSize), (tPosOfNewline + 1), mTextSize,
+                        mTextColor, mButtonColor, tStringlength);
 #endif
             }
         }
@@ -432,7 +436,7 @@ void LocalTouchButton::performTouchAction() {
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
             this->mBDButtonPtr->setValueAndDraw(mValue); // Update also the remote button
 #else
-            drawButton(); // Only local button refresh to show new color (and caption)
+            drawButton(); // Only local button refresh to show new color (and text)
 #endif
         }
     }
@@ -470,7 +474,7 @@ bool LocalTouchButton::isTouched(uint16_t aTouchPositionX, uint16_t aTouchPositi
  * @return NULL if no button found at the position
  */
 LocalTouchButton* LocalTouchButton::find(unsigned int aTouchPositionX, unsigned int aTouchPositionY,
-        bool aSearchOnlyAutorepeatButtons) {
+bool aSearchOnlyAutorepeatButtons) {
     LocalTouchButton *tButtonPointer = sButtonListStart;
 // walk through list
     while (tButtonPointer != NULL) {
@@ -490,7 +494,7 @@ LocalTouchButton* LocalTouchButton::find(unsigned int aTouchPositionX, unsigned 
  * @return NULL if no button found at this position
  */
 LocalTouchButton* LocalTouchButton::findAndAction(unsigned int aTouchPositionX, unsigned int aTouchPositionY,
-        bool aCheckOnlyAutorepeatButtons) {
+bool aCheckOnlyAutorepeatButtons) {
     LocalTouchButton *tButtonPointer = find(aTouchPositionX, aTouchPositionY, aCheckOnlyAutorepeatButtons);
     if (tButtonPointer != NULL) {
         tButtonPointer->performTouchAction();
@@ -502,7 +506,7 @@ LocalTouchButton* LocalTouchButton::findAndAction(unsigned int aTouchPositionX, 
  * Static convenience method - checks all buttons for matching touch position and perform touch action if position match.
  */
 bool LocalTouchButton::checkAllButtons(unsigned int aTouchPositionX, unsigned int aTouchPositionY,
-        bool aCheckOnlyAutorepeatButtons) {
+bool aCheckOnlyAutorepeatButtons) {
     return (findAndAction(aTouchPositionX, aTouchPositionY, aCheckOnlyAutorepeatButtons) != NULL);
 }
 
@@ -540,18 +544,18 @@ void LocalTouchButton::activateAll() {
 /*
  * Not used yet
  */
-uint8_t LocalTouchButton::getCaptionLength(char *aCaptionPointer) {
+uint8_t LocalTouchButton::getTextLength(char *aTextPointer) {
     uint8_t tLength = 0;
     uint8_t tFontWidth = 8;
-    if (mCaptionSize > 11) {
+    if (mTextSize > 11) {
         tFontWidth = 16;
     }
-    if (mFlags & LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE) {
-        while (pgm_read_byte(aCaptionPointer++) != 0) {
+    if (mFlags & LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE) {
+        while (pgm_read_byte(aTextPointer++) != 0) {
             tLength += (tFontWidth);
         }
     } else {
-        while (*aCaptionPointer++ != 0) {
+        while (*aTextPointer++ != 0) {
             tLength += (tFontWidth);
         }
     }
@@ -561,61 +565,76 @@ uint8_t LocalTouchButton::getCaptionLength(char *aCaptionPointer) {
 #  if defined(DEBUG)
     /*
      * for debug purposes
-     * needs char aStringBuffer[23+<CaptionLength>]
+     * needs char aStringBuffer[23+<TextLength>]
      */
     void LocalTouchButton::toString(char * aStringBuffer) const {
         sprintf(aStringBuffer, "X=%03u Y=%03u X1=%03u Y1=%03u B=%02u %s", mPositionX, mPositionY, mPositionX + mWidthX - 1,
-                mPositionY + mHeightY - 1, mTouchBorder, mCaption);
+                mPositionY + mHeightY - 1, mTouchBorder, mText);
     }
 #  endif
 #endif
 
-void LocalTouchButton::setCaptionForValueTrue(const char *aCaption) {
+void LocalTouchButton::setCaptionForValueTrue(const char *aText) {
+    setTextForValueTrue(aText);
+}
+void LocalTouchButton::setTextForValueTrue(const char *aText) {
 #if defined(__AVR__)
-    mFlags &= ~LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
+    mFlags &= ~LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE;
 #endif
-    mCaptionForTrue = aCaption;
+    mTextForTrue = aText;
 }
 
-void LocalTouchButton::setCaptionForValueTrue(const __FlashStringHelper *aPGMCaption) {
+void LocalTouchButton::setCaptionForValueTrue(const __FlashStringHelper *aPGmText) {
+    setTextForValueTrue(aPGmText);
+}
+void LocalTouchButton::setTextForValueTrue(const __FlashStringHelper *aPGmText) {
 #if defined (AVR)
-    mFlags |= LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
-    mCaptionForTrue = reinterpret_cast<const char*>(aPGMCaption);
+    mFlags |= LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE;
+    mTextForTrue = reinterpret_cast<const char*>(aPGmText);
 #else
-    setCaptionForValueTrue(reinterpret_cast<const char*>(aPGMCaption));
+    setTextForValueTrue(reinterpret_cast<const char*>(aPGmText));
 #endif
 }
 
 /*
- * Set caption
+ * Set text
  */
-void LocalTouchButton::setCaption(const char *aCaption, bool doDrawButton) {
+void LocalTouchButton::setCaption(const char *aText, bool doDrawButton) {
+    setText(aText, doDrawButton);
+}
+void LocalTouchButton::setText(const char *aText, bool doDrawButton) {
 #if defined(__AVR__)
-    mFlags &= ~LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
+    mFlags &= ~LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE;
 #endif
-    mCaption = aCaption;
+    mText = aText;
     if (doDrawButton) {
         drawButton();
     }
 }
 
-void LocalTouchButton::setCaption(const __FlashStringHelper *aPGMCaption, bool doDrawButton) {
+void LocalTouchButton::setCaption(const __FlashStringHelper *aPGmText, bool doDrawButton) {
+    setText(aPGmText, doDrawButton);
+}
+void LocalTouchButton::setText(const __FlashStringHelper *aPGmText, bool doDrawButton) {
 #if defined (AVR)
-    mFlags |= LOCAL_BUTTON_FLAG_BUTTON_CAPTION_IS_IN_PGMSPACE;
-    mCaption = reinterpret_cast<const char*>(aPGMCaption);
+    mFlags |= LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE;
+    mText = reinterpret_cast<const char*>(aPGmText);
     if (doDrawButton) {
         drawButton();
     }
 #else
-    setCaption(reinterpret_cast<const char*>(aPGMCaption), doDrawButton);
+    setText(reinterpret_cast<const char*>(aPGmText), doDrawButton);
 #endif
 }
 
 /**
- * Set caption and draw
+ * Set text and draw
  */
-void LocalTouchButton::setCaptionAndDraw(const char *aCaption) {
-    mCaption = aCaption;
+void LocalTouchButton::setCaptionAndDraw(const char *aText) {
+    setTextAndDraw(aText);
+}
+void LocalTouchButton::setTextAndDraw(const char *aText) {
+    mText = aText;
     drawButton();
 }
 
@@ -631,8 +650,8 @@ void LocalTouchButton::setButtonColorAndDraw(color16_t aButtonColor) {
     this->drawButton();
 }
 
-void LocalTouchButton::setCaptionColor(color16_t aCaptionColor) {
-    mCaptionColor = aCaptionColor;
+void LocalTouchButton::setTextColor(color16_t aTextColor) {
+    mTextColor = aTextColor;
 }
 
 /**

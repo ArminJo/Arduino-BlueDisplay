@@ -30,6 +30,16 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
+
+/*
+ * This library can be configured at compile time by the following options / macros:
+ * For more details see: https://github.com/ArminJo/Arduino-BlueDisplay?tab=readme-ov-file#compile-options--macros-for-this-library
+ *
+ * - BLUETOOTH_BAUD_RATE                Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate.
+ * - DO_NOT_NEED_BASIC_TOUCH_EVENTS     Disables basic touch events like down, move and up. Saves up to 620 bytes program memory and 36 bytes RAM.
+ * - BD_USE_SIMPLE_SERIAL               Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise.
+ */
+
 #ifndef _BLUEDISPLAY_HPP
 #define _BLUEDISPLAY_HPP
 
@@ -55,7 +65,13 @@
 #include <math.h> // for PI
 #include <stdlib.h> // for dtostrf()
 
-#if defined(TRACE) && !defined(LOCAL_TRACE)
+#if defined(DEBUG)
+#define LOCAL_DEBUG
+#else
+//#define LOCAL_DEBUG // This enables debug output only for this file
+#endif
+
+#if defined(TRACE)
 #define LOCAL_TRACE
 #else
 //#define LOCAL_TRACE // This enables debug output only for this file
@@ -80,24 +96,38 @@ void BlueDisplay::resetLocal() {
 }
 
 /**
- * Sets callback handler and calls host for requestMaxCanvasSize().
- * If host is connected, this results in a EVENT_REQUESTED_DATA_CANVAS_SIZE callback event,
- * which sends display size and local timestamp. This event calls the ConnectCallback as well as the RedrawCallback.
+ * Sets callback handler and calls android app (host) for requestMaxCanvasSize().
+ * If host is still Bluetooth connected, this results in a EVENT_REQUESTED_DATA_CANVAS_SIZE event.
+ * This event sets mCurrentDisplaySize and mHostUnixTimestamp and in turn calls the ConnectCallback as well as the RedrawCallback.
  *
- * Waits for 300 ms for connection to be established
+ * Wait 300 ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
+ *
+ * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth is just enabled here,
+ * but the android app (host) is not manually (re)connected to us, so we are most likely not connected here.
+ *
+ * At the time of manual (re)connection in the android app, a connection start event is send,
+ * which has the same content as the EVENT_REQUESTED_DATA_CANVAS_SIZE requested here.
+ * This event is then processed by the periodic call of checkAndHandleEvents() in the main loop.
+ *
+ * Redraw event is intended to redraw screen, if size of display changes.
+ * The app itself does the scaling of the screen content, but this can be coarse, especially when inflating
+ * so we will get better quality, if we redraw the content.
+ * Size changes will not happen, if BD_FLAG_USE_MAX_SIZE is set, and no reorientation (implying size changes) happens.
+ *
+ * The redraw event handler is automatically called directly after the reconnect or reorientation handler.
  *
  * Reorientation callback function is only required if we have a responsive layout,
  * since connect and reorientation event also calls the redraw callback.
- *
- * For ESP32 and after power on at other platforms, Bluetooth is just enabled here,
- * but the android app (host) is not manually (re)connected to us, so we are most likely not connected here.
- * In this case, the periodic call of checkAndHandleEvents() in the main loop catches the connection build up message
- * from the android app at the time of manual (re)connection and in turn calls the initDisplay() and drawGui() functions.
  */
 void BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)(), void (*aReorientationCallback)()) {
     registerConnectCallback(aConnectCallback);
-    registerReorientationCallback(aReorientationCallback);
+#if !defined(ONLY_CONNECT_EVENT_REQUIRED)
     registerRedrawCallback(aRedrawCallback);
+    registerReorientationCallback(aReorientationCallback);
+#else
+    (void) aRedrawCallback;
+    (void) aReorientationCallback;
+#endif
 
     mBlueDisplayConnectionEstablished = false;
     // consume up old received data
@@ -106,14 +136,16 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*aRedrawCa
 // This results in a data event, which sends size and timestamp
     requestMaxCanvasSize();
 
-    for (uint_fast8_t i = 0; i < 30; ++i) {
+    for (uint_fast8_t i = 0; i < 150; ++i) {
         /*
-         * Wait 300 ms for size to be sent back by a canvas size event.
-         * Time measured is between 50 and 150 ms (or 80 and 120) for Bluetooth.
+         * Wait 300 ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
+         * Time measured is between 50 and 150 ms (or mostly between 80 and 120) for Bluetooth.
+         * But I have seen 990 ms too :-(( , which corresponds to a communication lag of 500 ms in each direction,
+         * even if we have a 1 second delay before initCommunication();
          */
         delayMillisWithCheckAndHandleEvents(10);
         if (mBlueDisplayConnectionEstablished) { // is set by delay(WithCheckAndHandleEvents()
-#if defined(LOCAL_TRACE) && !defined(USE_SIMPLE_SERIAL) && (defined(USE_SERIAL1) || defined(ESP32))
+#if defined(LOCAL_DEBUG) && !defined(BD_USE_SIMPLE_SERIAL)
             Serial.print("Connection established after ");
             Serial.print(i * 10);
             Serial.println("ms");
@@ -121,13 +153,16 @@ void BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*aRedrawCa
             // Handler are called initially by the received canvas size event
             break;
         }
+#if defined(LOCAL_DEBUG) && !defined(BD_USE_SIMPLE_SERIAL)
+            Serial.println("Connection not established after 1500 ms");
+#endif
     }
 }
 
 bool BlueDisplay::isConnectionEstablished() {
     return mBlueDisplayConnectionEstablished;
 }
-// sends 4 byte function and 24 byte data message
+// sends 4 byte function and 36 byte data message containing 32 0x00
 void BlueDisplay::sendSync() {
     if (USART_isBluetoothPaired()) {
         char tStringBuffer[STRING_BUFFER_STACK_SIZE];
@@ -141,7 +176,7 @@ void BlueDisplay::setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHe
     mRequestedDisplaySize.YHeight = aHeight;
     if (USART_isBluetoothPaired()) {
         if (aFlags & BD_FLAG_FIRST_RESET_ALL) {
-#if defined(LOCAL_TRACE) && !defined(USE_SIMPLE_SERIAL) && (defined(USE_SERIAL1) || defined(ESP32))
+#if defined(LOCAL_TRACE) && !defined(BD_USE_SIMPLE_SERIAL)
             Serial.println("Send reset all");
 #endif
             // reset local buttons to be synchronized
@@ -162,6 +197,16 @@ void BlueDisplay::setCodePage(uint16_t aCodePageNumber) {
 
 /*
  * aChar must be bigger than 0x80!
+ *  0x03A9 is Omega in UTF16
+ *  0x0394 is Delta in UTF16
+ *  0x21B2 is Enter in UTF16
+ *  0x21E7 is Ascending in UTF16 - for printInfo()
+ *  0x21E9 is Descending in UTF16 - for printInfo()
+ *  0x2302 is Home in UTF16
+ *  0x2227 is UP (logical AND) in UTF16
+ *  0x2228 is Down (logical OR) in UTF16
+ *  0x2195 is UP/Down in UTF16
+ *  0x2103 is Degree Celsius in UTF16
  */
 void BlueDisplay::setCharacterMapping(uint8_t aChar, uint16_t aUnicodeChar) {
     sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 3, SUBFUNCTION_GLOBAL_SET_CHARACTER_CODE_MAPPING, aChar, aUnicodeChar);
@@ -177,7 +222,11 @@ void BlueDisplay::setLongTouchDownTimeout(uint16_t aLongTouchDownTimeoutMillis) 
  */
 void BlueDisplay::setScreenOrientationLock(uint8_t aLockMode) {
     sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 2, SUBFUNCTION_GLOBAL_SET_SCREEN_ORIENTATION_LOCK, aLockMode);
+}
 
+// 255 / BD_SCREEN_BRIGHTNESS_USER is user default, 0 / BD_SCREEN_BRIGHTNESS_MIN is dark and BD_SCREEN_BRIGHTNESS_MAX / 100 is full bright
+void BlueDisplay::setScreenBrightness(uint8_t aScreenBrightness) {
+    sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 2, SUBFUNCTION_GLOBAL_SET_SCREEN_BRIGHTNESS, aScreenBrightness);
 }
 
 void BlueDisplay::playTone() {
@@ -300,7 +349,7 @@ void BlueDisplay::drawVectorDegrees(uint16_t aStartX, uint16_t aStartY, uint16_t
 }
 
 /*
- * aRadian in radian, not degree
+ * aRadian in float radian, not degree
  */
 void BlueDisplay::drawVectorRadian(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, float aRadian, color16_t aColor,
         int16_t aThickness) {
@@ -311,7 +360,7 @@ void BlueDisplay::drawVectorRadian(uint16_t aStartX, uint16_t aStartY, uint16_t 
             uint16_t shortArray[2];
         } floatToShortArray;
         floatToShortArray.floatValue = aRadian;
-        sendUSARTArgs(FUNCTION_DRAW_VECTOR_DEGREE, 7, aStartX, aStartY, aLength, floatToShortArray.shortArray[0],
+        sendUSARTArgs(FUNCTION_DRAW_VECTOR_RADIAN, 7, aStartX, aStartY, aLength, floatToShortArray.shortArray[0],
                 floatToShortArray.shortArray[1], aColor, aThickness);
     }
 }
@@ -379,7 +428,7 @@ void BlueDisplay::fillCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRad
 /**
  * @param aPositionX left position
  * @param aPositionY baseline position - use (upper_position + getTextAscend(<aFontSize>))
- * @return start x for next character / x + (TEXT_SIZE_11_WIDTH * size)
+ * @return start x for next character / x + getTextWidth(aCharSize)
  */
 uint16_t BlueDisplay::drawChar(uint16_t aPositionX, uint16_t aPositionY, char aChar, uint16_t aCharSize, color16_t aCharacterColor,
         color16_t aBackgroundColor) {
@@ -584,6 +633,10 @@ uint16_t BlueDisplay::drawLong(uint16_t aPositionX, uint16_t aPositionY, int32_t
     return tRetValue;
 }
 
+void BlueDisplay::setPaintSizeAndColor(uint8_t aPaintIndex, uint16_t aPaintSize, color16_t aPaintColor) {
+    sendUSARTArgs(FUNCTION_WRITE_SETTINGS, 3, aPaintIndex, aPaintSize, aPaintColor);
+}
+
 /*
  * for writeString implementation
  */
@@ -626,7 +679,7 @@ extern "C" void writeStringC(const char *aStringPtr, uint8_t aStringLength) {
 }
 
 /**
- * Output String as warning to log and present as toast every 500 ms
+ * Output String as warning to log and present as toast for at least 500 ms, i.e. subsequent debugs are suppressed during 500 ms
  */
 void BlueDisplay::debugMessage(const char *aStringPtr) {
     sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(aStringPtr), (uint8_t*) aStringPtr);
@@ -636,7 +689,7 @@ void BlueDisplay::debug(const char *aStringPtr) {
     sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(aStringPtr), (uint8_t*) aStringPtr);
 }
 
-#if defined(F)
+#if defined(F) && defined(ARDUINO)
 void BlueDisplay::debug(const __FlashStringHelper *aPGMString) {
     if (USART_isBluetoothPaired()) {
         char tStringBuffer[STRING_BUFFER_STACK_SIZE];
@@ -849,7 +902,7 @@ void BlueDisplay::debug(const char *aMessage, float aFloat) {
         strncpy(tStringBuffer, aMessage, (STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE - 22));
         tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE - 22] = '\0'; // Terminate strings which are too long
         dtostrf(aFloat, 16, 7, &tStringBuffer[strlen(tStringBuffer)]);
-        tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE -1] = '\0'; // Terminate floats which are too long
+        tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE - 1] = '\0'; // Terminate floats which are too long
 //    snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%f", aMessage, (double)aFloat); // requires ca. 800 bytes more
 #else
         snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%f", aMessage, aFloat);
@@ -895,16 +948,37 @@ void BlueDisplay::drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, colo
     }
 }
 
-struct XYSize* BlueDisplay::getMaxDisplaySize() {
-    return &mMaxDisplaySize;
+/**
+ * if aClearBeforeColor != 0 then previous line is cleared before
+ * chart index is coded in the upper 4 bits of aYOffset
+ *
+ * aIntegerScaleFactor > 1 : expansion by factor aIntegerScaleFactor
+ * Factor == 1 : expansion by 1.5
+ * Factor == 0 : identity
+ * Factor == -1 : compression by 1.5
+ * Factor < -1 : compression by factor aIntegerScaleFactor
+ */
+void BlueDisplay::drawChartByteBufferScaled(uint16_t aXOffset, uint16_t aYOffset, int16_t aIntegerXScaleFactor, float aYScaleFactor,
+        uint8_t aLineSize, uint8_t aChartMode, color16_t aColor, color16_t aClearBeforeColor, uint8_t aChartIndex,
+        bool aDoDrawDirect, uint8_t *aByteBuffer, size_t aByteBufferLength) {
+    if (USART_isBluetoothPaired()) {
+        aYOffset = aYOffset | ((aChartIndex & 0x0F) << 12);
+        uint8_t tFunctionTag = FUNCTION_DRAW_SCALED_CHART_WITHOUT_DIRECT_RENDERING;
+        if (aDoDrawDirect) {
+            tFunctionTag = FUNCTION_DRAW_SCALED_CHART;
+        }
+        union {
+            float floatValue;
+            uint16_t shortArray[2];
+        } floatToShortArray;
+        floatToShortArray.floatValue = aYScaleFactor;
+        sendUSARTArgsAndByteBuffer(tFunctionTag, 9, aXOffset, aYOffset, aIntegerXScaleFactor, floatToShortArray.shortArray[0],
+                floatToShortArray.shortArray[1], aLineSize, aChartMode, aColor, aClearBeforeColor, aByteBufferLength, aByteBuffer);
+    }
 }
 
-uint16_t BlueDisplay::getMaxDisplayWidth() {
-    return mMaxDisplaySize.XWidth;
-}
-
-uint16_t BlueDisplay::getMaxDisplayHeight() {
-    return mMaxDisplaySize.YHeight;
+uint32_t BlueDisplay::getHostUnixTimestamp() {
+    return mHostUnixTimestamp;
 }
 
 struct XYSize* BlueDisplay::getCurrentDisplaySize() {
@@ -991,8 +1065,8 @@ uint16_t BlueDisplay::drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, cons
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
     uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, reinterpret_cast<const __FlashStringHelper*>(aPGMString));
 #  if defined(SUPPORT_LOCAL_DISPLAY)
-    tRetValue = LocalDisplay.drawTextPGM(aPositionX, aPositionY - getTextAscend(aFontSize), aPGMString, aFontSize, aTextColor,
-            aBackgroundColor);
+    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY - getTextAscend(aFontSize),
+            reinterpret_cast<const __FlashStringHelper*>(aPGMString), aFontSize, aTextColor, aBackgroundColor);
 #  endif
     if (USART_isBluetoothPaired()) {
         tRetValue = aPositionX + tTextLength * getTextWidth(aFontSize);
@@ -1006,8 +1080,8 @@ void BlueDisplay::drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const ch
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
     uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, reinterpret_cast<const __FlashStringHelper*>(aPGMString));
 #  if defined(SUPPORT_LOCAL_DISPLAY)
-    tRetValue = LocalDisplay.drawTextPGM(aPositionX, aPositionY - getTextAscend(aFontSize), tPGMString, tTextLength, COLOR16_BLACK,
-            COLOR16_WHITE);
+    LocalDisplay.drawText(aPositionX, aPositionY - getTextAscend(TEXT_SIZE_11),
+            reinterpret_cast<const __FlashStringHelper*>(aPGMString), tTextLength, COLOR16_BLACK, COLOR16_WHITE);
 #  endif
     sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPositionX, aPositionY, tTextLength, (uint8_t*) tStringBuffer);
 }
@@ -1468,6 +1542,9 @@ void BlueDisplay::generateColorSpectrum() {
         }
     }
 }
+#if defined(LOCAL_DEBUG)
+#undef LOCAL_DEBUG
+#endif
 #if defined(LOCAL_TRACE)
 #undef LOCAL_TRACE
 #endif
