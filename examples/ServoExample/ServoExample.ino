@@ -317,8 +317,8 @@ void initDisplay(void) {
     /*
      * handle display size
      */
-    sCurrentDisplayWidth = BlueDisplay1.getCurrentDisplayWidth();
-    sCurrentDisplayHeight = BlueDisplay1.getCurrentDisplayHeight();
+    sCurrentDisplayWidth = BlueDisplay1.getHostDisplayWidth();
+    sCurrentDisplayHeight = BlueDisplay1.getHostDisplayHeight();
 #if !defined(BD_USE_SIMPLE_SERIAL) && (defined(BD_USE_SERIAL1) || defined(ESP32))
     Serial.print("MaxDisplayWidth=");
     Serial.print(sCurrentDisplayWidth);
@@ -575,7 +575,7 @@ void processVerticalSensorValue(float aSensorValue) {
         tInactiveSlider.setValueAndDrawBar(0);
         if (sLastVerticalValue != tVerticalServoValue) {
             sLastVerticalValue = tVerticalServoValue;
-            sprintf(sStringBuffer, "%3d", tVerticalServoValue);
+            snprintf(sStringBuffer, sizeof(sStringBuffer), "%3d", tVerticalServoValue);
             SliderDown.printValue(sStringBuffer);
         }
     }

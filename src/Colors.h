@@ -47,7 +47,7 @@ typedef uint16_t color16_t;
 #define COLOR16_GREY      ((color16_t)0x39E7)
 #define COLOR16_DARK_GREY ((color16_t)0x18E3)
 
-#define COLOR16_NO_DELETE ((color16_t)0X0000) // 0 is used as flag (e.g. in touch button for default color, or as not delete old chart)
+#define COLOR16_NO_DELETE ((color16_t)0X0000) // 0 is used as flag (e.g. for not delete old chart)
 #define COLOR16_BLACK     ((color16_t)0X0001) // 01 because 0 is used as flag
 #define COLOR16_RED       ((color16_t)0xF800)
 #define COLOR16_GREEN     ((color16_t)0X07E0)

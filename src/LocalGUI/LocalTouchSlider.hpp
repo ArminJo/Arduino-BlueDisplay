@@ -520,7 +520,7 @@ int LocalTouchSlider::printValue() {
 
     // Convert to string
     char tValueAsString[4];
-    sprintf(tValueAsString, "%03d", mValue);
+    snprintf(tValueAsString, sizeof(tValueAsString), "%03d", mValue);
     return LocalDisplay.drawText(mPositionX + mXOffsetValue, tValuePositionY - TEXT_SIZE_11_ASCEND, tValueAsString, 1, mValueColor,
             mValueCaptionBackgroundColor);
 }

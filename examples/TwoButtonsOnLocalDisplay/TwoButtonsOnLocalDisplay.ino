@@ -49,7 +49,7 @@ void printRGB(const uint16_t aColor, const uint16_t aXPos, const uint16_t aYPos)
 #define BACKGROUND_COLOR COLOR16_WHITE
 
 // a string buffer for any purpose...
-char StringBuffer[128];
+char sStringBuffer[128];
 
 #define BUTTON_WIDTH 180
 #define BUTTON_HEIGHT 50
@@ -132,23 +132,23 @@ void doButtons(LocalTouchButton *const aTheTouchedButton, int16_t aValue) {
  */
 void printRGB(const uint16_t aColor, uint16_t aXPos, const uint16_t aYPos) {
     //RED
-    sprintf(StringBuffer, "R=%02X", (aColor & 0xF800) >> 8);
-    aXPos = LocalDisplay.drawText(aXPos, aYPos, StringBuffer, TEXT_SIZE_22, COLOR16_RED, BACKGROUND_COLOR);
+    snprintf(sStringBuffer, sizeof(sStringBuffer), "R=%02X", (aColor & 0xF800) >> 8);
+    aXPos = LocalDisplay.drawText(aXPos, aYPos, sStringBuffer, TEXT_SIZE_22, COLOR16_RED, BACKGROUND_COLOR);
     //GREEN
-    sprintf(StringBuffer, "G=%02X", (aColor & 0x07E0) >> 3);
+    snprintf(sStringBuffer, sizeof(sStringBuffer), "G=%02X", (aColor & 0x07E0) >> 3);
     aXPos += 2 * FONT_WIDTH;
-    aXPos = LocalDisplay.drawText(aXPos, aYPos, StringBuffer, TEXT_SIZE_22, COLOR16_GREEN, BACKGROUND_COLOR);
+    aXPos = LocalDisplay.drawText(aXPos, aYPos, sStringBuffer, TEXT_SIZE_22, COLOR16_GREEN, BACKGROUND_COLOR);
     //BLUE
-    sprintf(StringBuffer, "B=%02X", (aColor & 0x001F) << 3);
+    snprintf(sStringBuffer, sizeof(sStringBuffer), "B=%02X", (aColor & 0x001F) << 3);
     aXPos += 2 * FONT_WIDTH;
-    LocalDisplay.drawText(aXPos, aYPos, StringBuffer, TEXT_SIZE_22, COLOR16_BLUE, BACKGROUND_COLOR);
+    LocalDisplay.drawText(aXPos, aYPos, sStringBuffer, TEXT_SIZE_22, COLOR16_BLUE, BACKGROUND_COLOR);
 }
 
 /*
  * Show touch panel raw and processed data in the first line
  */
 void printTPData(void) {
-    sprintf(StringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i", TouchPanel.getCurrentX(), TouchPanel.getRawX(),
+    snprintf(sStringBuffer, sizeof(sStringBuffer), "X:%03i|%04i Y:%03i|%04i P:%03i", TouchPanel.getCurrentX(), TouchPanel.getRawX(),
             TouchPanel.getCurrentY(), TouchPanel.getRawY(), TouchPanel.getPressure());
-    LocalDisplay.drawText(20, 2, StringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
+    LocalDisplay.drawText(20, 2, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
 }
