@@ -178,6 +178,8 @@ public:
     void setTextFromStringArray(const __FlashStringHelper *const*aTextStringArrayPtr, uint8_t aStringIndex, bool doDrawButton =
             false);
 
+//#define OMIT_BD_DEPRECATED_FUNCTIONS // For testing :-)
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
     // deprecated
     void setCaption(const char *aText, bool doDrawButton = false) __attribute__ ((deprecated ("Renamed to setText")));
     void setCaption(const __FlashStringHelper *aPGMText, bool doDrawButton = false)
@@ -200,6 +202,10 @@ public:
                     __attribute__ ((deprecated ("Use setTextFromStringArray(const __FlashStringHelper *const *aTextStringArrayPtr,...) with cast")));
 #endif // defined(__AVR__)
 
+    static void activateAllButtons() __attribute__ ((deprecated ("Renamed to activateAll")));
+    static void deactivateAllButtons() __attribute__ ((deprecated ("Renamed to deactivateAll")));
+#endif
+
     // Value
     void setValue(int16_t aValue, bool doDrawButton = false);
     void setValueAndDraw(int16_t aValue);
@@ -210,8 +216,7 @@ public:
     static void playFeedbackTone();
     static void playFeedbackTone(bool aPlayErrorTone);
 
-    static void activateAllButtons() __attribute__ ((deprecated ("Renamed to activateAll")));
-    static void deactivateAllButtons() __attribute__ ((deprecated ("Renamed to deactivateAll")));
+
 
     BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions. Taken in init() from sLocalButtonIndex.
 

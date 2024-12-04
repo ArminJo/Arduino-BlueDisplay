@@ -213,7 +213,7 @@ void initDisplay(void) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
 //show touchpanel data
 void printLocalTouchPanelData(void) {
-    sprintf(sBDStringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getCurrentX(), TouchPanel.getRawX(),
+    snprintf(sBDStringBuffer, sizeof(sBDStringBuffer), "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getCurrentX(), TouchPanel.getRawX(),
             TouchPanel.getCurrentY(), TouchPanel.getRawY(), TouchPanel.getPressure(), sTouchObjectTouched);
     LocalDisplay.drawText(30, 2, sBDStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
 }
@@ -249,7 +249,7 @@ void showRTCTime(void) {
     i2c_stop();
 
 //buf[3] is day of week
-    sprintf_P(StringBuffer, PSTR("%02i.%02i.%04i %02i:%02i:%02i"), RtcBuf[4], RtcBuf[5], RtcBuf[6] + 2000, RtcBuf[2], RtcBuf[1],
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02i.%02i.%04i %02i:%02i:%02i"), RtcBuf[4], RtcBuf[5], RtcBuf[6] + 2000, RtcBuf[2], RtcBuf[1],
             RtcBuf[0]);
     LocalDisplay.drawText(10, DISPLAY_HEIGHT - FONT_HEIGHT - 1, StringBuffer, 1, COLOR_RED, BACKGROUND_COLOR);
 }

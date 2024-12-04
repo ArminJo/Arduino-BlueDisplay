@@ -93,7 +93,7 @@ public:
             const uint16_t aGridOrLabelYPixelSpacing);
 
     void initChartColors(const color16_t aDataColor, const color16_t aAxesColor, const color16_t aGridColor,
-            const color16_t aLabelColor, const color16_t aBackgroundColor);
+            const color16_t aXLabelColor, const color16_t aYLabelColor, const color16_t aBackgroundColor);
     void setDataColor(color16_t aDataColor);
     void setBackgroundColor(color16_t aBackgroundColor);
     void setLabelColor(color16_t aLabelColor);
@@ -158,10 +158,10 @@ public:
     int8_t getXDataScaleFactor(void) const;
     void setXLabelAndXDataScaleFactor(int aXFactor);
 
-    long reduceLongWithIntegerScaleFactor(long aValue);
-    float reduceFloatWithIntegerScaleFactor(float Value);
-    int enlargeLongWithIntegerScaleFactor(int Value);
-    float enlargeFloatWithIntegerScaleFactor(float Value);
+    long reduceLongWithXLabelScaleFactor(long aValue);
+    float reduceFloatWithXLabelScaleFactor(float Value);
+    long enlargeLongWithXLabelScaleFactor(long Value);
+    float enlargeFloatWithXLabelScaleFactor(float Value);
     static long reduceLongWithIntegerScaleFactor(long aValue, int aScaleFactor);
     static void getIntegerScaleFactorAsString(char *tStringBuffer, int aScaleFactor);
     static float reduceFloatWithIntegerScaleFactor(float aValue, int aScaleFactor);
@@ -171,8 +171,8 @@ public:
     // X Title
     void setXTitleText(const char *aLabelText);
     void drawXAxisTitle() const;
-    void setTitleTextSize(const uint8_t aTitleTextSize);
-
+    void setTitleTextSize(const uint8_t aTitleTextSize); // Sets chart X + Y title text size
+    void setXTitleTextAndSize(const char *aTitleText, const uint8_t aTitleTextSize); // Sets chart X + Y title text size
     /*
      *  Y Axis
      */
@@ -210,6 +210,7 @@ public:
 
     // Y Title
     void setYTitleText(const char *aLabelText);
+    void setYTitleTextAndSize(const char *aTitleText, const uint8_t aTitleTextSize); // Sets chart X + Y title text size
     void drawYAxisTitle(const int aYOffset) const;
 
     // layout all values are in pixels
@@ -226,7 +227,8 @@ public:
     color16_t mDataColor;
     color16_t mAxesColor;
     color16_t mGridColor;
-    color16_t mLabelColor;
+    color16_t mXLabelColor;
+    color16_t mYLabelColor;
     color16_t mBackgroundColor;
 
     /*
@@ -235,15 +237,17 @@ public:
     int_long_float_union mXLabelStartValue;
 
     /*
+     * !!! Offset of a main label to Y axis !!! E.g. for date as main label, we need the time to one of the last midnights here.
+     * If offset is positive -> grid is shifted left
+     * If offset is negative, the starting intermediate labels are not rendered!
+     *
      * If mXLabelAndGridStartValueOffset == mXLabelBaseIncrementValue then grid starts with 2. value
      * If label distance is 1, then label also starts with 2. value
      * Pixel offset is (mXLabelAndGridStartValueOffset / mXLabelBaseIncrementValue) * mGridXPixelSpacing
      * for X ScaleFactor != identity, pixel offset is (mXLabelAndGridStartValueOffset / adjusted(mXLabelBaseIncrementValue)) * mGridXPixelSpacing
      * because increment has changed by mXLabelScaleFactor
-     * Offset positive -> grid is shifted left
-     * If offset is negative, the starting intermediate labels are not rendered!
      */
-    float mXLabelAndGridStartValueOffset; // The value in the same units as mXLabelBaseIncrementValue. If > 0, the label and grid will be shifted left
+    float mXLabelAndGridStartValueOffset; // Left offset of a main label in the same units as mXLabelBaseIncrementValue
 
     /*
      * Value difference between 2 grid labels - the effective IncrementValue is mXLabelScaleFactor * mXLabelBaseIncrementValue
@@ -251,7 +255,7 @@ public:
      * Here we have only discrete (integer) scale factors to easily support local displays.
      */
     long_float_union mXLabelBaseIncrementValue; // The base increment value for one grid
-    uint8_t mGridXPixelSpacing; // Difference in pixel between 2 X grid lines
+    uint8_t mGridOrLabelXPixelSpacing; // Difference in pixel between 2 X grid lines
 
     /*
      * Scale factor is CHART_WIDTH / lengthOfDataToShow if this is > 1
@@ -261,6 +265,7 @@ public:
 #define CHART_X_AXIS_SCALE_FACTOR_EXPANSION_2       2 // expansion by factor 2
 #define CHART_X_AXIS_SCALE_FACTOR_EXPANSION_3       3 // expansion by factor 3
 #define CHART_X_AXIS_SCALE_FACTOR_EXPANSION_4       4 // expansion by factor 4
+#define CHART_X_AXIS_SCALE_FACTOR_EXPANSION_8       8 // expansion by factor 8
 #define CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5  -1 // compression by 1.5
 #define CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_2    -2 // compression by factor 2
 #define CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_3    -3 // compression by factor 3
@@ -290,7 +295,7 @@ public:
     int_float_union mYLabelStartOffset;
     int_float_union mYLabelIncrementValue; // Value difference between 2 grid labels - serves as Y scale factor
     float mYDataFactor; // Factor for input (raw (int16_t) or float) to chart (not display!!!) value - e.g. (3.0 / 4096) for adc reading of 4096 for 3 (Volt) or 0.2 for 1000 display at 5000 input value
-    uint8_t mGridYPixelSpacing; // difference in pixel between 2 Y grid lines
+    uint8_t mGridOrLabelYPixelSpacing; // difference in pixel between 2 Y grid lines
 
     // label formatting
     uint8_t mYNumVarsAfterDecimal;

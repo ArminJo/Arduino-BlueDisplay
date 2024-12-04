@@ -69,8 +69,8 @@ public:
     void drawStop();
 
     void setCursor(uint16_t aXStart, uint16_t aYStart);
-    uint16_t getDisplayWidth();
-    uint16_t getDisplayHeight();
+    uint16_t getRequestedDisplayWidth();
+    uint16_t getRequestedDisplayHeight();
 
     uint16_t readPixel(uint16_t aXPos, uint16_t aYPos);
     uint16_t* fillDisplayLineBuffer(uint16_t *aBufferPtr, uint16_t yLineNumber);
@@ -89,8 +89,8 @@ void resetBacklightTimeout(void);
 void callbackLCDDimming(void);
 int clipBrightnessValue(int aBrightnessValue);
 
-uint16_t getDisplayWidth(void);
-uint16_t getDisplayHeight(void);
+uint16_t getRequestedDisplayWidth(void);
+uint16_t getRequestedDisplayHeight(void);
 
 int drawNText(uint16_t x, uint16_t y, const char *s, int aNumberOfCharacters, uint8_t size, uint16_t color, uint16_t bg_color);
 
