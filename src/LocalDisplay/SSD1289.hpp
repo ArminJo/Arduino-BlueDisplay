@@ -119,11 +119,11 @@ void SSD1289::clearDisplay(uint16_t aColor) {
 
 }
 
-uint16_t SSD1289::getDisplayWidth(void) {
+uint16_t SSD1289::getRequestedDisplayWidth(void) {
     return LOCAL_DISPLAY_WIDTH;
 }
 
-uint16_t SSD1289::getDisplayHeight(void) {
+uint16_t SSD1289::getRequestedDisplayHeight(void) {
     return LOCAL_DISPLAY_HEIGHT;
 }
 

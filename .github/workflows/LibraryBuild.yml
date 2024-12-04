@@ -27,7 +27,7 @@ jobs:
 
     env:
       # Comma separated list without double quotes around the list.
-      REQUIRED_LIBRARIES: Servo
+      REQUIRED_LIBRARIES: Servo,LiquidCrystal
 
     strategy:
       matrix:
@@ -59,30 +59,30 @@ jobs:
             sketches-exclude: SimpleTouchScreenDSO,TouchGuiDemo # Too big
 
           - arduino-boards-fqbn: arduino:sam:arduino_due_x
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay,BTModuleProgrammer,ShowSensorValues,TouchGuiDemo # missing random()
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay,BTModuleProgrammer,ShowSensorValues,TouchGuiDemo,ChartForMHZ19_CO2 # missing random()
 
           - arduino-boards-fqbn: MegaCore:avr:128:bootloader=no_bootloader,eeprom=keep,BOD=2v7,LTO=Os,clock=8MHz_internal
             platform-url: https://mcudude.github.io/MegaCore/package_MCUdude_MegaCore_index.json
             arduino-platform: arduino:avr,MegaCore:avr # gcc is taken from arduino:avr
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay,ServoExample  # ServoEasing not available for Mega Core
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay,ServoExample,ChartForMHZ19_CO2  # ServoEasing not available for Mega Core
 
           - arduino-boards-fqbn: esp8266:esp8266:huzzah:eesz=4M3M,xtal=80
             platform-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay,BTModuleProgrammer
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay,BTModuleProgrammer,ChartForMHZ19_CO2
 
           - arduino-boards-fqbn: esp32:esp32:esp32doit-devkit-v1
             platform-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay,RcCarControl,BTModuleProgrammer,ServoExample
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay,RcCarControl,BTModuleProgrammer,ServoExample,ChartForMHZ19_CO2
 #            build-properties: # the flags were put in compiler.cpp.extra_flags
 #              ShowSensorValues: -Wno-error=format-overflow # https://github.com/espressif/arduino-esp32/issues/7024 !!using this in ESP 3.x gives strange errors!!!
 
           - arduino-boards-fqbn: STMicroelectronics:stm32:GenF1:pnum=BLUEPILL_F103C8
             platform-url: https://raw.githubusercontent.com/stm32duino/BoardManagerFiles/main/package_stmicroelectronics_index.json
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay # Comma separated list of example names to exclude in build
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay,ChartForMHZ19_CO2 # Comma separated list of example names to exclude in build
 
           - arduino-boards-fqbn: stm32duino:STM32F1:genericSTM32F103C # Roger Clark version
             platform-url: http://dan.drown.org/stm32duino/package_STM32duino_index.json
-            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay,BTModuleProgrammer   # Comma separated list of example names to exclude in build
+            sketches-exclude: SimpleTouchScreenDSO,SimpleDSO_BlueDisplay,TwoButtonsOnLocalDisplay,BTModuleProgrammer,ChartForMHZ19_CO2   # Comma separated list of example names to exclude in build
 
 #      fail-fast: false # false -> do not cancel all jobs / architectures if one job fails
 
@@ -99,6 +99,8 @@ jobs:
           required-libraries: ${{ env.REQUIRED_LIBRARIES }}
           sketches-exclude: ${{ matrix.sketches-exclude }}
           build-properties: ${{ toJson(matrix.build-properties) }}
+#          build-properties: '{ "All": "-DOMIT_BD_DEPRECATED_FUNCTIONS{{ matrix.build-properties }}" }'
+          
 #          build-properties: '{ "SimpleTouchScreenDSO": "-DBD_USE_SIMPLE_SERIAL" }'
 #          debug-install: true
 #          debug-compile: true

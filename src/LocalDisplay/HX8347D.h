@@ -48,8 +48,8 @@ public:
     void setBacklightBrightness(uint8_t aBrightnessPercent); //0-100
 
     void setOrientation(uint16_t o); //0 90 180 270
-    uint16_t getDisplayWidth();
-    uint16_t getDisplayHeight();
+    uint16_t getRequestedDisplayWidth();
+    uint16_t getRequestedDisplayHeight();
     void setCursor(uint16_t x, uint16_t y);
 
     /*

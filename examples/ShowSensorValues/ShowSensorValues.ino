@@ -235,17 +235,17 @@ void doAccelerometerChange(struct SensorCallback * aSensorCallbackInfo) {
 
     uint16_t tYPos = ACCELERATION_SLIDER_CENTER_Y + 2 * TEXT_SIZE_11_HEIGHT;
     dtostrf(aSensorCallbackInfo->ValueX, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Acc.X %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Acc.X %s"), &sStringBuffer[10]); // we have no overflow here
     BlueDisplay1.drawText(ACCELEROMETER_PRINT_VALUES_X, tYPos, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, COLOR16_WHITE);
 
     tYPos += TEXT_SIZE_11;
     dtostrf(aSensorCallbackInfo->ValueY, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Acc.Y %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Acc.Y %s"), &sStringBuffer[10]);
     BlueDisplay1.drawText(ACCELEROMETER_PRINT_VALUES_X, tYPos, sStringBuffer);
 
     tYPos += TEXT_SIZE_11;
     dtostrf(aSensorCallbackInfo->ValueZ, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Acc.Z %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Acc.Z %s"), &sStringBuffer[10]);
     BlueDisplay1.drawText(ACCELEROMETER_PRINT_VALUES_X, tYPos, sStringBuffer);
 #endif
 }
@@ -287,17 +287,17 @@ void doGyroscopeChange(struct SensorCallback * aSensorCallbackInfo) {
 
     uint16_t tYPos = ACCELERATION_SLIDER_CENTER_Y + 2 * TEXT_SIZE_11_HEIGHT;
     dtostrf(aSensorCallbackInfo->ValueX, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Roll  %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Roll  %s"), &sStringBuffer[10]);
     BlueDisplay1.drawText(GYROSCOPE_PRINT_VALUES_X, tYPos, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, COLOR16_WHITE);
 
     tYPos += TEXT_SIZE_11;
     dtostrf(aSensorCallbackInfo->ValueY, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Pitch %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Pitch %s"), &sStringBuffer[10]);
     BlueDisplay1.drawText(GYROSCOPE_PRINT_VALUES_X, tYPos, sStringBuffer);
 
     tYPos += TEXT_SIZE_11;
     dtostrf(aSensorCallbackInfo->ValueZ, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Yaw   %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Yaw   %s"), &sStringBuffer[10]);
     BlueDisplay1.drawText(GYROSCOPE_PRINT_VALUES_X, tYPos, sStringBuffer);
 #endif
 }

@@ -27,6 +27,18 @@
  *
  */
 
+/*
+ * Text Y position is baseline of character
+ * Text Y top position is (Y position - ascend) - use getTextAscend(TextSize)
+ * Text Y bottom position is position + descend
+ * Text Y middle position is position - ((ascend - descend) / 2) - see getTextMiddleCorrection()
+ * Text position for local implementation is upper left corner of character
+ *
+ * Slider position is upper left corner of slider
+ * Button position is upper left corner of button
+ * If button color is COLOR16_NO_BACKGROUND only a text button without background is rendered
+ */
+
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
@@ -42,6 +54,14 @@
  */
 #define VERSION_HEX_VALUE(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
 #define VERSION_BLUE_DISPLAY_HEX  VERSION_HEX_VALUE(VERSION_BLUE_DISPLAY_MAJOR, VERSION_BLUE_DISPLAY_MINOR, VERSION_BLUE_DISPLAY_PATCH)
+
+#define CONNECTIOM_TIMEOUT_MILLIS   1500
+
+// Helper macro for getting a macro definition as string
+#if !defined(STR)
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+#endif
 
 /*
  * If both macros are enabled, LocalGUI.hpp should be included and TouchButton and TouchSlider instead of BDButton and BDSlider used.
@@ -189,7 +209,7 @@ class BlueDisplay {
 public:
     BlueDisplay();
     void resetLocal();
-    void initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)() = NULL, void (*aReorientationCallback)() = NULL);
+    uint_fast16_t initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)() = NULL, void (*aReorientationCallback)() = NULL);
     // The result of initCommunication
     bool isConnectionEstablished();
     void sendSync();
@@ -248,6 +268,8 @@ public:
             bool aClearOnNewScreen);
     void setWriteStringPosition(uint16_t aPositionX, uint16_t aPositionY);
     void setWriteStringPositionColumnLine(uint16_t aColumnNumber, uint16_t aLineNumber);
+    void writeString(const char *aStringPtr);
+    void writeString(const __FlashStringHelper *aPGMString);
     void writeString(const char *aStringPtr, uint8_t aStringLength);
 
     void debugMessage(const char *aStringPtr);
@@ -272,7 +294,7 @@ public:
     void debug(double aDouble);
 
     void drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
-    void drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor);
+    void drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aXOffset, int16_t aYHeight, color16_t aColor);
     void drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aEndY, color16_t aColor);
     void drawVectorDegrees(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, int aDegrees, color16_t aColor,
             int16_t aThickness = 1);
@@ -280,7 +302,7 @@ public:
             int16_t aThickness = 1);
     void drawLineWithThickness(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor,
             int16_t aThickness);
-    void drawLineRelWithThickness(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor,
+    void drawLineRelWithThickness(uint16_t aStartX, uint16_t aStartY, int16_t aXOffset, int16_t aYOffset, color16_t aColor,
             int16_t aThickness);
 
     void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
@@ -291,13 +313,15 @@ public:
             uint8_t aLineSize, uint8_t aChartMode, color16_t aColor, color16_t aClearBeforeColor, uint8_t aChartIndex,
             bool aDoDrawDirect, uint8_t *aByteBuffer, size_t aByteBufferLength);
 
-    struct XYSize* getCurrentDisplaySize();
-    uint16_t getCurrentDisplayWidth();
-    uint16_t getCurrentDisplayHeight();
-    // returns requested size
+    // The display size / resolution of the Host (mobile or tablet)
+    struct XYSize* getHostDisplaySize();
+    uint16_t getHostDisplayWidth();
+    uint16_t getHostDisplayHeight();
+
+    // The requested / virtual display size / resolution
     struct XYSize* getRequestedDisplaySize();
-    uint16_t getDisplayWidth();
-    uint16_t getDisplayHeight();
+    uint16_t getRequestedDisplayWidth();
+    uint16_t getRequestedDisplayHeight();
     // Implemented by event handler
     bool isDisplayOrientationLandscape();
 
@@ -333,7 +357,7 @@ public:
     // Not yet implemented    void getTextWithShortPromptPGM(void (*aTextHandler)(const char *), const __FlashStringHelper *aPGMShortPromptString);
 
     struct XYSize mRequestedDisplaySize; // contains requested display size
-    struct XYSize mCurrentDisplaySize; // contains real host display size. Is initialized at connection build up and updated at reorientation and redraw event.
+    struct XYSize mHostDisplaySize; // contains real host display size. Is initialized at connection build up and updated at reorientation and redraw event.
     uint32_t mHostUnixTimestamp;
 
     bool mBlueDisplayConnectionEstablished; // true if BlueDisplayApps responded to requestMaxCanvasSize()
@@ -390,8 +414,11 @@ float getCPUTemperature(void);
 
 /*
  * Version 4.1.0
- * - Removed mMaxDisplaySize, because it was just a copy of CurrentDisplaySize.
- * - Added function setScreenBrightness();
+ * - Removed mMaxDisplaySize, because it was just a copy of CurrentDisplaySize, which is now HostDisplaySize etc..
+ * - Renamed getDisplaySize to getRequestedDisplaySize etc.
+ * - Added function setScreenBrightness().
+ * - Refactored Chart and chart line drawing functions.
+ * - Changed "Caption" to "Text" for buttons and renamed fields and functions.
  *
  * Version 4.0.1
  * - Minor changes and updated 3. party libs.

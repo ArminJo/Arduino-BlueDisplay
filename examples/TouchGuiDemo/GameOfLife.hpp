@@ -182,12 +182,12 @@ void drawGameOfLife(void) {
                     tGameOfLifeByteArray[x][y] = CELL_IS_ALIVE;
 //                    tColorIndex = ALIVE_COLOR_INDEX; // Red, green or blue
                 }
-                Display.fillRect(tPosX + 1, tPosY + 1, tPosX + (Display.getDisplayWidth() / GAME_OF_LIFE_X_SIZE) - 2,
-                        tPosY + (Display.getDisplayHeight() / GAME_OF_LIFE_Y_SIZE) - 2, drawcolor[tColorIndex]);
+                Display.fillRect(tPosX + 1, tPosY + 1, tPosX + (Display.getRequestedDisplayWidth() / GAME_OF_LIFE_X_SIZE) - 2,
+                        tPosY + (Display.getRequestedDisplayHeight() / GAME_OF_LIFE_Y_SIZE) - 2, drawcolor[tColorIndex]);
             }
-            tPosY += (Display.getDisplayHeight() / GAME_OF_LIFE_Y_SIZE);
+            tPosY += (Display.getRequestedDisplayHeight() / GAME_OF_LIFE_Y_SIZE);
         }
-        tPosX += (Display.getDisplayWidth() / GAME_OF_LIFE_X_SIZE);
+        tPosX += (Display.getRequestedDisplayWidth() / GAME_OF_LIFE_X_SIZE);
     }
 }
 
@@ -206,11 +206,11 @@ void ClearScreenAndDrawGameOfLifeGrid(void) {
 #endif
         for (uint_fast8_t y = 0; y < GAME_OF_LIFE_Y_SIZE; y++) {
             //clear cells
-            Display.fillRect(tPosX + 1, tPosY + 1, tPosX - 2 + (Display.getDisplayWidth() / GAME_OF_LIFE_X_SIZE),
-                    tPosY + (Display.getDisplayHeight() / GAME_OF_LIFE_Y_SIZE) - 2, drawcolor[DEAD_COLOR_INDEX]);
-            tPosY += (Display.getDisplayHeight() / GAME_OF_LIFE_Y_SIZE);
+            Display.fillRect(tPosX + 1, tPosY + 1, tPosX - 2 + (Display.getRequestedDisplayWidth() / GAME_OF_LIFE_X_SIZE),
+                    tPosY + (Display.getRequestedDisplayHeight() / GAME_OF_LIFE_Y_SIZE) - 2, drawcolor[DEAD_COLOR_INDEX]);
+            tPosY += (Display.getRequestedDisplayHeight() / GAME_OF_LIFE_Y_SIZE);
         }
-        tPosX += (Display.getDisplayWidth() / GAME_OF_LIFE_X_SIZE);
+        tPosX += (Display.getRequestedDisplayWidth() / GAME_OF_LIFE_X_SIZE);
     }
 }
 

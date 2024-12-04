@@ -200,7 +200,7 @@ public:
     uint16_t mWidthX;
     uint16_t mHeightY;
     uint8_t mTextSize;
-    uint8_t mFlags; //Flag for: Autorepeat type, allocated, only Text, Red/Green button. For definition, see BDButton.h
+    uint8_t mFlags; //Flag for: Autorepeat type, allocated, Red/Green button. For definition, see BDButton.h
 
     const char *mText; // Pointer to Text
     const char *mTextForTrue; // Pointer to text for true for red green buttons
