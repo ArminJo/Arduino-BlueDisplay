@@ -331,6 +331,7 @@ void LongTouchDownHandlerGUIDemo(struct TouchEvent *const aTouchPosition) {
 }
 
 void doGuiDemoButtons(Button *aTheTouchedButton, int16_t aValue) {
+    (void) aValue;
     Button::deactivateAll();
     Slider::deactivateAll();
 
@@ -453,10 +454,13 @@ void doGameOfLifeSpeed(Slider *aTheTouchedSlider, uint16_t aSliderValue) {
 }
 
 void doGameOfLifeDying(Button *aTheTouchedButton, int16_t aValue) {
+    (void) aTheTouchedButton;
     GameOfLifeShowDying = aValue;
 }
 
 void doNewGameOfLife(Button *aTheTouchedButton, int16_t aValue) {
+    (void) aTheTouchedButton;
+    (void) aValue;
     /*
      * Let slider Start/Stop and New game buttons active as invisible GUI
      */
@@ -472,6 +476,7 @@ void doNewGameOfLife(Button *aTheTouchedButton, int16_t aValue) {
 }
 
 void doStartStopGameOfLife(Button *aTheTouchedButton, int16_t aValue) {
+    (void) aTheTouchedButton;
     if (showingGameOfLife) {
         GameOfLifeRunning = !aValue;
         TouchButtonStartStopGame.setValue(GameOfLifeRunning);

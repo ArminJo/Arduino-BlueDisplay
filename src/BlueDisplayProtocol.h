@@ -297,6 +297,7 @@ struct BluetoothEvent {
 #define FLAG_WRITE_SETTINGS_SET_LINE_COLUMN         0x02
 
 #define INDEX_LAST_FUNCTION_WITHOUT_DATA            0x5F
+
 // Function with variable data size
 #define FUNCTION_DRAW_STRING                        0x60
 #define FUNCTION_DEBUG_STRING                       0x61
@@ -305,8 +306,8 @@ struct BluetoothEvent {
 #define FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT       0x64
 #define FUNCTION_GET_TEXT_WITH_SHORT_PROMPT         0x65
 
-#define FUNCTION_DRAW_PATH                          0x68
-#define FUNCTION_FILL_PATH                          0x69
+#define FUNCTION_DRAW_PATH                          0x68 // Not yet implemented in Arduino library
+#define FUNCTION_FILL_PATH                          0x69 // Not yet implemented in Arduino library
 #define FUNCTION_DRAW_CHART                                 0x6A // Chart index is coded in the upper 4 bits of Y start position
 #define FUNCTION_DRAW_CHART_WITHOUT_DIRECT_RENDERING        0x6B // To draw multiple charts (16 available) before rendering them
 #define FUNCTION_DRAW_SCALED_CHART                          0x6C // For chart implementation
@@ -315,7 +316,7 @@ struct BluetoothEvent {
 /**********************
  * Button functions
  *********************/
-#define FUNCTION_BUTTON_DRAW 0x40
+#define FUNCTION_BUTTON_DRAW                        0x40
 //#define FUNCTION_BUTTON_DRAW_CAPTION              0x41
 #define FUNCTION_BUTTON_SETTINGS                    0x42
 // Flags for BUTTON_SETTINGS
@@ -333,7 +334,7 @@ struct BluetoothEvent {
 #define SUBFUNCTION_BUTTON_RESET_ACTIVE             0x11
 #define SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING    0x12
 
-#define FUNCTION_BUTTON_REMOVE 0x43
+#define FUNCTION_BUTTON_REMOVE                      0x43
 
 // static functions
 #define FUNCTION_BUTTON_ACTIVATE_ALL                0x48

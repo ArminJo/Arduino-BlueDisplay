@@ -23,6 +23,10 @@
  *
  */
 
+/*
+ * Slider position is upper left corner of slider
+ */
+
 #ifndef _BDSLIDER_H
 #define _BDSLIDER_H
 

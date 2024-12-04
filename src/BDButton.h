@@ -23,6 +23,11 @@
  *
  */
 
+/*
+ * Button position is upper left corner of button
+ * If button color is COLOR16_NO_BACKGROUND only a text button without background is rendered
+ */
+
 #ifndef _BDBUTTON_H
 #define _BDBUTTON_H
 
@@ -58,7 +63,7 @@ static const int FLAG_BUTTON_GLOBAL_SET_BEEP_TONE = 0x02;   // Beep on button to
 // LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK is set, when we have a local and a remote button, i.e. SUPPORT_REMOTE_AND_LOCAL_DISPLAY is defined.
 // Then only the remote button pointer is used as callback parameter to enable easy comparison of this parameter with a fixed button.
 #define LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK     0x20
-#define LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE 0x40
+#define LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE    0x40
 #define LOCAL_BUTTON_FLAG_MASK                          0x70
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
@@ -178,6 +183,8 @@ public:
     void setTextFromStringArray(const __FlashStringHelper *const*aTextStringArrayPtr, uint8_t aStringIndex, bool doDrawButton =
             false);
 
+//#define OMIT_BD_DEPRECATED_FUNCTIONS // For testing :-)
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
     // deprecated
     void setCaption(const char *aText, bool doDrawButton = false) __attribute__ ((deprecated ("Renamed to setText")));
     void setCaption(const __FlashStringHelper *aPGMText, bool doDrawButton = false)
@@ -200,6 +207,10 @@ public:
                     __attribute__ ((deprecated ("Use setTextFromStringArray(const __FlashStringHelper *const *aTextStringArrayPtr,...) with cast")));
 #endif // defined(__AVR__)
 
+    static void activateAllButtons() __attribute__ ((deprecated ("Renamed to activateAll")));
+    static void deactivateAllButtons() __attribute__ ((deprecated ("Renamed to deactivateAll")));
+#endif
+
     // Value
     void setValue(int16_t aValue, bool doDrawButton = false);
     void setValueAndDraw(int16_t aValue);
@@ -210,8 +221,7 @@ public:
     static void playFeedbackTone();
     static void playFeedbackTone(bool aPlayErrorTone);
 
-    static void activateAllButtons() __attribute__ ((deprecated ("Renamed to activateAll")));
-    static void deactivateAllButtons() __attribute__ ((deprecated ("Renamed to deactivateAll")));
+
 
     BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions. Taken in init() from sLocalButtonIndex.
 

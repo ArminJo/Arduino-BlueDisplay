@@ -192,11 +192,11 @@ void initDisplay(void) {
     /*
      * handle display size
      */
-    BlueDisplay1.debug("XWidth=", BlueDisplay1.mCurrentDisplaySize.XWidth);
-    BlueDisplay1.debug("cWidth=", BlueDisplay1.getCurrentDisplayWidth());
+    BlueDisplay1.debug("XWidth=", BlueDisplay1.mHostDisplaySize.XWidth);
+    BlueDisplay1.debug("cWidth=", BlueDisplay1.getHostDisplayWidth());
 
-    sCurrentDisplayWidth = BlueDisplay1.getCurrentDisplayWidth();
-    sCurrentDisplayHeight = BlueDisplay1.getCurrentDisplayHeight();
+    sCurrentDisplayWidth = BlueDisplay1.getHostDisplayWidth();
+    sCurrentDisplayHeight = BlueDisplay1.getHostDisplayHeight();
     if (sCurrentDisplayWidth < sCurrentDisplayHeight) {
         // Portrait -> change to landscape 3/2 format
         sCurrentDisplayHeight = (sCurrentDisplayWidth / 3) * 2;
@@ -265,7 +265,7 @@ void initDisplay(void) {
     SliderShowUSDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR16_BLACK,
             COLOR16_WHITE);
 
-    BlueDisplay1.debug("XWidth1=", BlueDisplay1.mCurrentDisplaySize.XWidth);
+    BlueDisplay1.debug("XWidth1=", BlueDisplay1.mHostDisplaySize.XWidth);
     BlueDisplay1.debug("BUTTON_WIDTH_3_DYN=", (uint16_t) BUTTON_WIDTH_3_DYN);
     /*
      * Buttons
@@ -407,7 +407,7 @@ void BDloop() {
                         tSpeed = FOLLOWER_MAX_SPEED;
                     }
                     analogWrite(FORWARD_MOTOR_PWM_PIN, tSpeed);
-                    sprintf(sBDStringBuffer, "%3d", tSpeed);
+                    snprintf(sBDStringBuffer, sizeof(sBDStringBuffer), "%3d", tSpeed);
                     SliderVelocityBackward.printValue(sBDStringBuffer);
                 }
 
@@ -422,7 +422,7 @@ void BDloop() {
                     tSpeed = FOLLOWER_MAX_SPEED;
                 }
                 analogWrite(BACKWARD_MOTOR_PWM_PIN, tSpeed);
-                sprintf(sBDStringBuffer, "%3d", tSpeed);
+                snprintf(sBDStringBuffer, sizeof(sBDStringBuffer), "%3d", tSpeed);
                 SliderVelocityBackward.printValue(sBDStringBuffer);
             } else {
                 /*
@@ -539,7 +539,7 @@ void processVerticalSensorValue(float tSensorValue) {
         /*
          * Print speed as value of bottom slider
          */
-        sprintf(sBDStringBuffer, "%3d", tSpeedValue);
+        snprintf(sBDStringBuffer, sizeof(sBDStringBuffer), "%3d", tSpeedValue);
         SliderVelocityBackward.printValue(sBDStringBuffer);
     }
 }

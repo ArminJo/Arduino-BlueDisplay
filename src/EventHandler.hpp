@@ -626,8 +626,8 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 }
 
 void copyDisplaySizeAndTimestamp(struct BluetoothEvent *aEvent) {
-    BlueDisplay1.mCurrentDisplaySize.XWidth = aEvent->EventData.DisplaySizeAndTimestamp.DisplaySize.XWidth;
-    BlueDisplay1.mCurrentDisplaySize.YHeight = aEvent->EventData.DisplaySizeAndTimestamp.DisplaySize.YHeight;
+    BlueDisplay1.mHostDisplaySize.XWidth = aEvent->EventData.DisplaySizeAndTimestamp.DisplaySize.XWidth;
+    BlueDisplay1.mHostDisplaySize.YHeight = aEvent->EventData.DisplaySizeAndTimestamp.DisplaySize.YHeight;
     BlueDisplay1.mHostUnixTimestamp = aEvent->EventData.DisplaySizeAndTimestamp.UnixTimestamp;
 }
 
