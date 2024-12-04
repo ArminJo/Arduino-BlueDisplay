@@ -139,6 +139,12 @@ char sStringBuffer[20];
 // PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
 const char StartMessage[] = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
 
+// Helper macro for getting a macro definition as string
+#if !defined(STR)
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+#endif
+
 /*******************************************************************************************
  * Program code starts here
  *******************************************************************************************/
@@ -163,7 +169,16 @@ void setup() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
-    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+    uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &drawGui); // introduces up to 1.5 seconds delay
+#if !defined(BD_USE_SIMPLE_SERIAL)
+    if (tConnectDurationMillis > 0) {
+        Serial.print("Connection established after ");
+        Serial.print(tConnectDurationMillis);
+        Serial.println(" ms");
+    } else {
+        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
+    }
+#endif
 
 #if defined(BD_USE_SERIAL1) || defined(ESP32) // BD_USE_SERIAL1 may be defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
@@ -235,17 +250,17 @@ void doAccelerometerChange(struct SensorCallback * aSensorCallbackInfo) {
 
     uint16_t tYPos = ACCELERATION_SLIDER_CENTER_Y + 2 * TEXT_SIZE_11_HEIGHT;
     dtostrf(aSensorCallbackInfo->ValueX, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Acc.X %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Acc.X %s"), &sStringBuffer[10]); // we have no overflow here
     BlueDisplay1.drawText(ACCELEROMETER_PRINT_VALUES_X, tYPos, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, COLOR16_WHITE);
 
     tYPos += TEXT_SIZE_11;
     dtostrf(aSensorCallbackInfo->ValueY, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Acc.Y %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Acc.Y %s"), &sStringBuffer[10]);
     BlueDisplay1.drawText(ACCELEROMETER_PRINT_VALUES_X, tYPos, sStringBuffer);
 
     tYPos += TEXT_SIZE_11;
     dtostrf(aSensorCallbackInfo->ValueZ, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Acc.Z %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Acc.Z %s"), &sStringBuffer[10]);
     BlueDisplay1.drawText(ACCELEROMETER_PRINT_VALUES_X, tYPos, sStringBuffer);
 #endif
 }
@@ -287,17 +302,17 @@ void doGyroscopeChange(struct SensorCallback * aSensorCallbackInfo) {
 
     uint16_t tYPos = ACCELERATION_SLIDER_CENTER_Y + 2 * TEXT_SIZE_11_HEIGHT;
     dtostrf(aSensorCallbackInfo->ValueX, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Roll  %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Roll  %s"), &sStringBuffer[10]);
     BlueDisplay1.drawText(GYROSCOPE_PRINT_VALUES_X, tYPos, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, COLOR16_WHITE);
 
     tYPos += TEXT_SIZE_11;
     dtostrf(aSensorCallbackInfo->ValueY, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Pitch %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Pitch %s"), &sStringBuffer[10]);
     BlueDisplay1.drawText(GYROSCOPE_PRINT_VALUES_X, tYPos, sStringBuffer);
 
     tYPos += TEXT_SIZE_11;
     dtostrf(aSensorCallbackInfo->ValueZ, 4, 1, &sStringBuffer[10]);
-    sprintf_P(sStringBuffer, PSTR("Yaw   %s"), &sStringBuffer[10]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("Yaw   %s"), &sStringBuffer[10]);
     BlueDisplay1.drawText(GYROSCOPE_PRINT_VALUES_X, tYPos, sStringBuffer);
 #endif
 }

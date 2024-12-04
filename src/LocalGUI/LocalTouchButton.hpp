@@ -567,7 +567,7 @@ uint8_t LocalTouchButton::getTextLength(char *aTextPointer) {
      * for debug purposes
      * needs char aStringBuffer[23+<TextLength>]
      */
-    void LocalTouchButton::toString(char * aStringBuffer) const {
+    void LocalTouchButton::toString(char *aStringBuffer) const {
         sprintf(aStringBuffer, "X=%03u Y=%03u X1=%03u Y1=%03u B=%02u %s", mPositionX, mPositionY, mPositionX + mWidthX - 1,
                 mPositionY + mHeightY - 1, mTouchBorder, mText);
     }

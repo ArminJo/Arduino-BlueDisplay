@@ -513,7 +513,16 @@ void setup() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
-    BlueDisplay1.initCommunication(&initDisplay, &redrawDisplay);
+    uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &redrawDisplay); // introduces up to 1.5 seconds delay
+#if !defined(BD_USE_SIMPLE_SERIAL)
+    if (tConnectDurationMillis > 0) {
+        Serial.print("Connection established after ");
+        Serial.print(tConnectDurationMillis);
+        Serial.println(" ms");
+    } else {
+        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
+    }
+#endif
     registerSwipeEndCallback(&doSwipeEndDSO);
     registerTouchUpCallback(&doSwitchInfoModeOnTouchUp);
     registerLongTouchDownCallback(&doLongTouchDownDSO, 900);
@@ -1991,7 +2000,7 @@ void printInfo(bool aRecomputeValues) {
         /*
          * Long version 1. line Timebase, Channel, (min, average, max, peak to peak) voltage, Trigger, Reference.
          */
-        sprintf_P(sStringBuffer, PSTR("%3u%cs %c      %s %s %s P2P%sV %sV %cV"), tTimebaseUnitsPerGrid, tTimebaseUnitChar,
+        snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%3u%cs %c      %s %s %s P2P%sV %sV %cV"), tTimebaseUnitsPerGrid, tTimebaseUnitChar,
                 tSlopeChar, tMinStringBuffer, tAverageStringBuffer, tMaxStringBuffer, tP2PStringBuffer, tTriggerStringBuffer,
                 tReferenceChar);
         memcpy_P(&sStringBuffer[8], ADCInputMUXChannelStrings[MeasurementControl.ADMUXChannel], 4);
@@ -2002,7 +2011,7 @@ void printInfo(bool aRecomputeValues) {
          * 2. line - timing, period, 1st interval, 2nd interval
          */
         // 8 Character
-        sprintf_P(sStringBuffer, PSTR(" %5luHz"), tHertz);
+        snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR(" %5luHz"), tHertz);
         if (tHertz >= 1000) {
             formatThousandSeparator(&sStringBuffer[2]);
         }
@@ -2036,7 +2045,7 @@ void printInfo(bool aRecomputeValues) {
 #else
 #if defined(__AVR__)
 
-        sprintf_P(sStringBuffer, PSTR("%sV %sV  %5luHz %3u%cs"), tAverageStringBuffer, tP2PStringBuffer, tHertz,
+        snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%sV %sV  %5luHz %3u%cs"), tAverageStringBuffer, tP2PStringBuffer, tHertz,
                 tTimebaseUnitsPerGrid, tTimebaseUnitChar);
         if (tHertz >= 1000) {
             formatThousandSeparator(&sStringBuffer[15]);
@@ -2115,7 +2124,7 @@ void printVCCAndTemperature(void) {
         setVCCValue();
         dtostrf(MeasurementControl.VCC, 4, 2, &sStringBuffer[30]);
 
-        sprintf_P(sStringBuffer, PSTR("%s volt %s\xB0" "C"), &sStringBuffer[30], &sStringBuffer[40]); // \xB0 is degree character
+        snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%s volt %s\xB0" "C"), &sStringBuffer[30], &sStringBuffer[40]); // \xB0 is degree character
         BlueDisplay1.drawText(BUTTON_WIDTH_3_POS_2, SETTINGS_PAGE_INFO_Y, sStringBuffer,
         TEXT_SIZE_11, COLOR16_BLACK, COLOR_BACKGROUND_DSO);
     }
@@ -2179,7 +2188,7 @@ uint16_t getStackUnusedBytes() {
  */
 void printFreeStack(void) {
     uint16_t tUntouchesBytesOnStack = getStackUnusedBytes();
-    sprintf_P(sStringBuffer, PSTR("%4u Stack[bytes]"), tUntouchesBytesOnStack);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%4u Stack[bytes]"), tUntouchesBytesOnStack);
     BlueDisplay1.drawText(0, SETTINGS_PAGE_INFO_Y, sStringBuffer,
     TEXT_SIZE_11, COLOR16_BLACK, COLOR_BACKGROUND_DSO);
 }
@@ -2457,7 +2466,7 @@ ISR_ALIAS(TIMER3_OVF_vect, TIMER0_OVF_vect);
 
 #if defined(DEBUG)
 void printDebugData(void) {
-    sprintf_P(sStringBuffer, PSTR("%5d, 0x%04X, 0x%04X, 0x%04X"), DebugValue1, DebugValue2, DebugValue3, DebugValue4);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%5d, 0x%04X, 0x%04X, 0x%04X"), DebugValue1, DebugValue2, DebugValue3, DebugValue4);
     BlueDisplay1.drawText(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN + 2 * TEXT_SIZE_11_HEIGHT, sStringBuffer, 11, COLOR16_BLACK,
             COLOR_BACKGROUND_DSO);
 }

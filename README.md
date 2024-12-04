@@ -42,18 +42,18 @@ Connecting the Arduino with an USB cable to your smartphone requires an USB-OTG 
 <br/>
 
 # Features
-- Graphic + text output as well as printf implementation.
-- Draw chart from byte or short values. Enables clearing of last drawn chart.
+- **Graphic + text** output as well as **printf implementation**.
+- Draw **chart** from byte or short values. Enables clearing of last drawn chart.
 - Play system tones.
-- Touch button + slider objects with tone feedback.
-- Button and slider callback as well as touch and sensor events are sent back to Arduino.
-- Automatic and manually scaling of display region.
+- **Touch button + slider** objects with tone feedback.
+- Button and slider callback as well as touch and **sensor events** are sent back to Arduino.
+- Automatic and manually **scaling of display region**.
 - Easy mapping of UTF-8 characters like Ohm, Celsius etc..
-- Up to 115200 Baud using HC-05 modules.
-- USB OTG connection can be used instead of Bluetooth.
+- Up to **115200 Baud** using **HC-05** modules or** USB OTG**.
+- **USB OTG connection** can be used instead of Bluetooth.
 - Local display of received and sent commands for debugging purposes.
-- Hex and ASCII output of received Bluetooth data at log level verbose.
-- Debug messages as toasts.
+- Hex and ASCII output of received Bluetooth data at **log level** verbose.
+- **Debug messages as toasts**.
 
 ## Local graphic support
 - [Thick line](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/src/LocalGUI/ThickLine.hpp) with Bresenham.
@@ -82,6 +82,15 @@ void drawGui(void);
 void setup() {
     Serial.begin(BLUETOOTH_BAUD_RATE);
     BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+#if !defined(BD_USE_SIMPLE_SERIAL)
+    if (tConnectDurationMillis > 0) {
+        Serial.print("Connection established after ");
+        Serial.print(tConnectDurationMillis);
+        Serial.println(" ms");
+    } else {
+        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
+    }
+#endif
 }
 void loop() {
 ...
@@ -174,6 +183,24 @@ But if you have a [codepage](https://en.wikipedia.org/wiki/Windows_code_page) wh
 
 <br/>
 
+# Element positioning
+## Text
+- Text Y position is baseline of character.
+- Text Y top position is (Y position - ascend) - use getTextAscend(TextSize).
+- Text Y bottom position is position + descend.
+- Text Y middle position is position - ((ascend - descend) / 2) - see getTextMiddleCorrection().
+- Text position for local implementation is upper left corner of character.
+
+## Button and Slider
+- Slider position is upper left corner of slider
+- Button position is upper left corner of button
+
+# Specials
+- If color of text or button is COLOR16_NO_BACKGROUND no element background is rendered.
+- If drawChartcolor is COLOR16_NO_DELETE, the old chart will not be cleared. This is used for the "history" function for the DSO example.
+
+<br/>
+
 # [Examples](examples)
 Before using the examples, take care that the Bluetooth-module (e.g. the the HC-05 module) or ESP32 program is connected to your Android device and is visible in the Bluetooth Settings.
 
@@ -184,9 +211,9 @@ For ESP32 no baud rate must be specified :-).
 
 ## BlueDisplayBlink
 Simple example to check your installation.
-| Breadboard | With debug output after pressing the "Stop" button  |
+| With debug output as "Toast" after pressing the "Stop" button | Breadboard |
 | :-: | :-: |
-| ![BlueDisplayBlink Breadboard](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/Blink.jpg) | ![With debug output](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayBlink_off.jpg) |
+| ![With debug output](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayBlink_off.jpg) | ![BlueDisplayBlink Breadboard](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/Blink.jpg) |
 
 ## BlueDisplayExample
 More elaborated example to show more features of the BlueDisplay library.
@@ -195,6 +222,10 @@ More elaborated example to show more features of the BlueDisplay library.
 | ![Screenshot](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayExample.jpg) | ![Graphics test page](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayExample_Test.jpg) |
 | Fritzing schematic for BlueDisplay example | BlueDisplay example breadboard picture |
 | ![Fritzing board](extras/BlueDisplayBlink_Steckplatine.png) | ![Breadboard picture](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/Blink.jpg) |
+
+## ChartForMHZ19_CO2
+A full display GUI displaying 4 days of CO2 values with BlueDisplay chart.
+![CO2 chart for 2 days](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/ChartForMHZ19_CO2.png)
 
 ## TouchGuiDemo
 Demo of the GUI: LocalTouchButton, LocalTouchSlider and Chart as well as the programs Game of Life and Draw Lines.<br/>

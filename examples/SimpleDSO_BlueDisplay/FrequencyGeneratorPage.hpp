@@ -60,7 +60,7 @@ static void (*sLastRedrawCallback)(void);
  * Position + size
  */
 #define FREQ_SLIDER_SIZE 10 // width of bar / border
-#define FREQ_SLIDER_MAX_VALUE 300 // (BlueDisplay1.getDisplayWidth() - 20) = 300 length of bar
+#define FREQ_SLIDER_MAX_VALUE 300 // (BlueDisplay1.getRequestedDisplayWidth() - 20) = 300 length of bar
 #define FREQ_SLIDER_X 5
 #define FREQ_SLIDER_Y (4 * TEXT_SIZE_11_HEIGHT + 4)
 
@@ -235,11 +235,11 @@ void initFrequencyGeneratorPageGui() {
     const uint16_t *tFrequencyTextPtr = &FixedFrequencyButtonTexts[0];
     for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS; ++i) {
         tFrequency = pgm_read_word(tFrequencyTextPtr);
-        sprintf_P(sStringBuffer, PSTR("%u"), tFrequency);
+        snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%u"), tFrequency);
 #else
     for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS; ++i) {
         tFrequency = FixedFrequencyButtonTexts[i];
-        sprintf(sStringBuffer, "%u", tFrequency);
+        snprintf(sStringBuffer, sizeof(sStringBuffer), "%u", tFrequency);
 #endif
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
@@ -309,7 +309,7 @@ void drawFrequencyGeneratorPage(void) {
     FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1000"), TEXT_SIZE_11, COLOR16_BLUE,
     COLOR_BACKGROUND_FREQ);
 #else
-    BlueDisplay1.drawText(BlueDisplay1.getDisplayWidth() - 5 * TEXT_SIZE_11_WIDTH,
+    BlueDisplay1.drawText(BlueDisplay1.getRequestedDisplayWidth() - 5 * TEXT_SIZE_11_WIDTH,
     FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, ("1000"), TEXT_SIZE_11, COLOR16_BLUE,
     COLOR_BACKGROUND_FREQ);
 #endif
@@ -319,7 +319,7 @@ void drawFrequencyGeneratorPage(void) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1; ++i) {
         // Generate strings each time buttons are drawn since only the pointer to text is stored in button
-        sprintf(sStringBuffer, "%u", FixedFrequencyButtonTexts[i]);
+        snprintf(sStringBuffer, sizeof(sStringBuffer), "%u", FixedFrequencyButtonTexts[i]);
         TouchButtonFixedFrequency[i]->setText(sStringBuffer);
         TouchButtonFixedFrequency[i]->drawButton();
     }
@@ -500,7 +500,7 @@ void printFrequencyAndPeriod() {
 
 #if defined(__AVR__)
     dtostrf(sFrequencyInfo.FrequencyNormalizedTo_1_to_1000, 9, 3, &sStringBuffer[20]);
-    sprintf_P(sStringBuffer, PSTR("%s%cHz"), &sStringBuffer[20], FrequencyRangeChars[sFrequencyInfo.FrequencyRangeIndex]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%s%cHz"), &sStringBuffer[20], FrequencyRangeChars[sFrequencyInfo.FrequencyRangeIndex]);
 
 #else
     snprintf(sStringBuffer, sizeof sStringBuffer, "%9.3f%cHz", sFrequencyInfo.FrequencyNormalizedTo_1_to_1000,
@@ -522,7 +522,7 @@ void printFrequencyAndPeriod() {
 
 #if defined(__AVR__)
     dtostrf(tPeriodMicros, 10, 3, &sStringBuffer[20]);
-    sprintf_P(sStringBuffer, PSTR("%s%cs"), &sStringBuffer[20], tUnitChar);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%s%cs"), &sStringBuffer[20], tUnitChar);
 #else
     snprintf(sStringBuffer, sizeof sStringBuffer, "%10.3f%cs", tPeriodMicros, tUnitChar);
 #endif

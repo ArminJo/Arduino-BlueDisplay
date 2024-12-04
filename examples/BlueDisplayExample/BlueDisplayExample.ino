@@ -151,7 +151,16 @@ void setup() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
-    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+    uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &drawGui); // introduces up to 1.5 seconds delay
+#if !defined(BD_USE_SIMPLE_SERIAL)
+    if (tConnectDurationMillis > 0) {
+        Serial.print("Connection established after ");
+        Serial.print(tConnectDurationMillis);
+        Serial.println(" ms");
+    } else {
+        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
+    }
+#endif
 
 #if defined(BD_USE_SERIAL1) || defined(ESP32) // BD_USE_SERIAL1 may be defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
@@ -323,7 +332,7 @@ void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShor
 }
 
 void printTime() {
-    sprintf_P(sStringBuffer, PSTR("%02d.%02d.%4d %02d:%02d:%02d"), sTimeInfo->tm_mday, sTimeInfo->tm_mon, sTimeInfo->tm_year + 1900,
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), sTimeInfo->tm_mday, sTimeInfo->tm_mon, sTimeInfo->tm_year + 1900,
             sTimeInfo->tm_hour, sTimeInfo->tm_min, sTimeInfo->tm_sec);
     BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer,
             11,
@@ -351,7 +360,7 @@ time_t requestHostUnixTimestamp() {
 
 void printTime() {
     // 1600 byte code size for time handling plus print
-    sprintf_P(sStringBuffer, PSTR("%02d.%02d.%4d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(), second());
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(), second());
     BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer,
             11,
             COLOR16_BLACK, COLOR_DEMO_BACKGROUND);

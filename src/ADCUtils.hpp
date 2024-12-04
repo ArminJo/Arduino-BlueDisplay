@@ -28,7 +28,7 @@
 #include "ADCUtils.h"
 #if defined(ADC_UTILS_ARE_AVAILABLE) // set in ADCUtils.h, if supported architecture was detected
 
-#if !defined(STR_HELPER)
+#if !defined(STR)
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 #endif

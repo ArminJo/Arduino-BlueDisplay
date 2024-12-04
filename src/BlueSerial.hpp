@@ -221,6 +221,7 @@ size_t getReceiveBytesAvailable() {
     return BDSerial.available();
 }
 #  endif
+
 /**
  * Check if a touch event has completely received by USART
  * Function is not synchronized because it should only be used by main thread
@@ -335,6 +336,15 @@ void initSerial(uint32_t aBaudRate) {
 #  endif // defined(BD_USE_SIMPLE_SERIAL)
 }
 #endif // defined(ESP32)
+
+void clearSerialInputBuffer() {
+    // Simple serial has no input buffer
+#if !defined(BD_USE_SIMPLE_SERIAL)
+    while (BDSerial.available()) {
+        BDSerial.read();
+    }
+#endif
+}
 
 /**
  * The central point for sending bytes

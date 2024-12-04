@@ -39,7 +39,8 @@
 /*
  * Show temperature and VCC voltage
  */
-void printVCCAndTemperaturePeriodically(BlueDisplay &aBlueDisplay, uint16_t aXPos, uint16_t aYPos, uint16_t aFontSize, uint16_t aPeriodMillis) {
+void printVCCAndTemperaturePeriodically(BlueDisplay &aBlueDisplay, uint16_t aXPos, uint16_t aYPos, uint16_t aFontSize,
+        uint16_t aPeriodMillis) {
 #if defined (AVR)
     static unsigned long sMillisOfLastVCCInfo = 0;
     uint32_t tMillis = millis();
@@ -57,7 +58,7 @@ void printVCCAndTemperaturePeriodically(BlueDisplay &aBlueDisplay, uint16_t aXPo
         float tVCCvoltage = getVCCVoltage();
         dtostrf(tVCCvoltage, 4, 2, tVCCString);
 
-        sprintf_P(tDataBuffer, PSTR("%s volt %s\xB0" "C"), tVCCString, tTempString); // \xB0 is degree character
+        snprintf_P(tDataBuffer, sizeof(tDataBuffer), PSTR("%s volt %s\xB0" "C"), tVCCString, tTempString); // \xB0 is degree character
         aBlueDisplay.drawText(aXPos, aYPos, tDataBuffer, aFontSize, COLOR16_BLACK, COLOR16_WHITE);
     }
 #else

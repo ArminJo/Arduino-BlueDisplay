@@ -255,11 +255,11 @@ void HX8347D::setOrientation(uint16_t o) {
 #endif
 }
 
-uint16_t HX8347D::getDisplayWidth(void) {
+uint16_t HX8347D::getRequestedDisplayWidth(void) {
     return LOCAL_DISPLAY_WIDTH;
 }
 
-uint16_t HX8347D::getDisplayHeight(void) {
+uint16_t HX8347D::getRequestedDisplayHeight(void) {
     return LOCAL_DISPLAY_HEIGHT;
 }
 

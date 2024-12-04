@@ -92,7 +92,7 @@ void (*sRedrawCallback)() = NULL; // Intended to redraw screen, if size of displ
 void (*sReorientationCallback)() = NULL;
 void (*sSensorChangeCallback)(uint8_t aEventType, struct SensorCallback *aSensorCallbackInfo) = NULL;
 
-void copyDisplaySizeAndTimestamp(struct BluetoothEvent *aEvent);
+void copyDisplaySizeAndTimestampAndSetOrientation(struct BluetoothEvent *aEvent);
 
 /*
  * Connect event also calls redraw event
@@ -525,24 +525,20 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     case EVENT_REQUESTED_DATA_CANVAS_SIZE:
 //    } else if (tEventType == EVENT_REORIENTATION || tEventType == EVENT_REQUESTED_DATA_CANVAS_SIZE) {
         /*
-         * This is the event returned for initCommunication()
          * Got max display size for new orientation and local timestamp
          */
-        if (tEvent.EventData.DisplaySize.XWidth > tEvent.EventData.DisplaySize.YHeight) {
-            BlueDisplay1.mOrientationIsLandscape = true;
-        } else {
-            BlueDisplay1.mOrientationIsLandscape = false;
-        }
-        copyDisplaySizeAndTimestamp(&tEvent); // must be done before call of callback functions
+        copyDisplaySizeAndTimestampAndSetOrientation(&tEvent); // must be done before call of callback functions
 
         if (!BlueDisplay1.mBlueDisplayConnectionEstablished) {
-            // if this is the first event, which sets mBlueDisplayConnectionEstablished to true, call connection callback anyway
+            // if this is the first event, which sets mBlueDisplayConnectionEstablished to true, call connection callback too
             BlueDisplay1.mBlueDisplayConnectionEstablished = true;
             if (sConnectCallback != NULL) {
                 sConnectCallback();
             }
+#if !defined(ONLY_CONNECT_EVENT_REQUIRED)
             // Since with simpleSerial we have only buffer for 1 event, only one event is sent and we must also call redraw here
-            tEventType = EVENT_REDRAW; // This sets mCurrentDisplaySize
+            tEventType = EVENT_REDRAW; // This calls redraw callback
+#endif
         }
 
 #if !defined(ONLY_CONNECT_EVENT_REQUIRED)
@@ -550,7 +546,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
             if (sReorientationCallback != NULL) {
                 sReorientationCallback();
             }
-            tEventType = EVENT_REDRAW; // We also call redraw here, which in turn sets mCurrentDisplaySize and mHostUnixTimestamp
+            tEventType = EVENT_REDRAW;
         }
 #endif
 
@@ -559,15 +555,10 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     case EVENT_CONNECTION_BUILD_UP:
 //    } else if (tEventType == EVENT_CONNECTION_BUILD_UP) {
         /*
-         * This is the event sent if
+         * This is the event for initCommunication()
          * Got max display size for new orientation and local timestamp
          */
-        if (tEvent.EventData.DisplaySize.XWidth > tEvent.EventData.DisplaySize.YHeight) {
-            BlueDisplay1.mOrientationIsLandscape = true;
-        } else {
-            BlueDisplay1.mOrientationIsLandscape = false;
-        }
-        copyDisplaySizeAndTimestamp(&tEvent); // must be done before call of sConnectCallback()
+        copyDisplaySizeAndTimestampAndSetOrientation(&tEvent); // must be done before call of sConnectCallback()
         BlueDisplay1.mBlueDisplayConnectionEstablished = true;
 
         // first write a 40 bytes NOP command for synchronizing
@@ -576,7 +567,9 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         if (sConnectCallback != NULL) {
             sConnectCallback();
         }
+#if !defined(ONLY_CONNECT_EVENT_REQUIRED)
         tEventType = EVENT_REDRAW; // We also call redraw here, which in turn sets mCurrentDisplaySize and mHostUnixTimestamp
+#endif
 
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
         // do it after sConnectCallback() since the upper tends to send a reset all command
@@ -600,6 +593,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         break;
     }
 
+#if !defined(ONLY_CONNECT_EVENT_REQUIRED)
     /*
      * This EventType is set in EVENT_REORIENTATION and EVENT_CONNECTION_BUILD_UP and therefore cannot be included in switch or else if.
      */
@@ -608,11 +602,12 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
          * Got current display size since host display size has changed (manually)
          * sets mCurrentDisplaySize and mHostUnixTimestamp
          */
-        copyDisplaySizeAndTimestamp(&tEvent);
+        copyDisplaySizeAndTimestampAndSetOrientation(&tEvent);
         if (sRedrawCallback != NULL) {
             sRedrawCallback();
         }
     }
+#endif
     /*
      * End of individual event handling
      */
@@ -625,9 +620,14 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 #endif
 }
 
-void copyDisplaySizeAndTimestamp(struct BluetoothEvent *aEvent) {
-    BlueDisplay1.mCurrentDisplaySize.XWidth = aEvent->EventData.DisplaySizeAndTimestamp.DisplaySize.XWidth;
-    BlueDisplay1.mCurrentDisplaySize.YHeight = aEvent->EventData.DisplaySizeAndTimestamp.DisplaySize.YHeight;
+void copyDisplaySizeAndTimestampAndSetOrientation(struct BluetoothEvent *aEvent) {
+    if (aEvent->EventData.DisplaySize.XWidth > aEvent->EventData.DisplaySize.YHeight) {
+        BlueDisplay1.mOrientationIsLandscape = true;
+    } else {
+        BlueDisplay1.mOrientationIsLandscape = false;
+    }
+    BlueDisplay1.mHostDisplaySize.XWidth = aEvent->EventData.DisplaySizeAndTimestamp.DisplaySize.XWidth;
+    BlueDisplay1.mHostDisplaySize.YHeight = aEvent->EventData.DisplaySizeAndTimestamp.DisplaySize.YHeight;
     BlueDisplay1.mHostUnixTimestamp = aEvent->EventData.DisplaySizeAndTimestamp.UnixTimestamp;
 }
 

@@ -185,22 +185,14 @@ simpleTouchMoveHandlerForSlider	KEYWORD2
 # from Chart
 init	KEYWORD2
 initChart	KEYWORD2
-initXLabelInt	KEYWORD2
-stepXLabelInt	KEYWORD2
-initXLabelFloat	KEYWORD2
-stepXLabelFloat	KEYWORD2
-initYLabelInt	KEYWORD2
-stepYLabelInt	KEYWORD2
-initYLabelFloat	KEYWORD2
-stepYLabelFloat	KEYWORD2
+initXLabel	KEYWORD2
+initYLabel	KEYWORD2
+stepYLabel	KEYWORD2
+initYLabel	KEYWORD2
 setXLabelStartValue				KEYWORD2
-setXLabelStartValueFloat	KEYWORD2
 setYLabelStartValue				KEYWORD2
-setYLabelStartValueFloat	KEYWORD2
 setXLabelIncrementValue				KEYWORD2
-setXLabelIncrementValueFloat	KEYWORD2
 setYLabelIncrementValue				KEYWORD2
-setYLabelIncrementValueFloat	KEYWORD2
 
 initChartColors	KEYWORD2
 drawChart		KEYWORD2

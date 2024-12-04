@@ -204,7 +204,16 @@ void setup() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
-    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+    uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &drawGui); // introduces up to 1.5 seconds delay
+#if !defined(BD_USE_SIMPLE_SERIAL)
+    if (tConnectDurationMillis > 0) {
+        Serial.print("Connection established after ");
+        Serial.print(tConnectDurationMillis);
+        Serial.println(" ms");
+    } else {
+        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
+    }
+#endif
 
 #if defined(BD_USE_SERIAL1) || defined(ESP32) // BD_USE_SERIAL1 may be defined in BlueSerial.h
     // Serial(0) is available for Serial.print output.
@@ -317,8 +326,8 @@ void initDisplay(void) {
     /*
      * handle display size
      */
-    sCurrentDisplayWidth = BlueDisplay1.getCurrentDisplayWidth();
-    sCurrentDisplayHeight = BlueDisplay1.getCurrentDisplayHeight();
+    sCurrentDisplayWidth = BlueDisplay1.getHostDisplayWidth();
+    sCurrentDisplayHeight = BlueDisplay1.getHostDisplayHeight();
 #if !defined(BD_USE_SIMPLE_SERIAL) && (defined(BD_USE_SERIAL1) || defined(ESP32))
     Serial.print("MaxDisplayWidth=");
     Serial.print(sCurrentDisplayWidth);
@@ -575,7 +584,7 @@ void processVerticalSensorValue(float aSensorValue) {
         tInactiveSlider.setValueAndDrawBar(0);
         if (sLastVerticalValue != tVerticalServoValue) {
             sLastVerticalValue = tVerticalServoValue;
-            sprintf(sStringBuffer, "%3d", tVerticalServoValue);
+            snprintf(sStringBuffer, sizeof(sStringBuffer), "%3d", tVerticalServoValue);
             SliderDown.printValue(sStringBuffer);
         }
     }

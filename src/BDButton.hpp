@@ -97,9 +97,9 @@ void BDButton::setInitParameters(BDButtonParameterStruct *aBDButtonParameterStru
     aBDButtonParameterStructToFill->aOnTouchHandler = aOnTouchHandler;
 }
 
-void BDButton::setInitParameters(BDButtonPGMParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX, uint16_t aPositionY,
-        uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor, const __FlashStringHelper *aPGMText, uint16_t aTextSize, uint8_t aFlags,
-        int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t)) {
+void BDButton::setInitParameters(BDButtonPGMParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX,
+        uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor, const __FlashStringHelper *aPGMText,
+        uint16_t aTextSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t)) {
     aBDButtonParameterStructToFill->aPositionX = aPositionX;
     aBDButtonParameterStructToFill->aPositionY = aPositionY;
     aBDButtonParameterStructToFill->aWidthX = aWidthX;
@@ -123,8 +123,8 @@ void BDButton::init(BDButtonParameterStruct *aBDButtonParameter) {
  */
 void BDButton::init(BDButtonPGMParameterStruct *aBDButtonParameter) {
     init(aBDButtonParameter->aPositionX, aBDButtonParameter->aPositionY, aBDButtonParameter->aWidthX, aBDButtonParameter->aHeightY,
-            aBDButtonParameter->aButtonColor, aBDButtonParameter->aPGMText, aBDButtonParameter->aTextSize, aBDButtonParameter->aFlags,
-            aBDButtonParameter->aValue, aBDButtonParameter->aOnTouchHandler);
+            aBDButtonParameter->aButtonColor, aBDButtonParameter->aPGMText, aBDButtonParameter->aTextSize,
+            aBDButtonParameter->aFlags, aBDButtonParameter->aValue, aBDButtonParameter->aOnTouchHandler);
 }
 /*
  * initialize a button stub
@@ -257,12 +257,36 @@ void BDButton::removeButton(color16_t aBackgroundColor) {
     sendUSARTArgs(FUNCTION_BUTTON_REMOVE, 2, mButtonHandle, aBackgroundColor);
 }
 
-/*
- * Sets text for value true (green button) if different from default false (red button) text
- */
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
 void BDButton::setCaptionForValueTrue(const char *aText) {
     setTextForValueTrue(aText);
 }
+
+void BDButton::setCaptionForValueTrue(const __FlashStringHelper *aPGMText) {
+    setTextForValueTrue(aPGMText);
+}
+
+void BDButton::setCaption(const char *aText, bool doDrawButton) {
+    setText(aText, doDrawButton);
+}
+
+void BDButton::setCaption(const __FlashStringHelper *aPGMText, bool doDrawButton) {
+    setText(aPGMText, doDrawButton);
+}
+
+void BDButton::setCaptionFromStringArray(const char *const*aTextStringArrayPtr, uint8_t aStringIndex, bool doDrawButton) {
+    setText(aTextStringArrayPtr[aStringIndex], doDrawButton);
+}
+
+void BDButton::setCaptionFromStringArray(const __FlashStringHelper* const *aPGMTextStringArrayPtr, uint8_t aStringIndex,
+        bool doDrawButton) {
+    setTextFromStringArray(aPGMTextStringArrayPtr, aStringIndex, doDrawButton);
+}
+#endif
+/*
+ * Sets text for value true (green button) if different from default false (red button) text
+ */
+
 void BDButton::setTextForValueTrue(const char *aText) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->setTextForValueTrue(aText);
@@ -270,9 +294,6 @@ void BDButton::setTextForValueTrue(const char *aText) {
     sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE, 1, mButtonHandle, strlen(aText), aText);
 }
 
-void BDButton::setCaptionForValueTrue(const __FlashStringHelper *aPGMText) {
-    setTextForValueTrue(aPGMText);
-}
 void BDButton::setTextForValueTrue(const __FlashStringHelper *aPGMText) {
 #if defined (AVR)
     if (USART_isBluetoothPaired()) {
@@ -285,9 +306,6 @@ void BDButton::setTextForValueTrue(const __FlashStringHelper *aPGMText) {
 #endif
 }
 
-void BDButton::setCaption(const char *aText, bool doDrawButton) {
-    setText(aText, doDrawButton);
-}
 void BDButton::setText(const char *aText, bool doDrawButton) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->setText(aText);
@@ -303,9 +321,7 @@ void BDButton::setText(const char *aText, bool doDrawButton) {
         sendUSARTArgsAndByteBuffer(tFunctionCode, 1, mButtonHandle, strlen(aText), aText);
     }
 }
-void BDButton::setCaption(const __FlashStringHelper *aPGMText, bool doDrawButton) {
-    setText(aPGMText, doDrawButton);
-}
+
 void BDButton::setText(const __FlashStringHelper *aPGMText, bool doDrawButton) {
 #if defined (AVR)
     if (USART_isBluetoothPaired()) {
@@ -322,16 +338,10 @@ void BDButton::setText(const __FlashStringHelper *aPGMText, bool doDrawButton) {
 #endif
 }
 
-void BDButton::setCaptionFromStringArray(const char *const*aTextStringArrayPtr, uint8_t aStringIndex, bool doDrawButton) {
-    setText(aTextStringArrayPtr[aStringIndex], doDrawButton);
-}
 void BDButton::setTextFromStringArray(const char *const*aTextStringArrayPtr, uint8_t aStringIndex, bool doDrawButton) {
     setText(aTextStringArrayPtr[aStringIndex], doDrawButton);
 }
-void BDButton::setCaptionFromStringArray(const __FlashStringHelper* const *aPGMTextStringArrayPtr, uint8_t aStringIndex,
-        bool doDrawButton) {
-    setTextFromStringArray(aPGMTextStringArrayPtr, aStringIndex, doDrawButton);
-}
+
 void BDButton::setTextFromStringArray(const __FlashStringHelper* const *aPGMTextStringArrayPtr, uint8_t aStringIndex,
         bool doDrawButton) {
 #if defined(__AVR__)
@@ -560,7 +570,8 @@ void BDButton::deactivateAll() {
 //    mButtonHandle = tButtonNumber;
 //}
 
-#if defined(__AVR__)
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
+#  if defined(__AVR__)
 void BDButton::setCaptionPGMForValueTrue(const char *aPGMText) {
     setTextForValueTrue((const __FlashStringHelper*) aPGMText);
 }
@@ -569,11 +580,11 @@ void BDButton::setCaptionPGMForValueTrue(const char *aPGMText) {
  * deprecated: Use setTextFromStringArray((const __FlashStringHelper* const*) aTextStringArrayPtr,...) with this cast
  */
 void BDButton::setCaptionFromStringArrayPGM(const char *const aPGMTextStringArrayPtr[], uint8_t aStringIndex, bool doDrawButton) {
-#if defined(__AVR__)
+#    if defined(__AVR__)
     __FlashStringHelper *tPGMText = (__FlashStringHelper*) pgm_read_word(&aPGMTextStringArrayPtr[aStringIndex]);
-#else
+#    else
     const char *tPGMText = aPGMTextStringArrayPtr[aStringIndex];
-#endif
+#    endif
     setText(tPGMText, doDrawButton);
 }
 
@@ -581,6 +592,7 @@ void BDButton::setCaptionPGM(const char *aPGMText, bool doDrawButton) {
     setText(reinterpret_cast<const __FlashStringHelper*>(aPGMText), doDrawButton);
 }
 
-#endif // defined(__AVR__)
+#  endif // defined(__AVR__)
+#  endif // !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
 
 #endif //_BDBUTTON_H

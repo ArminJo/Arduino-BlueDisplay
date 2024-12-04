@@ -72,10 +72,14 @@ void drawDrawPage(void) {
 }
 
 void doDrawClear(Button *aTheTouchedButton, int16_t aValue) {
+    (void) aTheTouchedButton;
+    (void) aValue;
     drawDrawPage();
 }
 
 static void doDrawColor(Button *aTheTouchedButton, int16_t aValue) {
+    (void) aTheTouchedButton;
+    (void) aValue;
     sDrawColor = DrawColors[aValue];
 }
 

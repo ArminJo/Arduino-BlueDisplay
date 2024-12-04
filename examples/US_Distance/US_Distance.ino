@@ -51,7 +51,7 @@
 #define MEASUREMENT_INTERVAL_MILLIS 50
 #define DISTANCE_TIMEOUT_CM         300  // cm timeout for US reading
 
-int sCaptionTextSize;
+int sButtonTextSize;
 int sCaptionStartX;
 int sValueStartY;
 int sCount;
@@ -110,7 +110,16 @@ void setup(void) {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
-    BlueDisplay1.initCommunication(&handleConnectAndReorientation, &drawGui);
+    uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&handleConnectAndReorientation, &drawGui); // introduces up to 1.5 seconds delay
+#if !defined(BD_USE_SIMPLE_SERIAL)
+    if (tConnectDurationMillis > 0) {
+        Serial.print("Connection established after ");
+        Serial.print(tConnectDurationMillis);
+        Serial.println(" ms");
+    } else {
+        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
+    }
+#endif
 
 #if defined(BD_USE_SERIAL1) || defined(ESP32) // BD_USE_SERIAL1 may be defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
@@ -184,9 +193,9 @@ void loop(void) {
         tUSDistanceCentimeter -= sOffset;
         if (tUSDistanceCentimeter != sLastUSDistanceCentimeter) {
             if (BlueDisplay1.mBlueDisplayConnectionEstablished) {
-                uint16_t tCmXPosition = BlueDisplay1.drawUnsignedByte(getTextWidth(sCaptionTextSize * 2), sValueStartY,
-                        tUSDistanceCentimeter, sCaptionTextSize * 2, COLOR16_YELLOW, COLOR16_BLUE);
-                BlueDisplay1.drawText(tCmXPosition, sValueStartY, "cm", sCaptionTextSize, COLOR16_WHITE, COLOR16_BLUE);
+                uint16_t tCmXPosition = BlueDisplay1.drawUnsignedByte(getTextWidth(sButtonTextSize * 2), sValueStartY,
+                        tUSDistanceCentimeter, sButtonTextSize * 2, COLOR16_YELLOW, COLOR16_BLUE);
+                BlueDisplay1.drawText(tCmXPosition, sValueStartY, "cm", sButtonTextSize, COLOR16_WHITE, COLOR16_BLUE);
                 SliderShowDistance.setValueAndDrawBar(tUSDistanceCentimeter);
             }
             if (tUSDistanceCentimeter >= 40 || !doTone) {
@@ -237,8 +246,8 @@ void loop(void) {
 void handleConnectAndReorientation(void) {
 //    tone(TONE_PIN, 1000, 50);
     // manage positions according to actual display size
-    int tCurrentDisplayWidth = BlueDisplay1.getCurrentDisplayWidth();
-    int tCurrentDisplayHeight = BlueDisplay1.getCurrentDisplayHeight();
+    int tCurrentDisplayWidth = BlueDisplay1.getHostDisplayWidth();
+    int tCurrentDisplayHeight = BlueDisplay1.getHostDisplayHeight();
     if (tCurrentDisplayWidth < tCurrentDisplayHeight) {
         // Portrait -> change to landscape 3/2 format
         tCurrentDisplayHeight = (tCurrentDisplayWidth / 3) * 2;
@@ -249,30 +258,30 @@ void handleConnectAndReorientation(void) {
     /*
      * Compute text sizes etc.
      */
-    sCaptionTextSize = tCurrentDisplayHeight / 4;
+    sButtonTextSize = tCurrentDisplayHeight / 4;
     // Position Caption at middle of screen
-    sCaptionStartX = (tCurrentDisplayWidth - (getTextWidth(sCaptionTextSize) * strlen("Distance"))) / 2;
+    sCaptionStartX = (tCurrentDisplayWidth - (getTextWidth(sButtonTextSize) * strlen("Distance"))) / 2;
 
-    sprintf(sStringBuffer, "sCurrentDisplayWidth=%d", tCurrentDisplayWidth);
+    snprintf(sStringBuffer, sizeof(sStringBuffer), "sCurrentDisplayWidth=%d", tCurrentDisplayWidth);
     BlueDisplay1.debugMessage(sStringBuffer);
 
     if (sCaptionStartX < 0) {
         sCaptionStartX = 0;
     }
 
-    sValueStartY = getTextAscend(sCaptionTextSize * 2) + sCaptionTextSize + sCaptionTextSize / 4;
+    sValueStartY = getTextAscend(sButtonTextSize * 2) + sButtonTextSize + sButtonTextSize / 4;
 
-    SliderShowDistance.init(0, sCaptionTextSize * 3, sCaptionTextSize / 4, tCurrentDisplayWidth, 199, 0, COLOR16_BLUE,
+    SliderShowDistance.init(0, sButtonTextSize * 3, sButtonTextSize / 4, tCurrentDisplayWidth, 199, 0, COLOR16_BLUE,
     COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
     SliderShowDistance.setScaleFactor(200.0 / tCurrentDisplayWidth);
 
     // Initialize button position, size, colors etc.
     TouchButtonStartStop.init(0, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR16_BLUE, "Start Tone",
-            sCaptionTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doTone, &doStartStop);
-    TouchButtonStartStop.setCaptionForValueTrue("Stop Tone");
+            sButtonTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doTone, &doStartStop);
+    TouchButtonStartStop.setTextForValueTrue("Stop Tone");
 
     TouchButtonOffset.init(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN,
-    COLOR16_RED, "Offset", sCaptionTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetOffset);
+    COLOR16_RED, "Offset", sButtonTextSize / 3, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetOffset);
 
     BlueDisplay1.debug(StartMessage);
 }
@@ -282,7 +291,7 @@ void handleConnectAndReorientation(void) {
  */
 void drawGui(void) {
     BlueDisplay1.clearDisplay(COLOR16_BLUE);
-    BlueDisplay1.drawText(sCaptionStartX, sCaptionTextSize, "Distance", sCaptionTextSize, COLOR16_WHITE, COLOR16_BLUE);
+    BlueDisplay1.drawText(sCaptionStartX, sButtonTextSize, "Distance", sButtonTextSize, COLOR16_WHITE, COLOR16_BLUE);
     SliderShowDistance.drawSlider();
     TouchButtonStartStop.drawButton();
     TouchButtonOffset.drawButton();

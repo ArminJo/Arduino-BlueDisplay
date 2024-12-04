@@ -40,6 +40,16 @@
 #endif
 
 /*
+ * Settings to configure the BlueDisplay library and to reduce its size
+ */
+//#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+//#define DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Implies DO_NOT_NEED_BASIC_TOUCH_EVENTS.
+//#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
+//#define BD_USE_SIMPLE_SERIAL                 // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+//#define BD_USE_USB_SERIAL                    // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
+
+/*
  * Enable this lines to run the demo locally
  */
 //#define RUN_ON_LOCAL_HX8347_DISPLAY_ONLY
@@ -170,7 +180,16 @@ void setup() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
-    BlueDisplay1.initCommunication(&initDisplay, NULL); // redraw is registered by startGuiDemo() called by initDisplay()
+    uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay); // redraw is registered by startGuiDemo() called by initDisplay()
+#if !defined(BD_USE_SIMPLE_SERIAL)
+    if (tConnectDurationMillis > 0) {
+        Serial.print("Connection established after ");
+        Serial.print(tConnectDurationMillis);
+        Serial.println(" ms");
+    } else {
+        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
+    }
+#endif
 #endif
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
@@ -213,7 +232,7 @@ void initDisplay(void) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
 //show touchpanel data
 void printLocalTouchPanelData(void) {
-    sprintf(sBDStringBuffer, "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getCurrentX(), TouchPanel.getRawX(),
+    snprintf(sBDStringBuffer, sizeof(sBDStringBuffer), "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getCurrentX(), TouchPanel.getRawX(),
             TouchPanel.getCurrentY(), TouchPanel.getRawY(), TouchPanel.getPressure(), sTouchObjectTouched);
     LocalDisplay.drawText(30, 2, sBDStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
 }
@@ -249,7 +268,7 @@ void showRTCTime(void) {
     i2c_stop();
 
 //buf[3] is day of week
-    sprintf_P(StringBuffer, PSTR("%02i.%02i.%04i %02i:%02i:%02i"), RtcBuf[4], RtcBuf[5], RtcBuf[6] + 2000, RtcBuf[2], RtcBuf[1],
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02i.%02i.%04i %02i:%02i:%02i"), RtcBuf[4], RtcBuf[5], RtcBuf[6] + 2000, RtcBuf[2], RtcBuf[1],
             RtcBuf[0]);
     LocalDisplay.drawText(10, DISPLAY_HEIGHT - FONT_HEIGHT - 1, StringBuffer, 1, COLOR_RED, BACKGROUND_COLOR);
 }

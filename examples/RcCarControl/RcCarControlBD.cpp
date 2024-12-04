@@ -192,11 +192,11 @@ void initDisplay(void) {
     /*
      * handle display size
      */
-    BlueDisplay1.debug("XWidth=", BlueDisplay1.mCurrentDisplaySize.XWidth);
-    BlueDisplay1.debug("cWidth=", BlueDisplay1.getCurrentDisplayWidth());
+    BlueDisplay1.debug("XWidth=", BlueDisplay1.mHostDisplaySize.XWidth);
+    BlueDisplay1.debug("cWidth=", BlueDisplay1.getHostDisplayWidth());
 
-    sCurrentDisplayWidth = BlueDisplay1.getCurrentDisplayWidth();
-    sCurrentDisplayHeight = BlueDisplay1.getCurrentDisplayHeight();
+    sCurrentDisplayWidth = BlueDisplay1.getHostDisplayWidth();
+    sCurrentDisplayHeight = BlueDisplay1.getHostDisplayHeight();
     if (sCurrentDisplayWidth < sCurrentDisplayHeight) {
         // Portrait -> change to landscape 3/2 format
         sCurrentDisplayHeight = (sCurrentDisplayWidth / 3) * 2;
@@ -265,7 +265,7 @@ void initDisplay(void) {
     SliderShowUSDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR16_BLACK,
             COLOR16_WHITE);
 
-    BlueDisplay1.debug("XWidth1=", BlueDisplay1.mCurrentDisplaySize.XWidth);
+    BlueDisplay1.debug("XWidth1=", BlueDisplay1.mHostDisplaySize.XWidth);
     BlueDisplay1.debug("BUTTON_WIDTH_3_DYN=", (uint16_t) BUTTON_WIDTH_3_DYN);
     /*
      * Buttons
@@ -318,7 +318,16 @@ void BDsetup() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
-    BlueDisplay1.initCommunication(&initDisplay, &drawGui, &initDisplay);
+    uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &drawGui, &initDisplay); // introduces up to 1.5 seconds delay
+#if !defined(BD_USE_SIMPLE_SERIAL)
+    if (tConnectDurationMillis > 0) {
+        Serial.print("Connection established after ");
+        Serial.print(tConnectDurationMillis);
+        Serial.println(" ms");
+    } else {
+        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
+    }
+#endif
 
 #if defined(BD_USE_SERIAL1) || defined(ESP32) // BD_USE_SERIAL1 may be defined in BlueSerial.h
 // Serial(0) is available for Serial.print output.
@@ -407,7 +416,7 @@ void BDloop() {
                         tSpeed = FOLLOWER_MAX_SPEED;
                     }
                     analogWrite(FORWARD_MOTOR_PWM_PIN, tSpeed);
-                    sprintf(sBDStringBuffer, "%3d", tSpeed);
+                    snprintf(sBDStringBuffer, sizeof(sBDStringBuffer), "%3d", tSpeed);
                     SliderVelocityBackward.printValue(sBDStringBuffer);
                 }
 
@@ -422,7 +431,7 @@ void BDloop() {
                     tSpeed = FOLLOWER_MAX_SPEED;
                 }
                 analogWrite(BACKWARD_MOTOR_PWM_PIN, tSpeed);
-                sprintf(sBDStringBuffer, "%3d", tSpeed);
+                snprintf(sBDStringBuffer, sizeof(sBDStringBuffer), "%3d", tSpeed);
                 SliderVelocityBackward.printValue(sBDStringBuffer);
             } else {
                 /*
@@ -539,7 +548,7 @@ void processVerticalSensorValue(float tSensorValue) {
         /*
          * Print speed as value of bottom slider
          */
-        sprintf(sBDStringBuffer, "%3d", tSpeedValue);
+        snprintf(sBDStringBuffer, sizeof(sBDStringBuffer), "%3d", tSpeedValue);
         SliderVelocityBackward.printValue(sBDStringBuffer);
     }
 }
