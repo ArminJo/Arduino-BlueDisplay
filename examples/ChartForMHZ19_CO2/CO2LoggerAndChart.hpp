@@ -141,13 +141,25 @@ void changeBrightness();
 /*
  * Date and time handling for X scale
  */
-
 #if defined(ESP32) || defined(ESP8266)
 #define USE_C_TIME
+#define WAIT_FOR_TIME_SYNC_MAX_MILLIS   150
 #endif
 
 #if defined(USE_C_TIME)
 #include "time.h"
+struct tm *sTimeInfo;
+uint32_t prevMillis = 0; // To be compatible with TimeLib.h
+bool sTimeInfoWasJustUpdated = false;
+uint16_t waitUntilTimeWasUpdated(uint16_t aMaxWaitMillis);
+/* Useful Constants */
+#define SECS_PER_MIN  ((time_t)(60UL))
+#define SECS_PER_HOUR ((time_t)(3600UL))
+#define SECS_PER_DAY  ((time_t)(SECS_PER_HOUR * 24UL))
+//#define DAYS_PER_WEEK ((time_t)(7UL))
+//#define SECS_PER_WEEK ((time_t)(SECS_PER_DAY * DAYS_PER_WEEK))
+//#define SECS_PER_YEAR ((time_t)(SECS_PER_DAY * 365UL)) // TODO: ought to handle leap years
+//#define SECS_YR_2000  ((time_t)(946684800UL)) // the time at the start of y2k
 #else
 #include "TimeLib.h"
 #endif
@@ -161,6 +173,9 @@ time_t requestHostUnixTimestamp();
 uint32_t sNextStorageMillis = 60 * MILLIS_IN_ONE_SECOND; // If not connected first storage in 1 after boot.
 
 void printTime();
+void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) ;
+int convertUnixTimestampToDateString(char *aLabelStringBuffer, time_float_union aXvalue);
+int convertUnixTimestampToHourString(char *aLabelStringBuffer, time_float_union aXvalue);
 void printTimeToNextStorage();
 
 /*
@@ -204,8 +219,10 @@ void InitCo2LoggerAndChart() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
+#if defined(BD_USE_SIMPLE_SERIAL)
+    BlueDisplay1.initCommunication(&signalInitDisplay); // introduces up to 1.5 seconds delay
+#else
     uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&signalInitDisplay); // introduces up to 1.5 seconds delay
-#if !defined(BD_USE_SIMPLE_SERIAL)
     if (tConnectDurationMillis > 0) {
         Serial.print("Connection established after ");
         Serial.print(tConnectDurationMillis);
@@ -342,7 +359,9 @@ void initializeCO2Array() {
 #endif
 #if defined(ENABLE_STACK_ANALYSIS)
         printRAMInfo(&Serial);
+#  if !defined(BD_USE_SIMPLE_SERIAL)
         Serial.flush();
+#  endif
 #endif
         sCO2ArrayValuesChecksum = tCO2ArrayChecksum;
     }
@@ -399,7 +418,7 @@ void initDisplay(void) {
 // here we have received a new local timestamp
 #if defined(USE_C_TIME)
 // initialize sTimeInfo
-    sTimeInfo = localtime((const time_t*) &BlueDisplay1.getHostUnixTimestamp());
+    sTimeInfo = localtime((const time_t*) BlueDisplay1.getHostUnixTimestamp());
 #else
     setSyncProvider(requestHostUnixTimestamp); // This always calls getInfo() immediately, which will set time again.
 // Set function to call when time sync required (default: after 300 seconds)
@@ -408,9 +427,9 @@ void initDisplay(void) {
 #  else
     setSyncInterval(SECS_PER_DAY); // sync with host once per day
 #  endif
-#endif
     setTime(BlueDisplay1.getHostUnixTimestamp() - TIME_ADJUSTMENT); // safety net, because we need a reasonable timestamp for initCO2Chart().
-    delayMillisAndCheckForEvent(150); // Wait for requested time event but terminate at least after 100 ms
+#endif
+    delayMillisAndCheckForEvent(150); // Wait for requested time event but terminate at least after 150 ms
 
     BDButton::BDButtonPGMParameterStruct tBDButtonPGMParameterStruct; // Saves 480 Bytes for all 5 buttons
 
@@ -468,17 +487,6 @@ void initDisplay(void) {
     changeBrightness(); // from low to high :-)
 }
 
-/*
- * Here we take the long part of the value and return strings like "27" or "2:27"
- */
-int convertUnixTimestampToDateString(char *aLabelStringBuffer, time_float_union aXvalue) {
-    return snprintf(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, "%d.%d", day(aXvalue.TimeValue), month(aXvalue.TimeValue));
-}
-
-int convertUnixTimestampToHourString(char *aLabelStringBuffer, time_float_union aXvalue) {
-    return snprintf(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, "%d", hour(aXvalue.TimeValue));
-}
-
 void initCO2Chart() {
     /*
      * For CHART_X_AXIS_SCALE_FACTOR_1             and at 5 minutes / pixel we have 12 hours labels each 144 pixel -> 8 segments.
@@ -531,14 +539,18 @@ void drawDisplay() {
 }
 
 void drawCO2Chart() {
-    printTime();
+    printTime(); // gets now()
     printCO2Value();
     CO2Chart.clear();
 
     /*
      * Offset to Y axis for first main label (midnight) in seconds
      */
+#if defined(USE_C_TIME)
+    long tDifferenceToLastMidnightInSeconds = (sTimeInfo->tm_min + (60 * sTimeInfo->tm_hour)) * SECS_PER_MIN;
+#else
     long tDifferenceToLastMidnightInSeconds = (minute() + (60 * hour())) * SECS_PER_MIN;
+#endif
     if (sHoursPerChartToDisplay == 12) {
         // shift labels a half day left
         CO2Chart.setXLabelAndGridOffset(tDifferenceToLastMidnightInSeconds + (sHoursPerChartToDisplay * SECS_PER_HOUR));
@@ -549,8 +561,13 @@ void drawCO2Chart() {
     // Use 1,2, or 4 days back as start value
     // Timestamp of the midnight, which is left by tDifferenceToLastMidnightInSeconds of Y axis.
     uint8_t tFullDays = ((sHoursPerChartToDisplay - 1) / 24) + 1; // Results in 1 for values <= 24
+#if defined(USE_C_TIME)
+    CO2Chart.drawXAxisAndDateLabels(BlueDisplay1.getHostUnixTimestamp() - ((tFullDays * SECS_PER_DAY) + tDifferenceToLastMidnightInSeconds),
+            convertUnixTimestampToHourString);
+#else
     CO2Chart.drawXAxisAndDateLabels(now() - ((tFullDays * SECS_PER_DAY) + tDifferenceToLastMidnightInSeconds),
             convertUnixTimestampToHourString);
+#endif
 
     CO2Chart.drawYAxisAndLabels(); // this will restore the overwritten 400 label
     CO2Chart.drawGrid();
@@ -662,7 +679,11 @@ void doStoreInEEPROM(BDButton *aTheTouchedButton, int16_t aValue) {
 void doShowTimeToNextStorage(BDButton *aTheTouchedButton, int16_t aValue) {
     (void) aTheTouchedButton;
     (void) aValue;
+#if defined(USE_C_TIME)
+    BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &getTimeEventCallback); // set
+#else
     now(); // set prevMillis to current time
+#endif
     printTimeToNextStorage();
     printTime();
 }
@@ -719,8 +740,7 @@ void printTimeToNextStorage() {
 
         uint8_t tMinutesToGo = tSecondsToNext / SECS_PER_MIN;
         uint8_t tSecondsToGo = tSecondsToNext % SECS_PER_MIN;
-        snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Next in %d min %02d sec"), tMinutesToGo,
-                tSecondsToGo);
+        snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Next in %d min %02d sec"), tMinutesToGo, tSecondsToGo);
         // !!!!! What a bug! This gives x min 00 sec with 00 constant !!!!!
 //        snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Next in %d min %02d sec"), tSecondsToNext / SECS_PER_MIN,
 //                tSecondsToNext % SECS_PER_MIN);
@@ -735,41 +755,83 @@ void printTimeToNextStorage() {
     }
 }
 
+/*
+ * Here we take the long part of the value and return strings like "27" or "2:27"
+ */
+int convertUnixTimestampToDateString(char *aLabelStringBuffer, time_float_union aXvalue) {
 #if defined(USE_C_TIME)
-void printTime() {
-    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), sTimeInfo->tm_mday, sTimeInfo->tm_mon, sTimeInfo->tm_year + 1900,
-            sTimeInfo->tm_hour, sTimeInfo->tm_min, sTimeInfo->tm_sec);
-    BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer,
-            11,
-            COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
+    sTimeInfo = localtime((const time_t*) aXvalue.TimeValue);
+    return snprintf(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, "%d.%d", sTimeInfo->tm_mday, sTimeInfo->tm_mon);
+#else
+    return snprintf(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, "%d.%d", day(aXvalue.TimeValue), month(aXvalue.TimeValue));
+#endif
 }
 
+int convertUnixTimestampToHourString(char *aLabelStringBuffer, time_float_union aXvalue) {
+#if defined(USE_C_TIME)
+    sTimeInfo = localtime((const time_t*) aXvalue.TimeValue);
+    return snprintf(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, "%d", sTimeInfo->tm_hour);
 #else
+    return snprintf(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, "%d", hour(aXvalue.TimeValue));
+#endif
+}
+
 void printTime() {
+    char tStringBuffer[20];
+#if defined(USE_C_TIME)
+    BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &getTimeEventCallback);
+#  if defined(DEBUG)
+    uint16_t tElapsedTime = waitUntilTimeWasUpdated(WAIT_FOR_TIME_SYNC_MAX_MILLIS); // 150 ms
+    BlueDisplay1.debug("Time sync lasts ", tElapsedTime, " ms"); // timeout if 0
+#  else
+    waitUntilTimeWasUpdated(WAIT_FOR_TIME_SYNC_MAX_MILLIS); // 150 ms
+#  endif
+    snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), sTimeInfo->tm_mday, sTimeInfo->tm_mon,
+            sTimeInfo->tm_year + 1900, sTimeInfo->tm_hour, sTimeInfo->tm_min, sTimeInfo->tm_sec);
+#else
     time_t tTimestamp = now(); // use this timestamp for all prints
 // 1600 byte code size for time handling plus print
-    char tStringBuffer[20];
 // We can ignore warning: '%02d' directive writing between 2 and 11 bytes into a region of size between 0 and 1 [-Wformat-overflow=]
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-overflow"
     snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("%02d.%02d.%4d\n%02d:%02d:%02d"), day(tTimestamp), month(tTimestamp),
             year(tTimestamp), hour(tTimestamp), minute(tTimestamp), second(tTimestamp));
 #pragma GCC diagnostic pop
+#endif //defined(USE_C_TIME)
     BlueDisplay1.drawText(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - (3 * BASE_TEXT_SIZE), tStringBuffer,
     BASE_TEXT_SIZE, sTextColor, sBackgroundColor);
 }
-#endif //defined(USE_C_TIME)
 
+
+#if defined(USE_C_TIME)
+/*
+ * @return 0 if time was not updated in aMaxWaitMillis milliseconds, else millis used for update
+ */
+uint16_t waitUntilTimeWasUpdated(uint16_t aMaxWaitMillis) {
+    unsigned long tStartMillis = millis();
+    while (millis() - tStartMillis < aMaxWaitMillis) {
+        checkAndHandleEvents(); // BlueDisplay function, which may call getTimeEventCallback() if SUBFUNCTION_GET_INFO_LOCAL_TIME event received
+        if (sTimeInfoWasJustUpdated) {
+            return millis() - tStartMillis;
+        }
+    }
+    return 0;
+}
+/*
+ * Is called at startup and every time the actual time is required
+ */
+void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
+    if (aSubcommand == SUBFUNCTION_GET_INFO_LOCAL_TIME) {
+        BlueDisplay1.setHostUnixTimestamp(aLongInfo.uint32Value);
+        prevMillis = millis();
+        sTimeInfoWasJustUpdated = true;
+        sTimeInfo = localtime((const time_t*) &aLongInfo.uint32Value); // Compute minutes, hours, day, month etc.
+    }
+}
+#else
 /*
  * Is called at startup and every 24 hour
  */
-#  if defined(USE_C_TIME)
-void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
-    if (aSubcommand == SUBFUNCTION_GET_INFO_LOCAL_TIME) {
-        sTimeInfo = localtime((const time_t*) &aLongInfo.uint32Value);
-    }
-}
-#  else
 void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
     (void) aByteInfo;
     (void) aShortInfo;
@@ -802,7 +864,6 @@ void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShor
 #  endif
     }
 }
-#endif // #if defined(USE_C_TIME)
 
 /*
  * Is called every 5 minutes by default
@@ -811,6 +872,8 @@ time_t requestHostUnixTimestamp() {
     BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &getTimeEventCallback);
     return 0; // the time will be sent later in response to getInfo
 }
+#endif // #if defined(USE_C_TIME)
+
 #if defined(LOCAL_DEBUG)
 #undef LOCAL_DEBUG
 #endif

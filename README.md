@@ -288,7 +288,11 @@ Depending on the device you use, you can observe some random **"delays"** up to 
 The **delays does not occur if you use a USB connection** instead of the Bluetooth one.<br/>
 The reason is, that the Android Bluetooth driver does not return its received bytes for a longer time.<br/>
 If you send to much data during this delay the **driver may hang**, as you can observe for the SimpleDSO Application, which runs **smooth with a USB** connection.<br/>
+But I also got this kind of problems with an USB connection with my Samsung SM-T560.<br/>
+A hint is how often the error `RPCView Read delay > 1000ms for missing bytes.` can be seen in the log.
+It looks like some errors of this kind are tolerable, but if they are too often, then we schould increase the delays between the data sent.<br/>
 Hanging may be avoided if using flow control, but the HC05 firmware and HC05 breakout boards do not support it.
+And flow control with USB resets the board :-(.
 On the ESP32, the BluetoothSerial library supports flow control and there you can observe that the client program also delays, when the smartphone driver takes its break.<br/>
 This Bluetooth driver is usually delivered by the hardware vendor, so it may depend on the chips used in your smartphone.
 It seems, that some Bluetooth SPP (Serial Port Profile) drivers are not really specified/tested/optimized for real time behavior.<br/>
@@ -296,6 +300,8 @@ Known devices **with** these "delays" are:<br/>
 Lenovo K3 Note 6.0, Nexus7 with AW-NH665 BT-Chip running 6.0.1, Nexus 6P with ?8.x?, Kindle Fire HD 8 with Broadcom BCM2076 running 6.3.1.5.<br/>
 Known devices **without** these "delays" are:<br/>
 Samsung Note 3 running 5.0, Lifetab P9702 running 7.1.2, Lifetab E10310 running 4.2.2, XORO PAD 721 running 4.2.2, Samsung Galaxy S3 GT-I9300 running Lineage 7.1.2, LUX10 running 5.0, iRULU X11 running 5.1.1, Time2 TC1050G running 5.1, Pixel 4 XL running 10.
+
+Using a delay of HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_<USB or BT>_CONNECTION before or after sending chart values can help.
 
 # Extras
 The extras folder (in the Arduino IDE use "Sketch > Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
@@ -328,7 +334,7 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
 
 # Revision History
-### Version 4.1.0
+### Version 4.4.0 - The version compatible with app version 4.4
 - Removed mMaxDisplaySize, because it was just a copy of CurrentDisplaySize.
 - Refactored and improved Chart.
 - Minor bug fixes.

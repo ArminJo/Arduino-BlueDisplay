@@ -3,7 +3,7 @@
  *
  * Implements the common (GUI) parts of AVR and ARM development
  *
- *  Copyright (C) 2017-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2017-2024  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
@@ -27,6 +27,7 @@
 #define _TOUCH_DSO_GUI_HPP
 
 uint8_t sLastPickerValue;
+bool sSlowBluetoothMode; // for unstable BT connections
 
 #define MIN_SAMPLES_PER_PERIOD_FOR_RELIABLE_FREQUENCY_VALUE 3
 
@@ -252,15 +253,15 @@ void computePeriodFrequency(void) {
                     // found and search for next slope
                     tIntegrateValueForTotalPeriods = tIntegrateValue;
 #endif
-                    tCount++;
-                    if (tCount == 0) {
-                        // set start position for TRIGGER_MODE_FREE, TRIGGER_MODE_EXTERN or delayed trigger.
-                        tStartPositionForPulsPause = i;
-                    } else if (tCount == 1) {
-                        // first complete period (pulse + pause) is detected here
-                        MeasurementControl.PeriodSecond = getMicrosFromHorizontalDisplayValue(i - tFirstEndPositionForPulsPause, 1);
-                    }
-                    tCountPosition = i;
+                tCount++;
+                if (tCount == 0) {
+                    // set start position for TRIGGER_MODE_FREE, TRIGGER_MODE_EXTERN or delayed trigger.
+                    tStartPositionForPulsPause = i;
+                } else if (tCount == 1) {
+                    // first complete period (pulse + pause) is detected here
+                    MeasurementControl.PeriodSecond = getMicrosFromHorizontalDisplayValue(i - tFirstEndPositionForPulsPause, 1);
+                }
+                tCountPosition = i;
 #if !defined(__AVR__)
                 }
 #endif
@@ -460,6 +461,7 @@ void clearInfo(uint8_t aOldMode) {
  * GUI initialization
  ***********************************************************************/
 #if defined(__AVR__)
+BDButton TouchButtonSlowBluetoothMode;
 BDButton TouchButtonADCReference;
 const char ReferenceButtonVCC[] PROGMEM = "Ref VCC";
 const char ReferenceButton1_1V[] PROGMEM = "Ref 1.1V";
@@ -511,8 +513,8 @@ const char StringTemperature[] PROGMEM = "Temp";
 const char StringVRefint[] PROGMEM = "VRef";
 const char StringVBattDiv2[] PROGMEM = "\xBD" "VBatt";
 #if defined(__AVR__)
-const char *const ADCInputMUXChannelStrings[] = {StringChannel0, StringChannel1, StringChannel2, StringChannel3, StringChannel4,
-    StringTemperature, StringVRefint};
+const char *const ADCInputMUXChannelStrings[] = { StringChannel0, StringChannel1, StringChannel2, StringChannel3, StringChannel4,
+        StringTemperature, StringVRefint };
 #else
 #if defined(STM32F30X)
 const char *const ADCInputMUXChannelStrings[ADC_CHANNEL_COUNT] = { StringChannel2, StringChannel3, StringChannel4,
@@ -654,16 +656,19 @@ void initDSOGUI(void) {
 
 #if !defined(__AVR__)
 // Button for pretrigger area show
-#if defined(SUPPORT_LOCAL_DISPLAY)
+#  if defined(SUPPORT_LOCAL_DISPLAY)
     TouchButtonShowPretriggerValuesOnOff.init(SLIDER_DEFAULT_BAR_WIDTH + 6, tPosY, BUTTON_WIDTH_3 - (SLIDER_DEFAULT_BAR_WIDTH + 6),
     SETTINGS_PAGE_BUTTON_HEIGHT, 0, "Show\nPretrigger", TEXT_SIZE_11,
             FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, (DisplayControl.DatabufferPreTriggerDisplaySize != 0),
             &doShowPretriggerValuesOnOff);
-#else
+#  else
     TouchButtonShowPretriggerValuesOnOff.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, 0, "Show\nPretrigger",
             TEXT_SIZE_11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN,
             (DisplayControl.DatabufferPreTriggerDisplaySize != 0), &doShowPretriggerValuesOnOff);
-#endif
+#  endif
+#else
+    TouchButtonSlowBluetoothMode.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, 0, "Slow BT",
+            TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sSlowBluetoothMode, &doSlowBluetoothMode);
 #endif
 
 // Button for AutoRange on off
@@ -919,7 +924,9 @@ void drawDSOSettingsPage(void) {
     TouchButtonChannelSelect.setButtonColorAndDraw(tButtonColor);
 
 //3. Row
-#if !defined(__AVR__)
+#if defined(__AVR__)
+    TouchButtonSlowBluetoothMode.drawButton();
+#else
     TouchButtonShowPretriggerValuesOnOff.drawButton();
 #endif
     TouchButtonAutoRangeOnOff.drawButton();
@@ -1271,7 +1278,7 @@ void setReferenceButtonText(void) {
     } else {
         tText = ReferenceButton1_1V;
     }
-    TouchButtonADCReference.setText((const __FlashStringHelper *)tText, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonADCReference.setText((const __FlashStringHelper*) tText, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 #endif
 
@@ -1405,6 +1412,13 @@ void doSwipeEndDSO(struct Swipe *const aSwipeInfo) {
 /************************************************************************
  * Button handler section
  ************************************************************************/
+/*
+ * default handler for TouchButtonSlowBluetoothMode
+ */
+void doSlowBluetoothMode(BDButton *aTheTouchedButton, int16_t aValue) {
+    sSlowBluetoothMode = aValue;
+}
+
 /*
  * default handler for TouchButtonMainHome
  */

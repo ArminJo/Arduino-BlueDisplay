@@ -42,9 +42,9 @@
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
-#define VERSION_BLUE_DISPLAY "4.1.0"
+#define VERSION_BLUE_DISPLAY "4.4.0"
 #define VERSION_BLUE_DISPLAY_MAJOR 4
-#define VERSION_BLUE_DISPLAY_MINOR 1
+#define VERSION_BLUE_DISPLAY_MINOR 4
 #define VERSION_BLUE_DISPLAY_PATCH 0
 // The change log is at the bottom of the file
 
@@ -55,7 +55,9 @@
 #define VERSION_HEX_VALUE(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
 #define VERSION_BLUE_DISPLAY_HEX  VERSION_HEX_VALUE(VERSION_BLUE_DISPLAY_MAJOR, VERSION_BLUE_DISPLAY_MINOR, VERSION_BLUE_DISPLAY_PATCH)
 
-#define CONNECTIOM_TIMEOUT_MILLIS   1500
+#define CONNECTIOM_TIMEOUT_MILLIS   1500    // Timeout for initCommunication() attempts to connect to BD host
+#define HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_USB_CONNECTION   50 // without, the USB connection to my Samsung SM-T560 skips some bytes :-(
+#define HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_BT_CONNECTION   200 // without, the BT connection to my Nexus 7 breaks after a few seconds :-(
 
 // Helper macro for getting a macro definition as string
 #if !defined(STR)
@@ -279,14 +281,17 @@ public:
 #endif
     void debug(uint8_t aByte);
     void debug(const char *aMessage, uint8_t aByte);
+    void debug(const char *aMessageStart, uint8_t aByte, const char *aMessageEnd);
     void debug(const char *aMessage, int8_t aByte);
     void debug(int8_t aByte);
     void debug(uint16_t aShort);
     void debug(const char *aMessage, uint16_t aShort);
+    void debug(const char *aMessageStart, uint16_t aShort, const char *aMessageEnd);
     void debug(int16_t aShort);
     void debug(const char *aMessage, int16_t aShort);
     void debug(uint32_t aLong);
     void debug(const char *aMessage, uint32_t aLong);
+    void debug(const char *aMessageStart, uint32_t aLong, const char *aMessageEnd);
     void debug(int32_t aLong);
     void debug(const char *aMessage, int32_t aLong);
     void debug(float aDouble);
@@ -326,6 +331,7 @@ public:
     bool isDisplayOrientationLandscape();
 
     uint32_t getHostUnixTimestamp();
+    void setHostUnixTimestamp(uint32_t aHostUnixTimestamp);
 
     void refreshVector(struct ThickLine *aLine, int16_t aNewRelEndX, int16_t aNewRelEndY);
 
@@ -413,7 +419,7 @@ float getCPUTemperature(void);
 //#endif
 
 /*
- * Version 4.1.0
+ * Version 4.4.0 - The version compatible with app version 4.4
  * - Removed mMaxDisplaySize, because it was just a copy of CurrentDisplaySize, which is now HostDisplaySize etc..
  * - Renamed getDisplaySize to getRequestedDisplaySize etc.
  * - Added function setScreenBrightness().

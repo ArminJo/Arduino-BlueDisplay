@@ -149,8 +149,10 @@ uint_fast16_t BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*
 #endif
 
     mBlueDisplayConnectionEstablished = false;
+#if defined(ARDUINO)
     // consume up old received data
     clearSerialInputBuffer();
+#endif
 
 // This results in a data event, which sends size and timestamp
     requestMaxCanvasSize();
@@ -761,6 +763,7 @@ void BlueDisplay::debug(const __FlashStringHelper *aPGMString) {
 
 /**
  * Output as warning to log and present as toast every 500 ms
+ * Value is also printed in HEX notation
  */
 void BlueDisplay::debug(uint8_t aByte) {
     if (USART_isBluetoothPaired()) {
@@ -777,6 +780,7 @@ void BlueDisplay::debug(uint8_t aByte) {
 
 /*
  * Maximum size of aMessage string is 25 character.
+ * Value is also printed in HEX notation
  */
 void BlueDisplay::debug(const char *aMessage, uint8_t aByte) {
     if (USART_isBluetoothPaired()) {
@@ -792,7 +796,25 @@ void BlueDisplay::debug(const char *aMessage, uint8_t aByte) {
 }
 
 /*
+ * Maximum size of aMessage string is 30 character.
+ * Value is NOT printed in HEX notation
+ */
+void BlueDisplay::debug(const char *aMessageStart, uint8_t aByte, const char *aMessageEnd) {
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+// hhu -> unsigned char instead of unsigned int with u
+#if defined(__AVR__)
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%3u%s"), aMessageStart, aByte, aMessageEnd);
+#else
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%3u%s", aMessageStart, aByte, aMessageEnd);
+#endif
+        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
+    }
+}
+
+/*
  * Maximum size of aMessage string is 24 character.
+ * Value is also printed in HEX notation
  */
 void BlueDisplay::debug(const char *aMessage, int8_t aByte) {
     if (USART_isBluetoothPaired()) {
@@ -848,6 +870,7 @@ void BlueDisplay::debug(int16_t aShort) {
 
 /*
  * Maximum size of aMessage string is 21 character.
+ * Value is also printed in HEX notation
  */
 void BlueDisplay::debug(const char *aMessage, uint16_t aShort) {
     if (USART_isBluetoothPaired()) {
@@ -863,7 +886,25 @@ void BlueDisplay::debug(const char *aMessage, uint16_t aShort) {
 }
 
 /*
+ * Maximum size of aMessageStart + aMessageEnd string is 28 character.
+ * Value is NOT printed in HEX notation
+ */
+void BlueDisplay::debug(const char *aMessageStart, uint16_t aShort, const char *aMessageEnd) {
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+// hd -> short int instead of int with d
+#if defined(__AVR__)
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%5u%s"), aMessageStart, aShort, aMessageEnd);
+#else
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%5u%s", aMessageStart, aShort, aMessageEnd);
+#endif
+        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
+    }
+}
+
+/*
  * Maximum size of aMessage string is 20 character.
+ * Value is also printed in HEX notation
  */
 void BlueDisplay::debug(const char *aMessage, int16_t aShort) {
     if (USART_isBluetoothPaired()) {
@@ -908,6 +949,7 @@ void BlueDisplay::debug(int32_t aLong) {
 
 /*
  * Maximum size of aMessage string is 13 to 20 character depending on content of aLong.
+ * Value is also printed in HEX notation
  */
 void BlueDisplay::debug(const char *aMessage, uint32_t aLong) {
     if (USART_isBluetoothPaired()) {
@@ -924,7 +966,26 @@ void BlueDisplay::debug(const char *aMessage, uint32_t aLong) {
 }
 
 /*
+ * Maximum size of aMessageStart + aMessageEnd string is 23 character.
+ * Value is NOT printed in HEX notation
+ */
+void BlueDisplay::debug(const char *aMessageStart, uint32_t aLong, const char *aMessageEnd) {
+    if (USART_isBluetoothPaired()) {
+        char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
+#if defined(__AVR__)
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%10lu%s"), aMessageStart, aLong, aMessageEnd);
+#elif defined(__XTENSA__)
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu%s", aMessageStart, (long) aLong, aMessageEnd);
+#else
+        snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu%s", aMessageStart, aLong, aMessageEnd);
+#endif
+        sendUSARTArgsAndByteBuffer(FUNCTION_DEBUG_STRING, 0, strlen(tStringBuffer), tStringBuffer);
+    }
+}
+
+/*
  * Maximum size of aMessage string is 12 to 19 character depending on content of aLong.
+ * Value is also printed in HEX notation
  */
 void BlueDisplay::debug(const char *aMessage, int32_t aLong) {
     if (USART_isBluetoothPaired()) {
@@ -1039,6 +1100,10 @@ void BlueDisplay::drawChartByteBufferScaled(uint16_t aXOffset, uint16_t aYOffset
 
 uint32_t BlueDisplay::getHostUnixTimestamp() {
     return mHostUnixTimestamp;
+}
+
+void BlueDisplay::setHostUnixTimestamp(uint32_t aHostUnixTimestamp) {
+     mHostUnixTimestamp = aHostUnixTimestamp;
 }
 
 struct XYSize* BlueDisplay::getHostDisplaySize() {

@@ -169,8 +169,10 @@ void setup() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
+#if defined(BD_USE_SIMPLE_SERIAL)
+    BlueDisplay1.initCommunication(&initDisplay, &drawGui); // introduces up to 1.5 seconds delay
+#else
     uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &drawGui); // introduces up to 1.5 seconds delay
-#if !defined(BD_USE_SIMPLE_SERIAL)
     if (tConnectDurationMillis > 0) {
         Serial.print("Connection established after ");
         Serial.print(tConnectDurationMillis);

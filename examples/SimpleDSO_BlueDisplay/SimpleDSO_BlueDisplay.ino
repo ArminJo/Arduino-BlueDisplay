@@ -1,7 +1,7 @@
 /*
  * SimpleDSO_BlueDisplay.cpp
  *
- *  Copyright (C) 2015-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2024  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
@@ -277,7 +277,6 @@ struct MeasurementControlStruct MeasurementControl;
  * while running switch between upper info line on/off
  * while stopped switch between chart / t+info line and gui
  */
-
 DisplayControlStruct DisplayControl;
 
 // Union to speed up the combination of low and high bytes to a word
@@ -513,8 +512,10 @@ void setup() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
+#if defined(BD_USE_SIMPLE_SERIAL)
+    BlueDisplay1.initCommunication(&initDisplay, &redrawDisplay); // introduces up to 1.5 seconds delay
+#else
     uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &redrawDisplay); // introduces up to 1.5 seconds delay
-#if !defined(BD_USE_SIMPLE_SERIAL)
     if (tConnectDurationMillis > 0) {
         Serial.print("Connection established after ");
         Serial.print(tConnectDurationMillis);
@@ -647,7 +648,12 @@ void __attribute__((noreturn)) loop(void) {
                         if (!DisplayControl.DrawWhileAcquire) {
                             /*
                              * Clear old chart and draw new data
+                             * A delay of 150 ms is too small for my Nexus 7, 200 ms seems to be sufficient :-)
+                             * Otherwise we see to much errors: RPCView Read delay > 1000ms for missing bytes. ...
                              */
+                            if (sSlowBluetoothMode) {
+                                delayMillisAndCheckForEvent(HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_BT_CONNECTION);
+                            }
                             drawDataBuffer(&DataBufferControl.DataBuffer[0], COLOR_DATA_RUN, DisplayControl.EraseColor);
                         }
                         startAcquisition();
@@ -1821,8 +1827,7 @@ void drawRemainingDataBufferValues(void) {
     uint8_t tValueByte;
     uint16_t tBufferIndex = DataBufferControl.DataBufferNextDrawIndex;
 
-    while (DataBufferControl.DataBufferNextDrawPointer < DataBufferControl.DataBufferNextInPointer
-            && tBufferIndex < DISPLAY_WIDTH) {
+    while (DataBufferControl.DataBufferNextDrawPointer < DataBufferControl.DataBufferNextInPointer && tBufferIndex < DISPLAY_WIDTH) {
         /*
          * clear old line
          */
@@ -2000,9 +2005,9 @@ void printInfo(bool aRecomputeValues) {
         /*
          * Long version 1. line Timebase, Channel, (min, average, max, peak to peak) voltage, Trigger, Reference.
          */
-        snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%3u%cs %c      %s %s %s P2P%sV %sV %cV"), tTimebaseUnitsPerGrid, tTimebaseUnitChar,
-                tSlopeChar, tMinStringBuffer, tAverageStringBuffer, tMaxStringBuffer, tP2PStringBuffer, tTriggerStringBuffer,
-                tReferenceChar);
+        snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%3u%cs %c      %s %s %s P2P%sV %sV %cV"), tTimebaseUnitsPerGrid,
+                tTimebaseUnitChar, tSlopeChar, tMinStringBuffer, tAverageStringBuffer, tMaxStringBuffer, tP2PStringBuffer,
+                tTriggerStringBuffer, tReferenceChar);
         memcpy_P(&sStringBuffer[8], ADCInputMUXChannelStrings[MeasurementControl.ADMUXChannel], 4);
         BlueDisplay1.drawText(INFO_LEFT_MARGIN, FONT_SIZE_INFO_LONG_ASC, sStringBuffer, FONT_SIZE_INFO_LONG, COLOR16_BLACK,
         COLOR_INFO_BACKGROUND);
@@ -2045,8 +2050,8 @@ void printInfo(bool aRecomputeValues) {
 #else
 #if defined(__AVR__)
 
-        snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%sV %sV  %5luHz %3u%cs"), tAverageStringBuffer, tP2PStringBuffer, tHertz,
-                tTimebaseUnitsPerGrid, tTimebaseUnitChar);
+        snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%sV %sV  %5luHz %3u%cs"), tAverageStringBuffer, tP2PStringBuffer,
+                tHertz, tTimebaseUnitsPerGrid, tTimebaseUnitChar);
         if (tHertz >= 1000) {
             formatThousandSeparator(&sStringBuffer[15]);
         }

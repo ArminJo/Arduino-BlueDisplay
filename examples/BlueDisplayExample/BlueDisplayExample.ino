@@ -55,17 +55,6 @@
 //#define BD_USE_USB_SERIAL                   // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection to your smartphone / tablet.
 #include "BlueDisplay.hpp"
 
-#if defined(ESP32) || defined(ESP8266)
-#define USE_C_TIME
-#endif
-
-#if defined(USE_C_TIME)
-#include "time.h"
-struct tm *sTimeInfo;
-#else
-#include "TimeLib.h"
-#endif
-
 #define DELAY_START_VALUE 600
 #define DELAY_CHANGE_VALUE 10
 
@@ -108,21 +97,34 @@ BDSlider TouchSliderDelay;
 // handler for value change
 void doDelay(BDSlider *aTheTouchedSlider, uint16_t aSliderValue);
 
-/*
- * Time functions
- */
-void printTime();
-void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo);
-#if ! defined(USE_C_TIME)
-time_t requestHostUnixTimestamp();
-#endif
-
 void printDemoString(void);
 
 // Callback handler for (re)connect and reorientation
 void initDisplay(void);
 // Callback handler for redraw
 void drawGui(void);
+
+#define DEBUG
+
+/*
+ * Time handling
+ */
+#if defined(ESP32) || defined(ESP8266)
+#define USE_C_TIME
+#define WAIT_FOR_TIME_SYNC_MAX_MILLIS   150
+#endif
+
+#if defined(USE_C_TIME)
+#include "time.h"
+struct tm *sTimeInfo;
+bool sTimeInfoWasJustUpdated = false;
+uint16_t waitUntilTimeWasUpdated(uint16_t aMaxWaitMillis);
+#else
+#include "TimeLib.h"
+time_t requestHostUnixTimestamp();
+#endif
+void printTime();
+void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo);
 
 // PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
 const char StartMessage[] = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
@@ -151,8 +153,10 @@ void setup() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
+#if defined(BD_USE_SIMPLE_SERIAL)
+    BlueDisplay1.initCommunication(&initDisplay, &drawGui); // introduces up to 1.5 seconds delay
+#else
     uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &drawGui); // introduces up to 1.5 seconds delay
-#if !defined(BD_USE_SIMPLE_SERIAL)
     if (tConnectDurationMillis > 0) {
         Serial.print("Connection established after ");
         Serial.print(tConnectDurationMillis);
@@ -245,9 +249,6 @@ void loop() {
         unsigned long tMillis = millis();
         if (tMillis - sLastMilisOfTimePrinted > 1000) {
             sLastMilisOfTimePrinted = tMillis;
-#if defined(USE_C_TIME)
-            BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &getTimeEventCallback);
-#endif
             printTime();
         }
     }
@@ -324,19 +325,50 @@ void doBDExampleBlinkStartStop(BDButton *aTheTouchedButton __attribute__((unused
     doBlink = aValue;
 }
 
+/*
+ * Is called every 5 minutes from TimeLib by default
+ * Is called on request (every second) if we use Unix time.h functions
+ */
+time_t requestHostUnixTimestamp() {
+    BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &getTimeEventCallback);
+    return 0; // the time will be sent later in response to getInfo
+}
+
 #if defined(USE_C_TIME)
+/*
+ * @return 0 if time was not updated in aMaxWaitMillis milliseconds, else millis used for update
+ */
+uint16_t waitUntilTimeWasUpdated(uint16_t aMaxWaitMillis) {
+    unsigned long tStartMillis = millis();
+    while (millis() - tStartMillis < aMaxWaitMillis) {
+        checkAndHandleEvents(); // BlueDisplay function, which may call getTimeEventCallback() if SUBFUNCTION_GET_INFO_LOCAL_TIME event received
+        if (sTimeInfoWasJustUpdated) {
+            return millis() - tStartMillis;
+        }
+    }
+    return 0;
+}
+
 void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
     if (aSubcommand == SUBFUNCTION_GET_INFO_LOCAL_TIME) {
-        sTimeInfo = localtime((const time_t*) &aLongInfo.uint32Value);
+        BlueDisplay1.setHostUnixTimestamp(aLongInfo.uint32Value);
+        sTimeInfoWasJustUpdated = true;
+        sTimeInfo = localtime((const time_t*) &aLongInfo.uint32Value); // Compute minutes, hours, day, month etc. for later use in printTime
     }
 }
 
 void printTime() {
-    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), sTimeInfo->tm_mday, sTimeInfo->tm_mon, sTimeInfo->tm_year + 1900,
-            sTimeInfo->tm_hour, sTimeInfo->tm_min, sTimeInfo->tm_sec);
+    BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &getTimeEventCallback);
+#if defined(DEBUG)
+    uint16_t tElapsedTime = waitUntilTimeWasUpdated(WAIT_FOR_TIME_SYNC_MAX_MILLIS); // 150 ms
+    BlueDisplay1.debug("Time sync lasts ", tElapsedTime, " ms"); // timeout if 0
+#else
+    waitUntilTimeWasUpdated(WAIT_FOR_TIME_SYNC_MAX_MILLIS); // 150 ms
+#endif
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), sTimeInfo->tm_mday, sTimeInfo->tm_mon,
+            sTimeInfo->tm_year + 1900, sTimeInfo->tm_hour, sTimeInfo->tm_min, sTimeInfo->tm_sec);
     BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer,
-            11,
-            COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
+            11, COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
 }
 
 #else
@@ -350,17 +382,10 @@ void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShor
     }
 }
 
-/*
- * Is called every 5 minutes by default
- */
-time_t requestHostUnixTimestamp() {
-    BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &getTimeEventCallback);
-    return 0; // the time will be sent later in response to getInfo
-}
-
 void printTime() {
     // 1600 byte code size for time handling plus print
-    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(), second());
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(),
+            second());
     BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer,
             11,
             COLOR16_BLACK, COLOR_DEMO_BACKGROUND);

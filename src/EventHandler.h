@@ -26,7 +26,6 @@
 #define _EVENTHANDLER_H
 
 #include "Colors.h"
-
 #if defined(DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS)
 #define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Is implied by DO_NOT_NEED_BASIC_TOUCH_EVENTS
 #endif

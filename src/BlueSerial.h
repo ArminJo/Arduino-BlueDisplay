@@ -120,6 +120,7 @@ size_t getReceiveBytesAvailable(void);
 void serialEvent(void); // Is called by Arduino runtime in main loop, if (Serial0_available && serialEvent && Serial0_available()) serialEvent();
 #endif
 
+
 #if defined(ARDUINO)
 /*
  * Functions which depends on using simple or standard serial on AVR
@@ -131,6 +132,7 @@ void initSerial(String aBTClientName);
 #else
 void initSerial(uint32_t aBaudRate);
 #endif
+void clearSerialInputBuffer();
 
 void sendUSART(char aChar);
 void sendUSART(const char *aString);

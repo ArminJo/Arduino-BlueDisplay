@@ -392,6 +392,7 @@ void doSetTriggerDelay(float aValue);
 // Button handler section
 #if defined(__AVR__)
 void doADCReference(BDButton *aTheTouchedButton, int16_t aValue);
+void doSlowBluetoothMode(BDButton *aTheTouchedButton, int16_t aValue);
 #else
 void doShowPretriggerValuesOnOff(BDButton * aTheTouchedButton, int16_t aValue);
 void doShowFFT(BDButton * aTheTouchedButton, int16_t aValue);

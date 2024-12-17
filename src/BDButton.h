@@ -49,7 +49,7 @@
 // Flags for BUTTON_GLOBAL_SETTINGS
 static const int FLAG_BUTTON_GLOBAL_USE_DOWN_EVENTS_FOR_BUTTONS = 0x00; // Default
 static const int FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS = 0x01;   // If swipe can start on a button, you require this.
-static const int FLAG_BUTTON_GLOBAL_SET_BEEP_TONE = 0x02;   // Beep on button touch
+static const int FLAG_BUTTON_GLOBAL_SET_BEEP_TONE = 0x02; // Beep on button touch, TONE_CDMA_KEYPAD_VOLUME_KEY_LITE (89) is default tone
 
 // Flags for init - must correspond to the values used at the BlueDisplay App
 #define FLAG_BUTTON_NO_BEEP_ON_TOUCH        0x00
@@ -220,8 +220,6 @@ public:
     static void setButtonsTouchTone(uint8_t aToneIndex, uint16_t aToneDuration, uint8_t aToneVolume);
     static void playFeedbackTone();
     static void playFeedbackTone(bool aPlayErrorTone);
-
-
 
     BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions. Taken in init() from sLocalButtonIndex.
 

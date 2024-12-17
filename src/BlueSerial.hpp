@@ -5,7 +5,7 @@
  * Includes also common serial functions.
  *
  *
- *  Copyright (C) 2014-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2024  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -46,8 +46,16 @@
 
 #elif defined(ESP32)
 #include "BluetoothSerial.h"
+#  if !defined(CONFIG_BT_ENABLED)
+#error It seems that this ESP32 does not support Bluetooth
+#  else
+// CONFIG_BT_SSP_ENABLED is also not defined for some "normal" ESP boards :-(
+//#    if !defined(CONFIG_BT_SSP_ENABLED)
+//#error It seems that this ESP32 does not support normal Bluetooth, we cannot use BLE
+//#    endif
 BluetoothSerial SerialBT;
 #define BDSerial SerialBT // use SerialBT object instead of Serial object throughout this file
+#  endif
 #else
 
 // Other platforms
@@ -303,8 +311,7 @@ void initSerial(String aBTClientName) {
 void initSerial() {
     SerialBT.begin("ESP-BD_Example", false);
 }
-
-#else
+#else // defined(ESP32)
 
 /*
  * Take BLUETOOTH_BAUD_RATE for initialization, otherwise use 9600

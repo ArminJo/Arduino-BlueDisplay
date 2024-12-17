@@ -82,7 +82,7 @@
 // connection event sent after (re)connecting from host
 #define EVENT_CONNECTION_BUILD_UP   0x10
 // redraw event if canvas size was changed manually on host
-#define EVENT_REDRAW 0x11
+#define EVENT_REDRAW                0x11
 // reorientation event sent if orientation changed or requestMaxCanvasSize() was called
 #define EVENT_REORIENTATION         0x12
 // disconnect event sent if manually disconnected (does not cover out of range etc.)

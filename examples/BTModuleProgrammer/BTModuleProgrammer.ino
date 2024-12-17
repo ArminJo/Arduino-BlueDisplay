@@ -87,11 +87,13 @@ SoftwareSerial BTModuleSerial(2, 3); // RX, TX - RX data is not reliable at 1152
 /************************************
  ** MODIFY THESE VALUES IF YOU NEED **
  ************************************/
-#define MY_HC05_BAUDRATE_STRING     BAUD_STRING_115200
-//#define MY_JDY31_BAUDRATE           BAUD_JDY31_STRING_115200
-//#define MY_JDY31_BAUDRATE_STRING    BAUD_STRING_115200
-#define MY_JDY31_BAUDRATE           BAUD_JDY31_STRING_9600
-#define MY_JDY31_BAUDRATE_STRING    BAUD_STRING_9600
+#define HC05_NEW_BAUDRATE_STRING    BAUD_STRING_115200
+/*
+ * BOLUTEK Firmware V2.2, Bluetooth V2.1 does not work reliable with 115200 baud :-(
+ * But with 57600 baud, it also does not work reliable :-((
+ */
+#define JDY31_NEW_BAUDRATE          BAUD_JDY31_STRING_115200
+#define JDY31_NEW_BAUDRATE_STRING   BAUD_STRING_115200
 
 char StringBufferForModuleName[] = "AT+NAME=                    ";
 #define INDEX_OF_HC05_NAME_IN_BUFFER    8
@@ -236,12 +238,12 @@ void doProgramModules() {
     if (tDoInitJDY31) {
         Serial.println(F("JDY-31 module selected.\r\n"));
         BTModuleSerial.begin(BAUD_9600); // SPP-C default speed at delivery
-        Serial.println(F("Start with baudrate 9600 for JDY-31 - factory default"));
+        Serial.println(F("Start with programming baudrate 9600 for JDY-31 - factory default"));
         hasSuccess = setupJDY_31();
     } else {
         Serial.println(F("HC-05 module selected.\r\n"));
         BTModuleSerial.begin(BAUD_38400); // HC-05 default speed in AT command mode
-        Serial.println(F("Start with baudrate 38400 for HC-05 - factory default for AT command mode"));
+        Serial.println(F("Start with programming baudrate 38400 for HC-05 - factory default for AT command mode"));
         hasSuccess = setupHC_05();
     }
 
@@ -313,7 +315,7 @@ bool setupHC_05() {
 
         Serial.println(
                 F(
-                        "Enter new module name to set this name and to set baudrate to " MY_HC05_BAUDRATE_STRING " - you will be asked for confirmation."));
+                        "Enter new module name to set this name and to set baudrate to " HC05_NEW_BAUDRATE_STRING " - you will be asked for confirmation."));
         Serial.println(F("Or enter empty string to skip (and enter direct AT mode)."));
         Serial.println(F("Factory reset command is \"AT+ORGL\"."));
         Serial.println(F("Timeout is 60 seconds."));
@@ -324,7 +326,7 @@ bool setupHC_05() {
             Serial.println();
             Serial.print(F("Confirm setting to factory reset and setting name of the module to \""));
             Serial.print(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER]);
-            Serial.println(F("\" and baudrate to " MY_HC05_BAUDRATE_STRING));
+            Serial.println(F("\" and baudrate to " HC05_NEW_BAUDRATE_STRING));
             Serial.println(F("by entering any character or press reset or remove power to cancel."));
             Serial.println();
             waitAndEmptySerialReceiveBuffer(3); // read 3 character at 9600
@@ -357,8 +359,8 @@ bool setupHC_05() {
             }
 
             // Set baud / 1 stop bit / no parity
-            Serial.println(F("Set baud to " MY_HC05_BAUDRATE_STRING));
-            tReturnedBytes = sendWaitAndReceive("AT+UART=" MY_HC05_BAUDRATE_STRING ",0,0");
+            Serial.println(F("Set baud to " HC05_NEW_BAUDRATE_STRING));
+            tReturnedBytes = sendWaitAndReceive("AT+UART=" HC05_NEW_BAUDRATE_STRING ",0,0");
             if (!checkForOK(tReturnedBytes)) {
                 return false;
             }
@@ -389,6 +391,16 @@ bool setupJDY_31() {
         BTModuleSerial.begin(BAUD_115200);
         sendWaitAndReceive("AT");
         tReturnedBytes = sendWaitAndReceive("AT+BAUD");
+        if (tReturnedBytes != 9) {
+            /*
+             * Try another baud rate, since the module starts at the last programmed baud rate
+             */
+            Serial.println();
+            Serial.println(F("No valid response, try 57600 baud."));
+            BTModuleSerial.begin(BAUD_57600);
+            sendWaitAndReceive("AT");
+            tReturnedBytes = sendWaitAndReceive("AT+BAUD");
+        }
     }
     if (tReturnedBytes == 9 && StringBuffer[0] == '+' && StringBuffer[1] == 'B') {
 
@@ -401,7 +413,7 @@ bool setupJDY_31() {
 
         Serial.println(
                 F(
-                        "Enter new module name to factory reset and set name and set baudrate to " MY_JDY31_BAUDRATE " - you will be asked for confirmation."));
+                        "Enter new module name to factory reset and set name and set baudrate to " JDY31_NEW_BAUDRATE_STRING " - you will be asked for confirmation."));
         Serial.println(F("Or enter empty string to skip (and enter direct AT mode)."));
         Serial.println(F("Timeout is 60 seconds."));
         Serial.println();
@@ -411,7 +423,7 @@ bool setupJDY_31() {
             Serial.println();
             Serial.print(F("Enter any character to set name of the module to "));
             Serial.print(&StringBufferForModuleName[INDEX_OF_JDY31_NAME_IN_BUFFER]);
-            Serial.println(F(" and set baudrate to 115200 or press reset or remove power."));
+            Serial.println(F(" and set baudrate to " JDY31_NEW_BAUDRATE_STRING " or press reset or remove power."));
             waitAndEmptySerialReceiveBuffer(3); // read 3 character at 9600
 
             while (!Serial.available()) {
@@ -440,11 +452,11 @@ bool setupJDY_31() {
             sendWaitAndReceive(StringBufferForModuleName);
 
             // Set baud
-            Serial.println(F("Set baud to " MY_JDY31_BAUDRATE));
-            sendWaitAndReceive("AT+BAUD" MY_JDY31_BAUDRATE);
+            Serial.println(F("Set baud to " JDY31_NEW_BAUDRATE_STRING));
+            sendWaitAndReceive("AT+BAUD" JDY31_NEW_BAUDRATE); // send JD internal code for baudrate
 
             BTModuleSerial.begin(BAUD_115200);
-            Serial.println(F("Set communication to 115200 baud."));
+            Serial.println(F("Set communication to " JDY31_NEW_BAUDRATE_STRING " baud."));
             delay(300);
 
             Serial.println(F("Get new name"));

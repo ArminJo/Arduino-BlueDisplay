@@ -1,7 +1,7 @@
 /*
  * SimpleDSO_BlueDisplay.h
  *
- *  Copyright (C) 2015-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2024  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
@@ -26,8 +26,11 @@
 #include "TouchDSOCommon.h"
 
 // Internal version
-#define VERSION_DSO "3.3"
+#define VERSION_DSO "3.4"
 /*
+ * Version 3.4 - 12/2024
+ * - Slow Bluetooth mode selectable for unreliable Bluetooth connection of some tablets.
+ *
  * Version 3.3 - 02/2023
  * - Compatible to new BlueDisplay library version.
  *
@@ -222,17 +225,17 @@ extern DisplayControlStruct DisplayControl;
  */
 struct DataBufferStruct {
     uint8_t DisplayBuffer[DISPLAY_WIDTH];
-    uint8_t * DataBufferNextInPointer;
-    uint8_t * DataBufferNextDrawPointer; // pointer to DataBuffer - for draw-while-acquire mode
+    uint8_t *DataBufferNextInPointer;
+    uint8_t *DataBufferNextDrawPointer; // pointer to DataBuffer - for draw-while-acquire mode
     uint16_t DataBufferNextDrawIndex; // index in DisplayBuffer - for draw-while-acquire mode
     // to detect end of acquisition in interrupt service routine
-    uint8_t * DataBufferEndPointer;
+    uint8_t *DataBufferEndPointer;
     // Used to synchronize ISR with main loop
     bool DataBufferFull;
     // AcqusitionSize is DISPLAY_WIDTH except on last acquisition before stop then it is DATABUFFER_SIZE
     uint16_t AcquisitionSize;
     // Pointer for horizontal scrolling
-    uint8_t * DataBufferDisplayStart;
+    uint8_t *DataBufferDisplayStart;
     uint8_t DataBuffer[DATABUFFER_SIZE]; // contains also display values i.e. (DISPLAY_VALUE_FOR_ZERO - 8BitValue)
 };
 extern DataBufferStruct DataBufferControl;
@@ -252,6 +255,7 @@ extern "C" void INT0_vect();
 #endif
 extern char sStringBuffer[SIZEOF_STRINGBUFFER];
 
+extern bool sSlowBDMode; // for unstable BT connections
 extern BDButton TouchButtonBack;
 // global flag for page control. Is evaluated by calling loop or page and set by buttonBack handler
 extern bool sBackButtonPressed;
