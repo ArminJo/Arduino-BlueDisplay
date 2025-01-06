@@ -243,7 +243,7 @@ void BDButton::deinit() {
 
 void BDButton::drawButton() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    if (mLocalButtonPtr != NULL) {
+    if (mLocalButtonPtr != nullptr) {
         mLocalButtonPtr->drawButton();
     }
 #endif

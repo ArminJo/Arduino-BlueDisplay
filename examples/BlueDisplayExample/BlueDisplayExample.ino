@@ -15,7 +15,7 @@
  *  With 9600 baud, the minimal blink delay we observe is 200 ms because of the communication delay
  *  of 8 * printDemoString(), which requires 8*24 ms -> 192 ms
  *
- *  Copyright (C) 2014-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
@@ -48,8 +48,8 @@
  * of 8 * printDemoString(), which requires 8*24 ms -> 192 ms
  */
 //#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate.
-//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events like down, move and up. Saves up to 620 bytes program memory and 36 bytes RAM.
-#define DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Implies DO_NOT_NEED_BASIC_TOUCH_EVENTS.
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves up to 180 bytes program memory and 14 bytes RAM.
+#define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Saves up to 88 bytes program memory and 4 bytes RAM.
 //#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
 //#define BD_USE_SIMPLE_SERIAL                // Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise.
 //#define BD_USE_USB_SERIAL                   // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection to your smartphone / tablet.
@@ -258,6 +258,7 @@ void loop() {
 
 void initDisplay(void) {
 
+    // We can set BD_FLAG_TOUCH_BASIC_DISABLE it here, but it is set anyway if DO_NOT_NEED_BASIC_TOUCH_EVENTS is defined
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, LOCAL_DISPLAY_WIDTH,
     LOCAL_DISPLAY_HEIGHT);
 
@@ -459,8 +460,9 @@ void doTest(BDButton *aTheTouchedButton, int16_t aValue) {
     sInTestPage = true;
     BDButton::deactivateAll();
     BDSlider::deactivateAll();
-    BlueDisplay1.testDisplay(); // Blocking draw of test patterns
+    BlueDisplay1.clearDisplay();
     TouchButtonBack.drawButton(); // this also activates the button
+    BlueDisplay1.testDisplay(); // Blocking draw of test patterns
 }
 
 #define MILLIS_PER_CHANGE 20 // gives minimal 2 seconds

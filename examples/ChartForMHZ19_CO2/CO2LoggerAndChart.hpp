@@ -6,7 +6,7 @@
  *  Each 5 minutes the minimum of the snooped values is stored. I.e. 1 hour has 12 values, 72-> 6 hours, 288->1 day, 1152->4 days, 1440->5 days
  *
  *
- *  Copyright (C) 2024  Armin Joachimsmeyer
+ *  Copyright (C) 2024-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This program is distributed in the hope that it will be useful,
@@ -22,9 +22,9 @@
 #ifndef _CO2_LOGGER_AND_CHART_HPP
 #define _CO2_LOGGER_AND_CHART_HPP
 
-//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
-#define DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Implies DO_NOT_NEED_BASIC_TOUCH_EVENTS.
-#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS    // Disables LongTouchDown and SwipeEnd events.
+#define ONLY_CONNECT_EVENT_REQUIRED                     // Disables reorientation, redraw and SensorChange events
 #include "Chart.hpp"
 
 //#define LOCAL_DEBUG
@@ -128,7 +128,7 @@ void initializeCO2Array();
 void writeToCO2Array(uint8_t aCO2Value);
 
 void signalInitDisplay(void);
-void doDays(BDButton *aTheTouchedButton, int16_t aValue);
+void doDays(BDButton *aTheTouchedButton, int16_t aHoursPerChartToDisplay);
 void doSignalChangeBrightness(BDButton *aTheTouchedButton, int16_t aValue);
 void doShowTimeToNextStorage(BDButton *aTheTouchedButton, int16_t aValue);
 
@@ -169,13 +169,15 @@ time_t requestHostUnixTimestamp();
 #define TIME_ADJUSTMENT 0
 //#define TIME_ADJUSTMENT SECS_PER_HOUR // To be subtracted from received timestamp
 #define MILLIS_IN_ONE_SECOND 1000L
+#define STORAGE_INTERVAL_SECONDS (5 * SECS_PER_MIN)
 // sNextStorageMillis is required by CO2LoggerAndChart.hpp for toast at connection startup
 uint32_t sNextStorageMillis = 60 * MILLIS_IN_ONE_SECOND; // If not connected first storage in 1 after boot.
 
 void printTime();
-void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) ;
+void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo);
 int convertUnixTimestampToDateString(char *aLabelStringBuffer, time_float_union aXvalue);
 int convertUnixTimestampToHourString(char *aLabelStringBuffer, time_float_union aXvalue);
+int convertUnixTimestampToHourAndMinuteString(char *aLabelStringBuffer, time_float_union aXvalue);
 void printTimeToNextStorage();
 
 /*
@@ -189,28 +191,6 @@ void InitCo2LoggerAndChart() {
 #if defined(ENABLE_STACK_ANALYSIS)
     initStackFreeMeasurement();
 #endif
-    initializeCO2Array();
-
-#if defined(STANDALONE_TEST)
-    uint8_t *tArrayFillPointer = sCO2Array;
-    for (int i = 0; i < 200; ++i) {
-        *tArrayFillPointer++ = i;
-        *tArrayFillPointer++ = i;
-        *tArrayFillPointer++ = i;
-        *tArrayFillPointer++ = i;
-    }
-    for (int i = 200; i > 120; --i) {
-        *tArrayFillPointer++ = i;
-        *tArrayFillPointer++ = i;
-        *tArrayFillPointer++ = i;
-        *tArrayFillPointer++ = i;
-    }
-    while (tArrayFillPointer < &sCO2Array[CO2_ARRAY_SIZE]) {
-        *tArrayFillPointer++ = 80;
-    }
-#endif
-
-    sCO2MinimumOfCurrentReadings = __UINT16_MAX__;
 
     /*
      * Register callback handler and wait for 300 ms if Bluetooth connection is still active.
@@ -239,6 +219,29 @@ void InitCo2LoggerAndChart() {
 //    BlueDisplay1.mHostUnixTimestamp = 1733191057;
 //    BlueDisplay1.mBlueDisplayConnectionEstablished = true;
 //    sDoInitDisplay = true;
+
+    initializeCO2Array(); // uses BlueDisplay1.debug();
+
+#if defined(STANDALONE_TEST)
+    uint8_t *tArrayFillPointer = sCO2Array;
+    for (int i = 0; i < 200; ++i) {
+        *tArrayFillPointer++ = i;
+        *tArrayFillPointer++ = i;
+        *tArrayFillPointer++ = i;
+        *tArrayFillPointer++ = i;
+    }
+    for (int i = 200; i > 120; --i) {
+        *tArrayFillPointer++ = i;
+        *tArrayFillPointer++ = i;
+        *tArrayFillPointer++ = i;
+        *tArrayFillPointer++ = i;
+    }
+    while (tArrayFillPointer < &sCO2Array[CO2_ARRAY_SIZE]) {
+        *tArrayFillPointer++ = 80;
+    }
+#endif
+
+    sCO2MinimumOfCurrentReadings = __UINT16_MAX__;
 }
 
 /*
@@ -409,8 +412,7 @@ void initDisplay(void) {
 #endif
 
     uint16_t tDisplayHeight = (DISPLAY_WIDTH * BlueDisplay1.getHostDisplayHeight()) / BlueDisplay1.getHostDisplayWidth();
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE | BD_FLAG_USE_MAX_SIZE,
-    DISPLAY_WIDTH, tDisplayHeight);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH, tDisplayHeight);
 
 // set layout variables;
     int tDisplayHeightEighth = tDisplayHeight / 8;
@@ -487,19 +489,90 @@ void initDisplay(void) {
     changeBrightness(); // from low to high :-)
 }
 
+void doDays(BDButton *aTheTouchedButton, int16_t aHoursPerChartToDisplay) {
+    (void) aTheTouchedButton;
+    sHoursPerChartToDisplay = aHoursPerChartToDisplay;
+    /*
+     * X increment is 1/2 day (for scale factor 1)
+     * Chart: 4 days -> CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_2 (-2), 2 days -> CHART_X_AXIS_SCALE_FACTOR_1 (0), 1 day -> CHART_X_AXIS_SCALE_FACTOR_EXPANSION_2 (2)
+     * 4->-2,2->0, 1->2, 1/2->4
+     * Normal chart: 4->0, 2->2, 1->4, 1/2->8
+     */
+    int8_t tXLabelScaleFactor = CHART_X_AXIS_SCALE_FACTOR_1; // X increment is 1/2 day (for scale factor 1)
+    int8_t tDataFactor = CHART_X_AXIS_SCALE_FACTOR_1;
+    uint8_t tXPixelSpacing = CHART_WIDTH / 8;  // 8 grid lines per chart
+    uint8_t tXLabelDistance = 2; // // draw label at every 2. grid line
+    if (aHoursPerChartToDisplay == 96) {
+        // 4 days. Grid each 12 hours, label each 24 hours, data compressed by 2
+        sCO2ArrayDisplayStart = sCO2Array;
+        tDataFactor = CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_2;
+    } else if (aHoursPerChartToDisplay == 48) {
+        // 2 days. Grid each 6 hours, label each 12 hours => scale expanded by 2, data direct
+        sCO2ArrayDisplayStart = &sCO2Array[CO2_ARRAY_SIZE / 2];
+        tXLabelScaleFactor = CHART_X_AXIS_SCALE_FACTOR_EXPANSION_2;
+    } else if (aHoursPerChartToDisplay == 24) {
+        // 1 day. Grid each 3 hours, label each 6 hours => scale expanded by 4, data expanded by 2
+        sCO2ArrayDisplayStart = &sCO2Array[(CO2_ARRAY_SIZE / 2) + (CO2_ARRAY_SIZE / 4)];
+        tDataFactor = CHART_X_AXIS_SCALE_FACTOR_EXPANSION_2;
+        tXLabelScaleFactor = CHART_X_AXIS_SCALE_FACTOR_EXPANSION_4;
+    } else {
+        // 12 hour. Grid each hour, label each 3 hours => grid is narrower and scale expanded by 12, data expanded by 4
+        sCO2ArrayDisplayStart = &sCO2Array[(CO2_ARRAY_SIZE / 2) + (CO2_ARRAY_SIZE / 4) + (CO2_ARRAY_SIZE / 8)];
+        tDataFactor = CHART_X_AXIS_SCALE_FACTOR_EXPANSION_4;
+        /*
+         * Here the regular expansion would be 8, which leads to 1.5 hour per grid
+         * So change the grid to 1 hour per grid and draw labels every 3 hours
+         */
+        tXLabelScaleFactor = CHART_X_AXIS_SCALE_FACTOR_EXPANSION_12; // 1 hour per grid
+        tXPixelSpacing = CHART_WIDTH / 12; // 12 grid lines per chart
+        tXLabelDistance = 3; // draw label at every 3. grid line, but draw big label still each 2x12 hours by keeping mXBigLabelDistance at 2
+    }
+    CO2Chart.setXLabelDistance(tXLabelDistance);
+    CO2Chart.setGridOrLabelXPixelSpacing(tXPixelSpacing);
+    CO2Chart.setXLabelScaleFactor(tXLabelScaleFactor);
+    CO2Chart.setXDataScaleFactor(tDataFactor);
+    drawCO2Chart(); // this sets XLabelAndGridOffset
+}
+
+/*
+ * Current time is at pixel position CHART_START_X + CHART_WIDTH
+ * Touched time is at current time - (pixel_difference * X_data_scale * 5 min)
+ */
+void doShowTimeAtTouchPosition(struct TouchEvent *const aTouchPosition) {
+    static struct XYPosition sLastPosition = { 0, 0 };
+    uint16_t tPositionX = aTouchPosition->TouchPosition.PositionX;
+    if (tPositionX >= CHART_START_X && tPositionX <= (CHART_START_X + CHART_WIDTH)) {
+        uint16_t tPixelDifference = CO2Chart.reduceLongWithIntegerScaleFactor((CHART_START_X + CHART_WIDTH) - tPositionX,
+                CO2Chart.getXDataScaleFactor());
+        time_float_union tTimeOfTouchPosition;
+        tTimeOfTouchPosition.TimeValue = (now() - (now() % STORAGE_INTERVAL_SECONDS))
+                - (tPixelDifference * STORAGE_INTERVAL_SECONDS);
+        char tTimeString[6];
+        convertUnixTimestampToHourAndMinuteString(tTimeString, tTimeOfTouchPosition);
+        BlueDisplay1.drawText(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE / 2, tTimeString,
+        BASE_TEXT_SIZE, CHART_DATA_COLOR, sBackgroundColor);
+        // Clear last indicator
+        if (sLastPosition.PositionX != 0) {
+            BlueDisplay1.drawLineRel(sLastPosition.PositionX, sLastPosition.PositionY + 32, 0, 32, sBackgroundColor);
+        }
+        // Draw an indicator
+        BlueDisplay1.drawLineRel(tPositionX, aTouchPosition->TouchPosition.PositionY + 32, 0, 32, CHART_DATA_COLOR);
+        sLastPosition = aTouchPosition->TouchPosition;
+    }
+}
+
 void initCO2Chart() {
     /*
-     * For CHART_X_AXIS_SCALE_FACTOR_1             and at 5 minutes / pixel we have 12 hours labels each 144 pixel -> 8 segments.
+     * For CHART_X_AXIS_SCALE_FACTOR_1             and at 5 minutes / pixel we have 12 hours labels each 144 pixel -> 8 grid lines.
      * For CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_2 and at 5 minutes / pixel we have 24 hours labels each 288 pixel.
      * For CHART_X_AXIS_SCALE_FACTOR_EXPANSION_2   and at 5 minutes / pixel we have  6 hours labels each  72 pixel.
-     * SECS_PER_DAY/2 increment for label value
+     * SECS_PER_DAY/2 increment for label value and label distance is 2
      */
-
     sCO2ArrayDisplayStart = sCO2Array;
 // Increment is 1/2 day for scale factor 1
     CO2Chart.initXLabelTimestamp(0, SECS_PER_DAY / 2, CHART_X_AXIS_SCALE_FACTOR_1, 5);
-    CO2Chart.setXLabelDistance(2);
-    CO2Chart.setLabelStringFunction(convertUnixTimestampToDateString);
+    CO2Chart.setXBigLabelDistance(2); // regular label distance is set by doDays() below
+    CO2Chart.setLabelStringFunction(convertUnixTimestampToHourString);
 
     CO2Chart.initYLabel(CO2_BASE_VALUE, CHART_Y_LABEL_INCREMENT, CO2_COMPRESSION_FACTOR, 4, 0); // 200 ppm per grid, 5 for input 1 per 5 ppm , 4 is minimum label string width
 
@@ -508,7 +581,7 @@ void initCO2Chart() {
     sChartMaxValue = ((tChartHeight * (CHART_Y_LABEL_INCREMENT / CO2_COMPRESSION_FACTOR)) / (tYGridSize));
     // Grid spacing is CHART_WIDTH / 8 -> 8 columns and height / 6 for 5 lines from 400 to 1400
     CO2Chart.initChart(CHART_START_X, BlueDisplay1.getRequestedDisplayHeight() - (BASE_TEXT_SIZE + (BASE_TEXT_SIZE / 2)),
-    CHART_WIDTH, tChartHeight, CHART_AXES_SIZE, BASE_TEXT_SIZE, CHART_DISPLAY_GRID, CHART_WIDTH / 8, tYGridSize);
+    CHART_WIDTH, tChartHeight, CHART_AXES_SIZE, BASE_TEXT_SIZE, CHART_DISPLAY_GRID, 0, tYGridSize); // GridOrLabelXPixelSpacing is set by doDays() below
 
     CO2Chart.initChartColors(CHART_DATA_COLOR, CHART_AXES_COLOR, CHART_GRID_COLOR, sTextColor, sTextColor, sBackgroundColor);
     CO2Chart.setYTitleTextAndSize("ppm CO2", BASE_TEXT_SIZE + (BASE_TEXT_SIZE / 2));
@@ -516,7 +589,10 @@ void initCO2Chart() {
     /*
      * Set values depending on sHoursPerChartToDisplay
      */
-    doDays(NULL, sHoursPerChartToDisplay);
+    doDays(nullptr, sHoursPerChartToDisplay);
+
+    registerTouchDownCallback(doShowTimeAtTouchPosition);
+    registerTouchMoveCallback(doShowTimeAtTouchPosition);
 }
 
 void drawDisplay() {
@@ -541,6 +617,9 @@ void drawDisplay() {
 void drawCO2Chart() {
     printTime(); // gets now()
     printCO2Value();
+    // Clear time of marker area
+    BlueDisplay1.clearTextArea(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE / 2, 5, BASE_TEXT_SIZE,
+            sBackgroundColor);
     CO2Chart.clear();
 
     /*
@@ -551,8 +630,11 @@ void drawCO2Chart() {
 #else
     long tDifferenceToLastMidnightInSeconds = (minute() + (60 * hour())) * SECS_PER_MIN;
 #endif
+    /*
+     * We must always start with a midnight value to mark the start of the big labels
+     */
     if (sHoursPerChartToDisplay == 12) {
-        // shift labels a half day left
+        // We want to see the labels of the last half day here, so midnight grid line is shifted left by 12 hours
         CO2Chart.setXLabelAndGridOffset(tDifferenceToLastMidnightInSeconds + (sHoursPerChartToDisplay * SECS_PER_HOUR));
     } else {
         CO2Chart.setXLabelAndGridOffset(tDifferenceToLastMidnightInSeconds);
@@ -560,13 +642,14 @@ void drawCO2Chart() {
 
     // Use 1,2, or 4 days back as start value
     // Timestamp of the midnight, which is left by tDifferenceToLastMidnightInSeconds of Y axis.
-    uint8_t tFullDays = ((sHoursPerChartToDisplay - 1) / 24) + 1; // Results in 1 for values <= 24
+    uint8_t tFullDays =
+            ((sHoursPerChartToDisplay - 1) / 24) + 1; // Results in 1 for values <= 24
 #if defined(USE_C_TIME)
     CO2Chart.drawXAxisAndDateLabels(BlueDisplay1.getHostUnixTimestamp() - ((tFullDays * SECS_PER_DAY) + tDifferenceToLastMidnightInSeconds),
             convertUnixTimestampToHourString);
 #else
     CO2Chart.drawXAxisAndDateLabels(now() - ((tFullDays * SECS_PER_DAY) + tDifferenceToLastMidnightInSeconds),
-            convertUnixTimestampToHourString);
+            convertUnixTimestampToDateString);
 #endif
 
     CO2Chart.drawYAxisAndLabels(); // this will restore the overwritten 400 label
@@ -628,37 +711,6 @@ bool handleEventAndFlags() {
 //This handler is called after boot or reconnect
 void signalInitDisplay(void) {
     sDoInitDisplay = true;
-}
-
-void doDays(BDButton *aTheTouchedButton, int16_t aValue) {
-    (void) aTheTouchedButton;
-    sHoursPerChartToDisplay = aValue;
-    /*
-     * Small chart: 4 days -> CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_2 (-2), 2 days -> CHART_X_AXIS_SCALE_FACTOR_1 (0), 1 day -> CHART_X_AXIS_SCALE_FACTOR_EXPANSION_2 (2)
-     * 4->-2,2->0, 1->2, 1/2->4
-     * Normal chart: 4->0, 2->2, 1->4, 1/2->8
-     */
-    int8_t tXLabelScaleFactor = CHART_X_AXIS_SCALE_FACTOR_1;
-    int8_t tDataFactor = CHART_X_AXIS_SCALE_FACTOR_1;
-    if (aValue == 96) {
-        sCO2ArrayDisplayStart = sCO2Array;
-        tDataFactor = CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_2;
-    } else if (aValue == 48) {
-        sCO2ArrayDisplayStart = &sCO2Array[CO2_ARRAY_SIZE / 2];
-        tXLabelScaleFactor = CHART_X_AXIS_SCALE_FACTOR_EXPANSION_2;
-    } else if (aValue == 24) {
-        sCO2ArrayDisplayStart = &sCO2Array[(CO2_ARRAY_SIZE / 2) + (CO2_ARRAY_SIZE / 4)];
-        tDataFactor = CHART_X_AXIS_SCALE_FACTOR_EXPANSION_2;
-        tXLabelScaleFactor = CHART_X_AXIS_SCALE_FACTOR_EXPANSION_4;
-    } else {
-        // 12 hour
-        sCO2ArrayDisplayStart = &sCO2Array[(CO2_ARRAY_SIZE / 2) + (CO2_ARRAY_SIZE / 4) + (CO2_ARRAY_SIZE / 8)];
-        tDataFactor = CHART_X_AXIS_SCALE_FACTOR_EXPANSION_4;
-        tXLabelScaleFactor = CHART_X_AXIS_SCALE_FACTOR_EXPANSION_8;
-    }
-    CO2Chart.setXLabelScaleFactor(tXLabelScaleFactor);
-    CO2Chart.setXDataScaleFactor(tDataFactor);
-    drawCO2Chart();
 }
 
 void doSignalChangeBrightness(BDButton *aTheTouchedButton, int16_t aValue) {
@@ -776,6 +828,16 @@ int convertUnixTimestampToHourString(char *aLabelStringBuffer, time_float_union 
 #endif
 }
 
+int convertUnixTimestampToHourAndMinuteString(char *aLabelStringBuffer, time_float_union aXvalue) {
+#if defined(USE_C_TIME)
+    sTimeInfo = localtime((const time_t*) aXvalue.TimeValue);
+    return snprintf(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, "%2d:%02d", sTimeInfo->tm_hour, sTimeInfo->tm_minute);
+#else
+    return snprintf(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, "%2d:%02d", hour(aXvalue.TimeValue),
+            minute(aXvalue.TimeValue));
+#endif
+}
+
 void printTime() {
     char tStringBuffer[20];
 #if defined(USE_C_TIME)
@@ -801,7 +863,6 @@ void printTime() {
     BlueDisplay1.drawText(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - (3 * BASE_TEXT_SIZE), tStringBuffer,
     BASE_TEXT_SIZE, sTextColor, sBackgroundColor);
 }
-
 
 #if defined(USE_C_TIME)
 /*
@@ -849,8 +910,8 @@ void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShor
         sNextStorageMillis = millis() + ((20 - (second(tTimestamp) % 20)) * MILLIS_IN_ONE_SECOND);
 #  else
         // tweak sNextStorageMillis, so that our next storage is at the next full 5 minute
-        uint16_t tSecondsUntilNextFull5Minutes = ((5 * SECS_PER_MIN)
-                - ((minute(tTimestamp) * SECS_PER_MIN) + second(tTimestamp)) % (5 * SECS_PER_MIN));
+        uint16_t tSecondsUntilNextFull5Minutes = (STORAGE_INTERVAL_SECONDS
+                - ((minute(tTimestamp) * SECS_PER_MIN) + second(tTimestamp)) % STORAGE_INTERVAL_SECONDS);
         sNextStorageMillis = millis() + (tSecondsUntilNextFull5Minutes * MILLIS_IN_ONE_SECOND);
 #  endif
         delay(400); // wait for the scale factor toast to vanish

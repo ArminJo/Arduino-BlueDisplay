@@ -702,7 +702,7 @@ extern "C" void storeScreenshot(void) {
         uint16_t *tBufferPtr;
         if (tOpenResult == FR_OK) {
             uint16_t *tFourDisplayLinesBufferPointer = (uint16_t*) malloc(sizeof(uint16_t) * 4 * DISPLAY_DEFAULT_WIDTH);
-            if (tFourDisplayLinesBufferPointer == NULL) {
+            if (tFourDisplayLinesBufferPointer == nullptr) {
                 failParamMessage(sizeof(uint16_t) * 4 * DISPLAY_DEFAULT_WIDTH, "malloc() fails");
             }
             f_write(&tFile, bmpfileheader, 14, &tCount);

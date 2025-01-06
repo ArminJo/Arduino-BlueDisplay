@@ -28,7 +28,8 @@
 /*
  * Settings to configure the BlueDisplay library and to reduce its size
  */
-#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Saves up to 88 bytes program memory and 4 bytes RAM.
 //#define BD_USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 #include "BlueDisplay.hpp"
 #if defined(__AVR__)
@@ -215,8 +216,7 @@ void initDisplay(void) {
     sTextSize = sCurrentDisplayHeight / 16;
     sTextSizeVCC = sTextSize * 2;
 
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sCurrentDisplayWidth,
-            sCurrentDisplayHeight);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL, sCurrentDisplayWidth, sCurrentDisplayHeight);
 
     sSensorChangeCallCountForZeroAdjustment = 0;
     registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_SIMPLE_FILTER, &doSensorChange);
@@ -235,35 +235,34 @@ void initDisplay(void) {
 
     SliderVelocityForward.init(tSliderLeftX, (sCurrentDisplayHeight / 2) - sVerticalSliderLength, sSliderWidth,
             sVerticalSliderLength, tSliderThresholdVelocity, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
-            FLAG_SLIDER_IS_ONLY_OUTPUT,
-            NULL);
+            FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderVelocityForward.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
     // Bottom slider
     SliderVelocityBackward.init(tSliderLeftX, sCurrentDisplayHeight / 2, sSliderWidth, -(sVerticalSliderLength),
-            tSliderThresholdVelocity, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            tSliderThresholdVelocity, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderVelocityBackward.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
 // Position slider right from velocity at middle of screen
     SliderRight.init(tSliderLeftX + sSliderWidth, (sCurrentDisplayHeight - sSliderWidth) / 2, sSliderWidth, sHorizontalSliderLength,
     SLIDER_LEFT_RIGHT_THRESHOLD, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
-            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderRight.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
 // Position inverse slider left from Velocity at middle of screen
     SliderLeft.init((tSliderLeftX) - sHorizontalSliderLength, (sCurrentDisplayHeight - sSliderWidth) / 2, sSliderWidth,
             -(sHorizontalSliderLength), SLIDER_LEFT_RIGHT_THRESHOLD, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
-            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderLeft.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
     // US distance Display slider
     uint16_t tUSSliderLength = sCurrentDisplayWidth / 2 - sSliderWidth;
     SliderShowUSDistance.init(sCurrentDisplayWidth / 2 + sSliderWidth,
     BUTTON_HEIGHT_4_DYN_LINE_2 - sSliderWidth - BUTTON_VERTICAL_SPACING_DYN, sSliderWidth, tUSSliderLength, 99, 0, COLOR16_WHITE,
-    COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT | FLAG_SLIDER_SHOW_VALUE, NULL);
+    COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT | FLAG_SLIDER_SHOW_VALUE, nullptr);
     SliderShowUSDistance.setScaleFactor(100.0 / tUSSliderLength);
     SliderShowUSDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR16_BLACK,
-            COLOR16_WHITE);
+    COLOR16_WHITE);
 
     BlueDisplay1.debug("XWidth1=", BlueDisplay1.mHostDisplaySize.XWidth);
     BlueDisplay1.debug("BUTTON_WIDTH_3_DYN=", (uint16_t) BUTTON_WIDTH_3_DYN);
@@ -480,7 +479,7 @@ void doRcCarStartStop(BDButton *aTheTouchedButton, int16_t aValue) {
     if (sRCCarStarted) {
         registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, &doSensorChange);
     } else {
-        registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, NULL);
+        registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, nullptr);
         resetOutputs();
     }
 }

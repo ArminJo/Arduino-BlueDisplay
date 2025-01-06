@@ -1,9 +1,10 @@
 /*
  * BTModuleProgrammer.cpp
- * Program for easy changing name of HC-05 or JDY-31 Bluetooth modules and to set baudrate to 115200.
+ * Program for easy changing name of HC-05 or JDY-31 Bluetooth modules and to set baudrate to 115200 for HC-05.
  * It can also be used to enter AT commands directly to the BT module for extended manual programming.
  *
- * The baudrate is specified on line 87 and 88, change these lines if you need.
+ * The baudrate is specified on line 91 ff., change these lines if you need.
+ * JDY-31 do not work reliable with Baudrate 115200 or 57600 (others not yet tested).
  *
  * Serial is used for connection with host.
  * SoftwareSerial is used for connection with BT module.
@@ -92,8 +93,9 @@ SoftwareSerial BTModuleSerial(2, 3); // RX, TX - RX data is not reliable at 1152
  * BOLUTEK Firmware V2.2, Bluetooth V2.1 does not work reliable with 115200 baud :-(
  * But with 57600 baud, it also does not work reliable :-((
  */
-#define JDY31_NEW_BAUDRATE          BAUD_JDY31_STRING_115200
-#define JDY31_NEW_BAUDRATE_STRING   BAUD_STRING_115200
+#define JDY31_NEW_BAUDRATE              BAUD_9600
+#define JDY31_NEW_BAUDRATE_STRING       BAUD_STRING_9600
+#define JDY31_NEW_BAUDRATE_STRING_CODED BAUD_JDY31_STRING_9600
 
 char StringBufferForModuleName[] = "AT+NAME=                    ";
 #define INDEX_OF_HC05_NAME_IN_BUFFER    8
@@ -160,6 +162,9 @@ void setup() {
     digitalWrite(LED_BUILTIN, LOW);
     delay(300);
 
+    /*
+     * Call module programming only once after boot
+     */
     doProgramModules();
 
     delay(1000);
@@ -170,7 +175,7 @@ void setup() {
 }
 
 /*
- * The loop implements manual AT mode
+ * The loop implements only the manual AT mode
  */
 void loop() {
     if (Serial.available()) {
@@ -218,7 +223,7 @@ uint16_t readStringWithTimeoutFromSerial(char *aStringBufferPtr, uint16_t aTimeo
             char tChar = Serial.read();
             if (tChar == '\r' || tChar == '\n') {
                 /*
-                 * End of string read -> cancel timeout
+                 * End of string read -> cancel loop and timeout
                  */
                 *aStringBufferPtr = '\0';
                 break;
@@ -230,6 +235,9 @@ uint16_t readStringWithTimeoutFromSerial(char *aStringBufferPtr, uint16_t aTimeo
     return tStringLength;
 }
 
+/*
+ * Called once from setup()
+ */
 void doProgramModules() {
 
     bool tDoInitJDY31 = (digitalRead(JDY_31_SELECT_PIN) == LOW);
@@ -238,12 +246,12 @@ void doProgramModules() {
     if (tDoInitJDY31) {
         Serial.println(F("JDY-31 module selected.\r\n"));
         BTModuleSerial.begin(BAUD_9600); // SPP-C default speed at delivery
-        Serial.println(F("Start with programming baudrate 9600 for JDY-31 - factory default"));
+        Serial.println(F("Start with baudrate 9600, which is factory default for JDY-31 module."));
         hasSuccess = setupJDY_31();
     } else {
         Serial.println(F("HC-05 module selected.\r\n"));
         BTModuleSerial.begin(BAUD_38400); // HC-05 default speed in AT command mode
-        Serial.println(F("Start with programming baudrate 38400 for HC-05 - factory default for AT command mode"));
+        Serial.println(F("Start with baudrate 38400, which is factory default for AT command mode for HC-05 module."));
         hasSuccess = setupHC_05();
     }
 
@@ -257,6 +265,9 @@ void doProgramModules() {
     Serial.println(F("- Press reset for a new try."));
     Serial.println(F("- Enter \"AT+<Command>\"."));
     Serial.println();
+    /*
+     * Go to loop
+     */
     waitAndEmptySerialReceiveBuffer(1); // dummy wait 1 ms
 }
 
@@ -270,6 +281,9 @@ bool checkForOK(uint8_t aReturnedBytes) {
     return (aReturnedBytes == 4 && StringBuffer[0] == 'O' && StringBuffer[1] == 'K');
 }
 
+/*
+ * @return true, if programming was successful
+ */
 bool setupHC_05() {
     Serial.println(F("Setup HC-05 module."));
     int tReturnedBytes = sendWaitAndReceive("AT");
@@ -290,7 +304,7 @@ bool setupHC_05() {
 
         Serial.println();
         Serial.println(F("Get current name"));
-        sendWaitAndReceive("AT+NAME");
+        sendWaitAndReceive("AT+NAME"); // This does not give a name for HC-Firmware 2.0-20100601, but setting name works :-)
 
         Serial.println();
         Serial.println(F("Get current PIN"));
@@ -320,9 +334,14 @@ bool setupHC_05() {
         Serial.println(F("Factory reset command is \"AT+ORGL\"."));
         Serial.println(F("Timeout is 60 seconds."));
         Serial.println();
-        waitAndEmptySerialReceiveBuffer(3); // 3 ms is sufficient for reading 3 character at 9600
+        waitAndEmptySerialReceiveBuffer(3); // Clear "User" Serial input buffer 3 ms is sufficient for reading 3 character at 9600
+        /*
+         * Wait 60 seconds for user input of new name
+         */
         uint8_t tLength = readStringWithTimeoutFromSerial(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER], 60);
-        if (tLength > 0) {
+        if (tLength == 0) {
+            Serial.println(F("No new name specified in 60 seconds."));
+        } else {
             Serial.println();
             Serial.print(F("Confirm setting to factory reset and setting name of the module to \""));
             Serial.print(&StringBufferForModuleName[INDEX_OF_HC05_NAME_IN_BUFFER]);
@@ -372,7 +391,7 @@ bool setupHC_05() {
             return true;
         }
     } else {
-        Serial.println(F("No valid response to AT command. Program mode must be enabled to get a response!"));
+        Serial.println(F("No valid response from HC-05 module for \"AT\" command. Program mode must be enabled to get a response!"));
     }
     return false;
 }
@@ -419,7 +438,9 @@ bool setupJDY_31() {
         Serial.println();
         waitAndEmptySerialReceiveBuffer(3); // 3 ms is sufficient for reading 3 character at 9600
         uint8_t tLength = readStringWithTimeoutFromSerial(&StringBufferForModuleName[INDEX_OF_JDY31_NAME_IN_BUFFER], 60);
-        if (tLength > 0) {
+        if (tLength == 0) {
+            Serial.println(F("No new name specified in 60 seconds."));
+        } else {
             Serial.println();
             Serial.print(F("Enter any character to set name of the module to "));
             Serial.print(&StringBufferForModuleName[INDEX_OF_JDY31_NAME_IN_BUFFER]);
@@ -451,22 +472,25 @@ bool setupJDY_31() {
 
             sendWaitAndReceive(StringBufferForModuleName);
 
+#if JDY31_NEW_BAUDRATE != 9600
             // Set baud
             Serial.println(F("Set baud to " JDY31_NEW_BAUDRATE_STRING));
-            sendWaitAndReceive("AT+BAUD" JDY31_NEW_BAUDRATE); // send JD internal code for baudrate
+            sendWaitAndReceive("AT+BAUD" JDY31_NEW_BAUDRATE_STRING_CODED); // send JD internal code for baudrate
 
-            BTModuleSerial.begin(BAUD_115200);
+            BTModuleSerial.begin(JDY31_NEW_BAUDRATE);
             Serial.println(F("Set communication to " JDY31_NEW_BAUDRATE_STRING " baud."));
             delay(300);
-
+#endif
             Serial.println(F("Get new name"));
-            sendWaitAndReceive("AT+NAME");
+            if (sendWaitAndReceive("AT+NAME") > 8) {
+                Serial.print(F("Successful "));
+            }
 
-            Serial.println(F("Successful programmed JDY module."));
+            Serial.println(F("programmed JDY module."));
             return true;
         }
     } else {
-        Serial.println(F("No valid response to AT command."));
+        Serial.println(F("No valid response from JDY module for \"AT+BAUD\" command."));
     }
     return false;
 }

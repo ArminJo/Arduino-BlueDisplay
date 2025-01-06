@@ -2,7 +2,7 @@
  * EventHandler.h
  *
  *
- *  Copyright (C) 2014-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -26,8 +26,9 @@
 #define _EVENTHANDLER_H
 
 #include "Colors.h"
-#if defined(DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS)
-#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Is implied by DO_NOT_NEED_BASIC_TOUCH_EVENTS
+
+#if defined(DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS) // Old value
+#define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS
 #endif
 
 /*
@@ -37,9 +38,7 @@
  * Move and swipe recognition is currently not implemented in ADS7846.hpp, if USE_TIMER_FOR_PERIODIC_LOCAL_TOUCH_CHECKS is not defined.
  */
 //#define USE_TIMER_FOR_PERIODIC_LOCAL_TOUCH_CHECKS // Use registerDelayCallback() and changeDelayCallback() for periodic touch checks
-#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
-//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
-#endif
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 
 #if !defined(IS_STOP_REQUESTED)
 #define IS_STOP_REQUESTED               isStopRequested()
@@ -103,17 +102,19 @@ bool delayMillisAndCheckForStop(uint16_t aDelayMillis);
 
 void checkAndHandleEvents(void);
 
-#if !defined(DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS)
+#if !defined(DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS)
 /*
  * Long touch down stuff
  */
 #define TOUCH_STANDARD_LONG_TOUCH_TIMEOUT_MILLIS 800 // Millis after which a touch is classified as a long touch
 extern void (*sLongTouchDownCallback)(struct TouchEvent*);
 extern uint32_t sLongTouchDownTimeoutMillis;
-extern bool sDisableTouchUpOnce; // set normally by application if long touch action was made
+extern bool sDisableTouchUpOnce; // Disable next touch up detection. E.g. because we are already in a touch handler and don't want the end of this touch to be interpreted for a newly displayed button.
 
 void registerLongTouchDownCallback(void (*aLongTouchCallback)(struct TouchEvent*), uint16_t aLongTouchTimeoutMillis);
-
+/*
+ * Swipe stuff
+ */
 void registerSwipeEndCallback(void (*aSwipeEndCallback)(struct Swipe*));
 void setSwipeEndCallbackEnabled(bool aSwipeEndCallbackEnabled);
 extern bool sSwipeEndCallbackEnabled;  // for temporarily disabling swipe callbacks

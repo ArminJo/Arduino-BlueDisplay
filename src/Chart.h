@@ -2,7 +2,7 @@
  * Chart.h
  *
  *
- *  Copyright (C) 2012-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -35,6 +35,9 @@
 #define CHART_DEFAULT_BACKGROUND_COLOR  COLOR16_WHITE
 #define CHART_DEFAULT_LABEL_COLOR       COLOR16_BLACK
 #define CHART_MAX_AXES_SIZE             10
+
+// 8 is an experimental value, which looks good for me :-)
+#define CHART_DIVISOR_TO_ADD_FOR_BIG_LABEL_TEXT_SIZE   8 // 8 -> 112.5%. tBigLabelTextSize = tLabelTextSize + (tLabelTextSize / 8)
 
 // data drawing modes
 #define CHART_MODE_PIXEL                0
@@ -86,7 +89,7 @@ public:
     void setHeightY(const uint16_t heightY);
     void setPositionX(const uint16_t positionX);
     void setPositionY(const uint16_t positionY);
-    void setGridPixelSpacing(uint8_t aXGridSpacing, uint8_t aYGridSpacing);
+    void setGridOrLabelPixelSpacing(uint8_t aGridOrLabelXPixelSpacing, uint8_t aGridOrLabelYPixelSpacing);
 
     uint16_t getWidthX(void) const;
     uint16_t getHeightY(void) const;
@@ -105,11 +108,14 @@ public:
      * X Axis
      */
     void drawXAxisAndLabels();
-    void drawXAxisAndDateLabels(time_t aStartTimestamp, int (*aXIntermediateLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue));
+    void drawXAxisAndDateLabels(time_t aStartTimestamp, int (*aXBigLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue));
 
     void setXLabelDistance(uint8_t aXLabelDistance);
-    void setGridXPixelSpacing(uint8_t aXGridSpacing);
-    uint8_t getGridXPixelSpacing(void) const;
+    void setXBigLabelDistance(uint8_t aXBigLabelDistance);
+    void setXRegularAndBigLabelDistance(uint8_t aXLabelDistance);
+
+    void setGridOrLabelXPixelSpacing(uint8_t aGridOrLabelXPixelSpacing);
+    uint8_t getGridOrLabelXPixelSpacing(void) const;
 
     /*
      * X Label
@@ -162,8 +168,8 @@ public:
      */
     void drawYAxisAndLabels();
 
-    void setGridYPixelSpacing(uint8_t aYGridSpacing);
-    uint8_t getGridYPixelSpacing(void) const;
+    void setGridOrLabelYPixelSpacing(uint8_t aYGridOrLabelPixelSpacing);
+    uint8_t getGridOrLabelYPixelSpacing(void) const;
     void setXLabelAndGridOffset(float aXLabelAndGridOffset);
 
     // Y Label
@@ -211,33 +217,34 @@ public:
     time_float_union mXLabelStartValue; // Time must be explicitly allowed here, otherwise we cannot use the 32 bit timestamps.
 
     /*
-     * !!! Offset of a main label to Y axis !!! E.g. for date as main label, we need the time to one of the last midnights here.
-     * If offset is positive -> grid is shifted left
-     * If offset is negative, the starting intermediate labels are not rendered!
+     * Offset of first (big) label to origin / Y axis !!! E.g. for date as big label, we need the time to one of the last midnights here.
+     * If offset is positive -> 1. label is left of origin and chart, starting at main label, is shifted left.
+     * If offset is negative -> 1. label is right of origin, but the labels between this and the origin are not rendered!
      *
-     * If mXLabelAndGridStartValueOffset == mXLabelBaseIncrementValue then grid starts with 2. value
-     * If label distance is 1, then label also starts with 2. value
-     * Pixel offset is (mXLabelAndGridStartValueOffset / mXLabelBaseIncrementValue) * mGridXPixelSpacing
-     * for X ScaleFactor != identity, pixel offset is (mXLabelAndGridStartValueOffset / adjusted(mXLabelBaseIncrementValue)) * mGridXPixelSpacing
-     * because increment has changed by mXLabelScaleFactor
+     * If mXLabelAndGridStartValueOffset == mXLabelBaseIncrementValue then grid starts with 2. grid line
+     *   If label distance is 1, then label also starts with 2. value
+     * Pixel offset is (mXLabelAndGridStartValueOffset / mXLabelBaseIncrementValue) * mGridXOrLabelPixelSpacing
+     *   For X ScaleFactor != identity, pixel offset is (mXLabelAndGridStartValueOffset / adjusted(mXLabelBaseIncrementValue)) * mGridXOrLabelPixelSpacing
+     *   because increment has changed by mXLabelScaleFactor
      */
-    float mXLabelAndGridStartValueOffset; // Left offset of a main label in the same units as mXLabelBaseIncrementValue
+    float mXLabelAndGridStartValueOffset; // Left offset of first (big) label in the same units as mXLabelBaseIncrementValue (e.g. seconds for date charts)
 
     /*
      * Value difference between 2 grid labels - the effective IncrementValue is mXLabelScaleFactor * mXLabelBaseIncrementValue
      */
-    float mXLabelBaseIncrementValue; // The base increment value for one grid. seconds of 1 year are 0x01E1 3380 and use 25 bit but reduction of resolution does not matter here.
-    uint8_t mGridOrLabelXPixelSpacing; // Difference in pixel between 2 X grid lines
+    float mXLabelBaseIncrementValue; // The base increment value for one grid. Seconds of 1 year are 0x01E1 3380 and use 25 bit but resolution reduction does not matter here.
+    uint8_t mGridOrLabelXPixelSpacing; // Difference in pixel between two X grid lines
 
     /*
      * Scale factor is CHART_WIDTH / lengthOfDataToShow if this is > 1
      */
-#define CHART_X_AXIS_SCALE_FACTOR_1                 0 // identity is code with 0
+#define CHART_X_AXIS_SCALE_FACTOR_1                 0 // identity is coded with 0
 #define CHART_X_AXIS_SCALE_FACTOR_EXPANSION_1_5     1 // expansion by 1.5
 #define CHART_X_AXIS_SCALE_FACTOR_EXPANSION_2       2 // expansion by factor 2
 #define CHART_X_AXIS_SCALE_FACTOR_EXPANSION_3       3 // expansion by factor 3
 #define CHART_X_AXIS_SCALE_FACTOR_EXPANSION_4       4 // expansion by factor 4
 #define CHART_X_AXIS_SCALE_FACTOR_EXPANSION_8       8 // expansion by factor 8
+#define CHART_X_AXIS_SCALE_FACTOR_EXPANSION_12     12 // expansion by factor 12
 #define CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5  -1 // compression by 1.5
 #define CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_2    -2 // compression by factor 2
 #define CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_3    -3 // compression by factor 3
@@ -251,16 +258,22 @@ public:
      */
     // Normally these factors are equal.
     int8_t mXDataScaleFactor; // Factor for X Data expansion(>0) or compression(<0). 2->display 1 value 2 times -2->display average of 2 values etc.
-    int8_t mXLabelScaleFactor; // Factor for X scale expansion(>0) or compression(<0). 2-> use half the increment per label -2-> use double of increment per label
+    int8_t mXLabelScaleFactor; // Factor for X scale expansion(>0) or compression(<0). 2-> use half the increment per grid/label -2-> use double of increment per grid/label
 
     // label formatting, returns length of string
-    int (*XLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue); // Function, which is called with a long/float and returns a pointer to a string. Is not called if NULL.
+    int (*XLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue); // Function, which is called with a long/float and returns a pointer to a string. Is not called if nullptr.
 
     uint8_t mXNumVarsAfterDecimal; // For float label
     uint8_t mXMinStringWidth; // For clearing label space
-    uint8_t mXLabelDistance; // 1 label at every grid position, 2 label at every 2. grid position etc.
+    uint8_t mXLabelDistance; // Draw label at every mXLabelDistance grid line. 1 -> label at every grid position, 2 -> label at every 2. grid position etc.
+    /*
+     * Draw big label at every mXBigLabelDistance enlarged (not reduced) by XLabelScaleFactor, to keep the time distance between them constant.
+     * Big labels start at grid line determined by mXLabelAndGridStartValueOffset. Currently used only for date labels.
+     * If mXLabelDistance == mXBigLabelDistance no regular label is drawn
+     */
+    uint8_t mXBigLabelDistance; // Draw big label at every mXBigLabelDistance enlarged (not reduced) by XLabelScaleFactor
 
-    const char *mXTitleText; // No title text if NULL
+    const char *mXTitleText; // No title text if nullptr
 
     /*
      * Y axis
@@ -275,7 +288,7 @@ public:
     uint8_t mYNumVarsAfterDecimal;
     uint8_t mYMinStringWidth;
 
-    const char *mYTitleText; // No title text if NULL
+    const char *mYTitleText; // No title text if nullptr
 
     uint8_t checkParameterValues(); // almost private
 

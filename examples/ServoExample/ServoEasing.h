@@ -168,7 +168,7 @@ __attribute__((weak)) extern void handleServoTimerInterrupt();
  * Saves 4 byte RAM per servo.
  ****************************************************************************************/
 #if !defined(MAX_EASING_SERVOS)
-#  if defined(MAX_SERVOS)
+#  if defined(MAX_SERVOS) // defined in Sevos.h
 #define MAX_EASING_SERVOS MAX_SERVOS // =12 use default value from Servo.h for Uno etc.
 #  else
 #define MAX_EASING_SERVOS 12 // just take default value from Servo.h for Uno etc.
@@ -506,7 +506,7 @@ public:
 
 #  if defined(ENABLE_EASE_USER)
     void registerUserEaseInFunction(float (*aUserEaseInFunction)(float aPercentageOfCompletion, void *aUserDataPointer),
-            void *aUserDataPointer = NULL);
+            void *aUserDataPointer = nullptr);
     void setUserDataPointer(void *aUserDataPointer);
 #  endif
 #endif
@@ -568,9 +568,9 @@ public:
 
     int getCurrentAngle();
     int getCurrentMicroseconds();
+    int getDeltaMicrosecondsOrUnits();
     int getEndMicrosecondsOrUnits();
     int getEndMicrosecondsOrUnitsWithTrim();
-    int getDeltaMicrosecondsOrUnits();
     int getMillisForCompleteMove();
     bool isMoving();
     bool isMovingAndCallYield() __attribute__ ((deprecated ("Replaced by isMoving(). Often better to use areInterruptsActive() instead.")));
@@ -583,9 +583,7 @@ public:
 //    int DegreeToMicrosecondsOrUnits(float aDegree);
     int DegreeToMicrosecondsOrUnitsWithTrimAndReverse(int aDegree);
 
-    void synchronizeServosAndStartInterrupt(bool doUpdateByInterrupt);
-
-    int applyTrimAndreverseToTargetMicrosecondsOrUnits(int aTargetMicrosecondsOrUnits);
+    int applyTrimAndReverseToTargetMicrosecondsOrUnits(int aTargetMicrosecondsOrUnits);
     void print(Print *aSerial, bool doExtendedOutput = true); // Print dynamic and static info
     void printDynamic(Print *aSerial, bool doExtendedOutput = true);
     void printStatic(Print *aSerial);
@@ -611,9 +609,11 @@ public:
      * Convenience function
      */
 #if defined(__AVR__)
-    bool InitializeAndCheckI2CConnection(Print *aSerial); // Using Print class saves 95 bytes flash
+    bool InitializeAndCheckI2CConnection(Print *aSerial) __attribute__ ((deprecated ("Use initializeAndCheckI2CConnection()")));
+    bool initializeAndCheckI2CConnection(Print *aSerial); // Using Print class saves 95 bytes flash
 #else
-    bool InitializeAndCheckI2CConnection(Stream *aSerial); // Print class has no flush() here
+    bool InitializeAndCheckI2CConnection(Stream *aSerial); __attribute__ ((deprecated ("Use initializeAndCheckI2CConnection()")));
+    bool initializeAndCheckI2CConnection(Stream *aSerial); // Print class has no flush() here
 #endif
 
     /*

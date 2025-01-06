@@ -61,7 +61,7 @@
  * Settings to configure the BlueDisplay library and to reduce its size
  */
 //#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
-#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 //#define BD_USE_SIMPLE_SERIAL                 // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 //#define BD_USE_USB_SERIAL                    // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
 #include "BlueDisplay.hpp"
@@ -201,7 +201,7 @@ void setup() {
     || defined(SERIALUSB_PID)  || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_attiny3217)
         delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #    endif
-    // If connection is enabled, this message was already sent as BlueDisplay1.debug()
+        // If connection is enabled, this message was already sent as BlueDisplay1.debug()
         Serial.println(StartMessage);
     }
 # endif
@@ -228,7 +228,7 @@ void loop() {
  *  Y positive -> backward / bottom down
  *  Y negative -> forward  / top down
  */
-void doAccelerometerChange(struct SensorCallback * aSensorCallbackInfo) {
+void doAccelerometerChange(struct SensorCallback *aSensorCallbackInfo) {
 #if defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER)
     /*
      * Print 2 values for Arduino Plotter
@@ -278,7 +278,7 @@ void doAccelerometerChange(struct SensorCallback * aSensorCallbackInfo) {
  *  Z positive -> rotate counterclockwise
  *  Z negative -> rotate clockwise
  */
-void doGyroscopeChange(struct SensorCallback * aSensorCallbackInfo) {
+void doGyroscopeChange(struct SensorCallback *aSensorCallbackInfo) {
 #if defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER)
     /*
      * Print 2 values for Arduino Plotter
@@ -319,7 +319,7 @@ void doGyroscopeChange(struct SensorCallback * aSensorCallbackInfo) {
 #endif
 }
 
-void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallbackInfo) {
+void doSensorChange(uint8_t aSensorType, struct SensorCallback *aSensorCallbackInfo) {
     if (aSensorType == FLAG_SENSOR_TYPE_ACCELEROMETER) {
         doAccelerometerChange(aSensorCallbackInfo);
     } else {
@@ -331,7 +331,7 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback * aSensorCallback
  */
 void initDisplay(void) {
     // Initialize display size and flags
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, DISPLAY_WIDTH,
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH,
     DISPLAY_HEIGHT);
 
     // Screen orientation is fixed to the orientation at connect time
@@ -353,27 +353,29 @@ void initDisplay(void) {
      */
     // Top slider
     SliderAccelerationForward.init(ACCELERATION_SLIDER_LEFT_X, ACCELERATION_SLIDER_CENTER_Y - SLIDER_BAR_LENGTH,
-    SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH, SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_GREEN, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH, SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_GREEN, FLAG_SLIDER_IS_ONLY_OUTPUT,
+            nullptr);
 //    SliderAccelerationForward.setBarThresholdDefaultColor(COLOR16_BLUE); // since app version 4.3
     SliderAccelerationForward.setBarThresholdColor(COLOR16_BLUE);
     sAccelerationForwardBackwardSliders.negativeSliderPtr = &SliderAccelerationForward;
 
     // Bottom inverse slider (length is negative)
     SliderAccelerationBackward.init(ACCELERATION_SLIDER_LEFT_X, ACCELERATION_SLIDER_CENTER_Y,
-    SLIDER_BAR_WIDTH, -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_GREEN, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    SLIDER_BAR_WIDTH, -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_GREEN, FLAG_SLIDER_IS_ONLY_OUTPUT,
+            nullptr);
     SliderAccelerationBackward.setBarThresholdColor(COLOR16_BLUE);
     sAccelerationForwardBackwardSliders.positiveSliderPtr = &SliderAccelerationBackward;
 
     // slider right from forward
     SliderAccelerationRight.init(ACCELERATION_SLIDER_RIGHT_X, ACCELERATION_SLIDER_TOP_Y, SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH,
-    SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderAccelerationRight.setBarThresholdColor(COLOR16_BLUE);
     sAccelerationLeftRightSliders.negativeSliderPtr = &SliderAccelerationRight;
 
     // Position inverse slider left from forward
     SliderAccelerationLeft.init(ACCELERATION_SLIDER_LEFT_X - SLIDER_BAR_LENGTH, ACCELERATION_SLIDER_TOP_Y, SLIDER_BAR_WIDTH,
             -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_GREEN,
-            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderAccelerationLeft.setBarThresholdColor(COLOR16_BLUE);
     sAccelerationLeftRightSliders.positiveSliderPtr = &SliderAccelerationLeft;
 
@@ -382,25 +384,24 @@ void initDisplay(void) {
      */
     SliderRollForward.init(ROLL_PITCH_YAW_SLIDER_LEFT_X, ROLL_PITCH_YAW_SLIDER_CENTER_Y - SLIDER_BAR_LENGTH,
     ROLL_PITCH_YAW_SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH, SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_RED,
-            FLAG_SLIDER_IS_ONLY_OUTPUT,
-            NULL);
+            FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderRollForward.setBarThresholdColor(COLOR16_BLUE);
     sRollForwardBackwardSliders.negativeSliderPtr = &SliderRollForward;
 
     SliderRollBackward.init(ROLL_PITCH_YAW_SLIDER_LEFT_X, ROLL_PITCH_YAW_SLIDER_CENTER_Y, ROLL_PITCH_YAW_SLIDER_BAR_WIDTH,
-            -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_RED, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_RED, FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderRollBackward.setBarThresholdColor(COLOR16_BLUE);
     sRollForwardBackwardSliders.positiveSliderPtr = &SliderRollBackward;
 
     SliderPitchRight.init(ACCELERATION_SLIDER_RIGHT_X, ROLL_PITCH_YAW_SLIDER_TOP_Y, ROLL_PITCH_YAW_SLIDER_BAR_WIDTH,
     SLIDER_BAR_LENGTH,
-    SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_RED, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_RED, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderPitchRight.setBarThresholdColor(COLOR16_BLUE);
     sPitchLeftRightSliders.positiveSliderPtr = &SliderPitchRight;
 
     SliderPitchLeft.init(ACCELERATION_SLIDER_LEFT_X - SLIDER_BAR_LENGTH, ROLL_PITCH_YAW_SLIDER_TOP_Y,
     ROLL_PITCH_YAW_SLIDER_BAR_WIDTH, -(SLIDER_BAR_LENGTH), SLIDER_BAR_THRESHOLD, 0, COLOR16_YELLOW, COLOR16_RED,
-            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderPitchLeft.setBarThresholdColor(COLOR16_BLUE);
     sPitchLeftRightSliders.negativeSliderPtr = &SliderPitchLeft;
 #endif

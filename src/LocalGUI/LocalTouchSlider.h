@@ -57,7 +57,7 @@ typedef uint16_t BDSliderHandle_t;
 //static const int FLAG_SLIDER_IS_HORIZONTAL = 0x04;
 //static const int FLAG_SLIDER_IS_INVERSE = 0x08;         // is equivalent to negative slider length at init
 //static const int FLAG_SLIDER_VALUE_BY_CALLBACK = 0x10;  // If set, bar (+ ASCII) value will be set by callback handler, not by touch
-//static const int FLAG_SLIDER_IS_ONLY_OUTPUT = 0x20;     // is equivalent to slider aOnChangeHandler NULL at init
+//static const int FLAG_SLIDER_IS_ONLY_OUTPUT = 0x20;     // is equivalent to slider aOnChangeHandler nullptr at init
 //#define LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK 0x80 // Use pointer to index in slider list instead of pointer to this in callback
 /** @} */
 
@@ -218,7 +218,7 @@ public:
     uint16_t mBarLength; //aMaxValue serves also as height
     uint16_t mThresholdValue; // Value for color change
     uintForRamSpaceSaving mBarWidth; // Size of border and bar
-    const char *mCaption; // No caption if NULL
+    const char *mCaption; // No caption if nullptr
     uint8_t mTouchBorder; // extension of touch region
     uint8_t mFlags;
 

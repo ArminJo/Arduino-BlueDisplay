@@ -78,7 +78,7 @@ void handleTouchPanelEvents() {
         /*
          * Periodically check for long touch down
          */
-        if(sTouchUpCallbackEnabledOnce && sLongTouchDownCallback != NULL && sTouchObjectTouched != SLIDER_TOUCHED) {
+        if(sTouchUpCallbackEnabledOnce && sLongTouchDownCallback != nullptr && sTouchObjectTouched != SLIDER_TOUCHED) {
             if( millis() - sLongTouchDownTimeoutMillis > sLastTouchDownMillis) {
                 sTouchUpCallbackEnabledOnce = false;
 
@@ -143,7 +143,7 @@ void handleTouchPanelEvents(void) {
          */
         LocalTouchButton *tTouchedButton = LocalTouchButton::find(TouchPanel.mCurrentTouchPosition.PositionX,
                 TouchPanel.mCurrentTouchPosition.PositionY, false);
-        if (tTouchedButton != NULL) {
+        if (tTouchedButton != nullptr) {
             if (tTouchedButton->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
                 // Local autorepeat button callback, which is autorepeatTouchHandler() can not be called by event, so we must call it directly here
                 tTouchedButton->mOnTouchHandler(tTouchedButton, 0);
@@ -194,7 +194,7 @@ void handleTouchPanelEvents(void) {
             /*
              * Enable long touch down detection if touch is not on a slider
              */
-            if (sTouchObjectTouched != SLIDER_TOUCHED && sLongTouchDownCallback != NULL) {
+            if (sTouchObjectTouched != SLIDER_TOUCHED && sLongTouchDownCallback != nullptr) {
                 changeDelayCallback(&callbackHandlerForLongTouchDownTimeout, sLongTouchDownTimeoutMillis); // enable timeout
             }
         } else {
@@ -304,7 +304,7 @@ void setPeriodicTouchCallbackPeriod(uint32_t aCallbackPeriod) {
  */
 void callbackHandlerForLongTouchDownTimeout() {
 #  if !defined(ARDUINO)
-    assert_param(sLongTouchDownCallback != NULL);
+    assert_param(sLongTouchDownCallback != nullptr);
 #  endif
 // No long touch if slider touched or swipe is made
     /*

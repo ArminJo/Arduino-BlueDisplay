@@ -129,6 +129,13 @@ For detailed information to sensors see [ShowSensorValues example](https://githu
 
 <br/>
 
+# Lines and anti-aliasing
+Lines and vectors, that are not horizontal or vertical are drawn with anti-aliasing. 
+This has the disadvantage that these lines cannot be removed witout residual by overwriting them with background color.
+You must use the *WithAliasing() function variant if you have a diagonal line or vector that you want to remove by overwriting.
+
+<br/>
+
 # Using the new *.hpp files
 In order to support [compile options](#compile-options--macros-for-this-library) more easily,
 the line `#include <BlueDisplay.h>` must be changed to  `#include <BlueDisplay.hpp>`
@@ -146,8 +153,8 @@ Modify them by enabling / disabling them, or change the values if applicable.
 | Name | Default value | Description |
 |-|-:|-|
 | `BLUETOOTH_BAUD_RATE` | 9600 | Change this, if you have [reprogrammed](https://github.com/ArminJo/Arduino-BlueDisplay#btmoduleprogrammer) the HC05 module for another baud rate e.g.115200. |
-| `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | Disables basic touch events like down, move and up. Saves up to 620 bytes program memory and 36 bytes RAM. |
-| `DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS` | disabled | Disables LongTouchDown and SwipeEnd events. Implies `DO_NOT_NEED_BASIC_TOUCH_EVENTS`. Saves up to 38 bytes program memory and 3 bytes RAM. |
+| `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | Disables basic touch events down, move and up. Saves up to 180 bytes program memory and 14 bytes RAM. |
+| `DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS` | disabled | Disables LongTouchDown and SwipeEnd events. Saves up to 88 bytes program memory and 4 bytes RAM. |
 | `ONLY_CONNECT_EVENT_REQUIRED` | disabled | Disables reorientation, redraw and sensor-change events. Saves up to 50 bytes program memory and 4 bytes RAM. |
 | `BD_USE_SIMPLE_SERIAL` | disabled | Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise. |
 | `BD_USE_USB_SERIAL` | disabled | Activate it, if you want to force using **Serial** instead of **Serial1** for **direct USB cable connection** to your smartphone / tablet. This is only required on platforms, which have Serial1 available. |
@@ -196,8 +203,8 @@ But if you have a [codepage](https://en.wikipedia.org/wiki/Windows_code_page) wh
 - Button position is upper left corner of button
 
 # Specials
-- If color of text or button is COLOR16_NO_BACKGROUND no element background is rendered.
-- If drawChartcolor is COLOR16_NO_DELETE, the old chart will not be cleared. This is used for the "history" function for the DSO example.
+- If color of text or button is `COLOR16_NO_BACKGROUND` no background is rendered for text and button (Only-text button).
+- If drawChartcolor is `COLOR16_NO_DELETE`, the old chart will not be cleared. This is used for the "history" function for the DSO example.
 
 <br/>
 
@@ -323,7 +330,7 @@ The debug content will then show up as **toast** on your Android device and is s
 Change the **log level** in the app to see more or less information of the BlueDisplay communication.
 
 ### Connecting Arduino RX
-To enable programming of the Arduino while the HC-05 module is connected, use a Schottky diode 
+To enable programming of the Arduino while the HC-05 module is connected, use a Schottky diode
 (e.g. a BAT 42) to connect **Arduino RX and HC-05 TX**.
 On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
@@ -335,10 +342,18 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 
 # Revision History
 ### Version 4.4.0 - The version compatible with app version 4.4
-- Removed mMaxDisplaySize, because it was just a copy of CurrentDisplaySize.
+- Removed `mMaxDisplaySize`, because it was just a copy of `CurrentDisplaySize`.
+- Renamed `getDisplaySize()` to `getRequestedDisplaySize()` etc.
+- Renamed `drawVectorDegrees()` to `drawVectorDegree()`.
+- Added functions `draw*WithAliasing()`.
 - Refactored and improved Chart.
 - Minor bug fixes.
-- Added a full screen example for 
+- Added a full screen example for a log chart of CO2 values.
+- Added the convenience function `clearTextArea()`.
+- Changed value of `COLOR16_NO_DELETE`.
+- Renamed `DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS` to `DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS`.
+- `BD_FLAG_TOUCH_BASIC_DISABLE` is always set if `DO_NOT_NEED_BASIC_TOUCH_EVENTS` is defined.
+- Improved BTModuleProgrammer program.
 
 ### Version 4.0.1
 - Minor changes and updated 3. party libs.

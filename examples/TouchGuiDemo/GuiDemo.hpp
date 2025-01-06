@@ -244,7 +244,7 @@ void loopGuiDemo(void) {
 }
 
 void stopGuiDemo(void) {
-    registerLongTouchDownCallback(NULL, 0);
+    registerLongTouchDownCallback(nullptr, 0);
 
     // free buttons
     for (unsigned int i = 0; i < sizeof(TouchButtonsGuiDemo) / sizeof(TouchButtonsGuiDemo[0]); ++i) {
@@ -308,13 +308,13 @@ void createDemoButtonsAndSliders(void) {
      */
 // self moving sliders COLOR16_WHITE is bar background color for slider without border
     TouchSliderActionWithoutBorder.init(180, BUTTON_HEIGHT_4_LINE_2 - 10, 20, ACTION_SLIDER_MAX, ACTION_SLIDER_MAX, 0,
-            COLOR16_WHITE, COLOR16_YELLOW, FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            COLOR16_WHITE, COLOR16_YELLOW, FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     TouchSliderActionWithoutBorder.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE,
             SLIDER_DEFAULT_VALUE_MARGIN, COLOR16_BLUE, COLOR_DEMO_BACKGROUND);
 
     TouchSliderAction.init(180 + 2 * 20 + BUTTON_DEFAULT_SPACING, BUTTON_HEIGHT_4_LINE_2 - 10, 20, ACTION_SLIDER_MAX,
     ACTION_SLIDER_MAX, 0, COLOR16_BLUE, COLOR16_YELLOW,
-            FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     TouchSliderAction.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, SLIDER_DEFAULT_VALUE_MARGIN,
             COLOR16_BLUE, COLOR_DEMO_BACKGROUND);
 
@@ -350,7 +350,7 @@ void doGuiDemoButtons(Button *aTheTouchedButton, int16_t aValue) {
             registerLongTouchDownCallback(&LongTouchDownHandlerGUIDemo, TOUCH_STANDARD_LONG_TOUCH_TIMEOUT_MILLIS);
         }
     } else {
-        registerLongTouchDownCallback(NULL, 0); // disable long touch down callback
+        registerLongTouchDownCallback(nullptr, 0); // disable long touch down callback
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     if (*aTheTouchedButton == TouchButtonCalibration) {

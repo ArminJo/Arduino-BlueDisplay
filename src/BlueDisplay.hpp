@@ -11,7 +11,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -36,8 +36,8 @@
  * For more details see: https://github.com/ArminJo/Arduino-BlueDisplay?tab=readme-ov-file#compile-options--macros-for-this-library
  *
  * - BLUETOOTH_BAUD_RATE                Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate.
- * - DO_NOT_NEED_BASIC_TOUCH_EVENTS     Disables basic touch events like down, move and up. Saves up to 620 bytes program memory and 36 bytes RAM.
- * - DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS Disables LongTouchDown and SwipeEnd events. Implies DO_NOT_NEED_BASIC_TOUCH_EVENTS.
+ * - DO_NOT_NEED_BASIC_TOUCH_EVENTS     Disables basic touch events down, move and up. Saves up to 180 bytes program memory and 14 bytes RAM.
+ * - DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS Disables LongTouchDown and SwipeEnd events.
  * - ONLY_CONNECT_EVENT_REQUIRED        Disables reorientation, redraw and SensorChange events
  * - BD_USE_SIMPLE_SERIAL               Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise.
  * - BD_USE_USB_SERIAL                  Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection to your smartphone / tablet.
@@ -198,6 +198,9 @@ void BlueDisplay::setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHe
             BDButton::resetAll();
             BDSlider::resetAll();
         }
+#if defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
+        aFlags |= BD_FLAG_TOUCH_BASIC_DISABLE;
+#endif
         sendUSARTArgs(FUNCTION_GLOBAL_SETTINGS, 4, SUBFUNCTION_GLOBAL_SET_FLAGS_AND_SIZE, aFlags, aWidth, aHeight);
     }
 }
@@ -303,7 +306,7 @@ void BlueDisplay::clearDisplay(color16_t aColor) {
 //        tParamBuffer[0] = FUNCTION_CLEAR_DISPLAY << 8 | SYNC_TOKEN;
 //        tParamBuffer[1] = 1;
 //        tParamBuffer[2] = aColor;
-//        sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], 1 * 2 + 4, NULL, 0);
+//        sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], 1 * 2 + 4, nullptr, 0);
     sendUSARTArgs(FUNCTION_CLEAR_DISPLAY, 1, aColor);
 }
 
@@ -327,6 +330,11 @@ void BlueDisplay::drawPixel(uint16_t aXPos, uint16_t aYPos, color16_t aColor) {
     sendUSARTArgs(FUNCTION_DRAW_PIXEL, 3, aXPos, aYPos, aColor);
 }
 
+/*
+ * Line drawn with this functions can be removed without residual
+ * Horizontal or vertical lines are always drawn using aliasing Paint and thus can always be removed without residual
+ * Other lines drawn with this functions can NOT be overwritten/removed without residual -> use drawLineWithAliasing()
+ */
 void BlueDisplay::drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.drawLine(aStartX, aStartY, aEndX, aEndY, aColor);
@@ -335,15 +343,31 @@ void BlueDisplay::drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, u
 }
 
 /*
- * The relative parameters are NOT the width and length of the line!
- * They are added to start positions to get the end position!
+ * The relative parameters are added to start positions to get the end position!
  * I.e. if both are 0, then line is a pixel of width 1 and length 1!
  */
-void BlueDisplay::drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aXWidth, int16_t aYHeight, color16_t aColor) {
+void BlueDisplay::drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aXDelta, int16_t aYDelta, color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.drawLine(aStartX, aStartY, aStartX + aXWidth, aStartY + aYHeight, aColor);
 #endif
-    sendUSART5Args(FUNCTION_DRAW_LINE_REL, aStartX, aStartY, aXWidth, aYHeight, aColor);
+    sendUSART5Args(FUNCTION_DRAW_LINE_REL, aStartX, aStartY, aXDelta, aYDelta, aColor);
+}
+
+/*
+ * Line drawn with this functions can be overwritten/removed without residual
+ * Horizontal or vertical lines are always drawn using aliasing Paint and thus can always be overwritten/removed without residual
+ */
+void BlueDisplay::drawLineWithAliasing(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    LocalDisplay.drawLine(aStartX, aStartY, aEndX, aEndY, aColor);
+#endif
+    sendUSART5Args(FUNCTION_DRAW_LINE, aStartX, aStartY | 0x8000, aEndX, aEndY, aColor); // highest bit in aStartY signals use of aliasing paint
+}
+void BlueDisplay::drawLineRelWithAliasing(uint16_t aStartX, uint16_t aStartY, int16_t aXDelta, int16_t aYDelta, color16_t aColor) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    LocalDisplay.drawLine(aStartX, aStartY, aStartX + aXWidth, aStartY + aYHeight, aColor);
+#endif
+    sendUSART5Args(FUNCTION_DRAW_LINE_REL, aStartX, aStartY | 0x8000, aXDelta, aYDelta, aColor); // highest bit in aStartY signals use of aliasing paint
 }
 
 /**
@@ -363,9 +387,13 @@ void BlueDisplay::drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t 
 /*
  * aDegree in degree, not radian
  */
-void BlueDisplay::drawVectorDegrees(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, int aDegrees, color16_t aColor,
+void BlueDisplay::drawVectorDegree(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, int aDegree, color16_t aColor,
         int16_t aThickness) {
-    sendUSARTArgs(FUNCTION_DRAW_VECTOR_DEGREE, 6, aStartX, aStartY, aLength, aDegrees, aColor, aThickness);
+    sendUSARTArgs(FUNCTION_DRAW_VECTOR_DEGREE, 6, aStartX, aStartY, aLength, aDegree, aColor, aThickness);
+}
+void BlueDisplay::drawVectorDegreeWithAliasing(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, int aDegree, color16_t aColor,
+        int16_t aThickness) {
+    sendUSARTArgs(FUNCTION_DRAW_VECTOR_DEGREE, 6, aStartX, aStartY | 0x8000, aLength, aDegree, aColor, aThickness);
 }
 
 /*
@@ -399,6 +427,22 @@ void BlueDisplay::drawLineRelWithThickness(uint16_t aStartX, uint16_t aStartY, i
     drawThickLine(aStartX, aStartY, aStartX + aXOffset, aStartY + aYOffset, aThickness, LINE_THICKNESS_MIDDLE, aColor);
 #endif
     sendUSARTArgs(FUNCTION_DRAW_LINE_REL, 6, aStartX, aStartY, aXOffset, aYOffset, aColor, aThickness);
+}
+
+void BlueDisplay::drawLineWithThicknessWithAliasing(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor,
+        int16_t aThickness) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    drawThickLine(aStartX, aStartY, aEndX, aEndY, aThickness, LINE_THICKNESS_MIDDLE, aColor);
+#endif
+    sendUSARTArgs(FUNCTION_DRAW_LINE, 6, aStartX, aStartY | 0x8000, aEndX, aEndY, aColor, aThickness);
+}
+
+void BlueDisplay::drawLineRelWithThicknessWithAliasing(uint16_t aStartX, uint16_t aStartY, int16_t aXOffset, int16_t aYOffset, color16_t aColor,
+        int16_t aThickness) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    drawThickLine(aStartX, aStartY, aStartX + aXOffset, aStartY + aYOffset, aThickness, LINE_THICKNESS_MIDDLE, aColor);
+#endif
+    sendUSARTArgs(FUNCTION_DRAW_LINE_REL, 6, aStartX, aStartY | 0x8000, aXOffset, aYOffset, aColor, aThickness);
 }
 
 void BlueDisplay::drawRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor,
@@ -472,11 +516,11 @@ uint16_t BlueDisplay::drawChar(uint16_t aPositionX, uint16_t aPositionY, char aC
 
 /**
  * @param aPositionX left position
- * @param aPositionY baseline position - use (upper_position + getTextAscend(<aFontSize>))
+ * @param aPositionY baseline position is (upper_position + getTextAscend(<aFontSize>))
  * @param aStringPtr  If /r is used as newline character, rest of line will be cleared, if /n is used, rest of line will not be cleared.
  * @param aFontSize FontSize of text
  * @param aTextColor Foreground/text color
- * @param aBackgroundColor if COLOR16_NO_BACKGROUND, then the background will not filled
+ * @param aBackgroundColor if COLOR16_NO_BACKGROUND, then the background will not be filled
  * @return uint16_t start x for next character - next x Parameter
  */
 uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize,
@@ -511,6 +555,15 @@ uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const _
             tTextLength, (uint8_t*) aPGMString);
 #endif
     return tRetValue;
+}
+
+void BlueDisplay::clearTextArea(uint16_t aPositionX, uint16_t aPositionY, uint8_t aStringLength, uint16_t aFontSize,
+        color16_t aClearColor) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    LocalDisplay.aClearColor(aPositionX, aPositionY, aStringLength * getTextWidth(aFontSize), getTextHeight(aFontSize), aClearColor);
+#endif
+    fillRectRel(aPositionX, aPositionY - getTextAscend(aFontSize), aStringLength * getTextWidth(aFontSize),
+            getTextHeight(aFontSize), aClearColor);
 }
 
 /*
@@ -804,7 +857,8 @@ void BlueDisplay::debug(const char *aMessageStart, uint8_t aByte, const char *aM
         char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hhu -> unsigned char instead of unsigned int with u
 #if defined(__AVR__)
-        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%3u%s"), aMessageStart, aByte, aMessageEnd);
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%3u%s"), aMessageStart, aByte,
+                aMessageEnd);
 #else
         snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%3u%s", aMessageStart, aByte, aMessageEnd);
 #endif
@@ -894,7 +948,8 @@ void BlueDisplay::debug(const char *aMessageStart, uint16_t aShort, const char *
         char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 // hd -> short int instead of int with d
 #if defined(__AVR__)
-        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%5u%s"), aMessageStart, aShort, aMessageEnd);
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%5u%s"), aMessageStart, aShort,
+                aMessageEnd);
 #else
         snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%5u%s", aMessageStart, aShort, aMessageEnd);
 #endif
@@ -973,7 +1028,8 @@ void BlueDisplay::debug(const char *aMessageStart, uint32_t aLong, const char *a
     if (USART_isBluetoothPaired()) {
         char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE];
 #if defined(__AVR__)
-        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%10lu%s"), aMessageStart, aLong, aMessageEnd);
+        snprintf_P(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, PSTR("%s%10lu%s"), aMessageStart, aLong,
+                aMessageEnd);
 #elif defined(__XTENSA__)
         snprintf(tStringBuffer, STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE, "%s%10lu%s", aMessageStart, (long) aLong, aMessageEnd);
 #else
@@ -1103,7 +1159,7 @@ uint32_t BlueDisplay::getHostUnixTimestamp() {
 }
 
 void BlueDisplay::setHostUnixTimestamp(uint32_t aHostUnixTimestamp) {
-     mHostUnixTimestamp = aHostUnixTimestamp;
+    mHostUnixTimestamp = aHostUnixTimestamp;
 }
 
 struct XYSize* BlueDisplay::getHostDisplaySize() {
@@ -1411,6 +1467,7 @@ void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
  *****************************************************************************/
 /**
  * Draws a star consisting of 4 lines each quadrant
+ * Draw 6 lines with aliasing Paint, which can be removed without resiudual
  */
 void BlueDisplay::drawStar(int aXCenter, int aYCenter, int tOffsetCenter, int tLength, int tOffsetDiagonal, int aLengthDiagonal,
         color16_t aColor, int16_t aThickness) {
@@ -1421,7 +1478,7 @@ void BlueDisplay::drawStar(int aXCenter, int aYCenter, int tOffsetCenter, int tL
         // horizontal line
         drawLineRelWithThickness(X, aYCenter, tLength, 0, aColor, aThickness);
         // two lines adjacent to horizontal line ( < 45 degree)
-        drawLineRelWithThickness(X, aYCenter - tOffsetDiagonal, tLength, -aLengthDiagonal, aColor, aThickness);
+        drawLineRelWithThicknessWithAliasing(X, aYCenter - tOffsetDiagonal, tLength, -aLengthDiagonal, aColor, aThickness);
         drawLineRelWithThickness(X, aYCenter + tOffsetDiagonal, tLength, aLengthDiagonal, aColor, aThickness);
         X = aXCenter - tOffsetCenter;
         tLength = -tLength;
@@ -1433,7 +1490,7 @@ void BlueDisplay::drawStar(int aXCenter, int aYCenter, int tOffsetCenter, int tL
         // vertical line
         drawLineRelWithThickness(aXCenter, Y, 0, tLength, aColor, aThickness);
         // two lines adjacent to vertical line
-        drawLineRelWithThickness(aXCenter - tOffsetDiagonal, Y, -aLengthDiagonal, tLength, aColor, aThickness);
+        drawLineRelWithThicknessWithAliasing(aXCenter - tOffsetDiagonal, Y, -aLengthDiagonal, tLength, aColor, aThickness);
         drawLineRelWithThickness(aXCenter + tOffsetDiagonal, Y, aLengthDiagonal, tLength, aColor, aThickness);
         Y = aYCenter - tOffsetCenter;
         tLength = -tLength;
@@ -1443,7 +1500,7 @@ void BlueDisplay::drawStar(int aXCenter, int aYCenter, int tOffsetCenter, int tL
     int tLengthDiagonal = tLength;
     for (int i = 0; i < 2; i++) {
         // draw two 45 degree lines
-        drawLineRelWithThickness(X, aYCenter - tOffsetCenter, tLength, -tLengthDiagonal, aColor, aThickness);
+        drawLineRelWithThicknessWithAliasing(X, aYCenter - tOffsetCenter, tLength, -tLengthDiagonal, aColor, aThickness);
         drawLineRelWithThickness(X, aYCenter + tOffsetCenter, tLength, tLengthDiagonal, aColor, aThickness);
         X = aXCenter - tOffsetCenter;
         tLength = -tLength;
@@ -1480,128 +1537,155 @@ void BlueDisplay::drawGreyscale(uint16_t aXPos, uint16_t tYPos, uint16_t aHeight
  * Draws test page and a greyscale bar
  */
 void BlueDisplay::testDisplay() {
-    clearDisplay();
+    // array for colors, which can be cleared for 2. loop
+    color16_t tColorArray[5] = { COLOR16_RED, COLOR16_GREEN, COLOR16_BLUE, COLOR16_BLACK, COLOR16_YELLOW };
 
-    /*
-     * rectangles in all 4 corners
-     */
-    fillRectRel(0, 0, 2, 2, COLOR16_RED);
-    fillRectRel(mRequestedDisplaySize.XWidth, 0, 3, -3, COLOR16_GREEN);
-    fillRectRel(0, mRequestedDisplaySize.YHeight, 4, -4, COLOR16_BLUE);
-    fillRectRel(mRequestedDisplaySize.XWidth, mRequestedDisplaySize.YHeight, -3, -3, COLOR16_BLACK);
-    /*
-     * small graphics in the upper left corner
-     */
-    fillRectRel(2, 2, 4, 4, COLOR16_RED);
-    fillRectRel(10, 20, 10, 20, COLOR16_RED);
-    drawRectRel(8, 18, 14, 24, COLOR16_BLUE, 1);
-    drawCircle(15, 30, 5, COLOR16_BLUE, 1);
-    fillCircle(20, 10, 10, COLOR16_BLUE);
+    for (uint8_t i = 0; i < 2; ++i) {
 
-    /*
-     * Diagonal blue and green line
-     */
-    drawLineRel(0, mRequestedDisplaySize.YHeight - 1, mRequestedDisplaySize.XWidth - 1, -(mRequestedDisplaySize.YHeight - 1),
-    COLOR16_GREEN);
-// Top left to bottom right
-    drawLineRel(6, 6, mRequestedDisplaySize.XWidth - 9, mRequestedDisplaySize.YHeight - 9, COLOR16_BLUE);
+        /*
+         * rectangles in all 4 corners
+         */
+        fillRectRel(0, 0, 2, 2, tColorArray[0]);
+        fillRectRel(mRequestedDisplaySize.XWidth, 0, 3, -3, tColorArray[1]);
+        fillRectRel(0, mRequestedDisplaySize.YHeight, 4, -4, tColorArray[2]);
+        fillRectRel(mRequestedDisplaySize.XWidth, mRequestedDisplaySize.YHeight, -3, -3, tColorArray[3]);
+        /*
+         * small graphics in the upper left corner
+         */
+        fillRectRel(2, 2, 4, 4, tColorArray[0]);
+        fillRectRel(10, 20, 10, 20, tColorArray[0]);
+        drawRectRel(8, 18, 14, 24, tColorArray[2], 1);
+        drawCircle(15, 30, 5, tColorArray[2], 1);
+        fillCircle(20, 10, 10, tColorArray[2]);
 
-    /*
-     * Character and text
-     */
-    drawChar(150, TEXT_SIZE_11_ASCEND, 'y', TEXT_SIZE_11, COLOR16_GREEN, COLOR16_YELLOW);
-    drawText(0, 50 + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR16_BLACK, COLOR16_WHITE);
-    drawText(0, 50 + TEXT_SIZE_11_HEIGHT + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR16_WHITE,
-    COLOR16_BLACK);
+        /*
+         * Diagonal blue and green line
+         */
+        drawLineRel(0, mRequestedDisplaySize.YHeight - 1, mRequestedDisplaySize.XWidth - 1, -(mRequestedDisplaySize.YHeight - 1),
+                tColorArray[1]);
+        // Top left to bottom right
+        drawLineRelWithAliasing(6, 6, mRequestedDisplaySize.XWidth - 9, mRequestedDisplaySize.YHeight - 9, tColorArray[2]);
+
+        /*
+         * Character and text
+         */
+        drawChar(150, TEXT_SIZE_11_ASCEND, 'y', TEXT_SIZE_11, tColorArray[1], COLOR16_YELLOW);
+        drawText(0, 50 + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR16_BLACK, COLOR16_WHITE);
+        drawText(0, 50 + TEXT_SIZE_11_HEIGHT + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR16_WHITE,
+        COLOR16_BLACK);
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     /*
      * 4 red lines in the middle with different overlaps
      */
-    drawLineOverlap(120, 160, 180, 120, LINE_OVERLAP_NONE, COLOR16_RED);
-    drawLineOverlap(120, 164, 180, 124, LINE_OVERLAP_MAJOR, COLOR16_RED);
-    drawLineOverlap(120, 168, 180, 128, LINE_OVERLAP_MINOR, COLOR16_RED);
-    drawLineOverlap(120, 172, 180, 132, LINE_OVERLAP_BOTH, COLOR16_RED);
+    drawLineOverlap(120, 160, 180, 120, LINE_OVERLAP_NONE, tColorArray[0]);
+    drawLineOverlap(120, 164, 180, 124, LINE_OVERLAP_MAJOR, tColorArray[0]);
+    drawLineOverlap(120, 168, 180, 128, LINE_OVERLAP_MINOR, tColorArray[0]);
+    drawLineOverlap(120, 172, 180, 132, LINE_OVERLAP_BOTH, tColorArray[0]);
 #endif
 
-    /*
-     * 4 small red and black rectangles middle left
-     */
-    fillRectRel(100, 100, 10, 5, COLOR16_RED);
-    fillRectRel(90, 95, 10, 5, COLOR16_RED);
-    fillRectRel(100, 90, 10, 10, COLOR16_BLACK);
-    fillRectRel(95, 100, 5, 5, COLOR16_BLACK);
+        /*
+         * 4 small red and black rectangles middle left
+         */
+        fillRectRel(100, 100, 10, 5, tColorArray[0]);
+        fillRectRel(90, 95, 10, 5, tColorArray[0]);
+        fillRectRel(100, 90, 10, 10, tColorArray[3]);
+        fillRectRel(95, 100, 5, 5, tColorArray[3]);
 
-    /*
-     * stars middle
-     */
-    drawStar(130, 120, 4, 6, 2, 2, COLOR16_BLACK, 1);
-    drawStar(210, 120, 8, 12, 4, 4, COLOR16_BLACK, 1);
-    drawStar(255, 120, 8, 12, 4, 4, COLOR16_GREEN, 3);
+        /*
+         * stars middle
+         */
+        drawStar(130, 120, 4, 6, 2, 2, tColorArray[3], 1);
+        drawStar(210, 120, 8, 12, 4, 4, tColorArray[3], 1);
+        drawStar(255, 120, 8, 12, 4, 4, tColorArray[1], 3);
 
-    uint16_t DeltaSmall = 20;
-    uint16_t DeltaBig = 100;
-    uint16_t tYPos = 30;
+        /*
+         * draw grid, to detect different line size dependent of line position
+         */
+        for (uint8_t tLineoffset = 0; tLineoffset < 40; tLineoffset += 8) {
+            // draw 1 pixel vertical lines
+            drawLineRel(280 + tLineoffset, 80, 0, 32, tColorArray[3]);
+            // draw 1 pixel horizontal lines
+            drawLineRelWithThickness(280, 80 + tLineoffset, 32, 0, tColorArray[3],1);
 
-    /*
-     * Two 4 pixel thick lines left
-     */
-    tYPos = 75;
-    drawLineWithThickness(10, tYPos, 10 + DeltaSmall, tYPos + DeltaBig, COLOR16_GREEN, 4);
-    drawPixel(10, tYPos, COLOR16_BLUE);
+            // draw 1 pixel vertical lines using different paint object on host
+            drawLineRel(280 + tLineoffset, 130, 0, 32, tColorArray[3]);
+            // draw 1 pixel horizontal lines using different paint object on host
+            drawLineRelWithThickness(280, 130 + tLineoffset, 32, 0, tColorArray[3], 1);
+        }
 
-    drawLineWithThickness(70, tYPos, 70 - DeltaSmall, tYPos + DeltaBig, COLOR16_GREEN, 4);
-    drawPixel(70, tYPos, COLOR16_BLUE);
+        uint16_t DeltaSmall = 20;
+        uint16_t DeltaBig = 100;
+        uint16_t tYPos = 30;
 
-    /*
-     * Cross with 3 pixel thick lines top middle
-     */
-    tYPos = 55;
-    drawLineWithThickness(140, tYPos, 140 - DeltaSmall, tYPos - DeltaSmall, COLOR16_GREEN, 3);
-    drawPixel(140, tYPos, COLOR16_BLUE);
+        /*
+         * Two 4 pixel thick lines left
+         */
+        tYPos = 75;
+        drawLineWithThickness(10, tYPos, 10 + DeltaSmall, tYPos + DeltaBig, tColorArray[1], 4);
+        drawPixel(10, tYPos, tColorArray[2]);
 
-    drawLineWithThickness(150, tYPos, 150 + DeltaSmall, tYPos - DeltaSmall, COLOR16_GREEN, 3);
-    drawPixel(150, tYPos, COLOR16_BLUE);
+        drawLineWithThicknessWithAliasing(70, tYPos, 70 - DeltaSmall, tYPos + DeltaBig, tColorArray[1], 4);
+        drawPixel(70, tYPos, tColorArray[2]);
 
-    tYPos += 10;
-    drawLineWithThickness(140, tYPos, 140 - DeltaSmall, tYPos + DeltaSmall, COLOR16_GREEN, 3);
-    drawPixel(140, tYPos, COLOR16_BLUE);
+        /*
+         * Cross with 3 pixel thick lines top middle
+         */
+        tYPos = 55;
+        drawLineWithThickness(140, tYPos, 140 - DeltaSmall, tYPos - DeltaSmall, tColorArray[1], 3);
+        drawPixel(140, tYPos, tColorArray[2]);
 
-    drawLineWithThickness(150, tYPos, 150 + DeltaSmall, tYPos + DeltaSmall, COLOR16_GREEN, 3);
-    drawPixel(150, tYPos, COLOR16_BLUE);
+        drawLineWithThicknessWithAliasing(150, tYPos, 150 + DeltaSmall, tYPos - DeltaSmall, tColorArray[1], 3);
+        drawPixel(150, tYPos, tColorArray[2]);
+
+        tYPos += 10;
+        drawLineWithThickness(140, tYPos, 140 - DeltaSmall, tYPos + DeltaSmall, tColorArray[1], 3);
+        drawPixel(140, tYPos, tColorArray[2]);
+
+        drawLineWithThicknessWithAliasing(150, tYPos, 150 + DeltaSmall, tYPos + DeltaSmall, tColorArray[1], 3);
+        drawPixel(150, tYPos, tColorArray[2]);
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     /*
      * 2 3 pixel thick lines top middle-right drawn clockwise by drawThickLine()
      */
     tYPos = 55;
-    drawThickLine(200, tYPos, 200 - DeltaSmall, tYPos - DeltaSmall, 3, LINE_THICKNESS_MIDDLE, COLOR16_RED);
-    drawPixel(200, tYPos, COLOR16_BLUE);
+    drawThickLine(200, tYPos, 200 - DeltaSmall, tYPos - DeltaSmall, 3, LINE_THICKNESS_MIDDLE, tColorArray[0]);
+    drawPixel(200, tYPos, tColorArray[2]);
 
-    drawThickLine(210, tYPos, 210 + DeltaSmall, tYPos - DeltaSmall, 3, LINE_THICKNESS_MIDDLE, COLOR16_RED);
-    drawPixel(210, tYPos, COLOR16_BLUE);
+    drawThickLine(210, tYPos, 210 + DeltaSmall, tYPos - DeltaSmall, 3, LINE_THICKNESS_MIDDLE, tColorArray[0]);
+    drawPixel(210, tYPos, tColorArray[2]);
 
     tYPos += 10;
-    drawThickLine(200, tYPos, 200 - DeltaSmall, tYPos + DeltaSmall, 3, LINE_THICKNESS_DRAW_CLOCKWISE, COLOR16_RED);
-    drawPixel(200, tYPos, COLOR16_BLUE);
+    drawThickLine(200, tYPos, 200 - DeltaSmall, tYPos + DeltaSmall, 3, LINE_THICKNESS_DRAW_CLOCKWISE, tColorArray[0]);
+    drawPixel(200, tYPos, tColorArray[2]);
 
-    drawThickLine(210, tYPos, 210 + DeltaSmall, tYPos + DeltaSmall, 3, LINE_THICKNESS_DRAW_COUNTERCLOCKWISE, COLOR16_RED);
-    drawPixel(210, tYPos, COLOR16_BLUE);
+    drawThickLine(210, tYPos, 210 + DeltaSmall, tYPos + DeltaSmall, 3, LINE_THICKNESS_DRAW_COUNTERCLOCKWISE, tColorArray[0]);
+    drawPixel(210, tYPos, tColorArray[2]);
 
     /*
      * 2 9 pixel thick lines top middle drawn clockwise by drawThickLine()
      */
     tYPos = 30;
-    drawThickLine(140, tYPos, 140 - DeltaBig, tYPos - DeltaSmall, 9, LINE_THICKNESS_MIDDLE, COLOR16_RED);
-    drawPixel(140, tYPos, COLOR16_BLUE);
+    drawThickLine(140, tYPos, 140 - DeltaBig, tYPos - DeltaSmall, 9, LINE_THICKNESS_MIDDLE, tColorArray[0]);
+    drawPixel(140, tYPos, tColorArray[2]);
 
-    drawThickLine(145, tYPos, 145 + DeltaBig, tYPos - DeltaSmall, 9, LINE_THICKNESS_MIDDLE, COLOR16_RED);
-    drawPixel(145, tYPos, COLOR16_BLUE);
+    drawThickLine(145, tYPos, 145 + DeltaBig, tYPos - DeltaSmall, 9, LINE_THICKNESS_MIDDLE, tColorArray[0]);
+    drawPixel(145, tYPos, tColorArray[2]);
 #endif
-    /*
-     * Draw two greyscales and 3 color bars
-     */
-    drawGreyscale(5, 180, 10);
+        /*
+         * Draw two greyscales and 3 color bars
+         */
+        drawGreyscale(5, 180, 10);
+
+        /*
+         * Clear color array for next loop
+         */
+        for (uint8_t j = 0; j < sizeof(tColorArray) / sizeof(tColorArray[0]); ++j) {
+            tColorArray[j] = COLOR16_WHITE;
+        }
+        delayMillisAndCheckForEvent(10000); // wait 10 seconds and then clear items, to see residual
+    }
 }
 
 #define COLOR_SPECTRUM_SEGMENTS 6 // red->yellow, yellow-> green, green-> cyan, cyan-> blue, blue-> magent, magenta-> red

@@ -40,6 +40,7 @@ fillRect	KEYWORD2
 fillRectRel	KEYWORD2
 drawChar	KEYWORD2
 drawText	KEYWORD2
+clearTextArea	KEYWORD2
 drawByte	KEYWORD2
 drawUnsignedByte	KEYWORD2
 drawShort	KEYWORD2
@@ -54,9 +55,12 @@ debugMessage	KEYWORD2
 debug	KEYWORD2
 
 drawLine	KEYWORD2
+drawLineWithAliasing	KEYWORD2
 drawLineRel	KEYWORD2
+drawLineRelWithAliasing	KEYWORD2
 drawLineFastOneX	KEYWORD2
-drawVectorDegrees	KEYWORD2
+drawVectorDegree	KEYWORD2
+drawVectorDegreeWithAliasing	KEYWORD2
 drawVectorRadian	KEYWORD2
 drawLineWithThickness	KEYWORD2
 drawLineRelWithThickness	KEYWORD2
@@ -107,11 +111,11 @@ deinit	KEYWORD2
 initPGM	KEYWORD2
 drawButton	KEYWORD2
 removeButton	KEYWORD2
-drawCaption	KEYWORD2
-setCaption	KEYWORD2
-setCaptionPGM	KEYWORD2
-setCaptionForValueTrue	KEYWORD2
-setCaptionAndDraw	KEYWORD2
+drawText	KEYWORD2
+setText	KEYWORD2
+setTextPGM	KEYWORD2
+setTextForValueTrue	KEYWORD2
+setTextAndDraw	KEYWORD2
 setValue	KEYWORD2
 setValueAndDraw	KEYWORD2
 setButtonColor	KEYWORD2

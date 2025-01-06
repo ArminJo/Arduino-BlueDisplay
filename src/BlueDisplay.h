@@ -138,9 +138,10 @@ static const int BD_FLAG_ONLY_TOUCH_MOVE_DISABLE = 0x04; // Do not send MOVE, on
 static const int BD_FLAG_LONG_TOUCH_ENABLE = 0x08; // If long touch detection is required. This delays the sending of plain DOWN Events.
 static const int BD_FLAG_USE_MAX_SIZE = 0x10;      // Use maximum display size for given geometry. -> Scale automatically to screen.
 
-/****************************************
+/*********************************************
  * Flags for setScreenOrientationLock()
- ***************************************/
+ * We have the same values as used in Android
+ *********************************************/
 static const int FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x00;
 static const int FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT = 0x01;
 static const int FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x02;
@@ -211,7 +212,8 @@ class BlueDisplay {
 public:
     BlueDisplay();
     void resetLocal();
-    uint_fast16_t initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)() = NULL, void (*aReorientationCallback)() = NULL);
+    uint_fast16_t initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)() = nullptr,
+            void (*aReorientationCallback)() = nullptr);
     // The result of initCommunication
     bool isConnectionEstablished();
     void sendSync();
@@ -249,6 +251,8 @@ public:
             color16_t aBackgroundColor);
     uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
             color16_t aTextColor, color16_t aBackgroundColor);
+    void clearTextArea(uint16_t aPositionX, uint16_t aPositionY, uint8_t aStringLength, uint16_t aFontSize,
+            color16_t aClearColor);
     void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor);
     void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
@@ -299,15 +303,23 @@ public:
     void debug(double aDouble);
 
     void drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
-    void drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aXOffset, int16_t aYHeight, color16_t aColor);
+    void drawLineWithAliasing(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
+    void drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
+    void drawLineRelWithAliasing(uint16_t aStartX, uint16_t aStartY, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
     void drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aEndY, color16_t aColor);
-    void drawVectorDegrees(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, int aDegrees, color16_t aColor,
+    void drawVectorDegree(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, int aDegree, color16_t aColor,
+            int16_t aThickness = 1);
+    void drawVectorDegreeWithAliasing(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, int aDegree, color16_t aColor,
             int16_t aThickness = 1);
     void drawVectorRadian(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, float aRadian, color16_t aColor,
             int16_t aThickness = 1);
     void drawLineWithThickness(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor,
             int16_t aThickness);
+    void drawLineWithThicknessWithAliasing(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor,
+            int16_t aThickness);
     void drawLineRelWithThickness(uint16_t aStartX, uint16_t aStartY, int16_t aXOffset, int16_t aYOffset, color16_t aColor,
+            int16_t aThickness);
+    void drawLineRelWithThicknessWithAliasing(uint16_t aStartX, uint16_t aStartY, int16_t aXOffset, int16_t aYOffset, color16_t aColor,
             int16_t aThickness);
 
     void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
@@ -422,9 +434,16 @@ float getCPUTemperature(void);
  * Version 4.4.0 - The version compatible with app version 4.4
  * - Removed mMaxDisplaySize, because it was just a copy of CurrentDisplaySize, which is now HostDisplaySize etc..
  * - Renamed getDisplaySize to getRequestedDisplaySize etc.
+ * - Renamed drawVectorDegrees() to drawVectorDegree().
  * - Added function setScreenBrightness().
+ * - Added functions draw*WithAliasing().
  * - Refactored Chart and chart line drawing functions.
  * - Changed "Caption" to "Text" for buttons and renamed fields and functions.
+ * - Added a full screen example for a log chart of CO2 values.
+ * - Added the convenience function clearTextArea().
+ * - Changed value of COLOR16_NO_DELETE.
+ * - Renamed DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS to DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS.
+ * - BD_FLAG_TOUCH_BASIC_DISABLE is always set if DO_NOT_NEED_BASIC_TOUCH_EVENTS is defined.
  *
  * Version 4.0.1
  * - Minor changes and updated 3. party libs.

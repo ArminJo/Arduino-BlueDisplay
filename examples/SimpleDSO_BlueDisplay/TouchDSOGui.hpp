@@ -667,8 +667,8 @@ void initDSOGUI(void) {
             (DisplayControl.DatabufferPreTriggerDisplaySize != 0), &doShowPretriggerValuesOnOff);
 #  endif
 #else
-    TouchButtonSlowBluetoothMode.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, 0, "Slow BT",
-            TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sSlowBluetoothMode, &doSlowBluetoothMode);
+    TouchButtonSlowBluetoothMode.init(0, tPosY, BUTTON_WIDTH_3, SETTINGS_PAGE_BUTTON_HEIGHT, 0, "Slow BT", TEXT_SIZE_18,
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sSlowBluetoothMode, &doSlowBluetoothMode);
 #endif
 
 // Button for AutoRange on off
@@ -1771,7 +1771,7 @@ void doShowFFT(BDButton *aTheTouchedButton, int16_t aValue) {
  */
 void doDrawMode(BDButton *aTheTouchedButton, int16_t aValue) {
 // erase old chart in old mode
-    drawDataBuffer(NULL, DISPLAY_WIDTH, DisplayControl.EraseColor, 0, DRAW_MODE_CLEAR_OLD,
+    drawDataBuffer(nullptr, DISPLAY_WIDTH, DisplayControl.EraseColor, 0, DRAW_MODE_CLEAR_OLD,
             MeasurementControl.isEffectiveMinMaxMode);
 // switch mode
     if (!DisplayControl.drawPixelMode) {

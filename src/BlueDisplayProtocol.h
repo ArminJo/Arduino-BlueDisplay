@@ -218,12 +218,14 @@ struct BluetoothEvent {
  * Data field types
  *********************/
 #define DATAFIELD_TAG_BYTE              0x01
-#define DATAFIELD_TAG_SHORT             0x02
-//#define DATAFIELD_TAG_INT             0x03
-//#define DATAFIELD_TAG_LONG            0x04
+// for future ? use
+//#define DATAFIELD_TAG_SHORT           0x02 // 16 bit
+//#define DATAFIELD_TAG_INT             0x03 // 32 bit
+//#define DATAFIELD_TAG_LONG            0x04 // 64 bit
 //#define DATAFIE TAG_FLOAT             0x05
 //#define DATAFIELD_TAG_DOUBLE          0x06
-#define LAST_FUNCTION_TAG_DATAFIELD     0x07
+#define LAST_DATAFIELD_TAG              DATAFIELD_TAG_BYTE
+
 
 /**********************
  * Internal functions

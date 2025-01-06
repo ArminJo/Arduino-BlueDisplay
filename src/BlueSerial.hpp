@@ -150,7 +150,7 @@ void sendUSART5Args(uint8_t aFunctionTag, uint16_t aStartX, uint16_t aStartY, ui
         *tBufferPointer++ = aEndX;
         *tBufferPointer++ = aEndY;
         *tBufferPointer++ = aColor;
-        sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], 14, NULL, 0);
+        sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], 14, nullptr, 0);
     }
 }
 
@@ -179,7 +179,7 @@ void sendUSARTArgs(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs, ...) {
             *tBufferPointer++ = va_arg(argp, int);
         }
         va_end(argp);
-        sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], aNumberOfArgs * 2 + 4, NULL, 0);
+        sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], aNumberOfArgs * 2 + 4, nullptr, 0);
     }
 }
 
@@ -978,7 +978,7 @@ void sendUSARTBuffer(uint8_t *aParameterBufferPointer, size_t aParameterBufferLe
 #else
     if ((aParameterBufferLength + aDataBufferLength) > UART_SEND_BUFFER_SIZE) {
         // first send command
-        sendUSARTBufferNoSizeCheck(aParameterBufferPointer, aParameterBufferLength, NULL, 0);
+        sendUSARTBufferNoSizeCheck(aParameterBufferPointer, aParameterBufferLength, nullptr, 0);
         // then send data in USART_SEND_BUFFER_SIZE chunks
         int tSize = aDataBufferLength;
         while (tSize > 0) {
@@ -986,7 +986,7 @@ void sendUSARTBuffer(uint8_t *aParameterBufferPointer, size_t aParameterBufferLe
             if (tSize < UART_SEND_BUFFER_SIZE) {
                 tSendSize = tSize;
             }
-            sendUSARTBufferNoSizeCheck(aDataBufferPointer, tSendSize, NULL, 0);
+            sendUSARTBufferNoSizeCheck(aDataBufferPointer, tSendSize, nullptr, 0);
             aDataBufferPointer += UART_SEND_BUFFER_SIZE;
             tSize -= UART_SEND_BUFFER_SIZE;
         }

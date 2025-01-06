@@ -52,7 +52,7 @@ static const int FLAG_SLIDER_SHOW_VALUE = 0x02;         // If set, ASCII value i
 static const int FLAG_SLIDER_IS_HORIZONTAL = 0x04;
 static const int FLAG_SLIDER_IS_INVERSE = 0x08;         // is equivalent to negative slider length at init
 static const int FLAG_SLIDER_VALUE_BY_CALLBACK = 0x10;  // If set, bar (+ ASCII) value will be set by callback handler, not by touch
-static const int FLAG_SLIDER_IS_ONLY_OUTPUT = 0x20;     // is equivalent to slider aOnChangeHandler NULL at init
+static const int FLAG_SLIDER_IS_ONLY_OUTPUT = 0x20;     // is equivalent to slider aOnChangeHandler nullptr at init
 // LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK is set, when we have a local and a remote slider, i.e. SUPPORT_REMOTE_AND_LOCAL_DISPLAY is defined.
 // Then only the remote slider pointer is used as callback parameter to enable easy comparison of this parameter with a fixed slider.
 #define LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK 0x80

@@ -41,8 +41,8 @@
  * Settings to configure the BlueDisplay library and to reduce its size
  */
 //#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
-//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
-#define DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Implies DO_NOT_NEED_BASIC_TOUCH_EVENTS.
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Saves up to 88 bytes program memory and 4 bytes RAM.
 //#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
 //#define BD_USE_SIMPLE_SERIAL                 // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 //#define BD_USE_USB_SERIAL                    // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
@@ -350,8 +350,7 @@ void initDisplay(void) {
 
     sTextSize = sCurrentDisplayHeight / 9;
 
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, sCurrentDisplayWidth,
-            sCurrentDisplayHeight);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL, sCurrentDisplayWidth, sCurrentDisplayHeight);
 
 #if !defined(BD_USE_SIMPLE_SERIAL) && (defined(BD_USE_SERIAL1) || defined(ESP32))
     Serial.print("RequestedDisplayWidth=");
@@ -373,31 +372,31 @@ void initDisplay(void) {
     SliderLaserPower.setCaptionProperties(sCurrentDisplayHeight / 16, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT_BELOW, 4, COLOR16_RED,
     COLOR16_WHITE);
     SliderLaserPower.setCaption("Laser");
-    doLaserPowerSlider(NULL, tSliderSize / 2); // set according to initial slider bar length
+    doLaserPowerSlider(nullptr, tSliderSize / 2); // set according to initial slider bar length
 
     /*
      * 4 Slider
      */
 // Position Slider at middle of screen
     SliderUp.init((sCurrentDisplayWidth - sSliderSize) / 2, (sCurrentDisplayHeight / 2) - sSliderHeight + sSliderSize, sSliderSize,
-            sSliderHeight, sSliderHeight, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            sSliderHeight, sSliderHeight, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderUp.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
     SliderDown.init((sCurrentDisplayWidth - sSliderSize) / 2, (sCurrentDisplayHeight / 2) + sSliderSize, sSliderSize,
-            -(sSliderHeight), sSliderHeight, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            -(sSliderHeight), sSliderHeight, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderDown.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
 // Position slider right from vertical one at middle of screen
     SliderRight.init((sCurrentDisplayWidth + sSliderSize) / 2, ((sCurrentDisplayHeight - sSliderSize) / 2) + sSliderSize,
             sSliderSize, sSliderWidth,
             SLIDER_LEFT_RIGHT_THRESHOLD, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
-            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderRight.setBarThresholdColor( SLIDER_THRESHOLD_COLOR);
 
 // Position inverse slider left from vertical one at middle of screen
     SliderLeft.init(((sCurrentDisplayWidth - sSliderSize) / 2) - sSliderWidth,
             ((sCurrentDisplayHeight - sSliderSize) / 2) + sSliderSize, sSliderSize, -(sSliderWidth), SLIDER_LEFT_RIGHT_THRESHOLD, 0,
-            SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+            SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderLeft.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
     /*
@@ -494,7 +493,7 @@ void doServosStartStop(BDButton *aTheTouchedButton, int16_t aValue) {
         /*
          * Do stop
          */
-        registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, NULL);
+        registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_NO_FILTER, nullptr);
         if (!sDoAutoMove) {
             resetOutputs();
         }
@@ -527,7 +526,7 @@ void doEnableAutoMove(BDButton *aTheTouchedButton, int16_t aValue) {
     if (sDoAutoMove) {
         if (sDoSensorMove) {
             // first stop sensor moves
-            doServosStartStop(NULL, false);
+            doServosStartStop(nullptr, false);
             TouchButtonServosStartStop.setValueAndDraw(false);
         }
         ServoHorizontal.setEaseTo(90, 10);

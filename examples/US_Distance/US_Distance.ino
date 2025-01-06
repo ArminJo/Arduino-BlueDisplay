@@ -32,7 +32,7 @@
 /*
  * Settings to configure the BlueDisplay library and to reduce its size
  */
-#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events like down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 //#define BD_USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 #include "BlueDisplay.hpp"
 
@@ -252,8 +252,7 @@ void handleConnectAndReorientation(void) {
         // Portrait -> change to landscape 3/2 format
         tCurrentDisplayHeight = (tCurrentDisplayWidth / 3) * 2;
     }
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_TOUCH_BASIC_DISABLE, tCurrentDisplayWidth,
-            tCurrentDisplayHeight);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL, tCurrentDisplayWidth, tCurrentDisplayHeight);
 
     /*
      * Compute text sizes etc.
@@ -272,7 +271,7 @@ void handleConnectAndReorientation(void) {
     sValueStartY = getTextAscend(sButtonTextSize * 2) + sButtonTextSize + sButtonTextSize / 4;
 
     SliderShowDistance.init(0, sButtonTextSize * 3, sButtonTextSize / 4, tCurrentDisplayWidth, 199, 0, COLOR16_BLUE,
-    COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, NULL);
+    COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
     SliderShowDistance.setScaleFactor(200.0 / tCurrentDisplayWidth);
 
     // Initialize button position, size, colors etc.

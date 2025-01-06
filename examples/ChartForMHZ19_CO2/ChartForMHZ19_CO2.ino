@@ -17,7 +17,7 @@
  *
  *
  *
- *  Copyright (C) 2022-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2022-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This program is distributed in the hope that it will be useful,
@@ -217,7 +217,7 @@ void setup() {
      * Try to connect to BlueDisplay host, this may introduce a delay of 1.5 seconds :-(
      */
 #if defined(SUPPORT_BLUEDISPLAY_CHART)
-    InitCo2LoggerAndChart(); // introduces a delay of 1 second :-(
+    InitCo2LoggerAndChart(); // introduces a delay of up to 1.5 second :-(
 #  if defined(ENABLE_STACK_ANALYSIS)
     printRAMInfo(&Serial); // 1.12.24 - 90 bytes unused here
 #  endif

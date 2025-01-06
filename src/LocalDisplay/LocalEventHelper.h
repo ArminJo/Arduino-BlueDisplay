@@ -67,7 +67,7 @@ void handleTouchPanelEvents();
 void registerPeriodicTouchCallback(bool (*aPeriodicTouchCallback)(int, int), uint32_t aCallbackPeriodMillis);
 void setPeriodicTouchCallbackPeriod(uint32_t aCallbackPeriod);
 
-void (*sPeriodicTouchCallback)(int, int) = NULL; // return parameter not yet used
+void (*sPeriodicTouchCallback)(int, int) = nullptr; // return parameter not yet used
 void callbackHandlerForLongTouchDownTimeout(void);
 
 uint32_t sPeriodicCallbackPeriodMillis;

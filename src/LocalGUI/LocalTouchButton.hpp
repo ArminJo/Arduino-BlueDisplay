@@ -53,23 +53,23 @@
 /*
  * List for TouchButton(Autorepeat) objects
  */
-LocalTouchButton *LocalTouchButton::sButtonListStart = NULL; // Start of list of touch buttons, required for the *AllButtons functions
+LocalTouchButton *LocalTouchButton::sButtonListStart = nullptr; // Start of list of touch buttons, required for the *AllButtons functions
 color16_t LocalTouchButton::sDefaultTextColor = TOUCHBUTTON_DEFAULT_TEXT_COLOR;
 
 /**
  * Constructor - insert in list
  */
 LocalTouchButton::LocalTouchButton() { // @suppress("Class members should be properly initialized")
-    mTextForTrue = NULL; // moving this into init() costs 100 bytes
-    mNextObject = NULL;
-    if (sButtonListStart == NULL) {
+    mTextForTrue = nullptr; // moving this into init() costs 100 bytes
+    mNextObject = nullptr;
+    if (sButtonListStart == nullptr) {
         // first button
         sButtonListStart = this;
     } else {
         // put object in button list
         LocalTouchButton *tButtonPointer = sButtonListStart;
         // search last list element
-        while (tButtonPointer->mNextObject != NULL) {
+        while (tButtonPointer->mNextObject != nullptr) {
             tButtonPointer = tButtonPointer->mNextObject;
         }
         //insert actual button as last element
@@ -90,17 +90,17 @@ bool LocalTouchButton::operator!=(const LocalTouchButton &aButton) {
  * Required for creating a local button for an existing aBDButton at BDButton::init
  */
 LocalTouchButton::LocalTouchButton(BDButton *aBDButtonPtr) { // @suppress("Class members should be properly initialized")
-    mTextForTrue = NULL;
+    mTextForTrue = nullptr;
     mBDButtonPtr = aBDButtonPtr;
-    mNextObject = NULL;
-    if (sButtonListStart == NULL) {
+    mNextObject = nullptr;
+    if (sButtonListStart == nullptr) {
         // first button
         sButtonListStart = this;
     } else {
         // put object in button list
         LocalTouchButton *tButtonPointer = sButtonListStart;
         // search last list element
-        while (tButtonPointer->mNextObject != NULL) {
+        while (tButtonPointer->mNextObject != nullptr) {
             tButtonPointer = tButtonPointer->mNextObject;
         }
         //insert actual button as last element
@@ -117,10 +117,10 @@ LocalTouchButton::~LocalTouchButton() {
     LocalTouchButton *tButtonPointer = sButtonListStart;
     if (tButtonPointer == this) {
         // remove first element of list
-        sButtonListStart = NULL;
+        sButtonListStart = nullptr;
     } else {
         // walk through list to find previous element
-        while (tButtonPointer != NULL) {
+        while (tButtonPointer != nullptr) {
             if (tButtonPointer->mNextObject == this) {
                 tButtonPointer->mNextObject = this->mNextObject;
                 break;
@@ -138,13 +138,13 @@ LocalTouchButton::~LocalTouchButton() {
 LocalTouchButton* LocalTouchButton::getLocalTouchButtonFromBDButtonHandle(BDButtonHandle_t aButtonHandleToSearchFor) {
     LocalTouchButton *tButtonPointer = sButtonListStart;
 // walk through list
-    while (tButtonPointer != NULL) {
+    while (tButtonPointer != nullptr) {
         if (tButtonPointer->mBDButtonPtr->mButtonHandle == aButtonHandleToSearchFor) {
             return tButtonPointer;
         }
         tButtonPointer = tButtonPointer->mNextObject;
     }
-    return NULL;
+    return nullptr;
 }
 
 /**
@@ -156,7 +156,7 @@ void LocalTouchButton::createAllLocalButtonsAtRemote() {
         LocalTouchButton *tButtonPointer = sButtonListStart;
         sLocalButtonIndex = 0;
 // walk through list
-        while (tButtonPointer != NULL) {
+        while (tButtonPointer != nullptr) {
             // cannot use BDButton.init since this allocates a new TouchButton
             sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 11, tButtonPointer->mBDButtonPtr->mButtonHandle,
                     tButtonPointer->mPositionX, tButtonPointer->mPositionY, tButtonPointer->mWidthX, tButtonPointer->mHeightY,
@@ -164,7 +164,7 @@ void LocalTouchButton::createAllLocalButtonsAtRemote() {
                     tButtonPointer->mValue, tButtonPointer->mOnTouchHandler,
                     (reinterpret_cast<uint32_t>(tButtonPointer->mOnTouchHandler) >> 16), strlen(tButtonPointer->mText),
                     tButtonPointer->mText);
-            if (tButtonPointer->mTextForTrue != NULL) {
+            if (tButtonPointer->mTextForTrue != nullptr) {
                 tButtonPointer->setTextForValueTrue(tButtonPointer->mTextForTrue);
             }
             if (tButtonPointer->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
@@ -291,12 +291,12 @@ void LocalTouchButton::drawText() {
     auto tText = mText;
     if (mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
         // Handle text for red green button
-        if (mValue && mTextForTrue != NULL) {
+        if (mValue && mTextForTrue != nullptr) {
             tText = mTextForTrue;
         }
     }
     if (mTextSize > 0) { // dont render anything if text size == 0
-        if (tText != NULL) {
+        if (tText != nullptr) {
             uint16_t tXTextPosition;
             uint16_t tYTextPosition;
             /*
@@ -320,7 +320,7 @@ void LocalTouchButton::drawText() {
             tStringlengthOfText = strlen(tText);
 #endif
             size_t tStringlength = tStringlengthOfText;
-            if (tPosOfNewline != NULL) {
+            if (tPosOfNewline != nullptr) {
                 // assume 2 lines of Text
                 tTextHeight = 2 * getTextHeight(mTextSize);
                 tStringlength = (tPosOfNewline - tText);
@@ -351,7 +351,7 @@ void LocalTouchButton::drawText() {
 #else
             LocalDisplay.drawText(tXTextPosition, tYTextPosition, tText, mTextSize, mTextColor, mButtonColor, tStringlength);
 #endif
-            if (tPosOfNewline != NULL) {
+            if (tPosOfNewline != nullptr) {
                 // 2. line - position the string in the middle of the box again
                 tStringlength = tStringlengthOfText - tStringlength - 1;
                 tLength = getTextWidth(mTextSize) * tStringlength;
@@ -444,7 +444,7 @@ void LocalTouchButton::performTouchAction() {
     /*
      * Call callback handler
      */
-    if (mOnTouchHandler != NULL) {
+    if (mOnTouchHandler != nullptr) {
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
         // Call with mBDButtonPtr as parameter, only the autorepeatTouchHandler must be called with the local button here
         if (&LocalTouchButtonAutorepeat::autorepeatTouchHandler
@@ -471,13 +471,13 @@ bool LocalTouchButton::isTouched(uint16_t aTouchPositionX, uint16_t aTouchPositi
 /**
  * Searched for buttons, which are active
  * @param aSearchOnlyAutorepeatButtons if true search only autorepeat buttons (required for for autorepeat timing by cyclic checking)
- * @return NULL if no button found at the position
+ * @return nullptr if no button found at the position
  */
 LocalTouchButton* LocalTouchButton::find(unsigned int aTouchPositionX, unsigned int aTouchPositionY,
 bool aSearchOnlyAutorepeatButtons) {
     LocalTouchButton *tButtonPointer = sButtonListStart;
 // walk through list
-    while (tButtonPointer != NULL) {
+    while (tButtonPointer != nullptr) {
         // Always check autorepeat buttons
         if ((tButtonPointer->mFlags & LOCAL_BUTTON_FLAG_IS_ACTIVE)
                 && (!aSearchOnlyAutorepeatButtons || (tButtonPointer->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT))) {
@@ -487,16 +487,16 @@ bool aSearchOnlyAutorepeatButtons) {
         }
         tButtonPointer = tButtonPointer->mNextObject;
     }
-    return NULL;
+    return nullptr;
 }
 
 /**
- * @return NULL if no button found at this position
+ * @return nullptr if no button found at this position
  */
 LocalTouchButton* LocalTouchButton::findAndAction(unsigned int aTouchPositionX, unsigned int aTouchPositionY,
 bool aCheckOnlyAutorepeatButtons) {
     LocalTouchButton *tButtonPointer = find(aTouchPositionX, aTouchPositionY, aCheckOnlyAutorepeatButtons);
-    if (tButtonPointer != NULL) {
+    if (tButtonPointer != nullptr) {
         tButtonPointer->performTouchAction();
     }
     return tButtonPointer;
@@ -507,7 +507,7 @@ bool aCheckOnlyAutorepeatButtons) {
  */
 bool LocalTouchButton::checkAllButtons(unsigned int aTouchPositionX, unsigned int aTouchPositionY,
 bool aCheckOnlyAutorepeatButtons) {
-    return (findAndAction(aTouchPositionX, aTouchPositionY, aCheckOnlyAutorepeatButtons) != NULL);
+    return (findAndAction(aTouchPositionX, aTouchPositionY, aCheckOnlyAutorepeatButtons) != nullptr);
 }
 
 /**
@@ -519,7 +519,7 @@ void LocalTouchButton::deactivateAllButtons() {
 void LocalTouchButton::deactivateAll() {
     LocalTouchButton *tObjectPointer = sButtonListStart;
 // walk through list
-    while (tObjectPointer != NULL) {
+    while (tObjectPointer != nullptr) {
         tObjectPointer->deactivate();
         tObjectPointer = tObjectPointer->mNextObject;
     }
@@ -534,7 +534,7 @@ void LocalTouchButton::activateAllButtons() {
 void LocalTouchButton::activateAll() {
     LocalTouchButton *tObjectPointer = sButtonListStart;
 // walk through list
-    while (tObjectPointer != NULL) {
+    while (tObjectPointer != nullptr) {
         tObjectPointer->activate();
         tObjectPointer = tObjectPointer->mNextObject;
     }

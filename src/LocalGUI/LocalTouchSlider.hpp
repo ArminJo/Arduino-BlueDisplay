@@ -48,7 +48,7 @@
  * @{
  */
 
-LocalTouchSlider *LocalTouchSlider::sSliderListStart = NULL; // Start of list of touch sliders, required for the *AllSliders functions
+LocalTouchSlider *LocalTouchSlider::sSliderListStart = nullptr; // Start of list of touch sliders, required for the *AllSliders functions
 uint16_t LocalTouchSlider::sDefaultSliderColor = SLIDER_DEFAULT_BORDER_COLOR;
 uint16_t LocalTouchSlider::sDefaultBarColor = SLIDER_DEFAULT_BAR_COLOR;
 uint16_t LocalTouchSlider::sDefaultBarThresholdColor = SLIDER_DEFAULT_BAR_THRESHOLD_COLOR;
@@ -63,15 +63,15 @@ uint8_t LocalTouchSlider::sDefaultTouchBorder = SLIDER_DEFAULT_TOUCH_BORDER;
  * Constructor - insert in list
  */
 LocalTouchSlider::LocalTouchSlider() { // @suppress("Class members should be properly initialized")
-    mNextObject = NULL;
-    if (sSliderListStart == NULL) {
+    mNextObject = nullptr;
+    if (sSliderListStart == nullptr) {
         // first slider
         sSliderListStart = this;
     } else {
         // put object in slider list
         LocalTouchSlider *tSliderPointer = sSliderListStart;
         // search last list element
-        while (tSliderPointer->mNextObject != NULL) {
+        while (tSliderPointer->mNextObject != nullptr) {
             tSliderPointer = tSliderPointer->mNextObject;
         }
         //append actual slider as last element
@@ -88,10 +88,10 @@ LocalTouchSlider::~LocalTouchSlider() {
     LocalTouchSlider *tSliderPointer = sSliderListStart;
     if (tSliderPointer == this) {
         // remove first element of list
-        sSliderListStart = NULL;
+        sSliderListStart = nullptr;
     } else {
         // walk through list to find "this"
-        while (tSliderPointer != NULL) {
+        while (tSliderPointer != nullptr) {
             if (tSliderPointer->mNextObject == this) {
                 tSliderPointer->mNextObject = this->mNextObject;
                 break;
@@ -108,15 +108,15 @@ LocalTouchSlider::~LocalTouchSlider() {
  */
 LocalTouchSlider::LocalTouchSlider(BDSlider *aBDSliderPtr) { // @suppress("Class members should be properly initialized")
     mBDSliderPtr = aBDSliderPtr;
-    mNextObject = NULL;
-    if (sSliderListStart == NULL) {
+    mNextObject = nullptr;
+    if (sSliderListStart == nullptr) {
         // first slider
         sSliderListStart = this;
     } else {
         // put object in slider list
         LocalTouchSlider *tSliderPointer = sSliderListStart;
         // search last list element
-        while (tSliderPointer->mNextObject != NULL) {
+        while (tSliderPointer->mNextObject != nullptr) {
             tSliderPointer = tSliderPointer->mNextObject;
         }
         //append actual slider as last element
@@ -148,7 +148,7 @@ void LocalTouchSlider::setDefaults(uintForPgmSpaceSaving aDefaultTouchBorder, ui
 LocalTouchSlider* LocalTouchSlider::getLocalSliderFromBDSliderHandle(BDSliderHandle_t aSliderHandleToSearchFor) {
     LocalTouchSlider *tSliderPointer = sSliderListStart;
 // walk through list
-    while (tSliderPointer != NULL) {
+    while (tSliderPointer != nullptr) {
         if (tSliderPointer->mBDSliderPtr->mSliderHandle == aSliderHandleToSearchFor) {
             break;
         }
@@ -165,7 +165,7 @@ void LocalTouchSlider::createAllLocalSlidersAtRemote() {
         LocalTouchSlider *tSliderPointer = sSliderListStart;
         sLocalSliderIndex = 0;
 // walk through list
-        while (tSliderPointer != NULL) {
+        while (tSliderPointer != nullptr) {
             // cannot use BDSlider.init since this allocates a new TouchSlider
             sendUSARTArgs(FUNCTION_SLIDER_CREATE, 12, tSliderPointer->mBDSliderPtr->mSliderHandle, tSliderPointer->mPositionX,
                     tSliderPointer->mPositionY, tSliderPointer->mBarWidth, tSliderPointer->mBarLength,
@@ -192,7 +192,7 @@ void LocalTouchSlider::createAllLocalSlidersAtRemote() {
  * @param aSliderColor - Color of slider border. If no border specified, then this is taken as bar background color.
  * @param aBarColor
  * @param aFlags - See #FLAG_SLIDER_SHOW_BORDER etc.
- * @param aOnChangeHandler - If NULL no update of bar is done on touch - equivalent to FLAG_SLIDER_IS_ONLY_OUTPUT
+ * @param aOnChangeHandler - If nullptr no update of bar is done on touch - equivalent to FLAG_SLIDER_IS_ONLY_OUTPUT
  */
 
 void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength,
@@ -200,7 +200,7 @@ void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aB
         void (*aOnChangeHandler)(LocalTouchSlider*, uint16_t)) {
 
     mIsActive = false;
-    mCaption = NULL;
+    mCaption = nullptr;
     mXOffsetValue = 0;
 
     /*
@@ -317,7 +317,7 @@ void LocalTouchSlider::activateAllSliders() {
 }
 void LocalTouchSlider::activateAll() {
     LocalTouchSlider *tObjectPointer = sSliderListStart;
-    while (tObjectPointer != NULL) {
+    while (tObjectPointer != nullptr) {
         tObjectPointer->activate();
         tObjectPointer = tObjectPointer->mNextObject;
     }
@@ -328,7 +328,7 @@ void LocalTouchSlider::deactivateAllSliders() {
 }
 void LocalTouchSlider::deactivateAll() {
     LocalTouchSlider *tObjectPointer = sSliderListStart;
-    while (tObjectPointer != NULL) {
+    while (tObjectPointer != nullptr) {
         tObjectPointer->deactivate();
         tObjectPointer = tObjectPointer->mNextObject;
     }
@@ -458,12 +458,12 @@ void LocalTouchSlider::setPrintValueProperties(uint8_t aPrintValueTextSize __att
  * Print caption in the middle below slider
  */
 void LocalTouchSlider::printCaption() {
-    if (mCaption == NULL) {
+    if (mCaption == nullptr) {
         return;
     }
     uint16_t tCaptionLengthPixel = strlen(mCaption) * TEXT_SIZE_11_WIDTH;
     if (tCaptionLengthPixel == 0) {
-        mCaption = NULL;
+        mCaption = nullptr;
     }
 
     uintForPgmSpaceSaving tSliderWidthPixel;
@@ -507,7 +507,7 @@ int LocalTouchSlider::printValue() {
         return 0;
     }
     unsigned int tValuePositionY = mPositionYBottom + mBarWidth / 2 + getTextAscend(TEXT_SIZE_11);
-    if (mCaption != NULL && !((mFlags & FLAG_SLIDER_IS_HORIZONTAL) && (mFlags & FLAG_SLIDER_SHOW_VALUE))) {
+    if (mCaption != nullptr && !((mFlags & FLAG_SLIDER_IS_HORIZONTAL) && (mFlags & FLAG_SLIDER_SHOW_VALUE))) {
         // print below value
         tValuePositionY += TEXT_SIZE_11_HEIGHT;
     }
@@ -531,7 +531,7 @@ int LocalTouchSlider::printValue() {
 int LocalTouchSlider::printValue(const char *aValueString) {
 
     unsigned int tValuePositionY = mPositionYBottom + mBarWidth / 2 + getTextAscend(TEXT_SIZE_11);
-    if (mCaption != NULL && !((mFlags & FLAG_SLIDER_IS_HORIZONTAL) && (mFlags & FLAG_SLIDER_SHOW_VALUE))) {
+    if (mCaption != nullptr && !((mFlags & FLAG_SLIDER_IS_HORIZONTAL) && (mFlags & FLAG_SLIDER_SHOW_VALUE))) {
         // print below value
         tValuePositionY += TEXT_SIZE_11_HEIGHT;
     }
@@ -605,7 +605,7 @@ void LocalTouchSlider::performTouchAction(uint16_t aTouchPositionX, uint16_t aTo
          * Call callback handler if value has changed
          */
         mActualTouchValue = tActualTouchValue;
-        if (mOnChangeHandler != NULL) {
+        if (mOnChangeHandler != nullptr) {
             // call change handler
 #if !defined(DISABLE_REMOTE_DISPLAY)
             mOnChangeHandler((LocalTouchSlider*) this->mBDSliderPtr, tActualTouchValue);
@@ -641,34 +641,34 @@ LocalTouchSlider* LocalTouchSlider::find(unsigned int aTouchPositionX, unsigned 
     LocalTouchSlider *tSliderPointer = sSliderListStart;
 
 // walk through list of active elements
-    while (tSliderPointer != NULL) {
+    while (tSliderPointer != nullptr) {
         if (tSliderPointer->mIsActive && tSliderPointer->isTouched(aTouchPositionX, aTouchPositionY)) {
             return tSliderPointer;
         }
         tSliderPointer = tSliderPointer->mNextObject;
     }
-    return NULL;
+    return nullptr;
 }
 
 LocalTouchSlider* LocalTouchSlider::findAndAction(unsigned int aTouchPositionX, unsigned int aTouchPositionY) {
     LocalTouchSlider *tSliderPointer = sSliderListStart;
 
 // walk through list of active elements
-    while (tSliderPointer != NULL) {
+    while (tSliderPointer != nullptr) {
         if (tSliderPointer->mIsActive && tSliderPointer->isTouched(aTouchPositionX, aTouchPositionY)) {
             tSliderPointer->performTouchAction(aTouchPositionX, aTouchPositionY);
             return tSliderPointer;
         }
         tSliderPointer = tSliderPointer->mNextObject;
     }
-    return NULL;
+    return nullptr;
 }
 
 /**
  * Static convenience method - checks all sliders in for event position.
  */
 bool LocalTouchSlider::checkAllSliders(unsigned int aTouchPositionX, unsigned int aTouchPositionY) {
-    return (findAndAction(aTouchPositionX, aTouchPositionY) != NULL);
+    return (findAndAction(aTouchPositionX, aTouchPositionY) != nullptr);
 }
 
 int16_t LocalTouchSlider::getValue() const {
