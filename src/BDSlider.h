@@ -129,6 +129,7 @@ public:
 
     // Caption
     void setCaption(const char *aCaption);
+    void setCaption(const __FlashStringHelper *aPGMCaption);
     void setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositionFlags, uint8_t aCaptionMargin, color16_t aCaptionColor,
             color16_t aCaptionBackgroundColor);
 

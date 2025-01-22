@@ -48,7 +48,6 @@
 //#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
 //#define BD_USE_SIMPLE_SERIAL                // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 //#define BD_USE_USB_SERIAL                   // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
-
 /*
  * Enable this lines to run the demo locally
  */
@@ -180,16 +179,7 @@ void setup() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
-    uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay); // redraw is registered by startGuiDemo() called by initDisplay()
-#if !defined(BD_USE_SIMPLE_SERIAL)
-    if (tConnectDurationMillis > 0) {
-        Serial.print("Connection established after ");
-        Serial.print(tConnectDurationMillis);
-        Serial.println(" ms");
-    } else {
-        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
-    }
-#endif
+    BlueDisplay1.initCommunication(&Serial, &initDisplay); // redraw is registered by startGuiDemo() called by initDisplay()
 #endif
 
 #if defined(SUPPORT_LOCAL_DISPLAY)

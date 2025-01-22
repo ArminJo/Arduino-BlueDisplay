@@ -209,6 +209,15 @@ void BDSlider::setCaption(const char *aCaption) {
     sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderHandle, strlen(aCaption), aCaption);
 }
 
+void BDSlider::setCaption(const __FlashStringHelper *aPGMCaption) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalSliderPointer->setCaption(aCaption);
+#endif
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+    uint8_t tCaptionLength = _clipAndCopyPGMString(tStringBuffer, aPGMCaption);
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderHandle, tCaptionLength, tStringBuffer);
+}
+
 /*
  * Sets the unit behind the value e.g. cm or mph
  * This unit string is always appended to the value string.

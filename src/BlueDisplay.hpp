@@ -174,6 +174,26 @@ uint_fast16_t BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*
     return 0;
 }
 
+/*
+ * Call with BlueDisplay1.initCommunication(&Serial, &connectHandler);
+ */
+void BlueDisplay::initCommunication(Print *aSerial, void (*aConnectCallback)(), void (*aRedrawCallback)(),
+        void (*aReorientationCallback)()) {
+#if defined(BD_USE_SIMPLE_SERIAL)
+    (void) aSerial;
+    BlueDisplay1.initCommunication(aConnectCallback,aRedrawCallback,aReorientationCallback);
+#else
+    uint_fast16_t tConnectDurationMillis = BlueDisplay1.initCommunication(aConnectCallback, aRedrawCallback,
+            aReorientationCallback);
+    if (tConnectDurationMillis > 0) {
+        aSerial->print("Connection established after ");
+        aSerial->print(tConnectDurationMillis);
+        aSerial->println(" ms");
+    } else {
+        aSerial->println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
+    }
+#endif
+}
 bool BlueDisplay::isConnectionEstablished() {
     return mBlueDisplayConnectionEstablished;
 }
@@ -429,16 +449,16 @@ void BlueDisplay::drawLineRelWithThickness(uint16_t aStartX, uint16_t aStartY, i
     sendUSARTArgs(FUNCTION_DRAW_LINE_REL, 6, aStartX, aStartY, aXOffset, aYOffset, aColor, aThickness);
 }
 
-void BlueDisplay::drawLineWithThicknessWithAliasing(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor,
-        int16_t aThickness) {
+void BlueDisplay::drawLineWithThicknessWithAliasing(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY,
+        color16_t aColor, int16_t aThickness) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     drawThickLine(aStartX, aStartY, aEndX, aEndY, aThickness, LINE_THICKNESS_MIDDLE, aColor);
 #endif
     sendUSARTArgs(FUNCTION_DRAW_LINE, 6, aStartX, aStartY | 0x8000, aEndX, aEndY, aColor, aThickness);
 }
 
-void BlueDisplay::drawLineRelWithThicknessWithAliasing(uint16_t aStartX, uint16_t aStartY, int16_t aXOffset, int16_t aYOffset, color16_t aColor,
-        int16_t aThickness) {
+void BlueDisplay::drawLineRelWithThicknessWithAliasing(uint16_t aStartX, uint16_t aStartY, int16_t aXOffset, int16_t aYOffset,
+        color16_t aColor, int16_t aThickness) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     drawThickLine(aStartX, aStartY, aStartX + aXOffset, aStartY + aYOffset, aThickness, LINE_THICKNESS_MIDDLE, aColor);
 #endif
@@ -1606,7 +1626,7 @@ void BlueDisplay::testDisplay() {
             // draw 1 pixel vertical lines
             drawLineRel(280 + tLineoffset, 80, 0, 32, tColorArray[3]);
             // draw 1 pixel horizontal lines
-            drawLineRelWithThickness(280, 80 + tLineoffset, 32, 0, tColorArray[3],1);
+            drawLineRelWithThickness(280, 80 + tLineoffset, 32, 0, tColorArray[3], 1);
 
             // draw 1 pixel vertical lines using different paint object on host
             drawLineRel(280 + tLineoffset, 130, 0, 32, tColorArray[3]);

@@ -37,9 +37,9 @@ constexpr int ButtonWidth ( int aNumberOfButtonsPerLine, int aDisplayWidth ) {re
 #endif
 #endif
 
-/**********************
- * BUTTON LAYOUTS
- *********************/
+/*******************************
+ * BUTTON LAYOUTS for 320 x 240
+ *******************************/
 #define BUTTON_DEFAULT_SPACING 16
 #define BUTTON_DEFAULT_SPACING_THREE_QUARTER 12
 #define BUTTON_DEFAULT_SPACING_HALF 8

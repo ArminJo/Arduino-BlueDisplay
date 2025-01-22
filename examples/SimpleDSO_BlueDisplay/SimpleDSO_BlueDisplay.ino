@@ -515,14 +515,7 @@ void setup() {
 #if defined(BD_USE_SIMPLE_SERIAL)
     BlueDisplay1.initCommunication(&initDisplay, &redrawDisplay); // introduces up to 1.5 seconds delay
 #else
-    uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &redrawDisplay); // introduces up to 1.5 seconds delay
-    if (tConnectDurationMillis > 0) {
-        Serial.print("Connection established after ");
-        Serial.print(tConnectDurationMillis);
-        Serial.println(" ms");
-    } else {
-        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
-    }
+    BlueDisplay1.initCommunication(&Serial, &initDisplay, &redrawDisplay); // introduces up to 1.5 seconds delay
 #endif
     registerSwipeEndCallback(&doSwipeEndDSO);
     registerTouchUpCallback(&doSwitchInfoModeOnTouchUp);

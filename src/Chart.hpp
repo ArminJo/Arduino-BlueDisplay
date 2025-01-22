@@ -1462,9 +1462,9 @@ float Chart::reduceFloatWithIntegerScaleFactor(float aValue, int aIntegerScaleFa
 /*
  * Show charts features
  */
-#define CHART_1_LENGTH 120
-#define CHART_2_LENGTH 140
-#define CHART_3_LENGTH 180
+#define DEMO_CHART_1_LENGTH 120
+#define DEMO_CHART_2_LENGTH 140
+#define DEMO_CHART_3_LENGTH 180
 #if !defined(DISPLAY_HEIGHT)
 #define DISPLAY_HEIGHT_IS_DEFINED_LOCALLY
 #define DISPLAY_HEIGHT 240
@@ -1476,7 +1476,7 @@ void showChartDemo(void) {
     /*
      * allocate memory for 180 int16_t values
      */
-    int16_t *tChartBufferPtr = (int16_t*) malloc(sizeof(int16_t) * CHART_3_LENGTH);
+    int16_t *tChartBufferPtr = (int16_t*) malloc(sizeof(int16_t) * DEMO_CHART_3_LENGTH);
     if (tChartBufferPtr == nullptr) {
 #if !defined(ARDUINO)
         failParamMessage(sizeof(int16_t) * CHART_3_LENGTH, "malloc failed");
@@ -1497,7 +1497,7 @@ void showChartDemo(void) {
     ChartExample.disableXLabel();
     ChartExample.disableYLabel();
     ChartExample.initChartColors(COLOR16_BLUE, COLOR16_RED, CHART_DEFAULT_GRID_COLOR, COLOR16_RED, COLOR16_RED, COLOR16_WHITE);
-    ChartExample.initChart(5, DISPLAY_HEIGHT - 20, CHART_1_LENGTH, 90, 2, TEXT_SIZE_11, !sChartHasNoGrid, 0, 0);
+    ChartExample.initChart(5, DISPLAY_HEIGHT - 20, DEMO_CHART_1_LENGTH, 90, 2, TEXT_SIZE_11, !sChartHasNoGrid, 0, 0);
     ChartExample.setGridOrLabelPixelSpacing(20, 20);
     ChartExample.drawAxesAndGrid();
 
@@ -1506,7 +1506,7 @@ void showChartDemo(void) {
     *tRandomByteFillPointer++ = 200; // chart height - 1 is maximum but this tests clipping
 //generate random data
 #if defined(ARDUINO)
-    for (unsigned int i = 2; i < (CHART_1_LENGTH - 2); i++) {
+    for (unsigned int i = 2; i < (DEMO_CHART_1_LENGTH - 2); i++) {
         *tRandomByteFillPointer++ = 30 + random(31);
     }
 #else
@@ -1517,7 +1517,7 @@ void showChartDemo(void) {
 #endif
     *tRandomByteFillPointer++ = 1; // for testing
     *tRandomByteFillPointer++ = 0; // Last element is 0 for testing
-    ChartExample.drawChartDataDirect((uint8_t*) tChartBufferPtr, CHART_1_LENGTH, CHART_MODE_PIXEL);
+    ChartExample.drawChartDataDirect((uint8_t*) tChartBufferPtr, DEMO_CHART_1_LENGTH, CHART_MODE_PIXEL);
 
     delay(1000);
     /*
@@ -1531,7 +1531,7 @@ void showChartDemo(void) {
     *tRandomShortFillPointer++ = -20; // for testing value with X axis
     *tRandomShortFillPointer++ = -20; // for testing value with X axis
 
-    for (unsigned int i = 3; i < CHART_2_LENGTH; i++) {
+    for (unsigned int i = 3; i < DEMO_CHART_2_LENGTH; i++) {
 #if defined(ARDUINO)
         tDataValue += random(-3, 6);
 #else
@@ -1554,14 +1554,14 @@ void showChartDemo(void) {
     ChartExample.initYLabel(-20, 20, 20 / 15, 3, 0);
     ChartExample.initChartColors(COLOR16_GREEN, COLOR16_RED, CHART_DEFAULT_GRID_COLOR, COLOR16_YELLOW, COLOR16_GREEN,
     COLOR16_WHITE);
-    ChartExample.initChart(170, DISPLAY_HEIGHT - 20, CHART_2_LENGTH, 88, 2, TEXT_SIZE_11, !sChartHasNoGrid, 15, 15);
+    ChartExample.initChart(170, DISPLAY_HEIGHT - 20, DEMO_CHART_2_LENGTH, 88, 2, TEXT_SIZE_11, !sChartHasNoGrid, 15, 15);
     ChartExample.setYTitleText("Count");
 
     ChartExample.drawAxesAndGrid();
     ChartExample.drawXAxisTitle();
     ChartExample.drawYAxisTitle(-TEXT_SIZE_11); // draw Y title above grid
 
-    ChartExample.drawChartData(tChartBufferPtr, CHART_2_LENGTH, CHART_MODE_LINE);
+    ChartExample.drawChartData(tChartBufferPtr, DEMO_CHART_2_LENGTH, CHART_MODE_LINE);
 
     /*
      * 3. Chart: 140 16-bit values, without grid, with float labels, area mode
@@ -1570,7 +1570,7 @@ void showChartDemo(void) {
     tRandomShortFillPointer = tChartBufferPtr;
     tDataValue = 0;
 
-    for (unsigned int i = 0; i < CHART_3_LENGTH; i++) {
+    for (unsigned int i = 0; i < DEMO_CHART_3_LENGTH; i++) {
 #if defined(ARDUINO)
         tDataValue += random(-2, 4);
 #else
@@ -1589,9 +1589,9 @@ void showChartDemo(void) {
     }
     ChartExample.initYLabel(0, 0.3, 1.3 / 60, 3, 1); // display 1.3 for raw value of 60
     ChartExample.initChartColors(COLOR16_RED, COLOR16_BLUE, COLOR16_GREEN, COLOR16_BLACK, COLOR16_BLACK, COLOR16_WHITE);
-    ChartExample.initChart(30, 100, CHART_3_LENGTH, 90, 2, TEXT_SIZE_11, sChartHasNoGrid, 30, 16);
+    ChartExample.initChart(30, 100, DEMO_CHART_3_LENGTH, 90, 2, TEXT_SIZE_11, sChartHasNoGrid, 30, 16);
     ChartExample.drawAxesAndGrid();
-    ChartExample.drawChartData(tChartBufferPtr, CHART_3_LENGTH, CHART_MODE_AREA);
+    ChartExample.drawChartData(tChartBufferPtr, DEMO_CHART_3_LENGTH, CHART_MODE_AREA);
 
     free(tChartBufferPtr);
     sChartHasNoGrid = !sChartHasNoGrid; // switch grid display for next run, to see the markers, which are drawn instead of grid

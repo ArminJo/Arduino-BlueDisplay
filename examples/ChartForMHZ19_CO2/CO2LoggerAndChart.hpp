@@ -199,18 +199,7 @@ void InitCo2LoggerAndChart() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
-#if defined(BD_USE_SIMPLE_SERIAL)
-    BlueDisplay1.initCommunication(&signalInitDisplay); // introduces up to 1.5 seconds delay
-#else
-    uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&signalInitDisplay); // introduces up to 1.5 seconds delay
-    if (tConnectDurationMillis > 0) {
-        Serial.print("Connection established after ");
-        Serial.print(tConnectDurationMillis);
-        Serial.println(" ms");
-    } else {
-        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
-    }
-#endif
+    BlueDisplay1.initCommunication(&Serial, &signalInitDisplay); // introduces up to 1.5 seconds delay
     handleEventAndFlags(); // To process the (delayed) time event and flags set by the events received at init
 
 // Simulate a connection for testing
@@ -553,11 +542,13 @@ void doShowTimeAtTouchPosition(struct TouchEvent *const aTouchPosition) {
         BASE_TEXT_SIZE, CHART_DATA_COLOR, sBackgroundColor);
         // Clear last indicator
         if (sLastPosition.PositionX != 0) {
-            BlueDisplay1.drawLineRel(sLastPosition.PositionX, sLastPosition.PositionY + 32, 0, 32, sBackgroundColor);
+            BlueDisplay1.drawLineRel(sLastPosition.PositionX, sLastPosition.PositionY - 48, 0, 32, sBackgroundColor);
         }
         // Draw an indicator
-        BlueDisplay1.drawLineRel(tPositionX, aTouchPosition->TouchPosition.PositionY + 32, 0, 32, CHART_DATA_COLOR);
-        sLastPosition = aTouchPosition->TouchPosition;
+        if (aTouchPosition->TouchPosition.PositionY > 48) {
+            BlueDisplay1.drawLineRel(tPositionX, aTouchPosition->TouchPosition.PositionY - 48, 0, 32, CHART_DATA_COLOR);
+            sLastPosition = aTouchPosition->TouchPosition;
+        }
     }
 }
 
