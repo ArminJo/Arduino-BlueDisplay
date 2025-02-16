@@ -422,7 +422,7 @@ void initDisplay(void) {
 #endif
     delayMillisAndCheckForEvent(150); // Wait for requested time event but terminate at least after 150 ms
 
-    BDButton::BDButtonPGMParameterStruct tBDButtonPGMParameterStruct; // Saves 480 Bytes for all 5 buttons
+    BDButton::BDButtonPGMTextParameterStruct tBDButtonPGMParameterStruct; // Saves 480 Bytes for all 5 buttons
 
     BDButton::setInitParameters(&tBDButtonPGMParameterStruct, BUTTONS_START_X, BASE_TEXT_SIZE, (BASE_TEXT_SIZE * 4),
             tDisplayHeightEighth, COLOR16_GREEN, F("4"), BASE_TEXT_SIZE * 2, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 96, &doDays);

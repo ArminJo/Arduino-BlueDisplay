@@ -3,7 +3,7 @@
  *  Demo of using the BlueDisplay library for HC-05 on Arduino
  *  Example of controlling a RC-car by smartphone accelerometer sensor
 
- *  Copyright (C) 2015-2020  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay.
@@ -89,7 +89,7 @@ bool sRCCarStarted = true;
 BDButton TouchButtonLaserOnOff;
 void doLaserOnOff(BDButton *aTheTouchedButton, int16_t aValue);
 BDSlider SliderSpeed;
-void doLaserPosition(BDSlider *aTheTouchedSlider, uint16_t aValue);
+void doLaserPosition(BDSlider *aTheTouchedSlider, int16_t aValue);
 bool LaserOn = true;
 Servo ServoLaser;
 
@@ -235,32 +235,32 @@ void initDisplay(void) {
 
     SliderVelocityForward.init(tSliderLeftX, (sCurrentDisplayHeight / 2) - sVerticalSliderLength, sSliderWidth,
             sVerticalSliderLength, tSliderThresholdVelocity, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
-            FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
+            FLAG_SLIDER_IS_ONLY_OUTPUT);
     SliderVelocityForward.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
     // Bottom slider
     SliderVelocityBackward.init(tSliderLeftX, sCurrentDisplayHeight / 2, sSliderWidth, -(sVerticalSliderLength),
-            tSliderThresholdVelocity, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
+            tSliderThresholdVelocity, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT);
     SliderVelocityBackward.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
 // Position slider right from velocity at middle of screen
     SliderRight.init(tSliderLeftX + sSliderWidth, (sCurrentDisplayHeight - sSliderWidth) / 2, sSliderWidth, sHorizontalSliderLength,
     SLIDER_LEFT_RIGHT_THRESHOLD, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
-            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
+            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT);
     SliderRight.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
 // Position inverse slider left from Velocity at middle of screen
     SliderLeft.init((tSliderLeftX) - sHorizontalSliderLength, (sCurrentDisplayHeight - sSliderWidth) / 2, sSliderWidth,
             -(sHorizontalSliderLength), SLIDER_LEFT_RIGHT_THRESHOLD, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
-            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
+            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT);
     SliderLeft.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
     // US distance Display slider
     uint16_t tUSSliderLength = sCurrentDisplayWidth / 2 - sSliderWidth;
     SliderShowUSDistance.init(sCurrentDisplayWidth / 2 + sSliderWidth,
     BUTTON_HEIGHT_4_DYN_LINE_2 - sSliderWidth - BUTTON_VERTICAL_SPACING_DYN, sSliderWidth, tUSSliderLength, 99, 0, COLOR16_WHITE,
-    COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT | FLAG_SLIDER_SHOW_VALUE, nullptr);
-    SliderShowUSDistance.setScaleFactor(100.0 / tUSSliderLength);
+    COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT | FLAG_SLIDER_SHOW_VALUE);
+    SliderShowUSDistance.setMinMaxValue(0, 100);
     SliderShowUSDistance.setPrintValueProperties(sTextSize, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT, sTextSize / 2, COLOR16_BLACK,
     COLOR16_WHITE);
 
@@ -457,7 +457,7 @@ void doLaserOnOff(BDButton *aTheTouchedButton, int16_t aValue) {
 /*
  * Convert full range to 180
  */
-void doLaserPosition(BDSlider *aTheTouchedSlider, uint16_t aValue) {
+void doLaserPosition(BDSlider *aTheTouchedSlider, int16_t aValue) {
     int tValue = map(aValue, 0, sSliderHeightLaser, 0, 180);
     ServoLaser.write(tValue);
 }

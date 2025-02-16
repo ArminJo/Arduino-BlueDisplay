@@ -368,7 +368,7 @@ void BlueDisplay::drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, u
  */
 void BlueDisplay::drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aXDelta, int16_t aYDelta, color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    LocalDisplay.drawLine(aStartX, aStartY, aStartX + aXWidth, aStartY + aYHeight, aColor);
+    LocalDisplay.drawLine(aStartX, aStartY, aStartX + aXDelta, aStartY + aYDelta, aColor);
 #endif
     sendUSART5Args(FUNCTION_DRAW_LINE_REL, aStartX, aStartY, aXDelta, aYDelta, aColor);
 }
@@ -385,7 +385,7 @@ void BlueDisplay::drawLineWithAliasing(uint16_t aStartX, uint16_t aStartY, uint1
 }
 void BlueDisplay::drawLineRelWithAliasing(uint16_t aStartX, uint16_t aStartY, int16_t aXDelta, int16_t aYDelta, color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    LocalDisplay.drawLine(aStartX, aStartY, aStartX + aXWidth, aStartY + aYHeight, aColor);
+    LocalDisplay.drawLine(aStartX, aStartY, aStartX + aXDelta, aStartY + aYDelta, aColor);
 #endif
     sendUSART5Args(FUNCTION_DRAW_LINE_REL, aStartX, aStartY | 0x8000, aXDelta, aYDelta, aColor); // highest bit in aStartY signals use of aliasing paint
 }
@@ -580,7 +580,7 @@ uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const _
 void BlueDisplay::clearTextArea(uint16_t aPositionX, uint16_t aPositionY, uint8_t aStringLength, uint16_t aFontSize,
         color16_t aClearColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    LocalDisplay.aClearColor(aPositionX, aPositionY, aStringLength * getTextWidth(aFontSize), getTextHeight(aFontSize), aClearColor);
+    LocalDisplay.fillRect(aPositionX, aPositionY, aStringLength * getTextWidth(aFontSize), getTextHeight(aFontSize), aClearColor);
 #endif
     fillRectRel(aPositionX, aPositionY - getTextAscend(aFontSize), aStringLength * getTextWidth(aFontSize),
             getTextHeight(aFontSize), aClearColor);

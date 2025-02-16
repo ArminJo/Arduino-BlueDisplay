@@ -278,7 +278,7 @@ void initDisplay(void) {
     TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_VALUE_CAPTION_ALIGN_RIGHT, 4, COLOR16_RED,
     COLOR_DEMO_BACKGROUND);
     TouchSliderDelay.setCaption("Delay");
-    TouchSliderDelay.setScaleFactor(10); // Slider is virtually 10 times larger
+    TouchSliderDelay.setMinMaxValue(0, 1500); // Slider is virtually 10 times larger
     TouchSliderDelay.setValueUnitString("ms");
 
     TouchSliderDelay.setPrintValueProperties(TEXT_SIZE_22, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT, 4, COLOR16_WHITE,

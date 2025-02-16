@@ -7,7 +7,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -438,6 +438,8 @@ float getCPUTemperature(void);
  * - Renamed drawVectorDegrees() to drawVectorDegree().
  * - Added function setScreenBrightness().
  * - Added functions draw*WithAliasing().
+ * - Added slider function `setMinMaxValue()`.
+ * - Changed Slider callback value from uint16_t to int16_t.
  * - Refactored Chart and chart line drawing functions.
  * - Changed "Caption" to "Text" for buttons and renamed fields and functions.
  * - Added a full screen example for a log chart of CO2 values.

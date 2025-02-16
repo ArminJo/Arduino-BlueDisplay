@@ -3,7 +3,7 @@
  *
  * The constants here must correspond to the values used in the BlueDisplay App
  *
- *  Copyright (C) 2015-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -97,7 +97,8 @@ public:
         void (*aOnTouchHandler)(BDButton*, int16_t);
     };
 
-    struct BDButtonPGMParameterStruct {
+    // Same as before, but with aPGMText instead of aText
+    struct BDButtonPGMTextParameterStruct {
         uint16_t aPositionX;
         uint16_t aPositionY;
         uint16_t aWidthX;
@@ -130,11 +131,11 @@ public:
             void (*aOnTouchHandler)(BDButton*, int16_t));
 
     void init(BDButtonParameterStruct *aBDButtonParameter);
-    void init(BDButtonPGMParameterStruct *aBDButtonParameter);
+    void init(BDButtonPGMTextParameterStruct *aBDButtonParameter);
     static void setInitParameters(BDButtonParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX, uint16_t aPositionY,
             uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor, const char *aText, uint16_t aTextSize, uint8_t aFlags,
             int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t));
-    static void setInitParameters(BDButtonPGMParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX,
+    static void setInitParameters(BDButtonPGMTextParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX,
             uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor, const __FlashStringHelper *aPGMText,
             uint16_t aTextSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t));
 

@@ -3,7 +3,7 @@
  *
  * Implementation of the button client stub for the Android BlueDisplay app.
  *
- *  Copyright (C) 2015-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -97,7 +97,7 @@ void BDButton::setInitParameters(BDButtonParameterStruct *aBDButtonParameterStru
     aBDButtonParameterStructToFill->aOnTouchHandler = aOnTouchHandler;
 }
 
-void BDButton::setInitParameters(BDButtonPGMParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX,
+void BDButton::setInitParameters(BDButtonPGMTextParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX,
         uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor, const __FlashStringHelper *aPGMText,
         uint16_t aTextSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t)) {
     aBDButtonParameterStructToFill->aPositionX = aPositionX;
@@ -121,7 +121,7 @@ void BDButton::init(BDButtonParameterStruct *aBDButtonParameter) {
 /*
  * Each further call costs 10 to 14 bytes program memory
  */
-void BDButton::init(BDButtonPGMParameterStruct *aBDButtonParameter) {
+void BDButton::init(BDButtonPGMTextParameterStruct *aBDButtonParameter) {
     init(aBDButtonParameter->aPositionX, aBDButtonParameter->aPositionY, aBDButtonParameter->aWidthX, aBDButtonParameter->aHeightY,
             aBDButtonParameter->aButtonColor, aBDButtonParameter->aPGMText, aBDButtonParameter->aTextSize,
             aBDButtonParameter->aFlags, aBDButtonParameter->aValue, aBDButtonParameter->aOnTouchHandler);

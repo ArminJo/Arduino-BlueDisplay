@@ -3,7 +3,7 @@
  *
  * Implementation of the slider client stub for the Android BlueDisplay app.
  *
- *  Copyright (C) 2015-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -41,6 +41,17 @@ BDSliderHandle_t sLocalSliderIndex = 0;
 BDSlider::BDSlider() { // @suppress("Class members should be properly initialized")
 }
 
+void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth, int16_t aBarLength, int16_t aThresholdValue,
+        int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
+        void (*aOnChangeHandler)(BDSlider*, uint16_t)) {
+    init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags,
+            reinterpret_cast<void (*)(BDSlider*, int16_t)>(aOnChangeHandler));
+}
+
+void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth, int16_t aBarLength, int16_t aThresholdValue,
+        int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags) {
+    init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags, reinterpret_cast<void (*)(BDSlider*, int16_t)>(NULL));
+}
 /**
  * @brief initialization with all parameters (except BarBackgroundColor)
  * @param aPositionX - Determines upper left corner
@@ -58,7 +69,7 @@ BDSlider::BDSlider() { // @suppress("Class members should be properly initialize
  */
 void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth, int16_t aBarLength, int16_t aThresholdValue,
         int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
-        void (*aOnChangeHandler)(BDSlider*, uint16_t)) {
+        void (*aOnChangeHandler)(BDSlider*, int16_t)) {
     BDSliderHandle_t tSliderNumber = sLocalSliderIndex++;
 
     if (USART_isBluetoothPaired()) {
@@ -82,7 +93,7 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
     // Cast required here. At runtime the right pointer is returned because of FLAG_USE_INDEX_FOR_CALLBACK
     mLocalSliderPointer->init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue,
             aSliderColor, aBarColor, aFlags | LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK,
-            reinterpret_cast<void (*)(LocalTouchSlider *, uint16_t)>(aOnChangeHandler));
+            reinterpret_cast<void (*)(LocalTouchSlider *, int16_t)>(aOnChangeHandler));
     // keep the formatting
 #endif
 }
@@ -173,7 +184,7 @@ void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) 
 }
 void BDSlider::setDefaultBarThresholdColor(color16_t aDefaultBarThresholdColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalSliderPointer->setDefaultBarThresholdColor(aDefaultBarThresholdColor);
+    setDefaultBarThresholdColor(aDefaultBarThresholdColor);
 #endif
     sendUSARTArgs(FUNCTION_SLIDER_GLOBAL_SETTINGS, 2, SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD, aDefaultBarThresholdColor);
 }
@@ -193,8 +204,8 @@ void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
  * @param aCaptionColor - default is COLOR16_BLACK
  * @param aCaptionBackgroundColor - default is COLOR16_WHITE
  */
-void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositionFlags, uint8_t aCaptionMargin, color16_t aCaptionColor,
-        color16_t aCaptionBackgroundColor) {
+void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositionFlags, uint8_t aCaptionMargin,
+        color16_t aCaptionColor, color16_t aCaptionBackgroundColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setCaptionColors(aCaptionColor, aCaptionBackgroundColor);
 #endif
@@ -210,11 +221,11 @@ void BDSlider::setCaption(const char *aCaption) {
 }
 
 void BDSlider::setCaption(const __FlashStringHelper *aPGMCaption) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalSliderPointer->setCaption(aCaption);
-#endif
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
     uint8_t tCaptionLength = _clipAndCopyPGMString(tStringBuffer, aPGMCaption);
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalSliderPointer->setCaption(tStringBuffer);
+#endif
     sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderHandle, tCaptionLength, tStringBuffer);
 }
 
@@ -255,6 +266,7 @@ void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPri
 
 /*
  * Scale factor of 2 means, that the slider is virtually 2 times larger than displayed.
+ * => a slider of length 100 returns values from 0 to 200.
  * => values were divided by scale factor before displayed on real slider.
  * formula aScaleFactor = virtualLength / realLength
  */
@@ -267,7 +279,9 @@ void BDSlider::setScaleFactor(float aScaleFactor) {
 }
 
 /*
- * The scale factor for displaying a slider value. 2 means, that values are multiplied by 2 before displayed on slider.
+ * The scale factor for displaying a slider value.
+ * 2 means, that values are multiplied by 2 before displayed on slider,
+ * i.e. the real slider is 2 times larger than the maximum value.
  * Better use the call to setScaleFactor(1/aScaleFactorValue);
  */
 void BDSlider::setValueScaleFactor(float aScaleFactorValue) {
@@ -276,6 +290,14 @@ void BDSlider::setValueScaleFactor(float aScaleFactorValue) {
     }
 }
 #pragma GCC diagnostic pop
+
+/*
+ * @param aMinValue The value of slider, if position is left or bottom
+ * @param aMaxValue The value of slider, if position is right or top
+ */
+void BDSlider::setMinMaxValue(int16_t aMinValue, int16_t aMaxValue) {
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderHandle, SUBFUNCTION_SLIDER_SET_MIN_MAX, aMinValue, aMaxValue);
+}
 
 void BDSlider::printValue(const char *aValueString) {
 #if defined(SUPPORT_LOCAL_DISPLAY)

@@ -4,7 +4,7 @@
  * Defines all the protocol related constants and structures required for the client stubs.
  * The constants here must correspond to the values used in the BlueDisplay App
  *
- *  Copyright (C) 2015-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -158,6 +158,7 @@ struct Swipe {
 union ByteShortLongFloatUnion {
     unsigned char byteValues[4];
     uint16_t uint16Values[2];
+    uint16_t int16Values[2];
     uint32_t uint32Value;
     float floatValue;
 };
@@ -375,6 +376,7 @@ struct BluetoothEvent {
 
 #define SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES   0x08
 #define SUBFUNCTION_SLIDER_SET_VALUE_STRING_PROPERTIES 0x09
+#define SUBFUNCTION_SLIDER_SET_MIN_MAX              0x0A
 
 #define SUBFUNCTION_SLIDER_SET_VALUE                0x0C
 

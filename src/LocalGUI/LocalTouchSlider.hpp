@@ -11,7 +11,7 @@
  *
  * Size of one slider is 44 bytes on Arduino
  *
- *  Copyright (C) 2012-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -194,10 +194,14 @@ void LocalTouchSlider::createAllLocalSlidersAtRemote() {
  * @param aFlags - See #FLAG_SLIDER_SHOW_BORDER etc.
  * @param aOnChangeHandler - If nullptr no update of bar is done on touch - equivalent to FLAG_SLIDER_IS_ONLY_OUTPUT
  */
-
+void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength,
+        uint16_t aThresholdValue, int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags) {
+    init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags,
+            reinterpret_cast<void (*)(LocalTouchSlider*, int16_t)>(NULL));
+}
 void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength,
         uint16_t aThresholdValue, int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags,
-        void (*aOnChangeHandler)(LocalTouchSlider*, uint16_t)) {
+        void (*aOnChangeHandler)(LocalTouchSlider*, int16_t)) {
 
     mIsActive = false;
     mCaption = nullptr;
@@ -395,11 +399,11 @@ void LocalTouchSlider::drawBar() {
 // draw background bar
     if (tValue < mBarLength) {
         if (mFlags & FLAG_SLIDER_IS_HORIZONTAL) {
-            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth + tValue, mPositionY + tLongBorderWidth,
-                    mBarLength - tValue, mBarWidth, mBarBackgroundColor);
+            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth + tValue, mPositionY + tLongBorderWidth, mBarLength - tValue,
+                    mBarWidth, mBarBackgroundColor);
         } else {
-            LocalDisplay.fillRectRel(mPositionX + tLongBorderWidth, mPositionY + mShortBorderWidth, mBarWidth,
-                    mBarLength - tValue, mBarBackgroundColor);
+            LocalDisplay.fillRectRel(mPositionX + tLongBorderWidth, mPositionY + mShortBorderWidth, mBarWidth, mBarLength - tValue,
+                    mBarBackgroundColor);
         }
     }
 
@@ -410,11 +414,10 @@ void LocalTouchSlider::drawBar() {
             tColor = mBarThresholdColor;
         }
         if (mFlags & FLAG_SLIDER_IS_HORIZONTAL) {
-            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth, mPositionY + tLongBorderWidth, tValue, mBarWidth,
-                    tColor);
+            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth, mPositionY + tLongBorderWidth, tValue, mBarWidth, tColor);
         } else {
-            LocalDisplay.fillRectRel(mPositionX + tLongBorderWidth, mPositionYBottom - mShortBorderWidth - tValue + 1,
-                    mBarWidth, tValue, tColor);
+            LocalDisplay.fillRectRel(mPositionX + tLongBorderWidth, mPositionYBottom - mShortBorderWidth - tValue + 1, mBarWidth,
+                    tValue, tColor);
         }
     }
 }
@@ -432,8 +435,8 @@ void LocalTouchSlider::setCaptionColors(uint16_t aCaptionColor, uint16_t aValueC
  * Dummy stub to compatible with BDSliders
  */
 void LocalTouchSlider::setCaptionProperties(uint8_t aCaptionSize __attribute__((unused)),
-        uint8_t aCaptionPositionFlags __attribute__((unused)), uint8_t aCaptionMargin __attribute__((unused)), color16_t aCaptionColor,
-        color16_t aValueCaptionBackgroundColor) {
+        uint8_t aCaptionPositionFlags __attribute__((unused)), uint8_t aCaptionMargin __attribute__((unused)),
+        color16_t aCaptionColor, color16_t aValueCaptionBackgroundColor) {
     setCaptionColors(aCaptionColor, aValueCaptionBackgroundColor);
 }
 

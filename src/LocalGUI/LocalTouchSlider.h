@@ -4,7 +4,7 @@
  *
  * Size of one slider is 46 bytes on Arduino
  *
- *  Copyright (C) 2012-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -97,8 +97,10 @@ public:
     ~LocalTouchSlider();
 #endif
     void init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength, uint16_t aThresholdValue,
+            int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags);
+    void init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength, uint16_t aThresholdValue,
             int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags,
-            void (*aOnChangeHandler)(LocalTouchSlider*, uint16_t));
+            void (*aOnChangeHandler)(LocalTouchSlider*, int16_t));
     void deinit(); // Dummy to be more compatible with BDButton
     void activate();
     void deactivate();
@@ -117,7 +119,7 @@ public:
             uint16_t aDefaultValueColor, uint16_t aDefaultValueCaptionBackgroundColor);
     static void setDefaultSliderColor(uint16_t aDefaultSliderColor);
     static void setDefaultBarColor(uint16_t aDefaultBarColor);
-    void setDefaultBarThresholdColor(color16_t aDefaultBarThresholdColor);
+    void setDefaultBarThresholdColor(uint16_t aDefaultBarThresholdColor);
 
     /*
      * Basic touch functions
@@ -237,7 +239,7 @@ public:
     bool mIsActive;
 
     // misc
-    void (*mOnChangeHandler)(LocalTouchSlider*, uint16_t);
+    void (*mOnChangeHandler)(LocalTouchSlider*, int16_t);
 
     int8_t checkParameterValues();
 

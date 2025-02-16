@@ -103,7 +103,7 @@ void createGameOfLifeGUI();
 void showGameOfLifeSettings(void);
 
 static Slider TouchSliderGameOfLifeSpeed; // is also used in Settings sub page
-void doGameOfLifeSpeed(Slider *aTheTouchedSlider, uint16_t aSliderValue);
+void doGameOfLifeSpeed(Slider *aTheTouchedSlider, int16_t aSliderValue);
 // to slow down game of life
 unsigned long GameOfLifeDelay = 0;
 
@@ -308,13 +308,13 @@ void createDemoButtonsAndSliders(void) {
      */
 // self moving sliders COLOR16_WHITE is bar background color for slider without border
     TouchSliderActionWithoutBorder.init(180, BUTTON_HEIGHT_4_LINE_2 - 10, 20, ACTION_SLIDER_MAX, ACTION_SLIDER_MAX, 0,
-            COLOR16_WHITE, COLOR16_YELLOW, FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
+            COLOR16_WHITE, COLOR16_YELLOW, FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT);
     TouchSliderActionWithoutBorder.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE,
             SLIDER_DEFAULT_VALUE_MARGIN, COLOR16_BLUE, COLOR_DEMO_BACKGROUND);
 
     TouchSliderAction.init(180 + 2 * 20 + BUTTON_DEFAULT_SPACING, BUTTON_HEIGHT_4_LINE_2 - 10, 20, ACTION_SLIDER_MAX,
     ACTION_SLIDER_MAX, 0, COLOR16_BLUE, COLOR16_YELLOW,
-            FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
+            FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_ONLY_OUTPUT);
     TouchSliderAction.setPrintValueProperties(TEXT_SIZE_11, FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE, SLIDER_DEFAULT_VALUE_MARGIN,
             COLOR16_BLUE, COLOR_DEMO_BACKGROUND);
 
@@ -428,7 +428,7 @@ void initNewGameOfLife(void) {
     initGameOfLife();
 }
 
-void doGameOfLifeSpeed(Slider *aTheTouchedSlider, uint16_t aSliderValue) {
+void doGameOfLifeSpeed(Slider *aTheTouchedSlider, int16_t aSliderValue) {
     aSliderValue = aSliderValue / 25;
     const char *tValueString = "";
     switch (aSliderValue) {
