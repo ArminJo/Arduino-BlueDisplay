@@ -1601,7 +1601,7 @@ void doStartSingleshot(BDButton *aTheTouchedButton, int16_t aValue) {
 /*
  * Slider is only activated if trigger mode == TRIGGER_MODE_MANUAL_TIMEOUT or TRIGGER_MODE_MANUAL
  */
-void doTriggerLevel(BDSlider *aTheTouchedSlider, uint16_t aValue) {
+void doTriggerLevel(BDSlider *aTheTouchedSlider, int16_t aValue) {
 // to get display value take DISPLAY_VALUE_FOR_ZERO - aValue and vice versa
     aValue = DISPLAY_VALUE_FOR_ZERO - aValue;
     if (DisplayControl.TriggerLevelDisplayValue == aValue) {
@@ -1627,7 +1627,7 @@ void doTriggerLevel(BDSlider *aTheTouchedSlider, uint16_t aValue) {
 /*
  * The value printed has a resolution of 0,00488 * scale factor
  */
-void doVoltagePicker(BDSlider *aTheTouchedSlider, uint16_t aValue) {
+void doVoltagePicker(BDSlider *aTheTouchedSlider, int16_t aValue) {
     if (sLastPickerValue == aValue) {
         return;
     }

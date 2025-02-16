@@ -3,7 +3,7 @@
  *
  * Implementation of the button client stub for the Android BlueDisplay app.
  *
- *  Copyright (C) 2015-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -40,12 +40,12 @@
  * The number of the button used as identifier for the remote button.
  * Can be interpreted as index into button stack.
  */
-BDButtonHandle_t sLocalButtonIndex = 0;
+BDButtonIndex_t sLocalButtonIndex = 0;
 
 BDButton::BDButton() { // @suppress("Class members should be properly initialized")
 }
 
-BDButton::BDButton(BDButtonHandle_t aButtonHandle) { // @suppress("Class members should be properly initialized")
+BDButton::BDButton(BDButtonIndex_t aButtonHandle) { // @suppress("Class members should be properly initialized")
     mButtonHandle = aButtonHandle;
 }
 
@@ -97,7 +97,7 @@ void BDButton::setInitParameters(BDButtonParameterStruct *aBDButtonParameterStru
     aBDButtonParameterStructToFill->aOnTouchHandler = aOnTouchHandler;
 }
 
-void BDButton::setInitParameters(BDButtonPGMParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX,
+void BDButton::setInitParameters(BDButtonPGMTextParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX,
         uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor, const __FlashStringHelper *aPGMText,
         uint16_t aTextSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t)) {
     aBDButtonParameterStructToFill->aPositionX = aPositionX;
@@ -121,7 +121,7 @@ void BDButton::init(BDButtonParameterStruct *aBDButtonParameter) {
 /*
  * Each further call costs 10 to 14 bytes program memory
  */
-void BDButton::init(BDButtonPGMParameterStruct *aBDButtonParameter) {
+void BDButton::init(BDButtonPGMTextParameterStruct *aBDButtonParameter) {
     init(aBDButtonParameter->aPositionX, aBDButtonParameter->aPositionY, aBDButtonParameter->aWidthX, aBDButtonParameter->aHeightY,
             aBDButtonParameter->aButtonColor, aBDButtonParameter->aPGMText, aBDButtonParameter->aTextSize,
             aBDButtonParameter->aFlags, aBDButtonParameter->aValue, aBDButtonParameter->aOnTouchHandler);
@@ -137,7 +137,7 @@ void BDButton::init(BDButtonPGMParameterStruct *aBDButtonParameter) {
 void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
         const char *aText, uint16_t aTextSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t)) {
 
-    BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
+    BDButtonIndex_t tButtonNumber = sLocalButtonIndex++;
     if (USART_isBluetoothPaired()) {
 #if __SIZEOF_POINTER__ == 4
         sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 11, tButtonNumber, aPositionX, aPositionY, aWidthX, aHeightY,
@@ -183,7 +183,7 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
             aValue, aOnTouchHandler);
 #else
 
-    BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
+    BDButtonIndex_t tButtonNumber = sLocalButtonIndex++;
 
     if (USART_isBluetoothPaired()) {
         char tStringBuffer[STRING_BUFFER_STACK_SIZE];
@@ -226,6 +226,8 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
 /*
  * This function deletes the last BDButton initialized by BDButton::init() simply by decreasing sLocalButtonIndex by one.
  * So next BDButton::init() uses the same button on the remote side again.
+ * The memory allocated for this button (one byte on the heap) must be released manually.
+ *
  * The local button is deleted regular.
  * This assumes a button stack. with localButtonIndex as stack pointer.
  * The local button is deleted regular.
@@ -235,10 +237,20 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
  * This cannot be done with ~BDButton, because we can only delete the last BDButton from stack, and not any arbitrary one.
  */
 void BDButton::deinit() {
-#if defined(SUPPORT_LOCAL_DISPLAY)
     sLocalButtonIndex--;
+#if defined(SUPPORT_LOCAL_DISPLAY)
     delete mLocalButtonPtr; // free memory
 #endif
+}
+
+/*
+ * Overwrites and deactivate button
+ */
+void BDButton::removeButton(color16_t aBackgroundColor) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalButtonPtr->removeButton(aBackgroundColor);
+#endif
+    sendUSARTArgs(FUNCTION_BUTTON_REMOVE, 2, mButtonHandle, aBackgroundColor);
 }
 
 void BDButton::drawButton() {
@@ -248,13 +260,6 @@ void BDButton::drawButton() {
     }
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_DRAW, 1, mButtonHandle);
-}
-
-void BDButton::removeButton(color16_t aBackgroundColor) {
-#if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalButtonPtr->removeButton(aBackgroundColor);
-#endif
-    sendUSARTArgs(FUNCTION_BUTTON_REMOVE, 2, mButtonHandle, aBackgroundColor);
 }
 
 #if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
@@ -515,7 +520,7 @@ void BDButton::deactivateAll() {
 //void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMText, int16_t aValue,
 //        void (*aOnTouchHandler)(BDButton*, int16_t)) {
 //
-//    BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
+//    BDButtonIndex_t tButtonNumber = sLocalButtonIndex++;
 //    PGM_P tPGMText = reinterpret_cast<PGM_P>(aPGMText);
 //
 //    if (USART_isBluetoothPaired()) {
@@ -545,7 +550,7 @@ void BDButton::deactivateAll() {
 //
 //void BDButton::init(const struct ButtonInit *aButtonInfo, const __FlashStringHelper *aPGMText, int16_t aValue ) {
 //
-//    BDButtonHandle_t tButtonNumber = sLocalButtonIndex++;
+//    BDButtonIndex_t tButtonNumber = sLocalButtonIndex++;
 //    if (USART_isBluetoothPaired()) {
 //
 //        uint16_t tParamBuffer[MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS + 4];

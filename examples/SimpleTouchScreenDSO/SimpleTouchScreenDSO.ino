@@ -560,9 +560,9 @@ void doSettings(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
 void doTriggerSingleshot(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
 void doStartStop(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
 void doChartHistory(LocalTouchButton *const aTheTouchedButton, int16_t aValue);
-void doBacklight(LocalTouchSlider *aTheTouchedSlider, uint16_t aBrightness);
-void doTriggerLevel(LocalTouchSlider *aTheTouchedSlider, uint16_t aBrightness);
-void doVoltagePicker(LocalTouchSlider *aTheTouchedSlider, uint16_t aBrightness);
+void doBacklight(LocalTouchSlider *aTheTouchedSlider, int16_t aBrightness);
+void doTriggerLevel(LocalTouchSlider *aTheTouchedSlider, int16_t aBrightness);
+void doVoltagePicker(LocalTouchSlider *aTheTouchedSlider, int16_t aBrightness);
 
 void clearTriggerLine(uint8_t aTriggerLevelDisplayValue);
 void drawTriggerLine();
@@ -1949,7 +1949,7 @@ void doChartHistory(LocalTouchButton *const aTheTouchedButton __attribute__((unu
     }
 }
 
-void doBacklight(LocalTouchSlider *const aTheTouchedSlider __attribute__((unused)), uint16_t aBrightness) {
+void doBacklight(LocalTouchSlider *const aTheTouchedSlider __attribute__((unused)), int16_t aBrightness) {
     if (aBrightness < BACKLIGHT_MIN_BRIGHTNESS_VALUE) {
         aBrightness = BACKLIGHT_MIN_BRIGHTNESS_VALUE;
     }
@@ -1959,7 +1959,7 @@ void doBacklight(LocalTouchSlider *const aTheTouchedSlider __attribute__((unused
 /*
  * The value printed has a resolution of 0,00488 * scale factor
  */
-void doTriggerLevel(LocalTouchSlider *const aTheTouchedSlider __attribute__((unused)), uint16_t aValue) {
+void doTriggerLevel(LocalTouchSlider *const aTheTouchedSlider __attribute__((unused)), int16_t aValue) {
 // in auto-trigger mode show only computed value and do not modify it
     if (MeasurementControl.TriggerValuesAutomatic) {
         // already shown :-)
@@ -2001,7 +2001,7 @@ void restoreGraphAtYpos(uint16_t tYpos) {
 /*
  * The value printed has a resolution of 0,00488 * scale factor
  */
-void doVoltagePicker(LocalTouchSlider *aTheTouchedSlider __attribute__((unused)), uint16_t aValue) {
+void doVoltagePicker(LocalTouchSlider *aTheTouchedSlider __attribute__((unused)), int16_t aValue) {
     char tVoltageBuffer[6];
     if (sLastVoltagePickerValue == aValue) {
         return;

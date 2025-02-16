@@ -5,7 +5,7 @@
  *  Can be used as a parking assistance.
  *  This is an example for using a fullscreen GUI.
  *
- *  Copyright (C) 2014-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
@@ -262,8 +262,8 @@ void handleConnectAndReorientation(void) {
     sValueStartY = getTextAscend(sButtonTextSize * 2) + sButtonTextSize + sButtonTextSize / 4;
 
     SliderShowDistance.init(0, sButtonTextSize * 3, sButtonTextSize / 4, tCurrentDisplayWidth, 199, 0, COLOR16_BLUE,
-    COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
-    SliderShowDistance.setScaleFactor(200.0 / tCurrentDisplayWidth);
+    COLOR16_GREEN, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT);
+    SliderShowDistance.setMinMaxValue(0, 200);
 
     // Initialize button position, size, colors etc.
     TouchButtonStartStop.init(0, BUTTON_HEIGHT_5_DYN_LINE_5, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_5_DYN, COLOR16_BLUE, "Start Tone",

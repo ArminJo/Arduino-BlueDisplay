@@ -71,7 +71,6 @@ void initDisplay(void);
 #endif
 
 char sStringBuffer[32]; // Used in GameOfLife and GuiDemo, and provided by different main programs
-char *sBDStringBuffer = sStringBuffer;
 uint32_t sMillisOfLastLoop;
 
 #if !defined(Button)
@@ -222,9 +221,9 @@ void initDisplay(void) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
 //show touchpanel data
 void printLocalTouchPanelData(void) {
-    snprintf(sBDStringBuffer, sizeof(sBDStringBuffer), "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getCurrentX(), TouchPanel.getRawX(),
+    snprintf(sStringBuffer, sizeof(sStringBuffer), "X:%03i|%04i Y:%03i|%04i P:%03i %u", TouchPanel.getCurrentX(), TouchPanel.getRawX(),
             TouchPanel.getCurrentY(), TouchPanel.getRawY(), TouchPanel.getPressure(), sTouchObjectTouched);
-    LocalDisplay.drawText(30, 2, sBDStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
+    LocalDisplay.drawText(30, 2, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, BACKGROUND_COLOR);
 }
 #endif
 

@@ -110,7 +110,7 @@ BDSlider SliderLaserPower;
 // storage for laser analogWrite and laser slider value for next start if we stop laser
 uint8_t sLaserPowerValue;
 uint16_t sLastLaserSliderValue;
-void doLaserPowerSlider(BDSlider *aTheTouchedSlider, uint16_t aValue);
+void doLaserPowerSlider(BDSlider *aTheTouchedSlider, int16_t aValue);
 
 /*
  * Vertical
@@ -368,24 +368,24 @@ void initDisplay(void) {
      */
 // Position Slider at middle of screen
     SliderUp.init((sCurrentDisplayWidth - sSliderSize) / 2, (sCurrentDisplayHeight / 2) - sSliderHeight + sSliderSize, sSliderSize,
-            sSliderHeight, sSliderHeight, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
+            sSliderHeight, sSliderHeight, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT);
     SliderUp.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
     SliderDown.init((sCurrentDisplayWidth - sSliderSize) / 2, (sCurrentDisplayHeight / 2) + sSliderSize, sSliderSize,
-            -(sSliderHeight), sSliderHeight, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
+            -(sSliderHeight), sSliderHeight, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_ONLY_OUTPUT);
     SliderDown.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
 // Position slider right from vertical one at middle of screen
     SliderRight.init((sCurrentDisplayWidth + sSliderSize) / 2, ((sCurrentDisplayHeight - sSliderSize) / 2) + sSliderSize,
             sSliderSize, sSliderWidth,
             SLIDER_LEFT_RIGHT_THRESHOLD, 0, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR,
-            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
+            FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT);
     SliderRight.setBarThresholdColor( SLIDER_THRESHOLD_COLOR);
 
 // Position inverse slider left from vertical one at middle of screen
     SliderLeft.init(((sCurrentDisplayWidth - sSliderSize) / 2) - sSliderWidth,
             ((sCurrentDisplayHeight - sSliderSize) / 2) + sSliderSize, sSliderSize, -(sSliderWidth), SLIDER_LEFT_RIGHT_THRESHOLD, 0,
-            SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT, nullptr);
+            SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_IS_ONLY_OUTPUT);
     SliderLeft.setBarThresholdColor(SLIDER_THRESHOLD_COLOR);
 
     /*
@@ -446,7 +446,7 @@ uint8_t getRandomValue(ServoControlStruct *aServoControlStruct, ServoEasing *aSe
 /*
  * Use logarithmic scale: 0 -> 0, (sCurrentDisplayHeight / 2) -> 255
  */
-void doLaserPowerSlider(BDSlider *aTheTouchedSlider, uint16_t aValue) {
+void doLaserPowerSlider(BDSlider *aTheTouchedSlider, int16_t aValue) {
     sLastLaserSliderValue = aValue;
     float tValue = aValue;
     tValue = (tValue * 5) / sCurrentDisplayHeight; // gives 0-2.5 for 0 - sCurrentDisplayHeight/2

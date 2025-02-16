@@ -425,7 +425,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
         { // "{" must be here to avoid nasty errors
             LocalTouchButton *tLocalButton = LocalTouchButton::getLocalTouchButtonFromBDButtonHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
-            tLocalButton->mValue = tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0]; // we support only 16 bit values for buttons
+            tLocalButton->mValue = tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.int16Values[0]; // we support only 16 bit values for buttons
             /*
              * We can not call performTouchAction() of the local button here.
              * It is because for autorepeat buttons, CallbackFunctionAddress is the mOriginalButtonOnTouchHandler and not the mOnTouchHandler
@@ -442,10 +442,11 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         }
 #elif !defined(SUPPORT_LOCAL_DISPLAY)
         sButtonCalledWithFalse = (tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0] == false);
-        // BDButton * is the same as BDButtonHandle_t * because BDButton only has one BDButtonHandle_t element
+        // The BDButton object is just a 8 bit (16 bit) unsigned integer holding the remote index of the button.
+        // So every pointer to a memory location holding the index of the button is a valid pointer to BDButton :-).
         ((void (*)(BDButton*, int16_t)) tEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress)(
-                (BDButton*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex,
-                tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0]); // we support only 16 bit values for buttons
+                (BDButton*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex, // Pointer to button object (remote index number) (on stack)
+                tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.int16Values[0]); // we support only 16 bit values for buttons
 #endif
         break;
 
@@ -457,15 +458,17 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
         { // "{" must be here to avoid nasty errors
             LocalTouchSlider *tLocalSlider = LocalTouchSlider::getLocalSliderFromBDSliderHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
-            tLocalSlider->mActualTouchValue = tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0];
+            tLocalSlider->mActualTouchValue = tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.int16Values[0];
             // synchronize local slider - remote one is synchronized by local slider itself
-            tLocalSlider->setValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0]);
+            tLocalSlider->setValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.int16Values[0]);
             ((void (*)(BDSlider*, int16_t)) tEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress)(tLocalSlider->mBDSliderPtr, tLocalSlider->mActualTouchValue);
         }
 #else
+        // The BDSlider object is just a 8 bit (16 bit) unsigned integer holding the remote index of the slider.
+        // So every pointer to a memory location holding the index of the slider is a valid pointer to BDSlider :-).
         ((void (*)(BDSlider*, int16_t)) tEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress)(
-                (BDSlider*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex,
-                tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0]);
+                (BDSlider*) &tEvent.EventData.GuiCallbackInfo.ObjectIndex, // Pointer to slider object (remote index number) (on stack)
+                tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.int16Values[0]);
 #endif
         break;
 

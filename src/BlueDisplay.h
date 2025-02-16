@@ -7,7 +7,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -116,8 +116,8 @@ class __FlashStringHelper;
 #include "EventHandler.h"
 
 #ifdef __cplusplus
-#include "BDButton.h" // for BDButtonHandle_t
-#include "BDSlider.h" // for BDSliderHandle_t
+#include "BDButton.h" // for BDButtonIndex_t
+#include "BDSlider.h" // for BDSliderIndex_t
 #endif
 
 /*****************************
@@ -214,8 +214,10 @@ public:
     void resetLocal();
     uint_fast16_t initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)() = nullptr,
             void (*aReorientationCallback)() = nullptr);
+#if defined(ARDUINO)
     void initCommunication(Print *aSerial, void (*aConnectCallback)(), void (*aRedrawCallback)() = nullptr,
             void (*aReorientationCallback)() = nullptr);
+#endif
     // The result of initCommunication
     bool isConnectionEstablished();
     void sendSync();
@@ -438,6 +440,8 @@ float getCPUTemperature(void);
  * - Renamed drawVectorDegrees() to drawVectorDegree().
  * - Added function setScreenBrightness().
  * - Added functions draw*WithAliasing().
+ * - Added slider function setMinMaxValue().
+ * - Changed Slider callback value from uint16_t to int16_t.
  * - Refactored Chart and chart line drawing functions.
  * - Changed "Caption" to "Text" for buttons and renamed fields and functions.
  * - Added a full screen example for a log chart of CO2 values.

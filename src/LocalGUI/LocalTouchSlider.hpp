@@ -11,7 +11,7 @@
  *
  * Size of one slider is 44 bytes on Arduino
  *
- *  Copyright (C) 2012-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -194,10 +194,14 @@ void LocalTouchSlider::createAllLocalSlidersAtRemote() {
  * @param aFlags - See #FLAG_SLIDER_SHOW_BORDER etc.
  * @param aOnChangeHandler - If nullptr no update of bar is done on touch - equivalent to FLAG_SLIDER_IS_ONLY_OUTPUT
  */
-
+void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength,
+        uint16_t aThresholdValue, int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags) {
+    init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags,
+            reinterpret_cast<void (*)(LocalTouchSlider*, int16_t)>(NULL));
+}
 void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength,
         uint16_t aThresholdValue, int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags,
-        void (*aOnChangeHandler)(LocalTouchSlider*, uint16_t)) {
+        void (*aOnChangeHandler)(LocalTouchSlider*, int16_t)) {
 
     mIsActive = false;
     mCaption = nullptr;
@@ -229,8 +233,8 @@ void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aB
 
     checkParameterValues();
 
-    uint8_t tShortBordersAddedWidth = mBarWidth;
-    uint8_t tLongBordersAddedWidth = 2 * mBarWidth;
+    uint8_t tShortBordersAddedWidth = 2 * SLIDER_DEFAULT_SHORT_BORDER_WIDTH;
+    uint8_t tLongBordersAddedWidth = 2 * SLIDER_DEFAULT_LONG_BORDER_WIDTH;
     if (!(mFlags & FLAG_SLIDER_SHOW_BORDER)) {
         tShortBordersAddedWidth = 0;
         tLongBordersAddedWidth = 0;
@@ -349,29 +353,34 @@ void LocalTouchSlider::drawSlider() {
 }
 
 void LocalTouchSlider::drawBorder() {
-    uintForPgmSpaceSaving mShortBorderWidth = mBarWidth / 2;
+    uintForPgmSpaceSaving const mShortBorderWidth = SLIDER_DEFAULT_SHORT_BORDER_WIDTH;
+    uintForPgmSpaceSaving const mLongBorderWidth = SLIDER_DEFAULT_LONG_BORDER_WIDTH;
     if (mFlags & FLAG_SLIDER_IS_HORIZONTAL) {
-        // Create value bar upper border
-        LocalDisplay.fillRectRel(mPositionX, mPositionY, mBarLength + mBarWidth, mBarWidth, mSliderColor);
-        // Create value bar lower border
-        LocalDisplay.fillRectRel(mPositionX, mPositionY + (2 * mBarWidth), mBarLength + mBarWidth, mBarWidth, mSliderColor);
+        // Create upper long border
+        LocalDisplay.fillRectRel(mPositionX, mPositionY, mBarLength + (2 * mShortBorderWidth), mLongBorderWidth, mSliderColor);
+        // Create lower lomg border
+        LocalDisplay.fillRectRel(mPositionX, mPositionY + mLongBorderWidth + mBarWidth, mBarLength + (2 * mShortBorderWidth),
+                mLongBorderWidth, mSliderColor);
 
-        // Create left border
-        LocalDisplay.fillRectRel(mPositionX, mPositionY + mBarWidth, mShortBorderWidth, mBarWidth, mSliderColor);
-        // Create right border
-        LocalDisplay.fillRectRel(mPositionXRight - mShortBorderWidth + 1, mPositionY + mBarWidth, mShortBorderWidth, mBarWidth,
-                mSliderColor);
+        // Create left short border (as extension of bar)
+        LocalDisplay.fillRectRel(mPositionX, mPositionY + mLongBorderWidth, mShortBorderWidth, mBarWidth, mSliderColor);
+        // Create right short border (as extension of bar)
+        LocalDisplay.fillRectRel(mPositionXRight - mShortBorderWidth + 1, mPositionY + mLongBorderWidth, mShortBorderWidth,
+                mBarWidth, mSliderColor);
+
     } else {
-        // Create left border
-        LocalDisplay.fillRectRel(mPositionX, mPositionY, mBarWidth, mBarLength + mBarWidth, mSliderColor);
-        // Create right border
-        LocalDisplay.fillRectRel(mPositionX + (2 * mBarWidth), mPositionY, mBarWidth, mBarLength + mBarWidth, mSliderColor);
+        // VERTICAL slider
+        // Create left long border
+        LocalDisplay.fillRectRel(mPositionX, mPositionY, mLongBorderWidth, mBarLength + (2 * mShortBorderWidth), mSliderColor);
+        // Create right long border
+        LocalDisplay.fillRectRel(mPositionX + mLongBorderWidth + mBarWidth, mPositionY, mLongBorderWidth,
+                mBarLength + (2 * mShortBorderWidth), mSliderColor);
 
-        // Create value bar upper border
-        LocalDisplay.fillRectRel(mPositionX + mBarWidth, mPositionY, mBarWidth, mShortBorderWidth, mSliderColor);
-        // Create value bar lower border
-        LocalDisplay.fillRectRel(mPositionX + mBarWidth, mPositionYBottom - mShortBorderWidth + 1, mBarWidth, mShortBorderWidth,
-                mSliderColor);
+        // Create upper short border (as extension of bar)
+        LocalDisplay.fillRectRel(mPositionX + mLongBorderWidth, mPositionY, mBarWidth, mShortBorderWidth, mSliderColor);
+        // Create lower short border (as extension of bar)
+        LocalDisplay.fillRectRel(mPositionX + mLongBorderWidth, mPositionYBottom - mShortBorderWidth + 1, mBarWidth,
+                mShortBorderWidth, mSliderColor);
     }
 }
 
@@ -388,18 +397,18 @@ void LocalTouchSlider::drawBar() {
     uintForPgmSpaceSaving tLongBorderWidth = 0;
 
     if ((mFlags & FLAG_SLIDER_SHOW_BORDER)) {
-        mShortBorderWidth = mBarWidth / 2;
-        tLongBorderWidth = mBarWidth;
+        mShortBorderWidth = SLIDER_DEFAULT_SHORT_BORDER_WIDTH;
+        tLongBorderWidth = SLIDER_DEFAULT_LONG_BORDER_WIDTH;
     }
 
 // draw background bar
     if (tValue < mBarLength) {
         if (mFlags & FLAG_SLIDER_IS_HORIZONTAL) {
-            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth + tValue, mPositionY + tLongBorderWidth,
-                    mBarLength - tValue, mBarWidth, mBarBackgroundColor);
+            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth + tValue, mPositionY + tLongBorderWidth, mBarLength - tValue,
+                    mBarWidth, mBarBackgroundColor);
         } else {
-            LocalDisplay.fillRectRel(mPositionX + tLongBorderWidth, mPositionY + mShortBorderWidth, mBarWidth,
-                    mBarLength - tValue, mBarBackgroundColor);
+            LocalDisplay.fillRectRel(mPositionX + tLongBorderWidth, mPositionY + mShortBorderWidth, mBarWidth, mBarLength - tValue,
+                    mBarBackgroundColor);
         }
     }
 
@@ -410,11 +419,10 @@ void LocalTouchSlider::drawBar() {
             tColor = mBarThresholdColor;
         }
         if (mFlags & FLAG_SLIDER_IS_HORIZONTAL) {
-            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth, mPositionY + tLongBorderWidth, tValue, mBarWidth,
-                    tColor);
+            LocalDisplay.fillRectRel(mPositionX + mShortBorderWidth, mPositionY + tLongBorderWidth, tValue, mBarWidth, tColor);
         } else {
-            LocalDisplay.fillRectRel(mPositionX + tLongBorderWidth, mPositionYBottom - mShortBorderWidth - tValue + 1,
-                    mBarWidth, tValue, tColor);
+            LocalDisplay.fillRectRel(mPositionX + tLongBorderWidth, mPositionYBottom - mShortBorderWidth - tValue + 1, mBarWidth,
+                    tValue, tColor);
         }
     }
 }
@@ -432,8 +440,8 @@ void LocalTouchSlider::setCaptionColors(uint16_t aCaptionColor, uint16_t aValueC
  * Dummy stub to compatible with BDSliders
  */
 void LocalTouchSlider::setCaptionProperties(uint8_t aCaptionSize __attribute__((unused)),
-        uint8_t aCaptionPositionFlags __attribute__((unused)), uint8_t aCaptionMargin __attribute__((unused)), color16_t aCaptionColor,
-        color16_t aValueCaptionBackgroundColor) {
+        uint8_t aCaptionPositionFlags __attribute__((unused)), uint8_t aCaptionMargin __attribute__((unused)),
+        color16_t aCaptionColor, color16_t aValueCaptionBackgroundColor) {
     setCaptionColors(aCaptionColor, aValueCaptionBackgroundColor);
 }
 
@@ -572,11 +580,12 @@ bool LocalTouchSlider::isTouched(uint16_t aTouchPositionX, uint16_t aTouchPositi
 void LocalTouchSlider::performTouchAction(uint16_t aTouchPositionX, uint16_t aTouchPositionY) {
     /*
      * Get value from touch position within slider
+     * Use SLIDER_DEFAULT_SHORT_BORDER_WIDTH as Touch acceptance margin
      * Handle horizontal and vertical layout
      */
     uintForPgmSpaceSaving tShortBorderWidth = 0;
     if ((mFlags & FLAG_SLIDER_SHOW_BORDER)) {
-        tShortBorderWidth = mBarWidth / 2;
+        tShortBorderWidth = SLIDER_DEFAULT_SHORT_BORDER_WIDTH;
     }
 
     unsigned int tActualTouchValue;

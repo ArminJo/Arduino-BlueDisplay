@@ -423,8 +423,8 @@ void doDrawMode(BDButton * aTheTouchedButton, int16_t aValue);
 #endif // SUPPORT_LOCAL_DISPLAY
 
 // Slider handler section
-void doTriggerLevel(BDSlider *aTheTouchedSlider, uint16_t aValue);
-void doVoltagePicker(BDSlider *aTheTouchedSlider, uint16_t aValue);
+void doTriggerLevel(BDSlider *aTheTouchedSlider, int16_t aValue);
+void doVoltagePicker(BDSlider *aTheTouchedSlider, int16_t aValue);
 
 // Button text section
 #if defined(__AVR__)

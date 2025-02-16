@@ -122,7 +122,7 @@ BDSlider TouchSliderFrequency;
 
 void initFrequencyGeneratorPageGui(void);
 
-void doSetFrequencyFromSliderValue(BDSlider *aTheTouchedSlider, uint16_t aFrequencySliderValue);
+void doSetFrequencyFromSliderValue(BDSlider *aTheTouchedSlider, int16_t aFrequencySliderValue);
 
 void doWaveformMode(BDButton *aTheTouchedButton, int16_t aValue);
 void doSetFixedFrequency(BDButton *aTheTouchedButton, int16_t aNormalizedFrequency);
@@ -370,7 +370,7 @@ void setFrequencyNormalizedForGUI(float aNormalizedFrequency) {
 /**
  * Convert linear slider value to exponential normalized frequency from 1 to 1000
  */
-void doSetFrequencyFromSliderValue(BDSlider *aTheTouchedSlider, uint16_t aFrequencySliderValue) {
+void doSetFrequencyFromSliderValue(BDSlider *aTheTouchedSlider, int16_t aFrequencySliderValue) {
     float tNormalizedFrequencyFloat = aFrequencySliderValue;
     tNormalizedFrequencyFloat = tNormalizedFrequencyFloat / (FREQ_SLIDER_MAX_VALUE / 3); // gives 0-3
     // 950 byte program memory required for pow() and log10f()

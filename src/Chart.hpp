@@ -1479,7 +1479,7 @@ void showChartDemo(void) {
     int16_t *tChartBufferPtr = (int16_t*) malloc(sizeof(int16_t) * DEMO_CHART_3_LENGTH);
     if (tChartBufferPtr == nullptr) {
 #if !defined(ARDUINO)
-        failParamMessage(sizeof(int16_t) * CHART_3_LENGTH, "malloc failed");
+        failParamMessage(sizeof(int16_t) * DEMO_CHART_3_LENGTH, "malloc failed");
 #else
         DisplayForChart.drawText(0, 2 * TEXT_SIZE_11, "malloc of 360 byte buffer failed", TEXT_SIZE_11, COLOR16_RED,
         COLOR16_WHITE);
@@ -1511,7 +1511,7 @@ void showChartDemo(void) {
     }
 #else
     srand(120);
-    for (unsigned int i = 2; i < (CHART_1_LENGTH - 2); i++) {
+    for (unsigned int i = 2; i < (DEMO_CHART_1_LENGTH - 2); i++) {
         *tRandomByteFillPointer++ = 30 + (rand() >> 27); // +/-16
     }
 #endif

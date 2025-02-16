@@ -61,7 +61,7 @@ AutorepeatButton TouchButtonAutorepeatBacklight_Minus;
  * Backlight stuff
  *******************/
 void doChangeBacklight(Button *aTheTouchedButton, int16_t aValue);
-void doBacklightSlider(Slider *aTheTouchedSlider, uint16_t aBrightnessPercent);
+void doBacklightSlider(Slider *aTheTouchedSlider, int16_t aBrightnessPercent);
 
 /**
  * create backlight slider and autorepeat buttons
@@ -102,7 +102,7 @@ void drawBacklightElements(void) {
     TouchButtonAutorepeatBacklight_Minus.drawButton();
 }
 
-void doBacklightSlider(Slider *aTheTouchedSlider, uint16_t aBrightnessPercent) {
+void doBacklightSlider(Slider *aTheTouchedSlider, int16_t aBrightnessPercent) {
     LocalDisplay.setBacklightBrightness(aBrightnessPercent);
 }
 

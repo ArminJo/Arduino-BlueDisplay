@@ -1,9 +1,12 @@
 /*
  * BDButton.h
  *
+ * The BDButton object is just a 8 bit (16 bit) unsigned integer holding the remote index of the button.
+ * So every pointer to a memory location holding the index of the button is a valid pointer to BDButton :-).
+ *
  * The constants here must correspond to the values used in the BlueDisplay App
  *
- *  Copyright (C) 2015-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -70,13 +73,17 @@ static const int FLAG_BUTTON_GLOBAL_SET_BEEP_TONE = 0x02; // Beep on button touc
 #include "LocalGUI/LocalTouchButton.h"
 #endif
 
+/*
+ *  The (remote) index of the button in the order of calling init()
+ *  The BDButton object is just a 8 bit (16 bit) unsigned integer holding the remote index of the button.
+ */
 #if defined(__AVR__)
-typedef uint8_t BDButtonHandle_t;
+typedef uint8_t BDButtonIndex_t;
 #else
-typedef uint16_t BDButtonHandle_t;
+typedef uint16_t BDButtonIndex_t;
 #endif
 
-extern BDButtonHandle_t sLocalButtonIndex; // local button index counter used by BDButton.init() and LocalTouchButton.createAllLocalButtonsAtRemote()
+extern BDButtonIndex_t sLocalButtonIndex; // local button index counter used by BDButton.init() and LocalTouchButton.createAllLocalButtonsAtRemote()
 
 #include "Colors.h"
 
@@ -97,7 +104,8 @@ public:
         void (*aOnTouchHandler)(BDButton*, int16_t);
     };
 
-    struct BDButtonPGMParameterStruct {
+    // Same as before, but with aPGMText instead of aText
+    struct BDButtonPGMTextParameterStruct {
         uint16_t aPositionX;
         uint16_t aPositionY;
         uint16_t aWidthX;
@@ -112,7 +120,7 @@ public:
 
     // Constructors
     BDButton();
-    BDButton(BDButtonHandle_t aButtonHandle);
+    BDButton(BDButtonIndex_t aButtonHandle);
     BDButton(const BDButton &aButton);
 
     // Operators
@@ -130,15 +138,16 @@ public:
             void (*aOnTouchHandler)(BDButton*, int16_t));
 
     void init(BDButtonParameterStruct *aBDButtonParameter);
-    void init(BDButtonPGMParameterStruct *aBDButtonParameter);
+    void init(BDButtonPGMTextParameterStruct *aBDButtonParameter);
     static void setInitParameters(BDButtonParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX, uint16_t aPositionY,
             uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor, const char *aText, uint16_t aTextSize, uint8_t aFlags,
             int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t));
-    static void setInitParameters(BDButtonPGMParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX,
+    static void setInitParameters(BDButtonPGMTextParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX,
             uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor, const __FlashStringHelper *aPGMText,
             uint16_t aTextSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t));
 
     void deinit(); // is defined as dummy if SUPPORT_LOCAL_DISPLAY is not active
+    void removeButton(color16_t aBackgroundColor); // Deactivates the button and redraws its screen space with aBackgroundColor
     void activate();
     void deactivate();
 
@@ -166,7 +175,6 @@ public:
 
     // Draw
     void drawButton();
-    void removeButton(color16_t aBackgroundColor); // Deactivates the button and redraws its screen space with aBackgroundColor
 
     // Color
     void setButtonColor(color16_t aButtonColor);
@@ -221,7 +229,7 @@ public:
     static void playFeedbackTone();
     static void playFeedbackTone(bool aPlayErrorTone);
 
-    BDButtonHandle_t mButtonHandle; // Index for BlueDisplay button functions. Taken in init() from sLocalButtonIndex.
+    BDButtonIndex_t mButtonHandle; // Index of button for BlueDisplay button functions 0 to n. Taken in init() from sLocalButtonIndex.
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalTouchButton *mLocalButtonPtr; // Pointer to the corresponding local button, which is allocated at init()

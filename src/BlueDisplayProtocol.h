@@ -4,7 +4,7 @@
  * Defines all the protocol related constants and structures required for the client stubs.
  * The constants here must correspond to the values used in the BlueDisplay App
  *
- *  Copyright (C) 2015-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -53,7 +53,7 @@
  * Callback message has 15 bytes:
  * 1 - Gross message length in bytes
  * 2 - Function code
- * 16 bit button index
+ * 16 bit button/slider index
  * 16 bit filler for 32 bit alignment of next values
  * 32 bit callback address
  * 32 bit value
@@ -158,6 +158,7 @@ struct Swipe {
 union ByteShortLongFloatUnion {
     unsigned char byteValues[4];
     uint16_t uint16Values[2];
+    uint16_t int16Values[2];
     uint32_t uint32Value;
     float floatValue;
 };
@@ -225,7 +226,6 @@ struct BluetoothEvent {
 //#define DATAFIE TAG_FLOAT             0x05
 //#define DATAFIELD_TAG_DOUBLE          0x06
 #define LAST_DATAFIELD_TAG              DATAFIELD_TAG_BYTE
-
 
 /**********************
  * Internal functions
@@ -302,6 +302,9 @@ struct BluetoothEvent {
 
 // Function with variable data size
 #define FUNCTION_DRAW_STRING                        0x60
+
+#define STRING_ALIGN_RIGHT_XPOS                     0xFFFF // left is 0 :-)
+#define STRING_ALIGN_MIDDLE_XPOS                    0xFFFE
 #define FUNCTION_DEBUG_STRING                       0x61
 #define FUNCTION_WRITE_STRING                       0x62
 
@@ -346,22 +349,23 @@ struct BluetoothEvent {
 
 // Function with variable data size
 #define FUNCTION_BUTTON_CREATE                      0x70
-#define FUNCTION_BUTTON_INIT                        0x70
-#define FUNCTION_BUTTON_SET_CAPTION_FOR_VALUE_TRUE  0x71
-#define FUNCTION_BUTTON_SET_CAPTION                 0x72
-#define FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON 0x73
+#define FUNCTION_BUTTON_INIT                        FUNCTION_BUTTON_CREATE
 #define FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE     0x71
 #define FUNCTION_BUTTON_SET_TEXT                    0x72
 #define FUNCTION_BUTTON_SET_TEXT_AND_DRAW_BUTTON    0x73
+#define FUNCTION_BUTTON_SET_CAPTION_FOR_VALUE_TRUE  FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE  // Deprecated
+#define FUNCTION_BUTTON_SET_CAPTION                 FUNCTION_BUTTON_SET_TEXT                 // Deprecated
+#define FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON FUNCTION_BUTTON_SET_TEXT_AND_DRAW_BUTTON // Deprecated
 
 /**********************
  * Slider functions
  *********************/
 #define FUNCTION_SLIDER_CREATE                      0x50
-#define FUNCTION_SLIDER_INIT                        0x50
+#define FUNCTION_SLIDER_INIT                        FUNCTION_SLIDER_CREATE
 #define FUNCTION_SLIDER_DRAW                        0x51
 #define FUNCTION_SLIDER_SETTINGS                    0x52
-#define FUNCTION_SLIDER_DRAW_BORDER                 0x53
+#define FUNCTION_SLIDER_REMOVE                      0x53
+#define FUNCTION_SLIDER_DRAW_BORDER                 0x54
 
 // Flags for SLIDER_SETTINGS
 #define SUBFUNCTION_SLIDER_SET_COLOR_THRESHOLD      0x00
@@ -375,6 +379,8 @@ struct BluetoothEvent {
 
 #define SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES   0x08
 #define SUBFUNCTION_SLIDER_SET_VALUE_STRING_PROPERTIES 0x09
+#define SUBFUNCTION_SLIDER_SET_MIN_MAX              0x0A
+#define SUBFUNCTION_SLIDER_SET_BORDER_SIZES_AND_COLOR 0x0B
 
 #define SUBFUNCTION_SLIDER_SET_VALUE                0x0C
 

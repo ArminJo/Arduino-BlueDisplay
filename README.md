@@ -346,6 +346,7 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 - Renamed `getDisplaySize()` to `getRequestedDisplaySize()` etc.
 - Renamed `drawVectorDegrees()` to `drawVectorDegree()`.
 - Added functions `draw*WithAliasing()`.
+- Added slider function `setMinMaxValue()`.
 - Refactored and improved Chart.
 - Minor bug fixes.
 - Added a full screen example for a log chart of CO2 values.
