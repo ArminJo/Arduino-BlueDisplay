@@ -43,17 +43,17 @@ BDSlider::BDSlider() { // @suppress("Class members should be properly initialize
 
 bool BDSlider::operator==(const BDSlider &aSlider) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    return (mSliderHandle == aSlider.mSliderHandle && mLocalSliderPointer == aSlider.mLocalSliderPointer);
+    return (mSliderIndex == aSlider.mSliderIndex && mLocalSliderPointer == aSlider.mLocalSliderPointer);
 #else
-    return (mSliderHandle == aSlider.mSliderHandle);
+    return (mSliderIndex == aSlider.mSliderIndex);
 #endif
 }
 
 bool BDSlider::operator!=(const BDSlider &aSlider) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    return (mSliderHandle != aSlider.mSliderHandle || mLocalSliderPointer != aSlider.mLocalSliderPointer);
+    return (mSliderIndex != aSlider.mSliderIndex || mLocalSliderPointer != aSlider.mLocalSliderPointer);
 #else
-    return (mSliderHandle != aSlider.mSliderHandle);
+    return (mSliderIndex != aSlider.mSliderIndex);
 #endif
 }
 
@@ -101,7 +101,7 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
                 aInitalValue, aSliderColor, aBarColor, aFlags, aOnChangeHandler);
 #endif
     }
-    mSliderHandle = tSliderNumber;
+    mSliderIndex = tSliderNumber;
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
 #  if defined(DISABLE_REMOTE_DISPLAY)
@@ -131,7 +131,7 @@ void BDSlider::deinit() {
  * Overwrites and deactivate slider, caption and value
  */
 void BDSlider::removeSlider(color16_t aBackgroundColor) {
-    sendUSARTArgs(FUNCTION_SLIDER_REMOVE, 2, mSliderHandle, aBackgroundColor);
+    sendUSARTArgs(FUNCTION_SLIDER_REMOVE, 2, mSliderIndex, aBackgroundColor);
 }
 
 /**
@@ -142,7 +142,7 @@ void BDSlider::setPosition(int16_t aPositionX, int16_t aPositionY) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setPosition(aPositionX, aPositionY);
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderHandle, SUBFUNCTION_SLIDER_SET_POSITION, aPositionX, aPositionY);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderIndex, SUBFUNCTION_SLIDER_SET_POSITION, aPositionX, aPositionY);
 }
 
 /*
@@ -152,21 +152,21 @@ void BDSlider::drawSlider() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->drawSlider();
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_DRAW, 1, mSliderHandle);
+    sendUSARTArgs(FUNCTION_SLIDER_DRAW, 1, mSliderIndex);
 }
 
 void BDSlider::drawBorder() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->drawBorder();
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_DRAW_BORDER, 1, mSliderHandle);
+    sendUSARTArgs(FUNCTION_SLIDER_DRAW_BORDER, 1, mSliderIndex);
 }
 
 void BDSlider::setValue(int16_t aCurrentValue) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
 }
 
 /*
@@ -176,7 +176,7 @@ void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);
 }
 
 /*
@@ -191,7 +191,7 @@ void BDSlider::setValue(int16_t aCurrentValue, bool doDrawBar) {
         if (doDrawBar) {
             tSubFunctionCode = SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR;
         }
-        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, tSubFunctionCode, aCurrentValue);
+        sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, tSubFunctionCode, aCurrentValue);
     }
 }
 
@@ -199,14 +199,14 @@ void BDSlider::setBarColor(color16_t aBarColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setBarThresholdColor(aBarColor);
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_COLOR_BAR, aBarColor);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_COLOR_BAR, aBarColor);
 }
 
 void BDSlider::setBarThresholdColor(color16_t aBarThresholdColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setBarThresholdColor(aBarThresholdColor);
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_COLOR_THRESHOLD, aBarThresholdColor);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_COLOR_THRESHOLD, aBarThresholdColor);
 }
 
 /*
@@ -228,7 +228,7 @@ void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setBarBackgroundColor(aBarBackgroundColor);
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderHandle, SUBFUNCTION_SLIDER_SET_COLOR_BAR_BACKGROUND, aBarBackgroundColor);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_COLOR_BAR_BACKGROUND, aBarBackgroundColor);
 }
 
 /*
@@ -244,7 +244,7 @@ void BDSlider::setCaptionProperties(uint8_t aCaptionSize, uint8_t aCaptionPositi
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setCaptionColors(aCaptionColor, aCaptionBackgroundColor);
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 7, mSliderHandle, SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES, aCaptionSize,
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 7, mSliderIndex, SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES, aCaptionSize,
             aCaptionPositionFlags, aCaptionMargin, aCaptionColor, aCaptionBackgroundColor);
 }
 
@@ -252,7 +252,7 @@ void BDSlider::setCaption(const char *aCaption) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setCaption(aCaption);
 #endif
-    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderHandle, strlen(aCaption), aCaption);
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderIndex, strlen(aCaption), aCaption);
 }
 
 void BDSlider::setCaption(const __FlashStringHelper *aPGMCaption) {
@@ -262,10 +262,10 @@ void BDSlider::setCaption(const __FlashStringHelper *aPGMCaption) {
 #  if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setCaption(tStringBuffer);
 #  endif
-    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderHandle, tCaptionLength, tStringBuffer);
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderIndex, tCaptionLength, tStringBuffer);
 #else
     uint8_t tCaptionLength = strlen(reinterpret_cast<const char*>(aPGMCaption));
-    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderHandle, tCaptionLength, (uint8_t*) aPGMCaption);
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderIndex, tCaptionLength, (uint8_t*) aPGMCaption);
 #endif
 }
 
@@ -274,7 +274,7 @@ void BDSlider::setCaption(const __FlashStringHelper *aPGMCaption) {
  * This unit string is always appended to the value string.
  */
 void BDSlider::setValueUnitString(const char *aValueUnitString) {
-    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_VALUE_UNIT_STRING, 1, mSliderHandle, strlen(aValueUnitString), aValueUnitString);
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_VALUE_UNIT_STRING, 1, mSliderIndex, strlen(aValueUnitString), aValueUnitString);
 }
 
 /*
@@ -282,7 +282,7 @@ void BDSlider::setValueUnitString(const char *aValueUnitString) {
  * Default is "%2d" for a slider with virtual slider length from 10 to 99 and "%3d" for length 100 to 999.
  */
 void BDSlider::setValueFormatString(const char *aValueFormatString) {
-    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING, 1, mSliderHandle, strlen(aValueFormatString),
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING, 1, mSliderIndex, strlen(aValueFormatString),
             aValueFormatString);
 }
 
@@ -300,7 +300,7 @@ void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPri
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->setValueStringColors(aPrintValueColor, aPrintValueBackgroundColor);
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 7, mSliderHandle, SUBFUNCTION_SLIDER_SET_VALUE_STRING_PROPERTIES, aPrintValueTextSize,
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 7, mSliderIndex, SUBFUNCTION_SLIDER_SET_VALUE_STRING_PROPERTIES, aPrintValueTextSize,
             aPrintValuePositionFlags, aPrintValueMargin, aPrintValueColor, aPrintValueBackgroundColor);
 }
 
@@ -314,7 +314,7 @@ void BDSlider::setPrintValueProperties(uint8_t aPrintValueTextSize, uint8_t aPri
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 void BDSlider::setScaleFactor(float aScaleFactor) {
     long tScaleFactor = *reinterpret_cast<uint32_t*>(&aScaleFactor);
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderHandle, SUBFUNCTION_SLIDER_SET_SCALE_FACTOR, (uint16_t) tScaleFactor & 0XFFFF,
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderIndex, SUBFUNCTION_SLIDER_SET_SCALE_FACTOR, (uint16_t) tScaleFactor & 0XFFFF,
             (uint16_t) (tScaleFactor >> 16));
 }
 
@@ -336,32 +336,32 @@ void BDSlider::setValueScaleFactor(float aScaleFactorValue) {
  * @param aMaxValue The value of slider, if position is right or top
  */
 void BDSlider::setMinMaxValue(int16_t aMinValue, int16_t aMaxValue) {
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderHandle, SUBFUNCTION_SLIDER_SET_MIN_MAX, aMinValue, aMaxValue);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderIndex, SUBFUNCTION_SLIDER_SET_MIN_MAX, aMinValue, aMaxValue);
 }
 
 void BDSlider::setBorderSizesAndColor(uint8_t aLongBorderWidth, uint8_t aShortBorderWidth, color16_t aBorderColor) {
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 5, mSliderHandle, SUBFUNCTION_SLIDER_SET_BORDER_SIZES_AND_COLOR, aLongBorderWidth, aShortBorderWidth, aBorderColor);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 5, mSliderIndex, SUBFUNCTION_SLIDER_SET_BORDER_SIZES_AND_COLOR, aLongBorderWidth, aShortBorderWidth, aBorderColor);
 }
 
 void BDSlider::printValue(const char *aValueString) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->printValue(aValueString);
 #endif
-    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_PRINT_VALUE, 1, mSliderHandle, strlen(aValueString), aValueString);
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_PRINT_VALUE, 1, mSliderIndex, strlen(aValueString), aValueString);
 }
 
 void BDSlider::activate() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->activate();
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, mSliderHandle, SUBFUNCTION_SLIDER_SET_ACTIVE);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, mSliderIndex, SUBFUNCTION_SLIDER_SET_ACTIVE);
 }
 
 void BDSlider::deactivate() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalSliderPointer->deactivate();
 #endif
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, mSliderHandle, SUBFUNCTION_SLIDER_RESET_ACTIVE);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 2, mSliderIndex, SUBFUNCTION_SLIDER_RESET_ACTIVE);
 }
 
 /*

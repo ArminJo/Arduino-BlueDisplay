@@ -182,7 +182,7 @@ public:
 
     void setBorderSizesAndColor(uint8_t aLongBorderWidth, uint8_t aShortBorderWidth, color16_t aBorderColor);
 
-    BDSliderIndex_t mSliderHandle;
+    BDSliderIndex_t mSliderIndex;
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalTouchSlider * mLocalSliderPointer;

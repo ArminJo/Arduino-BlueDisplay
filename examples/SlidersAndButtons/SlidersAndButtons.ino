@@ -68,12 +68,12 @@ BDSlider sRightSliderArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES];
  * PROGMEM caption strings for sliders
  */
 const char sString_Brightness[] PROGMEM = "Brightness";
-const char sString_Delay[] PROGMEM = "Delay";
+const char sString_LoopDelay[] PROGMEM = "Loop delay";
 const char sString_Variation[] PROGMEM = "Variation";
-const char sString_BaseMaxRandomTemperature[] PROGMEM = "BaseMaxRandomTemperature";
-const char sString_BaseMinRandomTemperature[] PROGMEM = "BaseMinRandomTemperature"; // BaseMax Random is Temperature
+const char sString_PlusMinus[] PROGMEM = "Plus Minus";
+const char sString_Minus[] PROGMEM = "Minus";
 const char sString_Pattern[] PROGMEM = "Pattern";
-const char sString_EffectMaxLength[] PROGMEM = "EffectMaxLength";
+const char sString_PositiveRange[] PROGMEM = "Positive range";
 const char sString_AnalogValue1[] PROGMEM = "Analog value 1";
 const char sString_AnalogValue2[] PROGMEM = "Analog value 2";
 const char sString_AnalogValue3[] PROGMEM = "Analog value 3";
@@ -96,9 +96,9 @@ const char sString_AnalogValue16[] PROGMEM = "Analog value 16";
  */
 struct SliderStaticInfoStruct {
     const char *SliderName; // String in PROGMEM
-    uint8_t MinValue;
-    uint8_t MaxValue;
-    uint8_t Threshold;
+    int16_t MinValue;
+    int16_t MaxValue;
+    int16_t Threshold;
 } sTemporarySliderStaticInfo; // The PROGMEM values to be processed are copied to this instance at runtime
 /*
  * PROGMEM array of PROGMEM structures for left sliders
@@ -108,13 +108,13 @@ static const SliderStaticInfoStruct sLeftSliderStaticInfoArray[NUMBER_OF_SLIDER_
 #else
 static const SliderStaticInfoStruct sLeftSliderStaticInfoArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES]= {
 #endif
-        { sString_Brightness, 0, 255, 255 }, /*Brightness*/
-        { sString_Delay, 0, 64, 64 }, /*Delay*/
+        { sString_Brightness, BD_SCREEN_BRIGHTNESS_MIN, BD_SCREEN_BRIGHTNESS_MAX, BD_SCREEN_BRIGHTNESS_MAX }, /*Brightness*/
+        { sString_LoopDelay, 0, 1000, 500 }, /*Loop delay*/
         { sString_Variation, 0, 255, 255 }, /*Variation*/
-        { sString_BaseMinRandomTemperature, 0, 255, 255 }, /*BaseMinRandomTemperature*/
-        { sString_BaseMaxRandomTemperature, 0, 255, 255 }, /*BaseMaxRandomTemperature*/
+        { sString_PlusMinus, -1000, 1000, 0 }, /*Plus Minus*/
+        { sString_Minus, -255, 0, 0 }, /*Minus*/
         { sString_Pattern, 0, 3, 3 }, /*Pattern 0 - 3*/
-        { sString_EffectMaxLength, 40, 200, 200 }, /*EffectMaxLength*/
+        { sString_PositiveRange, 100, 200, 200 }, /*PositiveRange*/
         { sString_AnalogValue8, 0, 255, 200 } /*Analog value 8*/
 };
 
@@ -156,13 +156,7 @@ int16_t EEPROMRightSliderValues[NUMBER_OF_SLIDER_AND_BUTTON_LINES] EEMEM;
  * !!!Must be the same order as used in SliderStaticInfoStruct!!!
  */
 typedef enum {
-    BRIGHTNESS_SLIDER = 0,
-    DELAY_SLIDER,
-    VARIATION_SLIDER,
-    BASE_MIN_RANDOM_TEMPERATURE_SLIDER,
-    BASE_MAX_RANDOM_TEMPERATURE_SLIDER,
-    PATTERN_SLIDER,
-    EFFECT_MAX_LENTH_SLIDER
+    BRIGHTNESS_SLIDER = 0, DELAY_SLIDER, VARIATION_SLIDER, PLUS_MINUS_SLIDER, MINUS_SLIDER, PATTERN_SLIDER, EFFECT_MAX_LENGTH_SLIDER
 } slider_Index_t;
 
 /********************
@@ -306,7 +300,7 @@ void initDisplay(void) {
                 tYPosition);
 #if !defined(USE_ONLY_LEFT_SLIDERS)
         InitSliderFromSliderStaticInfoStruct(&sRightSliderArray[i], &sRightSliderStaticInfoArray[i],
-                DISPLAY_WIDTH - (BUTTON_DEFAULT_SPACING_HALF + SLIDER_BAR_LENGTH), tYPosition);
+        DISPLAY_WIDTH - (BUTTON_DEFAULT_SPACING_HALF + SLIDER_BAR_LENGTH), tYPosition);
 #endif
 
         // Middle buttons
@@ -345,18 +339,55 @@ void drawDisplay(void) {
  * Is called by touch or move on a slider and sets the new value
  */
 void doSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue) {
-    for (uint8_t i = 0; i < NUMBER_OF_SLIDER_AND_BUTTON_LINES; i++) {
-        if (sLeftSliderArray[i] == *aTheTouchedSlider) {
-            sLeftSliderValues[i] = aSliderValue;
-            switch (i) {
-            case BRIGHTNESS_SLIDER:
-                // Put individual slider code here
-                break;
-            default:
-                break;
-            }
-        }
+    /*
+     * If we use left and right sliders, even slider indexes are from sliders in sLeftSliderStaticInfoArray, odd from sRightSliderStaticInfoArray
+     */
+    BDSliderIndex_t tSliderIndex = aTheTouchedSlider->mSliderIndex;
+#if defined(USE_ONLY_LEFT_SLIDERS)
+    sLeftSliderValues[tSliderIndex] = aSliderValue;
+    SliderStaticInfoStruct tSliderStaticInfoStructPtr = &sLeftSliderStaticInfoArray[tSliderIndex];
+#else
+    bool tIsRightSlider = tSliderIndex % 2;
+    if (tIsRightSlider) {
+        // Odd -> Right sliders
+        tSliderIndex /= 2;
+        sRightSliderValues[tSliderIndex] = aSliderValue;
+    } else {
+        // Even -> Left sliders
+        tSliderIndex /= 2;
+        sLeftSliderValues[tSliderIndex] = aSliderValue;
     }
+#endif
+
+    /*
+     * alternative search solution if order is unknown
+     */
+//    for (uint8_t i = 0; i < NUMBER_OF_SLIDER_AND_BUTTON_LINES; i++) {
+//        if (sLeftSliderArray[i] == *aTheTouchedSlider) {
+//            BlueDisplay1.debug("LeftSliderArray index=", i);
+//        }
+//    }
+#if !defined(USE_ONLY_LEFT_SLIDERS)
+    if (!tIsRightSlider) {
+#endif
+        // Only check left sliders here
+        switch (tSliderIndex) {
+        case BRIGHTNESS_SLIDER:
+            BlueDisplay1.setScreenBrightness(aSliderValue);
+            break;
+        default:
+            char tStringBuffer[28];
+            snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Left slider %2u value=%d"), tSliderIndex, aSliderValue);
+            BlueDisplay1.debug(tStringBuffer);
+            break;
+        }
+#if !defined(USE_ONLY_LEFT_SLIDERS)
+    } else {
+        char tStringBuffer[27];
+        snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Right slider %2u value=%d"), tSliderIndex, aSliderValue);
+        BlueDisplay1.debug(tStringBuffer);
+    }
+#endif
 }
 
 void doButton(BDButton *aTheTouchedButton, int16_t aValue) {
@@ -371,7 +402,7 @@ void doButton(BDButton *aTheTouchedButton, int16_t aValue) {
         TestNewSliderAndButton();
         break;
     default:
-        BlueDisplay1.debug("Pressed button ", aTheTouchedButton->mButtonHandle);
+        BlueDisplay1.debug("Pressed button ", aTheTouchedButton->mButtonIndex);
         break;
     }
 }

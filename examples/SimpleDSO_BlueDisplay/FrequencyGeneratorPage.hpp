@@ -256,7 +256,7 @@ void initFrequencyGeneratorPageGui() {
 #endif
     }
 #if !defined(SUPPORT_LOCAL_DISPLAY)
-    TouchButtonFirstFixedFrequency.mButtonHandle -= NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1;
+    TouchButtonFirstFixedFrequency.mButtonIndex -= NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1;
 #endif
 
     // Range next
@@ -330,7 +330,7 @@ void drawFrequencyGeneratorPage(void) {
     BDButton tButton(TouchButtonFirstFixedFrequency);
     for (uint8_t i = 0; i < NUMBER_OF_FIXED_FREQUENCY_BUTTONS; ++i) {
         tButton.drawButton();
-        tButton.mButtonHandle++; // Simply increment id to get the next button
+        tButton.mButtonIndex++; // Simply increment id to get the next button
     }
 #endif
 

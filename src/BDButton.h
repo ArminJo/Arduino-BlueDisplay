@@ -229,7 +229,7 @@ public:
     static void playFeedbackTone();
     static void playFeedbackTone(bool aPlayErrorTone);
 
-    BDButtonIndex_t mButtonHandle; // Index of button for BlueDisplay button functions 0 to n. Taken in init() from sLocalButtonIndex.
+    BDButtonIndex_t mButtonIndex; // Index of button for BlueDisplay button functions 0 to n. Taken in init() from sLocalButtonIndex.
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalTouchButton *mLocalButtonPtr; // Pointer to the corresponding local button, which is allocated at init()
