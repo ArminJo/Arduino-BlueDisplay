@@ -1,7 +1,8 @@
 /*
- * SlidersAndButtons.cpp
+ * ManySlidersAndButtons.cpp
  *
- * Example for 8 / 16 sliders and 8 buttons to control 8 / 16 analog values and 6 functions of an application.
+ * Example for 8 / 16 sliders and 8 buttons
+ * to control 8 / 16 analog values and 6 functions of an arduino application.
  *
  *  Copyright (C) 2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
@@ -68,12 +69,12 @@ BDSlider sRightSliderArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES];
  * PROGMEM caption strings for sliders
  */
 const char sString_Brightness[] PROGMEM = "Brightness";
-const char sString_Delay[] PROGMEM = "Delay";
+const char sString_LoopDelay[] PROGMEM = "Loop delay";
 const char sString_Variation[] PROGMEM = "Variation";
-const char sString_BaseMaxRandomTemperature[] PROGMEM = "BaseMaxRandomTemperature";
-const char sString_BaseMinRandomTemperature[] PROGMEM = "BaseMinRandomTemperature"; // BaseMax Random is Temperature
+const char sString_PlusMinus[] PROGMEM = "Plus Minus";
+const char sString_Minus[] PROGMEM = "Minus";
 const char sString_Pattern[] PROGMEM = "Pattern";
-const char sString_EffectMaxLength[] PROGMEM = "EffectMaxLength";
+const char sString_PositiveRange[] PROGMEM = "Positive range";
 const char sString_AnalogValue1[] PROGMEM = "Analog value 1";
 const char sString_AnalogValue2[] PROGMEM = "Analog value 2";
 const char sString_AnalogValue3[] PROGMEM = "Analog value 3";
@@ -96,9 +97,9 @@ const char sString_AnalogValue16[] PROGMEM = "Analog value 16";
  */
 struct SliderStaticInfoStruct {
     const char *SliderName; // String in PROGMEM
-    uint8_t MinValue;
-    uint8_t MaxValue;
-    uint8_t Threshold;
+    int16_t MinValue;
+    int16_t MaxValue;
+    int16_t Threshold;
 } sTemporarySliderStaticInfo; // The PROGMEM values to be processed are copied to this instance at runtime
 /*
  * PROGMEM array of PROGMEM structures for left sliders
@@ -108,13 +109,13 @@ static const SliderStaticInfoStruct sLeftSliderStaticInfoArray[NUMBER_OF_SLIDER_
 #else
 static const SliderStaticInfoStruct sLeftSliderStaticInfoArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES]= {
 #endif
-        { sString_Brightness, 0, 255, 255 }, /*Brightness*/
-        { sString_Delay, 0, 64, 64 }, /*Delay*/
+        { sString_Brightness, BD_SCREEN_BRIGHTNESS_MIN, BD_SCREEN_BRIGHTNESS_MAX, BD_SCREEN_BRIGHTNESS_MAX }, /*Brightness*/
+        { sString_LoopDelay, 0, 1000, 500 }, /*Loop delay*/
         { sString_Variation, 0, 255, 255 }, /*Variation*/
-        { sString_BaseMinRandomTemperature, 0, 255, 255 }, /*BaseMinRandomTemperature*/
-        { sString_BaseMaxRandomTemperature, 0, 255, 255 }, /*BaseMaxRandomTemperature*/
+        { sString_PlusMinus, -1000, 1000, 0 }, /*Plus Minus*/
+        { sString_Minus, -255, 0, 0 }, /*Minus*/
         { sString_Pattern, 0, 3, 3 }, /*Pattern 0 - 3*/
-        { sString_EffectMaxLength, 40, 200, 200 }, /*EffectMaxLength*/
+        { sString_PositiveRange, 100, 200, 200 }, /*PositiveRange*/
         { sString_AnalogValue8, 0, 255, 200 } /*Analog value 8*/
 };
 
@@ -156,13 +157,7 @@ int16_t EEPROMRightSliderValues[NUMBER_OF_SLIDER_AND_BUTTON_LINES] EEMEM;
  * !!!Must be the same order as used in SliderStaticInfoStruct!!!
  */
 typedef enum {
-    BRIGHTNESS_SLIDER = 0,
-    DELAY_SLIDER,
-    VARIATION_SLIDER,
-    BASE_MIN_RANDOM_TEMPERATURE_SLIDER,
-    BASE_MAX_RANDOM_TEMPERATURE_SLIDER,
-    PATTERN_SLIDER,
-    EFFECT_MAX_LENTH_SLIDER
+    BRIGHTNESS_SLIDER = 0, DELAY_SLIDER, VARIATION_SLIDER, PLUS_MINUS_SLIDER, MINUS_SLIDER, PATTERN_SLIDER, EFFECT_MAX_LENGTH_SLIDER
 } slider_Index_t;
 
 /********************
@@ -171,16 +166,16 @@ typedef enum {
 #define BUTTON_WIDTH            BUTTON_WIDTH_4
 #define BUTTONS_START_X         ((DISPLAY_WIDTH - BUTTON_WIDTH) / 2)
 #define BUTTON_HEIGHT           (SLIDER_BAR_WIDTH + SLIDER_CAPTION_SIZE)
-#define BUTTON_TEXT_SIZE        11
+#define BUTTON_TEXT_SIZE        7
 
 BDButton sButtonArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES];
 
 // PROGMEM text strings for buttons
-const char sString_Reset[] PROGMEM = "Reset";
-const char sString_Store[] PROGMEM = "Store";
+const char sString_Load[] PROGMEM = "Load\nvalues";
+const char sString_Store[] PROGMEM = "Store\nvalues";
+const char sString_LedOff[] PROGMEM = "Led off"; // Text for false / red button
+const char sString_LedOn[] PROGMEM = "Led on"; // Text for true / green button
 const char sString_Test[] PROGMEM = "Test";
-const char sString_Button3[] PROGMEM = "Button_3";
-const char sString_Button4[] PROGMEM = "Button_4";
 const char sString_Button5[] PROGMEM = "Button_5";
 const char sString_Button6[] PROGMEM = "Button_6";
 const char sString_Button7[] PROGMEM = "Button_7";
@@ -193,17 +188,18 @@ static const char *const sButtonsTextArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES] PR
 #else
 static const char *const sButtonsTextArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES] = {
 #endif
-        sString_Reset, /*Reset*/
-        sString_Store, /*Store*/
+        sString_Load, /*Load values*/
+        sString_Store, /*Store values*/
+        sString_LedOff, /*Led off*/
         sString_Test, /*Test*/
-        sString_Button4, sString_Button5, sString_Button6, sString_Button7, sString_Button8 };
+        sString_Button5, sString_Button6, sString_Button7, sString_Button8 };
 
 /**
  * An enum consisting of indexes of all buttons, used in doButton() to determine the individual function for each button.
  * !!!Must be the same order as used in sButtonsTextArray!!!
  */
 typedef enum {
-    RESET_BUTTON = 0, STORE_BUTTON, TEST_BUTTON, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8
+    LOAD_BUTTON = 0, STORE_BUTTON, LED_BUTTON, TEST_BUTTON, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8
 } button_Index_t;
 
 void initDisplay(void);
@@ -306,7 +302,7 @@ void initDisplay(void) {
                 tYPosition);
 #if !defined(USE_ONLY_LEFT_SLIDERS)
         InitSliderFromSliderStaticInfoStruct(&sRightSliderArray[i], &sRightSliderStaticInfoArray[i],
-                DISPLAY_WIDTH - (BUTTON_DEFAULT_SPACING_HALF + SLIDER_BAR_LENGTH), tYPosition);
+        DISPLAY_WIDTH - (BUTTON_DEFAULT_SPACING_HALF + SLIDER_BAR_LENGTH), tYPosition);
 #endif
 
         // Middle buttons
@@ -322,6 +318,17 @@ void initDisplay(void) {
         // Prepare for next line
         tYPosition += BUTTON_HEIGHT_8;
     }
+
+    /*
+     * Set all slider values to initial position
+     */
+    loadSliderValuesFromEEPROM();
+
+    /*
+     * Convert LED button to a red green toggling one and start with led off
+     */
+    sButtonArray[LED_BUTTON].setValue(0); // start with led off
+    sButtonArray[LED_BUTTON].setTextForValueTrue(reinterpret_cast<const __FlashStringHelper*>(sString_LedOn));
 
     drawDisplay();
 }
@@ -345,33 +352,73 @@ void drawDisplay(void) {
  * Is called by touch or move on a slider and sets the new value
  */
 void doSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue) {
-    for (uint8_t i = 0; i < NUMBER_OF_SLIDER_AND_BUTTON_LINES; i++) {
-        if (sLeftSliderArray[i] == *aTheTouchedSlider) {
-            sLeftSliderValues[i] = aSliderValue;
-            switch (i) {
-            case BRIGHTNESS_SLIDER:
-                // Put individual slider code here
-                break;
-            default:
-                break;
-            }
-        }
+    /*
+     * If we use left and right sliders, even slider indexes are from sliders in sLeftSliderStaticInfoArray, odd from sRightSliderStaticInfoArray
+     */
+    BDSliderIndex_t tSliderIndex = aTheTouchedSlider->mSliderIndex;
+#if defined(USE_ONLY_LEFT_SLIDERS)
+    sLeftSliderValues[tSliderIndex] = aSliderValue;
+    SliderStaticInfoStruct tSliderStaticInfoStructPtr = &sLeftSliderStaticInfoArray[tSliderIndex];
+#else
+    bool tIsRightSlider = tSliderIndex % 2;
+    if (tIsRightSlider) {
+        // Odd -> Right sliders
+        tSliderIndex /= 2;
+        sRightSliderValues[tSliderIndex] = aSliderValue;
+    } else {
+        // Even -> Left sliders
+        tSliderIndex /= 2;
+        sLeftSliderValues[tSliderIndex] = aSliderValue;
     }
+#endif
+
+    /*
+     * alternative search solution if order is unknown
+     */
+//    for (uint8_t i = 0; i < NUMBER_OF_SLIDER_AND_BUTTON_LINES; i++) {
+//        if (sLeftSliderArray[i] == *aTheTouchedSlider) {
+//            BlueDisplay1.debug("LeftSliderArray index=", i);
+//        }
+//    }
+#if !defined(USE_ONLY_LEFT_SLIDERS)
+    if (!tIsRightSlider) {
+#endif
+        // Only check left sliders here
+        switch (tSliderIndex) {
+        case BRIGHTNESS_SLIDER:
+            BlueDisplay1.setScreenBrightness(aSliderValue);
+            break;
+        default:
+            char tStringBuffer[28];
+            snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Left slider %2u value=%d"), tSliderIndex, aSliderValue);
+            BlueDisplay1.debug(tStringBuffer);
+            break;
+        }
+#if !defined(USE_ONLY_LEFT_SLIDERS)
+    } else {
+        char tStringBuffer[27];
+        snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Right slider %2u value=%d"), tSliderIndex, aSliderValue);
+        BlueDisplay1.debug(tStringBuffer);
+    }
+#endif
 }
 
 void doButton(BDButton *aTheTouchedButton, int16_t aValue) {
-    switch (aValue) {
-    case RESET_BUTTON:
+    switch (aTheTouchedButton->mButtonIndex) {
+    case LOAD_BUTTON:
         loadSliderValuesFromEEPROM();
         break;
     case STORE_BUTTON:
         storeSliderValuesToEEPROM();
         break;
+    case LED_BUTTON:
+        digitalWrite(LED_BUILTIN, aValue); // Toggle LED
+        break;
     case TEST_BUTTON:
         TestNewSliderAndButton();
         break;
     default:
-        BlueDisplay1.debug("Pressed button ", aTheTouchedButton->mButtonHandle);
+        BlueDisplay1.debug("Pressed button ", aTheTouchedButton->mButtonIndex);
         break;
     }
 }

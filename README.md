@@ -222,6 +222,8 @@ Simple example to check your installation.
 | :-: | :-: |
 | ![With debug output](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/BlueDisplayBlink_off.jpg) | ![BlueDisplayBlink Breadboard](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/Blink.jpg) |
 
+<br/>
+
 ## BlueDisplayExample
 More elaborated example to show more features of the BlueDisplay library.
 | Screenshot | Graphics test page with additional thick red lines |
@@ -230,9 +232,26 @@ More elaborated example to show more features of the BlueDisplay library.
 | Fritzing schematic for BlueDisplay example | BlueDisplay example breadboard picture |
 | ![Fritzing board](extras/BlueDisplayBlink_Steckplatine.png) | ![Breadboard picture](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/Blink.jpg) |
 
+<br/>
+
+## ManySlidersAndButtons
+Example for 8 / 16 sliders and 8 buttons to control 8 / 16 analog values and 6 functions of an arduino application.
+![16 sliders and 8 buttons](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/ManySlidersAndButtons.png)
+
+<br/>
+
 ## ChartForMHZ19_CO2
 A full display GUI displaying 4 days of CO2 values with BlueDisplay chart.
 ![CO2 chart for 2 days](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/ChartForMHZ19_CO2.png)
+
+<br/>
+
+## UltimateBatteryTester
+Screenshot from the [Ultimate-Battery-Tester example running in BlueDisplay mode](https://github.com/ArminJo/Ultimate-Battery-Tester?tab=readme-ov-file#features).
+
+![LiFePO4_5300mAh](https://github.com/ArminJo/Ultimate-Battery-Tester/blob/master/pictures/LiFePO4_5300mAh.png)
+
+<br/>
 
 ## TouchGuiDemo
 Demo of the GUI: LocalTouchButton, LocalTouchSlider and Chart as well as the programs Game of Life and Draw Lines.<br/>
@@ -245,10 +264,14 @@ If a local display is attached, two additional pages, show font and ADS7846 A/D 
 | Draw page | Settings page |
 | ![Draw page](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/DrawPage.bmp) | ![Settings page](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/SettingsPage.bmp) |
 
+<br/>
+
 ## ShowSensorValues
 Shows the accelerometer and gyroscope values received from the smartphone both graphical and numerical.
 
 ![Plotter output of accelerometer](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/AccelerometerOnPlotter.png)
+
+<br/>
 
 ## BTModuleProgrammer
 Simple helper program to configure your HC-05 or JDY-31 modules name and default baud rate with a serial monitor.
@@ -257,12 +280,16 @@ It can also be used to enter AT commands directly to the BT module for extended 
 
 Sample outputs can be found [here](https://github.com/ArminJo/Arduino-BlueDisplay/tree/master/examples/BTModuleProgrammer).
 
+<br/>
+
 ## RcCarControl
 Example of controlling a RC-car by smartphone accelerometer sensor.
 
 | RC car control display | Hacked RC car |
 | :-: | :-: |
 | ![RC car control display](pictures/RCCarControl.png) | ![Hacked RC car](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/RCCar+Tablet.jpg) |
+
+<br/>
 
 ## ServoExample
 The accelerometer sensor of the android display is used to control two servos in a frame which holds a laser.
@@ -276,6 +303,8 @@ If no BD connection available, the servo first marks the border and then moves r
 | :-: | :-: |
 | ![ServoExample](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/ServoExample.png) | ![Bias setting](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/ServoExample_Bias.png) |
 
+<br/>
+
 ## **SimpleTouchScreenDSO**
 300 kSamples DSO without external hardware (except the HC-05 module). For AC input, only a capacitor and 4 resistors are needed.
 More information at [Arduino-Simple-DSO](examples/SimpleTouchScreenDSO).<br/>
@@ -283,6 +312,8 @@ Not for STM32.
 | DSO start screen | DSO chart screen with long info |
 | :-: | :-: |
 | ![DSO start screen](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Welcome.jpg) | ![DSO chart screen with long info](https://github.com/ArminJo/Arduino-Simple-DSO/blob/master/pictures/Chart_Long_Info.jpg) |
+
+<br/>
 
 ## US_Distance
 Shows the distances measured by a HC-SR04 ultrasonic sensor. Can be used as a parking assistance.

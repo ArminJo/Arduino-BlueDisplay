@@ -149,7 +149,7 @@ LocalTouchSlider* LocalTouchSlider::getLocalSliderFromBDSliderHandle(BDSliderHan
     LocalTouchSlider *tSliderPointer = sSliderListStart;
 // walk through list
     while (tSliderPointer != nullptr) {
-        if (tSliderPointer->mBDSliderPtr->mSliderHandle == aSliderHandleToSearchFor) {
+        if (tSliderPointer->mBDSliderPtr->mSliderIndex == aSliderHandleToSearchFor) {
             break;
         }
         tSliderPointer = tSliderPointer->mNextObject;
@@ -167,7 +167,7 @@ void LocalTouchSlider::createAllLocalSlidersAtRemote() {
 // walk through list
         while (tSliderPointer != nullptr) {
             // cannot use BDSlider.init since this allocates a new TouchSlider
-            sendUSARTArgs(FUNCTION_SLIDER_CREATE, 12, tSliderPointer->mBDSliderPtr->mSliderHandle, tSliderPointer->mPositionX,
+            sendUSARTArgs(FUNCTION_SLIDER_CREATE, 12, tSliderPointer->mBDSliderPtr->mSliderIndex, tSliderPointer->mPositionX,
                     tSliderPointer->mPositionY, tSliderPointer->mBarWidth, tSliderPointer->mBarLength,
                     tSliderPointer->mThresholdValue, tSliderPointer->mValue, tSliderPointer->mSliderColor,
                     tSliderPointer->mBarColor, tSliderPointer->mFlags, tSliderPointer->mOnChangeHandler,

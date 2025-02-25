@@ -139,7 +139,7 @@ LocalTouchButton* LocalTouchButton::getLocalTouchButtonFromBDButtonHandle(BDButt
     LocalTouchButton *tButtonPointer = sButtonListStart;
 // walk through list
     while (tButtonPointer != nullptr) {
-        if (tButtonPointer->mBDButtonPtr->mButtonHandle == aButtonHandleToSearchFor) {
+        if (tButtonPointer->mBDButtonPtr->mButtonIndex == aButtonHandleToSearchFor) {
             return tButtonPointer;
         }
         tButtonPointer = tButtonPointer->mNextObject;
@@ -158,7 +158,7 @@ void LocalTouchButton::createAllLocalButtonsAtRemote() {
 // walk through list
         while (tButtonPointer != nullptr) {
             // cannot use BDButton.init since this allocates a new TouchButton
-            sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 11, tButtonPointer->mBDButtonPtr->mButtonHandle,
+            sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 11, tButtonPointer->mBDButtonPtr->mButtonIndex,
                     tButtonPointer->mPositionX, tButtonPointer->mPositionY, tButtonPointer->mWidthX, tButtonPointer->mHeightY,
                     tButtonPointer->mButtonColor, tButtonPointer->mTextSize, tButtonPointer->mFlags & ~(LOCAL_BUTTON_FLAG_MASK),
                     tButtonPointer->mValue, tButtonPointer->mOnTouchHandler,
@@ -169,7 +169,7 @@ void LocalTouchButton::createAllLocalButtonsAtRemote() {
             }
             if (tButtonPointer->mFlags & FLAG_BUTTON_TYPE_AUTOREPEAT) {
                 LocalTouchButtonAutorepeat *tAutorepeatButtonPointer = (LocalTouchButtonAutorepeat*) tButtonPointer;
-                sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 7, tAutorepeatButtonPointer->mBDButtonPtr->mButtonHandle,
+                sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 7, tAutorepeatButtonPointer->mBDButtonPtr->mButtonIndex,
                 SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING, tAutorepeatButtonPointer->mMillisFirstDelay,
                         tAutorepeatButtonPointer->mMillisFirstRate, tAutorepeatButtonPointer->mFirstCount,
                         tAutorepeatButtonPointer->mMillisSecondRate);

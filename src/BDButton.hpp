@@ -46,11 +46,11 @@ BDButton::BDButton() { // @suppress("Class members should be properly initialize
 }
 
 BDButton::BDButton(BDButtonIndex_t aButtonHandle) { // @suppress("Class members should be properly initialized")
-    mButtonHandle = aButtonHandle;
+    mButtonIndex = aButtonHandle;
 }
 
 BDButton::BDButton(BDButton const &aButton) { // @suppress("Class members should be properly initialized")
-    mButtonHandle = aButton.mButtonHandle;
+    mButtonIndex = aButton.mButtonIndex;
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr = aButton.mLocalButtonPtr;
 #endif
@@ -58,17 +58,17 @@ BDButton::BDButton(BDButton const &aButton) { // @suppress("Class members should
 
 bool BDButton::operator==(const BDButton &aButton) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    return (mButtonHandle == aButton.mButtonHandle && mLocalButtonPtr == aButton.mLocalButtonPtr);
+    return (mButtonIndex == aButton.mButtonIndex && mLocalButtonPtr == aButton.mLocalButtonPtr);
 #else
-    return (mButtonHandle == aButton.mButtonHandle);
+    return (mButtonIndex == aButton.mButtonIndex);
 #endif
 }
 
 bool BDButton::operator!=(const BDButton &aButton) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    return (mButtonHandle != aButton.mButtonHandle || mLocalButtonPtr != aButton.mLocalButtonPtr);
+    return (mButtonIndex != aButton.mButtonIndex || mLocalButtonPtr != aButton.mLocalButtonPtr);
 #else
-    return (mButtonHandle != aButton.mButtonHandle);
+    return (mButtonIndex != aButton.mButtonIndex);
 #endif
 }
 
@@ -148,7 +148,7 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
                 aButtonColor, aTextSize, aFlags, aValue, aOnTouchHandler, strlen(aText), aText);
 #endif
     }
-    mButtonHandle = tButtonNumber;
+    mButtonIndex = tButtonNumber;
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     /*
@@ -198,7 +198,7 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
                 aButtonColor, aTextSize, aFlags, aValue, aOnTouchHandler, tTextLength, tStringBuffer);
 #endif
     }
-    mButtonHandle = tButtonNumber;
+    mButtonIndex = tButtonNumber;
 #if defined(SUPPORT_LOCAL_DISPLAY)
     /*
      * Allocate a local button here to be displayed locally
@@ -250,7 +250,7 @@ void BDButton::removeButton(color16_t aBackgroundColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->removeButton(aBackgroundColor);
 #endif
-    sendUSARTArgs(FUNCTION_BUTTON_REMOVE, 2, mButtonHandle, aBackgroundColor);
+    sendUSARTArgs(FUNCTION_BUTTON_REMOVE, 2, mButtonIndex, aBackgroundColor);
 }
 
 void BDButton::drawButton() {
@@ -259,7 +259,7 @@ void BDButton::drawButton() {
         mLocalButtonPtr->drawButton();
     }
 #endif
-    sendUSARTArgs(FUNCTION_BUTTON_DRAW, 1, mButtonHandle);
+    sendUSARTArgs(FUNCTION_BUTTON_DRAW, 1, mButtonIndex);
 }
 
 #if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
@@ -288,23 +288,23 @@ void BDButton::setCaptionFromStringArray(const __FlashStringHelper* const *aPGMT
     setTextFromStringArray(aPGMTextStringArrayPtr, aStringIndex, doDrawButton);
 }
 #endif
+
 /*
  * Sets text for value true (green button) if different from default false (red button) text
+ * And implicitly converts button to a green button
  */
-
 void BDButton::setTextForValueTrue(const char *aText) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->setTextForValueTrue(aText);
 #endif
-    sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE, 1, mButtonHandle, strlen(aText), aText);
+    sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE, 1, mButtonIndex, strlen(aText), aText);
 }
-
 void BDButton::setTextForValueTrue(const __FlashStringHelper *aPGMText) {
 #if defined (AVR)
     if (USART_isBluetoothPaired()) {
         char tStringBuffer[STRING_BUFFER_STACK_SIZE];
         uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, aPGMText);
-        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE, 1, mButtonHandle, tTextLength, tStringBuffer);
+        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE, 1, mButtonIndex, tTextLength, tStringBuffer);
     }
 #else
     setTextForValueTrue(reinterpret_cast<const char*>(aPGMText));
@@ -323,7 +323,7 @@ void BDButton::setText(const char *aText, bool doDrawButton) {
         if (doDrawButton) {
             tFunctionCode = FUNCTION_BUTTON_SET_TEXT_AND_DRAW_BUTTON;
         }
-        sendUSARTArgsAndByteBuffer(tFunctionCode, 1, mButtonHandle, strlen(aText), aText);
+        sendUSARTArgsAndByteBuffer(tFunctionCode, 1, mButtonIndex, strlen(aText), aText);
     }
 }
 
@@ -336,7 +336,7 @@ void BDButton::setText(const __FlashStringHelper *aPGMText, bool doDrawButton) {
         if (doDrawButton) {
             tFunctionCode = FUNCTION_BUTTON_SET_TEXT_AND_DRAW_BUTTON;
         }
-        sendUSARTArgsAndByteBuffer(tFunctionCode, 1, mButtonHandle, tTextLength, tStringBuffer);
+        sendUSARTArgsAndByteBuffer(tFunctionCode, 1, mButtonIndex, tTextLength, tStringBuffer);
     }
 #else
     setText(reinterpret_cast<const char*>(aPGMText), doDrawButton);
@@ -369,7 +369,7 @@ void BDButton::setValue(int16_t aValue, bool doDrawButton) {
         if (doDrawButton) {
             tSubFunctionCode = SUBFUNCTION_BUTTON_SET_VALUE_AND_DRAW;
         }
-        sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonHandle, tSubFunctionCode, aValue);
+        sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, tSubFunctionCode, aValue);
     }
 }
 
@@ -378,14 +378,14 @@ void BDButton::setValueAndDraw(int16_t aValue) {
     mLocalButtonPtr->setValue(aValue);
     mLocalButtonPtr->drawButton();
 #endif
-    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonHandle, SUBFUNCTION_BUTTON_SET_VALUE_AND_DRAW, aValue);
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_VALUE_AND_DRAW, aValue);
 }
 
 void BDButton::setButtonColor(color16_t aButtonColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->setButtonColor(aButtonColor);
 #endif
-    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonHandle, SUBFUNCTION_BUTTON_SET_BUTTON_COLOR, aButtonColor);
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_BUTTON_COLOR, aButtonColor);
 }
 
 void BDButton::setButtonColorAndDraw(color16_t aButtonColor) {
@@ -393,14 +393,14 @@ void BDButton::setButtonColorAndDraw(color16_t aButtonColor) {
     mLocalButtonPtr->setButtonColor(aButtonColor);
     mLocalButtonPtr->drawButton();
 #endif
-    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonHandle, SUBFUNCTION_BUTTON_SET_BUTTON_COLOR_AND_DRAW, aButtonColor);
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_BUTTON_COLOR_AND_DRAW, aButtonColor);
 }
 
 void BDButton::setButtonTextColor(color16_t aButtonTextColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->setTextColor(aButtonTextColor);
 #endif
-    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonHandle, SUBFUNCTION_BUTTON_SET_TEXT_COLOR, aButtonTextColor);
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_TEXT_COLOR, aButtonTextColor);
 }
 
 void BDButton::setButtonTextColorAndDraw(color16_t aButtonTextColor) {
@@ -408,14 +408,14 @@ void BDButton::setButtonTextColorAndDraw(color16_t aButtonTextColor) {
     mLocalButtonPtr->setButtonColor(aButtonTextColor);
     mLocalButtonPtr->drawButton();
 #endif
-    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonHandle, SUBFUNCTION_BUTTON_SET_TEXT_COLOR_AND_DRAW, aButtonTextColor);
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_TEXT_COLOR_AND_DRAW, aButtonTextColor);
 }
 
 void BDButton::setPosition(int16_t aPositionX, int16_t aPositionY) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->setPosition(aPositionX, aPositionY);
 #endif
-    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 4, mButtonHandle, SUBFUNCTION_BUTTON_SET_POSITION, aPositionX, aPositionY);
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 4, mButtonIndex, SUBFUNCTION_BUTTON_SET_POSITION, aPositionX, aPositionY);
 }
 
 /**
@@ -429,7 +429,7 @@ void BDButton::setButtonAutorepeatTiming(uint16_t aMillisFirstDelay, uint16_t aM
     ((LocalTouchButtonAutorepeat*) mLocalButtonPtr)->setButtonAutorepeatTiming(aMillisFirstDelay, aMillisFirstRate, aFirstCount,
             aMillisSecondRate);
 #endif
-    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 7, mButtonHandle, SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING, aMillisFirstDelay,
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 7, mButtonIndex, SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING, aMillisFirstDelay,
             aMillisFirstRate, aFirstCount, aMillisSecondRate);
 }
 
@@ -444,14 +444,14 @@ void BDButton::activate() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->activate();
 #endif
-    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 2, mButtonHandle, SUBFUNCTION_BUTTON_SET_ACTIVE);
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 2, mButtonIndex, SUBFUNCTION_BUTTON_SET_ACTIVE);
 }
 
 void BDButton::deactivate() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->deactivate();
 #endif
-    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 2, mButtonHandle, SUBFUNCTION_BUTTON_RESET_ACTIVE);
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 2, mButtonIndex, SUBFUNCTION_BUTTON_RESET_ACTIVE);
 }
 
 /*
@@ -540,7 +540,7 @@ void BDButton::deactivateAll() {
 //                sLastButtonColor, sLastTextSize, sLastFlags, aValue, aOnTouchHandler, tTextLength, tStringBuffer);
 //#endif
 //    }
-//    mButtonHandle = tButtonNumber;
+//    mButtonIndex = tButtonNumber;
 //}
 
 // This uses around 200 bytes and saves 8 to 24 bytes per button
@@ -572,7 +572,7 @@ void BDButton::deactivateAll() {
 //        sendUSARTBufferNoSizeCheck(reinterpret_cast<uint8_t*>(&tParamBuffer[0]), 10 * 2 + 8,
 //                reinterpret_cast<uint8_t*>(&tStringBuffer[0]), tLength);
 //    }
-//    mButtonHandle = tButtonNumber;
+//    mButtonIndex = tButtonNumber;
 //}
 
 #if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)

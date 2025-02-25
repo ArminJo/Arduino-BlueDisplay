@@ -166,7 +166,7 @@ void handleTouchPanelEvents(void) {
                 localTouchEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress = (void*) tTouchedButton->mOnTouchHandler;
                 localTouchEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0] = tTouchedButton->mValue; // we support only 16 bit values for buttons
 #  if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
-                localTouchEvent.EventData.GuiCallbackInfo.ObjectIndex = tTouchedButton->mBDButtonPtr->mButtonHandle;
+                localTouchEvent.EventData.GuiCallbackInfo.ObjectIndex = tTouchedButton->mBDButtonPtr->mButtonIndex;
 #  endif
             }
             sTouchObjectTouched = BUTTON_TOUCHED;
