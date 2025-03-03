@@ -549,6 +549,7 @@ uint16_t BlueDisplay::drawChar(uint16_t aPositionX, uint16_t aPositionY, char aC
 }
 
 /**
+ * Draws a text of almost unlimited size on the screen
  * @param aPositionX left position or STRING_ALIGN_RIGHT_XPOS or STRING_ALIGN_MIDDLE_XPOS
  * @param aPositionY baseline position is (upper_position + getTextAscend(<aFontSize>))
  * @param aStringPtr  If /r is used as newline character, rest of line will be cleared, if /n is used, rest of line will not be cleared.
@@ -577,6 +578,16 @@ void BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const char 
     sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPositionX, aPositionY, strlen(aStringPtr), (uint8_t*) aStringPtr);
 }
 
+/**
+ * Draws a PGM text of maximum 32 characters (STRING_BUFFER_STACK_SIZE) on the screen
+ * @param aPositionX left position or STRING_ALIGN_RIGHT_XPOS or STRING_ALIGN_MIDDLE_XPOS
+ * @param aPositionY baseline position is (upper_position + getTextAscend(<aFontSize>))
+ * @param aStringPtr  If /r is used as newline character, rest of line will be cleared, if /n is used, rest of line will not be cleared.
+ * @param aFontSize FontSize of text
+ * @param aTextColor Foreground/text color
+ * @param aBackgroundColor if COLOR16_NO_BACKGROUND, then the background will not be filled
+ * @return uint16_t start x for next character - next x Parameter
+ */
 uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
         color16_t aTextColor, color16_t aBackgroundColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
@@ -598,7 +609,8 @@ uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const _
     return tRetValue;
 }
 
-/*
+/**
+ * Draws a PGM text of maximum 32 characters (STRING_BUFFER_STACK_SIZE) on the screen
  * Take size and colors from preceding drawText command
  */
 void BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString) {

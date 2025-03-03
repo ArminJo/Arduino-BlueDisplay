@@ -26,8 +26,9 @@
 
 #include <Arduino.h>
 
-//#define USE_ONLY_LEFT_SLIDERS // Do not show and use right sliders
-#define NUMBER_OF_SLIDER_AND_BUTTON_LINES 8
+#define NUMBER_OF_LEFT_SLIDERS      8
+#define NUMBER_OF_RIGHT_SLIDERS     6
+#define NUMBER_OF_BUTTONS           7
 #define DISPLAY_BACKGROUND_COLOR COLOR16_WHITE
 
 /*
@@ -45,26 +46,15 @@
 #define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 #define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Saves up to 88 bytes program memory and 4 bytes RAM.
 #define ONLY_CONNECT_EVENT_REQUIRED       // Disables reorientation, redraw and SensorChange events
-//#define BD_USE_SIMPLE_SERIAL                 // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
-//#define BD_USE_USB_SERIAL                    // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
+//#define BD_USE_SIMPLE_SERIAL              // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+//#define BD_USE_USB_SERIAL                 // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
 #include "BlueDisplay.hpp"
+
+#include "ManySlidersAndButtonsHelper.h"
 
 /********************
  *      SLIDERS
  ********************/
-#define SLIDER_BAR_WIDTH        BUTTON_DEFAULT_SPACING_THREE_QUARTER
-#define SLIDER_BAR_LENGTH       128
-#define SLIDER_CAPTION_SIZE     7
-#define SLIDER_CAPTION_MARGIN   2
-#define SLIDER_BAR_COLOR        COLOR16_GREEN
-#define SLIDER_BAR_BG_COLOR     COLOR16_YELLOW
-#define SLIDER_CAPTION_COLOR    COLOR16_BLACK
-#define SLIDER_VALUE_COLOR      COLOR16_BLUE
-#define SLIDER_CAPTION_BG_COLOR DISPLAY_BACKGROUND_COLOR
-
-BDSlider sLeftSliderArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES];
-BDSlider sRightSliderArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES];
-
 /*
  * PROGMEM caption strings for sliders
  */
@@ -75,81 +65,64 @@ const char sString_PlusMinus[] PROGMEM = "Plus Minus";
 const char sString_Minus[] PROGMEM = "Minus";
 const char sString_Pattern[] PROGMEM = "Pattern";
 const char sString_PositiveRange[] PROGMEM = "Positive range";
-const char sString_AnalogValue1[] PROGMEM = "Analog value 1";
-const char sString_AnalogValue2[] PROGMEM = "Analog value 2";
-const char sString_AnalogValue3[] PROGMEM = "Analog value 3";
-const char sString_AnalogValue4[] PROGMEM = "Analog value 4";
-const char sString_AnalogValue5[] PROGMEM = "Analog value 5";
-const char sString_AnalogValue6[] PROGMEM = "Analog value 6";
-const char sString_AnalogValue7[] PROGMEM = "Analog value 7";
-const char sString_AnalogValue8[] PROGMEM = "Analog value 8";
-const char sString_AnalogValue9[] PROGMEM = "Analog value 9";
-const char sString_AnalogValue10[] PROGMEM = "Analog value 10";
-const char sString_AnalogValue11[] PROGMEM = "Analog value 11";
-const char sString_AnalogValue12[] PROGMEM = "Analog value 12";
-const char sString_AnalogValue13[] PROGMEM = "Analog value 13";
-const char sString_AnalogValue14[] PROGMEM = "Analog value 14";
-const char sString_AnalogValue15[] PROGMEM = "Analog value 15";
-const char sString_AnalogValue16[] PROGMEM = "Analog value 16";
 
-/**
- * This structure holds the values, which are different for each slider created
- */
-struct SliderStaticInfoStruct {
-    const char *SliderName; // String in PROGMEM
-    int16_t MinValue;
-    int16_t MaxValue;
-    int16_t Threshold;
-} sTemporarySliderStaticInfo; // The PROGMEM values to be processed are copied to this instance at runtime
 /*
  * PROGMEM array of PROGMEM structures for left sliders
  */
-#if defined(ARDUINO) && defined(__AVR__)
-static const SliderStaticInfoStruct sLeftSliderStaticInfoArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES] PROGMEM = {
-#else
-static const SliderStaticInfoStruct sLeftSliderStaticInfoArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES]= {
-#endif
+#if NUMBER_OF_LEFT_SLIDERS > 0
+#  if defined(ARDUINO) && defined(__AVR__)
+static const SliderStaticInfoStruct sLeftSliderStaticInfoArray[NUMBER_OF_LEFT_SLIDERS] PROGMEM = {
+#  else
+static const SliderStaticInfoStruct sLeftSliderStaticInfoArray[NUMBER_OF_LEFT_SLIDERS]= {
+#  endif
         { sString_Brightness, BD_SCREEN_BRIGHTNESS_MIN, BD_SCREEN_BRIGHTNESS_MAX, BD_SCREEN_BRIGHTNESS_MAX }, /*Brightness*/
         { sString_LoopDelay, 0, 1000, 500 }, /*Loop delay*/
         { sString_Variation, 0, 255, 255 }, /*Variation*/
         { sString_PlusMinus, -1000, 1000, 0 }, /*Plus Minus*/
         { sString_Minus, -255, 0, 0 }, /*Minus*/
-        { sString_Pattern, 0, 3, 3 }, /*Pattern 0 - 3*/
-        { sString_PositiveRange, 100, 200, 200 }, /*PositiveRange*/
-        { sString_AnalogValue8, 0, 255, 200 } /*Analog value 8*/
-};
-
-/**
- * Current values of the sliders and EEpron storage for them
- */
-int16_t sLeftSliderValues[NUMBER_OF_SLIDER_AND_BUTTON_LINES];
-#  if defined(EEMEM)
-int16_t EEPROMLeftSliderValues[NUMBER_OF_SLIDER_AND_BUTTON_LINES] EEMEM;
+        { sString_Pattern, 0, 3, 3 } /*Pattern 0 - 3*/
+#  if NUMBER_OF_LEFT_SLIDERS > 6
+        , { sString_PositiveRange, 100, 200, 200 } /*PositiveRange*/
 #  endif
+#  if NUMBER_OF_LEFT_SLIDERS > 7
+        , { sString_AnalogValue8, 0, 255, 200 } /*Analog value 8*/
+#  endif
+        };
+#endif
 
-#if !defined(USE_ONLY_LEFT_SLIDERS)
+#if NUMBER_OF_RIGHT_SLIDERS > 0
 // PROGMEM array of PROGMEM structures for right sliders
 
 #if defined(ARDUINO) && defined(__AVR__)
-static const SliderStaticInfoStruct sRightSliderStaticInfoArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES] PROGMEM = {
+static const SliderStaticInfoStruct sRightSliderStaticInfoArray[NUMBER_OF_RIGHT_SLIDERS] PROGMEM = {
 #else
-static const SliderStaticInfoStruct sRightSliderStaticInfoArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES]= {
+static const SliderStaticInfoStruct sRightSliderStaticInfoArray[NUMBER_OF_RIGHT_SLIDERS]= {
 #endif
-        { sString_AnalogValue9, 0, 255, 200 }, /*Analog value 9*/
-        { sString_AnalogValue10, 0, 255, 200 }, /*Analog value */
-        { sString_AnalogValue11, 0, 255, 200 }, /*Analog value */
-        { sString_AnalogValue12, 0, 255, 200 }, /*Analog value */
-        { sString_AnalogValue13, 0, 255, 200 }, /*Analog value */
-        { sString_AnalogValue14, 0, 255, 200 }, /*Analog value */
-        { sString_AnalogValue15, 0, 255, 200 }, /*Analog value */
-        { sString_AnalogValue16, 0, 255, 200 } /*Analog value 16*/
-};
-
-// Current values of the sliders and EEprom storage for them
-int16_t sRightSliderValues[NUMBER_OF_SLIDER_AND_BUTTON_LINES];
-#  if defined(EEMEM)
-int16_t EEPROMRightSliderValues[NUMBER_OF_SLIDER_AND_BUTTON_LINES] EEMEM;
-#  endif
+#if NUMBER_OF_RIGHT_SLIDERS > 0
+        { sString_AnalogValue9, 0, 255, 200 } /*Analog value 9*/
+#endif
+#if NUMBER_OF_RIGHT_SLIDERS > 1
+        , { sString_AnalogValue10, 0, 255, 200 } /*Analog value 10*/
+#endif
+#if NUMBER_OF_RIGHT_SLIDERS > 2
+        , { sString_AnalogValue11, 0, 255, 200 } /*Analog value 11*/
+#endif
+#if NUMBER_OF_RIGHT_SLIDERS > 3
+        , { sString_AnalogValue12, 0, 255, 200 } /*Analog value 12*/
+#endif
+#if NUMBER_OF_RIGHT_SLIDERS > 4
+        , { sString_AnalogValue13, 0, 255, 200 } /*Analog value 13*/
+#endif
+#if NUMBER_OF_RIGHT_SLIDERS > 5
+        , { sString_AnalogValue14, 0, 255, 200 } /*Analog value 14*/
+#endif
+#if NUMBER_OF_RIGHT_SLIDERS > 6
+        ,{ sString_AnalogValue15, 0, 255, 200 } /*Analog value 15*/
+#endif
+#if NUMBER_OF_RIGHT_SLIDERS > 7
+        ,{ sString_AnalogValue16, 0, 255, 200 } /*Analog value 16*/
+#endif
+        };
 #endif
 
 /**
@@ -157,42 +130,53 @@ int16_t EEPROMRightSliderValues[NUMBER_OF_SLIDER_AND_BUTTON_LINES] EEMEM;
  * !!!Must be the same order as used in SliderStaticInfoStruct!!!
  */
 typedef enum {
-    BRIGHTNESS_SLIDER = 0, DELAY_SLIDER, VARIATION_SLIDER, PLUS_MINUS_SLIDER, MINUS_SLIDER, PATTERN_SLIDER, EFFECT_MAX_LENGTH_SLIDER
+    BRIGHTNESS_SLIDER = 0,
+    DELAY_SLIDER,
+    VARIATION_SLIDER,
+    PLUS_MINUS_SLIDER,
+    MINUS_SLIDER,
+    PATTERN_SLIDER,
+    EFFECT_MAX_LENGTH_SLIDER,
+    SLIDER_8
 } slider_Index_t;
 
 /********************
  *     BUTTONS
  ********************/
-#define BUTTON_WIDTH            BUTTON_WIDTH_4
-#define BUTTONS_START_X         ((DISPLAY_WIDTH - BUTTON_WIDTH) / 2)
-#define BUTTON_HEIGHT           (SLIDER_BAR_WIDTH + SLIDER_CAPTION_SIZE)
-#define BUTTON_TEXT_SIZE        7
-
-BDButton sButtonArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES];
-
 // PROGMEM text strings for buttons
-const char sString_Load[] PROGMEM = "Load\nvalues";
-const char sString_Store[] PROGMEM = "Store\nvalues";
 const char sString_LedOff[] PROGMEM = "Led off"; // Text for false / red button
 const char sString_LedOn[] PROGMEM = "Led on"; // Text for true / green button
 const char sString_Test[] PROGMEM = "Test";
-const char sString_Button5[] PROGMEM = "Button_5";
-const char sString_Button6[] PROGMEM = "Button_6";
-const char sString_Button7[] PROGMEM = "Button_7";
-const char sString_Button8[] PROGMEM = "Button_8";
+
 /*
  * PROGMEM array of PROGMEM strings for buttons
  */
 #if defined(ARDUINO) && defined(__AVR__)
-static const char *const sButtonsTextArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES] PROGMEM = {
+static const char *const sButtonsTextArray[NUMBER_OF_BUTTONS] PROGMEM = {
 #else
-static const char *const sButtonsTextArray[NUMBER_OF_SLIDER_AND_BUTTON_LINES] = {
+static const char *const sButtonsTextArray[NUMBER_OF_BUTTONS] = {
 #endif
         sString_Load, /*Load values*/
-        sString_Store, /*Store values*/
-        sString_LedOff, /*Led off*/
-        sString_Test, /*Test*/
-        sString_Button5, sString_Button6, sString_Button7, sString_Button8 };
+        sString_Store /*Store values*/
+#if NUMBER_OF_BUTTONS > 2
+        , sString_LedOff
+#endif
+#if NUMBER_OF_BUTTONS > 3
+        , sString_Test
+#endif
+#if NUMBER_OF_BUTTONS > 4
+        , sString_Button5
+#endif
+#if NUMBER_OF_BUTTONS > 5
+        , sString_Button6
+#endif
+#if NUMBER_OF_BUTTONS > 6
+        , sString_Button7
+#endif
+#if NUMBER_OF_BUTTONS > 7
+        , sString_Button8
+#endif
+        };
 
 /**
  * An enum consisting of indexes of all buttons, used in doButton() to determine the individual function for each button.
@@ -202,20 +186,18 @@ typedef enum {
     LOAD_BUTTON = 0, STORE_BUTTON, LED_BUTTON, TEST_BUTTON, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8
 } button_Index_t;
 
-void initDisplay(void);
-void drawDisplay(void);
+/*
+ * These 2 functions are required by ManySlidersAndButtonsHelper.hpp
+ */
 void doSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue);
 void doButton(BDButton *aTheTouchedButton, int16_t aValue);
+#include "ManySlidersAndButtonsHelper.hpp"
+
+void initDisplay(void);
+void drawDisplay(void);
 void TestNewSliderAndButton();
 void doTestSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue);
 void doTestButton(BDButton *aTheTouchedButton, int16_t aValue);
-void storeSliderValuesToEEPROM();
-void loadSliderValuesFromEEPROM();
-
-#if !defined(STR)
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-#endif
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -245,35 +227,6 @@ void loop() {
     delay(sLeftSliderValues[DELAY_SLIDER]); // Using value of DELAY_SLIDER
 }
 
-void InitSliderFromSliderStaticInfoStruct(BDSlider *aSlider, const SliderStaticInfoStruct *aSliderStaticPGMInfoPtr, int aXPosition,
-        int aYPosition) {
-    const SliderStaticInfoStruct *tTemporarySliderStaticInfoPtr;
-
-#if defined(ARDUINO) && defined(__AVR__)
-// copy PGM data to RAM
-    memcpy_P(&sTemporarySliderStaticInfo, aSliderStaticPGMInfoPtr, sizeof(sTemporarySliderStaticInfo));
-    tTemporarySliderStaticInfoPtr = &sTemporarySliderStaticInfo;
-#else
-    tTemporarySliderStaticInfoPtr = aSliderStaticPGMInfoPtr;
-#endif
-
-// Initialize slider
-    aSlider->init(aXPosition, aYPosition, SLIDER_BAR_WIDTH, SLIDER_BAR_LENGTH, tTemporarySliderStaticInfoPtr->Threshold,
-    SLIDER_BAR_LENGTH / 2, SLIDER_BAR_BG_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_IS_HORIZONTAL | FLAG_SLIDER_SHOW_VALUE, &doSlider);
-
-    /*
-     * Set additional values, like min, max, and value and caption size and position
-     */
-    aSlider->setMinMaxValue(tTemporarySliderStaticInfoPtr->MinValue, tTemporarySliderStaticInfoPtr->MaxValue);
-
-    aSlider->setCaptionProperties(SLIDER_CAPTION_SIZE, FLAG_SLIDER_CAPTION_ALIGN_LEFT_BELOW, SLIDER_CAPTION_MARGIN,
-    SLIDER_CAPTION_COLOR, SLIDER_CAPTION_BG_COLOR);
-    aSlider->setPrintValueProperties(SLIDER_CAPTION_SIZE, FLAG_SLIDER_VALUE_CAPTION_ALIGN_RIGHT, SLIDER_CAPTION_MARGIN,
-    SLIDER_VALUE_COLOR, SLIDER_CAPTION_BG_COLOR);
-
-    aSlider->setCaption(reinterpret_cast<const __FlashStringHelper*>(tTemporarySliderStaticInfoPtr->SliderName));
-}
-
 /*
  * Function used as callback handler for connect too
  */
@@ -281,48 +234,7 @@ void initDisplay(void) {
 // Initialize display size and flags
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
-    BDSlider::setDefaultBarThresholdColor(COLOR16_RED);
-
-    /*
-     * Set button common parameters
-     */
-    BDButton::BDButtonPGMTextParameterStruct tBDButtonParameterStruct; // Saves 480 Bytes for all 5 buttons
-    BDButton::setInitParameters(&tBDButtonParameterStruct, BUTTONS_START_X, 0, BUTTON_WIDTH, BUTTON_HEIGHT, COLOR16_GREEN, nullptr,
-    BUTTON_TEXT_SIZE, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doButton);
-
-// Upper start position of sliders and buttons
-    int tYPosition = BUTTON_HEIGHT_6;
-
-    /*
-     * Initialize 8 left and optional 8 right sliders and position the 8 button in the middle between the sliders
-     */
-    for (uint8_t i = 0; i < NUMBER_OF_SLIDER_AND_BUTTON_LINES; i++) {
-        // Left + right sliders
-        InitSliderFromSliderStaticInfoStruct(&sLeftSliderArray[i], &sLeftSliderStaticInfoArray[i], BUTTON_DEFAULT_SPACING_HALF,
-                tYPosition);
-#if !defined(USE_ONLY_LEFT_SLIDERS)
-        InitSliderFromSliderStaticInfoStruct(&sRightSliderArray[i], &sRightSliderStaticInfoArray[i],
-        DISPLAY_WIDTH - (BUTTON_DEFAULT_SPACING_HALF + SLIDER_BAR_LENGTH), tYPosition);
-#endif
-
-        // Middle buttons
-        tBDButtonParameterStruct.aPositionY = tYPosition;
-        tBDButtonParameterStruct.aValue = i;
-#if defined(__AVR__)
-        tBDButtonParameterStruct.aPGMText = reinterpret_cast<const __FlashStringHelper*>pgm_read_word(&sButtonsTextArray[i]);
-#else
-        tBDButtonParameterStruct.aPGMText = reinterpret_cast<const __FlashStringHelper*>(sButtonsTextArray[i]);
-#endif
-        sButtonArray[i].init(&tBDButtonParameterStruct);
-
-        // Prepare for next line
-        tYPosition += BUTTON_HEIGHT_8;
-    }
-
-    /*
-     * Set all slider values to initial position
-     */
-    loadSliderValuesFromEEPROM();
+    initSlidersAndButtons(sLeftSliderStaticInfoArray, sRightSliderStaticInfoArray);
 
     /*
      * Convert LED button to a red green toggling one and start with led off
@@ -335,54 +247,43 @@ void initDisplay(void) {
 
 void drawDisplay(void) {
     BlueDisplay1.clearDisplay(DISPLAY_BACKGROUND_COLOR);
-#if !defined(USE_ONLY_LEFT_SLIDERS)
-    BlueDisplay1.drawText(STRING_ALIGN_MIDDLE_XPOS, 16, F("16 Sliders 8 buttons demo"), 16, COLOR16_BLUE, DISPLAY_BACKGROUND_COLOR);
-#else
-    BlueDisplay1.drawText(STRING_ALIGN_MIDDLE_XPOS, 16, F("8 Sliders 8 buttons demo"), 16, COLOR16_BLUE, DISPLAY_BACKGROUND_COLOR);
-#endif
-
-    for (uint8_t i = 0; i < NUMBER_OF_SLIDER_AND_BUTTON_LINES; i++) {
-        sLeftSliderArray[i].drawSlider();
-        sButtonArray[i].drawButton();
-        sRightSliderArray[i].drawSlider();
-    }
+    BlueDisplay1.drawText(STRING_ALIGN_MIDDLE_XPOS, 16,
+            F(STR(NUMBER_OF_LEFT_SLIDERS) " + " STR(NUMBER_OF_RIGHT_SLIDERS) " sliders + " STR(NUMBER_OF_BUTTONS) " buttons demo"),
+            16, COLOR16_BLUE, DISPLAY_BACKGROUND_COLOR);
+    drawSlidersAndButtons();
 }
 
 /*
  * Is called by touch or move on a slider and sets the new value
  */
 void doSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue) {
-    /*
-     * If we use left and right sliders, even slider indexes are from sliders in sLeftSliderStaticInfoArray, odd from sRightSliderStaticInfoArray
-     */
     BDSliderIndex_t tSliderIndex = aTheTouchedSlider->mSliderIndex;
-#if defined(USE_ONLY_LEFT_SLIDERS)
-    sLeftSliderValues[tSliderIndex] = aSliderValue;
-    SliderStaticInfoStruct tSliderStaticInfoStructPtr = &sLeftSliderStaticInfoArray[tSliderIndex];
-#else
-    bool tIsRightSlider = tSliderIndex % 2;
-    if (tIsRightSlider) {
-        // Odd -> Right sliders
-        tSliderIndex /= 2;
-        sRightSliderValues[tSliderIndex] = aSliderValue;
-    } else {
-        // Even -> Left sliders
-        tSliderIndex /= 2;
+
+#if NUMBER_OF_RIGHT_SLIDERS > 0
+    bool tIsLeftSlider = tSliderIndex < NUMBER_OF_LEFT_SLIDERS;
+    if (tIsLeftSlider) {
+        // Left sliders with index from 0 to NUMBER_OF_LEFT_SLIDERS - 1
         sLeftSliderValues[tSliderIndex] = aSliderValue;
+    } else {
+        // Right sliders with index from NUMBER_OF_LEFT_SLIDERS to NUMBER_OF_LEFT_SLIDERS + NUMBER_OF_RIGHT_SLIDERS - 1
+        tSliderIndex -= NUMBER_OF_LEFT_SLIDERS;
+        sRightSliderValues[tSliderIndex] = aSliderValue;
     }
+
+    if (tIsLeftSlider) {
+
+#else
+    sLeftSliderValues[tSliderIndex] = aSliderValue;
 #endif
 
-    /*
-     * alternative search solution if order is unknown
-     */
+        /*
+         * alternative search solution if order is unknown
+         */
 //    for (uint8_t i = 0; i < NUMBER_OF_SLIDER_AND_BUTTON_LINES; i++) {
 //        if (sLeftSliderArray[i] == *aTheTouchedSlider) {
 //            BlueDisplay1.debug("LeftSliderArray index=", i);
 //        }
 //    }
-#if !defined(USE_ONLY_LEFT_SLIDERS)
-    if (!tIsRightSlider) {
-#endif
         // Only check left sliders here
         switch (tSliderIndex) {
         case BRIGHTNESS_SLIDER:
@@ -390,14 +291,14 @@ void doSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue) {
             break;
         default:
             char tStringBuffer[28];
-            snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Left slider %2u value=%d"), tSliderIndex, aSliderValue);
+            snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Left slider %2u value=%hd"), tSliderIndex + 1, aSliderValue);
             BlueDisplay1.debug(tStringBuffer);
             break;
         }
-#if !defined(USE_ONLY_LEFT_SLIDERS)
+#if NUMBER_OF_RIGHT_SLIDERS > 0
     } else {
         char tStringBuffer[27];
-        snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Right slider %2u value=%d"), tSliderIndex, aSliderValue);
+        snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Right slider %2u value=%hd"), tSliderIndex + 1, aSliderValue); // Start with slider number 1
         BlueDisplay1.debug(tStringBuffer);
     }
 #endif
@@ -418,37 +319,9 @@ void doButton(BDButton *aTheTouchedButton, int16_t aValue) {
         TestNewSliderAndButton();
         break;
     default:
-        BlueDisplay1.debug("Pressed button ", aTheTouchedButton->mButtonIndex);
+        BlueDisplay1.debug("Pressed button ", (uint8_t)(aTheTouchedButton->mButtonIndex + 1)); // Start with button number 1
         break;
     }
-}
-
-/*
- * Functions used by Reset and Store buttons
- * Dummy for CPU without EEprom
- */
-void storeSliderValuesToEEPROM() {
-#if defined(EEMEM)
-    eeprom_update_block(sLeftSliderValues, EEPROMLeftSliderValues, sizeof(sLeftSliderValues));
-#  if !defined(USE_ONLY_LEFT_SLIDERS)
-    eeprom_update_block(sRightSliderValues, EEPROMRightSliderValues, sizeof(sRightSliderValues));
-#  endif
-#endif
-}
-
-void loadSliderValuesFromEEPROM() {
-#if defined(EEMEM)
-#  if !defined(USE_ONLY_LEFT_SLIDERS)
-    eeprom_read_block(sRightSliderValues, EEPROMRightSliderValues, sizeof(sRightSliderValues));
-#  endif
-    eeprom_read_block(sLeftSliderValues, EEPROMLeftSliderValues, sizeof(sLeftSliderValues));
-    for (uint8_t i = 0; i < NUMBER_OF_SLIDER_AND_BUTTON_LINES; i++) {
-#  if !defined(USE_ONLY_LEFT_SLIDERS)
-        sRightSliderArray[i].setValueAndDrawBar(sRightSliderValues[i]);
-#  endif
-        sLeftSliderArray[i].setValueAndDrawBar(sLeftSliderValues[i]);
-    }
-#endif
 }
 
 /**
@@ -482,11 +355,11 @@ void TestNewSliderAndButton() {
 
     tButton->removeButton(DISPLAY_BACKGROUND_COLOR);
     tButton->deinit();
-    free(tButton);
+    delete(tButton);
 
     tSlider->removeSlider(DISPLAY_BACKGROUND_COLOR);
     tSlider->deinit();
-    free(tSlider);
+    delete(tSlider);
 }
 
 void doTestSlider(BDSlider *aTheTouchedSlider __attribute__((unused)), int16_t aSliderValue) {

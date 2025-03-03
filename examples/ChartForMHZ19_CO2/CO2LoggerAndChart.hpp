@@ -86,6 +86,11 @@ color16_t sTextColor = CHART_TEXT_COLOR;
 #define CO2_BASE_VALUE          400L
 #define CO2_COMPRESSION_FACTOR    5L // value 1 -> 405, 2 -> 410 etc.
 /*
+ * Layout values for fullscreen GUI
+ */
+uint8_t sChartMaxValue = ((1400L - CO2_BASE_VALUE) / CO2_COMPRESSION_FACTOR); // For clipping, and initialized, if BT is not available at startup
+
+/*
  * Even with initDisplay() called from main loop we only have 1140 bytes available for application
  */
 #define CO2_ARRAY_SIZE  1152L // 1152-> 4 days, 1440->5 days at 5 minutes / sample
@@ -95,10 +100,7 @@ uint16_t sCO2ArrayValuesChecksum __attribute__((section(".noinit")));  // must b
 uint8_t sCO2Array[CO2_ARRAY_SIZE] __attribute__((section(".noinit"))); // values are (CO2[ppm] - 400) / 5
 uint16_t sHoursPerChartToDisplay __attribute__((section(".noinit")));  // is initialized to 96 if checksum is wrong
 uint16_t sCO2MinimumOfCurrentReadings; // the minimum of all values received during one period
-/*
- * Layout values for fullscreen GUI
- */
-uint8_t sChartMaxValue; // For clipping
+
 /*
  * We do not have enough resolution/pixel for 1152 pixel of chart + label.
  * So we use 576 pixel chart with compressed display of 10 minutes per pixel for 4 days display
@@ -569,7 +571,7 @@ void initCO2Chart() {
 
     uint16_t tChartHeight = BlueDisplay1.getRequestedDisplayHeight() - (BlueDisplay1.getRequestedDisplayHeight() / 4); // 3/4 display height
     uint16_t tYGridSize = (BlueDisplay1.getRequestedDisplayHeight() / 7);
-    sChartMaxValue = ((tChartHeight * (CHART_Y_LABEL_INCREMENT / CO2_COMPRESSION_FACTOR)) / (tYGridSize));
+    sChartMaxValue = ((tChartHeight * (CHART_Y_LABEL_INCREMENT / CO2_COMPRESSION_FACTOR)) / (tYGridSize)) - 1;
     // Grid spacing is CHART_WIDTH / 8 -> 8 columns and height / 6 for 5 lines from 400 to 1400
     CO2Chart.initChart(CHART_START_X, BlueDisplay1.getRequestedDisplayHeight() - (BASE_TEXT_SIZE + (BASE_TEXT_SIZE / 2)),
     CHART_WIDTH, tChartHeight, CHART_AXES_SIZE, BASE_TEXT_SIZE, CHART_DISPLAY_GRID, 0, tYGridSize); // GridOrLabelXPixelSpacing is set by doDays() below

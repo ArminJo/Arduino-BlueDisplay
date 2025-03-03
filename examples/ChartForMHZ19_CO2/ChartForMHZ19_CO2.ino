@@ -141,8 +141,8 @@ LCDBigNumbers BigNumbersLCD(&myLCD, BIG_NUMBERS_FONT_3_COLUMN_4_ROWS_VARIANT_1);
 void printErrorCode();
 void printData();
 void printCO2DataOnLCD();
-void checkDebugAndSmallDigitsPin();
-void checkSmallDigitsPin();
+void checkDebugAndSmallDigitsPin(bool aDoInit);
+void checkSmallDigitsPin(bool aDoInit);
 
 //#define PRINT_PERIODIC_DATA_ALWAYS_ON_SERIAL
 /*
@@ -206,12 +206,10 @@ void setup() {
     myLCD.begin(20, 4); // This also clears display
 #else
     myLCD.init();
-    myLCD.clear();
     myLCD.backlight();  // Switch backlight LED on
 #endif
-    BigNumbersLCD.begin(); // This also sets cursor to 0.0
+    checkDebugAndSmallDigitsPin(true);  // This initializes BigNumbers, clears LCD and sets cursor to 0.0
     myLCD.print(F("CO2 Sensor")); // Show this before waiting for BlueDisplay connection
-    checkDebugAndSmallDigitsPin();
 
     /*
      * Try to connect to BlueDisplay host, this may introduce a delay of 1.5 seconds :-(
@@ -384,7 +382,7 @@ void loop() {
 #if defined(DISPLAY_MHZ19_TEMPERATURE)
     checkTemperatureCorrectionPins(); // must before checkDebugAndSmallDigitsPin()
 #endif
-    checkDebugAndSmallDigitsPin();
+    checkDebugAndSmallDigitsPin(false);
 
     if (millis() - sMillisOfLastRequestedCO2Data >= DISPLAY_PERIOD_MILLIS) {
         sMillisOfLastRequestedCO2Data = millis(); // set for next check
@@ -439,20 +437,25 @@ void printErrorCode() {
 #if !defined(BD_USE_SIMPLE_SERIAL)
     myMHZ19.printErrorMessage(&Serial);
 #endif
-    myLCD.setCursor(0, 3);
+    clearLine(&myLCD, 3);
     myLCD.print(F("MHZ error: "));
     myMHZ19.printErrorCode(&myLCD);
     delay(1000);
 }
 
-void checkDebugAndSmallDigitsPin() {
+void checkDebugAndSmallDigitsPin(bool aDoInit) {
     checkDebugPin();
     /*
      * sDebugModeActive has precedence over sShow3LineDigits
      */
+#if defined(MHZ19_USE_MINIMAL_RAM)
+    // No debug mode for !sShow3LineDigits so precendence is not required
+    checkSmallDigitsPin(aDoInit);
+#else
     if (!sDebugModeActive) {
-        checkSmallDigitsPin();
+        checkSmallDigitsPin(aDoInit);
     }
+#endif
 }
 
 /*
@@ -464,7 +467,16 @@ void checkDebugPin() {
         sDebugModeActive = tDebugModeActive;
 // Debug mode changed
 
-#if !defined(MHZ19_USE_MINIMAL_RAM)
+#if defined(MHZ19_USE_MINIMAL_RAM)
+        if (tDebugModeActive && !sShow3LineDigits) {
+            myLCD.setCursor(0, 3);
+            myLCD.print(F("No debug possible!  "));
+#if !defined(BD_USE_SIMPLE_SERIAL)
+            Serial.print(F("No debug possible for minimal RAM setting and 4 line digits"));
+#endif
+            delay(2000);
+        }
+#else
         if (tDebugModeActive) {
             myMHZ19.enableDebug(&Serial);
             Serial.print(F("En"));
@@ -479,9 +491,9 @@ void checkDebugPin() {
     }
 }
 
-void checkSmallDigitsPin() {
+void checkSmallDigitsPin(bool aDoInit) {
     bool tShow3LineDigits = !digitalRead(ENABLE_3_LINE_DIGITS_PIN);
-    if (sShow3LineDigits != tShow3LineDigits) {
+    if (sShow3LineDigits != tShow3LineDigits || aDoInit) {
         sShow3LineDigits = tShow3LineDigits;
 #if !defined(BD_USE_SIMPLE_SERIAL)
         Serial.print(F("Changed digit size to "));
@@ -500,7 +512,9 @@ void checkSmallDigitsPin() {
         }
         BigNumbersLCD.begin(); // Generate font symbols in LCD controller
         myLCD.clear(); // clear content of former page
-        printCO2DataOnLCD();
+        if (!aDoInit) {
+            printCO2DataOnLCD();
+        }
     }
 }
 
@@ -648,7 +662,8 @@ void printCO2DataOnLCD() {
     ) {
 #if defined(DISPLAY_MHZ19_TEMPERATURE)
         /*
-         * Only float temperature in line 4
+         * Big numbers
+         * Only 4 character float temperature in line 4
          */
         myLCD.setCursor(16, 3);
         myLCD.print(myMHZ19.TemperatureFloat + sTemperatureCorrectionFloat, 1);
@@ -659,11 +674,12 @@ void printCO2DataOnLCD() {
          * Print additional info for 3 line digits and debug
          * Float temperature in line 4
          */
-        myLCD.setCursor(0, 3);
+        myLCD.setCursor(13, 3);
         myLCD.print(myMHZ19.TemperatureFloat + sTemperatureCorrectionFloat, 2);
         myLCD.print(F("\xDF" "C "));
 
         if (sDebugModeActive) {
+            myLCD.setCursor(0, 3);
             /*
              * Temperature correction and integer temperature in line 4
              */
