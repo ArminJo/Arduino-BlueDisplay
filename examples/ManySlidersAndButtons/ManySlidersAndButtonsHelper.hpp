@@ -90,15 +90,21 @@ void InitSliderFromSliderStaticInfoStruct(BDSlider *aSlider, const SliderStaticI
 }
 
 /*
+ * Loads slider values from EEPROM
  * Function used as callback handler for connect too
  */
-void initSlidersAndButtons(const SliderStaticInfoStruct *aLeftSliderStaticPGMInfoPtr,const SliderStaticInfoStruct *aRightSliderStaticPGMInfoPtr) {
+void initSlidersAndButtons(const SliderStaticInfoStruct *aLeftSliderStaticPGMInfoPtr,
+        const SliderStaticInfoStruct *aRightSliderStaticPGMInfoPtr, const ButtonStaticInfoStruct *aButtonStaticPGMInfoPtr) {
     BDSlider::setDefaultBarThresholdColor (COLOR16_RED);
 
     /*
-     * Set button common parameters
+     * First, set button common parameters
      */
+#if defined(__AVR__)
     BDButton::BDButtonPGMTextParameterStruct tBDButtonParameterStruct; // Saves 480 Bytes for all 5 buttons
+#else
+    BDButton::BDButtonParameterStruct tBDButtonParameterStruct;
+#endif
     BDButton::setInitParameters(&tBDButtonParameterStruct, BUTTONS_START_X, 0, BUTTON_WIDTH, BUTTON_HEIGHT, COLOR16_GREEN, nullptr,
             BUTTON_TEXT_SIZE, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doButton);
 
@@ -107,41 +113,69 @@ void initSlidersAndButtons(const SliderStaticInfoStruct *aLeftSliderStaticPGMInf
     /*
      * Initialize sliders and position the button in the middle between the sliders
      */
-    int tYPosition = BUTTON_HEIGHT_6;
+    int tYPosition = SLIDER_AND_BUTTON_START_Y;
 #if NUMBER_OF_LEFT_SLIDERS > 0
+    /*
+     * LEFT sliders
+     */
     for (uint8_t i = 0; i < NUMBER_OF_LEFT_SLIDERS; i++) {
         // Left sliders with index from 0 to NUMBER_OF_LEFT_SLIDERS - 1
         InitSliderFromSliderStaticInfoStruct(&sLeftSliderArray[i], &aLeftSliderStaticPGMInfoPtr[i], BUTTON_DEFAULT_SPACING_HALF,
                 tYPosition);
         // Prepare for next line
-        tYPosition += BUTTON_HEIGHT_8;
+        tYPosition += SLIDER_AND_BUTTON_DELTA_Y;
     }
 #endif
 
 #if NUMBER_OF_RIGHT_SLIDERS > 0
-    tYPosition = BUTTON_HEIGHT_6;
+    /*
+     * RIGHT sliders
+     */
+    tYPosition = SLIDER_AND_BUTTON_START_Y;
     for (uint8_t i = 0; i < NUMBER_OF_RIGHT_SLIDERS; i++) {
         // Right sliders with index from NUMBER_OF_LEFT_SLIDERS to NUMBER_OF_LEFT_SLIDERS + NUMBER_OF_RIGHT_SLIDERS - 1
         InitSliderFromSliderStaticInfoStruct(&sRightSliderArray[i], &aRightSliderStaticPGMInfoPtr[i],
         DISPLAY_WIDTH - (BUTTON_DEFAULT_SPACING_HALF + SLIDER_BAR_LENGTH), tYPosition);
         // Prepare for next line
-        tYPosition += BUTTON_HEIGHT_8;
+        tYPosition += SLIDER_AND_BUTTON_DELTA_Y;
     }
 #endif
 
-    tYPosition = BUTTON_HEIGHT_6;
+    tYPosition = SLIDER_AND_BUTTON_START_Y;
+    /*
+     * MIDDLE buttons
+     */
     for (uint8_t i = 0; i < NUMBER_OF_BUTTONS; i++) {
         // Middle button
         tBDButtonParameterStruct.aPositionY = tYPosition;
-        tBDButtonParameterStruct.aValue = i;
 #if defined(__AVR__)
-        tBDButtonParameterStruct.aPGMText = reinterpret_cast<const __FlashStringHelper*>pgm_read_word(&sButtonsTextArray[i]);
-#else
-        tBDButtonParameterStruct.aPGMText = reinterpret_cast<const __FlashStringHelper*>(sButtonsTextArray[i]);
-#endif
+        ButtonStaticInfoStruct tButtonStaticPGMInfo;
+        memcpy_P(&tButtonStaticPGMInfo, &aButtonStaticPGMInfoPtr[i], sizeof(ButtonStaticInfoStruct));
+        tBDButtonParameterStruct.aValue =tButtonStaticPGMInfo.Value;
+        tBDButtonParameterStruct.aPGMText = reinterpret_cast<const __FlashStringHelper*>(tButtonStaticPGMInfo.ButtonText);
+        if (tButtonStaticPGMInfo.ButtonTextForValueTrue != nullptr) {
+            tBDButtonParameterStruct.aFlags |= FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN;
+        }
         sButtonArray[i].init(&tBDButtonParameterStruct);
+        if (tButtonStaticPGMInfo.ButtonTextForValueTrue != nullptr) {
+            sButtonArray[i].setTextForValueTrue(reinterpret_cast<const __FlashStringHelper*>(tButtonStaticPGMInfo.ButtonTextForValueTrue));
+            tBDButtonParameterStruct.aFlags &= ~FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN;
+        }
+#else
+        tBDButtonParameterStruct.aValue = aButtonStaticPGMInfoPtr[i].Value;
+        tBDButtonParameterStruct.aText = aButtonStaticPGMInfoPtr[i].ButtonText;
+        if (aButtonStaticPGMInfoPtr[i].ButtonTextForValueTrue != nullptr) {
+            tBDButtonParameterStruct.aFlags |= FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN;
+        }
+
+        sButtonArray[i].init(&tBDButtonParameterStruct);
+        if (aButtonStaticPGMInfoPtr[i].ButtonTextForValueTrue != nullptr) {
+            sButtonArray[i].setTextForValueTrue(aButtonStaticPGMInfoPtr[i].ButtonTextForValueTrue);
+            tBDButtonParameterStruct.aFlags &= ~FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN;
+        }
+#endif
         // Prepare for next line
-        tYPosition += BUTTON_HEIGHT_8;
+        tYPosition += SLIDER_AND_BUTTON_DELTA_Y;
     }
 
     /*

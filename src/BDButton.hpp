@@ -97,6 +97,7 @@ void BDButton::setInitParameters(BDButtonParameterStruct *aBDButtonParameterStru
     aBDButtonParameterStructToFill->aOnTouchHandler = aOnTouchHandler;
 }
 
+#if defined(__AVR__)
 void BDButton::setInitParameters(BDButtonPGMTextParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX,
         uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor, const __FlashStringHelper *aPGMText,
         uint16_t aTextSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t)) {
@@ -111,21 +112,24 @@ void BDButton::setInitParameters(BDButtonPGMTextParameterStruct *aBDButtonParame
     aBDButtonParameterStructToFill->aValue = aValue;
     aBDButtonParameterStructToFill->aOnTouchHandler = aOnTouchHandler;
 }
+#endif
 
 void BDButton::init(BDButtonParameterStruct *aBDButtonParameter) {
     init(aBDButtonParameter->aPositionX, aBDButtonParameter->aPositionY, aBDButtonParameter->aWidthX, aBDButtonParameter->aHeightY,
             aBDButtonParameter->aButtonColor, aBDButtonParameter->aText, aBDButtonParameter->aTextSize, aBDButtonParameter->aFlags,
             aBDButtonParameter->aValue, aBDButtonParameter->aOnTouchHandler);
 }
-
 /*
  * Each further call costs 10 to 14 bytes program memory
  */
+#if defined(__AVR__)
 void BDButton::init(BDButtonPGMTextParameterStruct *aBDButtonParameter) {
     init(aBDButtonParameter->aPositionX, aBDButtonParameter->aPositionY, aBDButtonParameter->aWidthX, aBDButtonParameter->aHeightY,
             aBDButtonParameter->aButtonColor, aBDButtonParameter->aPGMText, aBDButtonParameter->aTextSize,
             aBDButtonParameter->aFlags, aBDButtonParameter->aValue, aBDButtonParameter->aOnTouchHandler);
 }
+#endif // !defined (AVR)
+
 /*
  * initialize a button stub
  * If local display is attached, allocate a button (if the local pool is used, do not forget to call deinit()).
@@ -178,11 +182,11 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
 void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
         const __FlashStringHelper *aPGMText, uint16_t aTextSize, uint8_t aFlags, int16_t aValue,
         void (*aOnTouchHandler)(BDButton*, int16_t)) {
+
 #if !defined (AVR)
     init(aPositionX, aPositionY, aWidthX, aHeightY, aButtonColor, reinterpret_cast<const char*>(aPGMText), aTextSize, aFlags,
             aValue, aOnTouchHandler);
 #else
-
     BDButtonIndex_t tButtonNumber = sLocalButtonIndex++;
 
     if (USART_isBluetoothPaired()) {
@@ -221,6 +225,22 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
             aFlags | LOCAL_BUTTON_FLAG_USE_BDBUTTON_FOR_CALLBACK, aValue, reinterpret_cast<void (*)(LocalTouchButton*, int16_t)> (aOnTouchHandler));
 #endif // defined(SUPPORT_LOCAL_DISPLAY)
 #endif // !defined (AVR)
+}
+
+void BDButton::setCallback(void (*aOnTouchHandler)(BDButton*, int16_t)) {
+#if __SIZEOF_POINTER__ == 4
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mButtonIndex, SUBFUNCTION_SLIDER_SET_CALLBACK, aOnTouchHandler,
+                (reinterpret_cast<uint32_t>(aOnTouchHandler) >> 16));
+#else
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_SLIDER_SET_CALLBACK, aOnTouchHandler);
+#endif
+}
+
+/*
+ * @param aFlags - See #FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN etc.
+ */
+void BDButton::setFlags(int16_t aFlags) {
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_FLAGS, aFlags);
 }
 
 /*

@@ -42,10 +42,10 @@
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
-#define VERSION_BLUE_DISPLAY "4.4.0"
+#define VERSION_BLUE_DISPLAY "4.4.2"
 #define VERSION_BLUE_DISPLAY_MAJOR 4
 #define VERSION_BLUE_DISPLAY_MINOR 4
-#define VERSION_BLUE_DISPLAY_PATCH 0
+#define VERSION_BLUE_DISPLAY_PATCH 2
 // The change log is at the bottom of the file
 
 /*
@@ -434,7 +434,11 @@ float getCPUTemperature(void);
 //#endif
 
 /*
- * Version 4.4.0 - The version compatible with app version 4.4
+ *
+ * Version 4.4.2
+ * - Added setCallback() and setFlags() for buttons and sliders.
+ *
+ * Version 4.4.0 - The version compatible with app version 4.4.1
  * - Removed mMaxDisplaySize, because it was just a copy of CurrentDisplaySize, which is now HostDisplaySize etc..
  * - Renamed getDisplaySize to getRequestedDisplaySize etc.
  * - Renamed drawVectorDegrees() to drawVectorDegree().

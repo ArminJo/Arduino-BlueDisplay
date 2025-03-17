@@ -3,6 +3,8 @@
  *
  * Example for 8 / 16 sliders and 8 buttons
  * to control 8 / 16 analog values and 6 functions of an arduino application.
+ * Buttons can be Red/Green toggle buttons.
+ * Includes the implementation of a 4 value slider (PATTERN_SLIDER) with user provided text value.
  *
  *  Copyright (C) 2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
@@ -70,6 +72,21 @@ const char sString_PositiveRange[] PROGMEM = "Positive range";
  * PROGMEM array of PROGMEM structures for left sliders
  */
 #if NUMBER_OF_LEFT_SLIDERS > 0
+/**
+ * An enum consisting of indexes of all sliders, used in doSlider() to determine the individual function for each slider.
+ * !!!Must be the same order as used in SliderStaticInfoStruct!!!
+ */
+typedef enum {
+    BRIGHTNESS_SLIDER = 0,
+    DELAY_SLIDER,
+    VARIATION_SLIDER,
+    PLUS_MINUS_SLIDER,
+    MINUS_SLIDER,
+    PATTERN_SLIDER,
+    EFFECT_MAX_LENGTH_SLIDER,
+    SLIDER_8
+} slider_Index_t;
+
 #  if defined(ARDUINO) && defined(__AVR__)
 static const SliderStaticInfoStruct sLeftSliderStaticInfoArray[NUMBER_OF_LEFT_SLIDERS] PROGMEM = {
 #  else
@@ -125,58 +142,11 @@ static const SliderStaticInfoStruct sRightSliderStaticInfoArray[NUMBER_OF_RIGHT_
         };
 #endif
 
-/**
- * An enum consisting of indexes of all sliders, used in doSlider() to determine the individual function for each slider.
- * !!!Must be the same order as used in SliderStaticInfoStruct!!!
- */
-typedef enum {
-    BRIGHTNESS_SLIDER = 0,
-    DELAY_SLIDER,
-    VARIATION_SLIDER,
-    PLUS_MINUS_SLIDER,
-    MINUS_SLIDER,
-    PATTERN_SLIDER,
-    EFFECT_MAX_LENGTH_SLIDER,
-    SLIDER_8
-} slider_Index_t;
-
 /********************
  *     BUTTONS
  ********************/
-// PROGMEM text strings for buttons
-const char sString_LedOff[] PROGMEM = "Led off"; // Text for false / red button
-const char sString_LedOn[] PROGMEM = "Led on"; // Text for true / green button
+// PROGMEM text strings for Test button
 const char sString_Test[] PROGMEM = "Test";
-
-/*
- * PROGMEM array of PROGMEM strings for buttons
- */
-#if defined(ARDUINO) && defined(__AVR__)
-static const char *const sButtonsTextArray[NUMBER_OF_BUTTONS] PROGMEM = {
-#else
-static const char *const sButtonsTextArray[NUMBER_OF_BUTTONS] = {
-#endif
-        sString_Load, /*Load values*/
-        sString_Store /*Store values*/
-#if NUMBER_OF_BUTTONS > 2
-        , sString_LedOff
-#endif
-#if NUMBER_OF_BUTTONS > 3
-        , sString_Test
-#endif
-#if NUMBER_OF_BUTTONS > 4
-        , sString_Button5
-#endif
-#if NUMBER_OF_BUTTONS > 5
-        , sString_Button6
-#endif
-#if NUMBER_OF_BUTTONS > 6
-        , sString_Button7
-#endif
-#if NUMBER_OF_BUTTONS > 7
-        , sString_Button8
-#endif
-        };
 
 /**
  * An enum consisting of indexes of all buttons, used in doButton() to determine the individual function for each button.
@@ -187,9 +157,40 @@ typedef enum {
 } button_Index_t;
 
 /*
+ * PROGMEM array of PROGMEM structures for buttons
+ */
+#if defined(ARDUINO) && defined(__AVR__)
+static const ButtonStaticInfoStruct sButtonStaticInfoStructArray[NUMBER_OF_BUTTONS] PROGMEM = {
+#else
+        static const ButtonStaticInfoStruct sButtonStaticInfoStructArray[NUMBER_OF_BUTTONS] = {
+#endif
+        LOAD_BUTTON, sString_Load, nullptr, /*Load values*/
+        STORE_BUTTON, sString_Store, nullptr /*Store values*/
+#if NUMBER_OF_BUTTONS > 2
+        , 0, sString_LedOff, sString_LedOn /* This creates a red green button */
+#endif
+#if NUMBER_OF_BUTTONS > 3
+        , TEST_BUTTON, sString_Test, nullptr
+#endif
+#if NUMBER_OF_BUTTONS > 4
+        , BUTTON_5, sString_Button5, nullptr
+#endif
+#if NUMBER_OF_BUTTONS > 5
+        , BUTTON_6, sString_Button6, nullptr
+#endif
+#if NUMBER_OF_BUTTONS > 6
+        , BUTTON_7, sString_Button7, nullptr
+#endif
+#if NUMBER_OF_BUTTONS > 7
+        , BUTTON_8, sString_Button8, nullptr
+#endif
+        };
+
+/*
  * These 2 functions are required by ManySlidersAndButtonsHelper.hpp
  */
 void doSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue);
+void doPatternSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue);
 void doButton(BDButton *aTheTouchedButton, int16_t aValue);
 #include "ManySlidersAndButtonsHelper.hpp"
 
@@ -201,18 +202,16 @@ void doTestButton(BDButton *aTheTouchedButton, int16_t aValue);
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
+    Serial.begin(115200);
 
     BlueDisplay1.initCommunication(&Serial, &initDisplay); // initializes Serial and introduces up to 1.5 seconds delay
 
-    Serial.begin(115200);
 #if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
     || defined(SERIALUSB_PID)  || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_attiny3217)
 delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
 // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing BD library version " VERSION_BLUE_DISPLAY));
-
-    initDisplay();
 
     Serial.println(F("Setup finished"));
 }
@@ -234,13 +233,14 @@ void initDisplay(void) {
 // Initialize display size and flags
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
-    initSlidersAndButtons(sLeftSliderStaticInfoArray, sRightSliderStaticInfoArray);
+    initSlidersAndButtons(sLeftSliderStaticInfoArray, sRightSliderStaticInfoArray, sButtonStaticInfoStructArray);
+    // Here slider values are loaded from EEPROM
 
     /*
-     * Convert LED button to a red green toggling one and start with led off
+     * Change pattern slider value handling to manual and set callback for manual value handling
      */
-    sButtonArray[LED_BUTTON].setValue(0); // start with led off
-    sButtonArray[LED_BUTTON].setTextForValueTrue(reinterpret_cast<const __FlashStringHelper*>(sString_LedOn));
+    sLeftSliderArray[PATTERN_SLIDER].setFlags(FLAG_SLIDER_IS_HORIZONTAL); // Reset FLAG_SLIDER_SHOW_VALUE flag, since we provide the value text by our own
+    sLeftSliderArray[PATTERN_SLIDER].setCallback(&doPatternSlider);
 
     drawDisplay();
 }
@@ -251,6 +251,7 @@ void drawDisplay(void) {
             F(STR(NUMBER_OF_LEFT_SLIDERS) " + " STR(NUMBER_OF_RIGHT_SLIDERS) " sliders + " STR(NUMBER_OF_BUTTONS) " buttons demo"),
             16, COLOR16_BLUE, DISPLAY_BACKGROUND_COLOR);
     drawSlidersAndButtons();
+    doPatternSlider(&sLeftSliderArray[PATTERN_SLIDER], sLeftSliderValues[PATTERN_SLIDER]); // Print value string after drawing slider
 }
 
 /*
@@ -304,10 +305,37 @@ void doSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue) {
 #endif
 }
 
+/*
+ * Here we do not handle the pattern slider in the default callback,
+ * but use a special callback for it to make code more readable
+ */
+void doPatternSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue) {
+    const char *tValueString;
+    switch (aSliderValue) {
+    case 0:
+        tValueString = "  Constant temperature";
+        break;
+    case 1:
+        tValueString = "    Random temperature";
+        break;
+    case 2:
+        tValueString = "Random and some darker";
+        break;
+    case 3:
+        tValueString = "Random darker/brighter";
+        break;
+    }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+    aTheTouchedSlider->printValue(tValueString);
+#pragma GCC diagnostic pop
+}
+
 void doButton(BDButton *aTheTouchedButton, int16_t aValue) {
     switch (aTheTouchedButton->mButtonIndex) {
     case LOAD_BUTTON:
         loadSliderValuesFromEEPROM();
+        doPatternSlider(&sLeftSliderArray[PATTERN_SLIDER], sLeftSliderValues[PATTERN_SLIDER]); // Print value string after drawing slider
         break;
     case STORE_BUTTON:
         storeSliderValuesToEEPROM();
@@ -319,7 +347,7 @@ void doButton(BDButton *aTheTouchedButton, int16_t aValue) {
         TestNewSliderAndButton();
         break;
     default:
-        BlueDisplay1.debug("Pressed button ", (uint8_t)(aTheTouchedButton->mButtonIndex + 1)); // Start with button number 1
+        BlueDisplay1.debug("Pressed button ", (uint8_t) (aTheTouchedButton->mButtonIndex + 1)); // Start with button number 1
         break;
     }
 }
@@ -355,11 +383,11 @@ void TestNewSliderAndButton() {
 
     tButton->removeButton(DISPLAY_BACKGROUND_COLOR);
     tButton->deinit();
-    delete(tButton);
+    delete (tButton);
 
     tSlider->removeSlider(DISPLAY_BACKGROUND_COLOR);
     tSlider->deinit();
-    delete(tSlider);
+    delete (tSlider);
 }
 
 void doTestSlider(BDSlider *aTheTouchedSlider __attribute__((unused)), int16_t aSliderValue) {

@@ -53,7 +53,7 @@
 
 #define SLIDER_DEFAULT_LONG_BORDER_WIDTH          (mBarWidth / 4)
 
-// Flags for slider options
+// Flags for slider options used in init and setFlags()
 static const int FLAG_SLIDER_VERTICAL = 0x00;
 static const int FLAG_SLIDER_VERTICAL_SHOW_NOTHING = 0x00;
 static const int FLAG_SLIDER_SHOW_BORDER = 0x01;
@@ -66,7 +66,7 @@ static const int FLAG_SLIDER_IS_ONLY_OUTPUT = 0x20;     // Is equivalent to slid
 // Then only the remote slider pointer is used as callback parameter to enable easy comparison of this parameter with a fixed slider.
 #define LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK 0x80
 
-// Flags for slider value and caption position
+// Flags for slider value and caption position used in setPrintValueProperties()
 #define FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT_BELOW   0x00
 #define FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT         0x00
 #define FLAG_SLIDER_VALUE_CAPTION_ALIGN_RIGHT        0x01
@@ -129,6 +129,9 @@ public:
     void removeSlider(color16_t aBackgroundColor); // Deactivates the slider and redraws its screen space with aBackgroundColor
     void activate();
     void deactivate();
+
+    void setCallback(void (*aOnChangeHandler)(BDSlider*, int16_t));
+    void setFlags(int16_t aFlags);
 
     // Defaults
     static void setDefaultBarThresholdColor(color16_t aDefaultBarThresholdColor);

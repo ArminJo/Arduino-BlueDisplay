@@ -338,6 +338,8 @@ struct BluetoothEvent {
 #define SUBFUNCTION_BUTTON_SET_ACTIVE               0x10
 #define SUBFUNCTION_BUTTON_RESET_ACTIVE             0x11
 #define SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING    0x12
+#define SUBFUNCTION_BUTTON_SET_CALLBACK             0x20
+#define SUBFUNCTION_BUTTON_SET_FLAGS                0x30
 
 #define FUNCTION_BUTTON_REMOVE                      0x43
 
@@ -383,6 +385,9 @@ struct BluetoothEvent {
 #define SUBFUNCTION_SLIDER_SET_BORDER_SIZES_AND_COLOR 0x0B
 
 #define SUBFUNCTION_SLIDER_SET_VALUE                0x0C
+
+#define SUBFUNCTION_SLIDER_SET_CALLBACK             0x20
+#define SUBFUNCTION_SLIDER_SET_FLAGS                0x30
 
 // static slider functions
 #define FUNCTION_SLIDER_ACTIVATE_ALL                0x58

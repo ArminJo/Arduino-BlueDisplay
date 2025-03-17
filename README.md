@@ -236,6 +236,7 @@ More elaborated example to show more features of the BlueDisplay library.
 
 ## ManySlidersAndButtons
 Example for 8 / 16 sliders and 8 buttons to control 8 / 16 analog values and 6 functions of an arduino application.
+Buttons can be Red/Green toggle buttons. Includes the implementation of a 4 value slider with user provided text value.
 ![16 sliders and 8 buttons](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/pictures/ManySlidersAndButtons.png)
 
 <br/>
@@ -372,6 +373,10 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
 
 # Revision History
+### Version 4.4.2
+- Added `setCallback()` and `setFlags()` for buttons and sliders.
+- Modified ManySlidersAndButtons example.
+
 ### Version 4.4.0 - The version compatible with app version 4.4
 - Removed `mMaxDisplaySize`, because it was just a copy of `CurrentDisplaySize`.
 - Renamed `getDisplaySize()` to `getRequestedDisplaySize()` etc.

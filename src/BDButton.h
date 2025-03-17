@@ -104,6 +104,7 @@ public:
         void (*aOnTouchHandler)(BDButton*, int16_t);
     };
 
+#if defined(__AVR__)
     // Same as before, but with aPGMText instead of aText
     struct BDButtonPGMTextParameterStruct {
         uint16_t aPositionX;
@@ -117,6 +118,7 @@ public:
         int16_t aValue;
         void (*aOnTouchHandler)(BDButton*, int16_t);
     };
+#endif
 
     // Constructors
     BDButton();
@@ -138,19 +140,23 @@ public:
             void (*aOnTouchHandler)(BDButton*, int16_t));
 
     void init(BDButtonParameterStruct *aBDButtonParameter);
-    void init(BDButtonPGMTextParameterStruct *aBDButtonParameter);
     static void setInitParameters(BDButtonParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX, uint16_t aPositionY,
             uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor, const char *aText, uint16_t aTextSize, uint8_t aFlags,
             int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t));
+#if defined(__AVR__)
+    void init(BDButtonPGMTextParameterStruct *aBDButtonParameter);
     static void setInitParameters(BDButtonPGMTextParameterStruct *aBDButtonParameterStructToFill, uint16_t aPositionX,
             uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor, const __FlashStringHelper *aPGMText,
             uint16_t aTextSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t));
+#endif
 
     void deinit(); // is defined as dummy if SUPPORT_LOCAL_DISPLAY is not active
     void removeButton(color16_t aBackgroundColor); // Deactivates the button and redraws its screen space with aBackgroundColor
     void activate();
     void deactivate();
 
+    void setCallback(void (*aOnTouchHandler)(BDButton*, int16_t));
+    void setFlags(int16_t aFlags);
     /*
      * Autorepeat functions
      */

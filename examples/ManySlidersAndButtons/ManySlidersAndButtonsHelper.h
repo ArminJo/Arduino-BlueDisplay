@@ -29,15 +29,33 @@
 /********************
  *      SLIDERS
  ********************/
-#define SLIDER_BAR_WIDTH        BUTTON_DEFAULT_SPACING_THREE_QUARTER
+#if !defined(SLIDER_BAR_WIDTH)
+#define SLIDER_BAR_WIDTH        12
+#endif
+#if !defined(SLIDER_BAR_LENGTH)
 #define SLIDER_BAR_LENGTH       128
+#endif
+#if !defined(SLIDER_CAPTION_SIZE)
 #define SLIDER_CAPTION_SIZE     7
+#endif
+#if !defined(SLIDER_CAPTION_MARGIN)
 #define SLIDER_CAPTION_MARGIN   2
+#endif
+#if !defined(SLIDER_BAR_COLOR)
 #define SLIDER_BAR_COLOR        COLOR16_GREEN
+#endif
+#if !defined(SLIDER_BAR_BG_COLOR)
 #define SLIDER_BAR_BG_COLOR     COLOR16_YELLOW
+#endif
+#if !defined(SLIDER_CAPTION_COLOR)
 #define SLIDER_CAPTION_COLOR    COLOR16_BLACK
+#endif
+#if !defined(SLIDER_VALUE_COLOR)
 #define SLIDER_VALUE_COLOR      COLOR16_BLUE
+#endif
+#if !defined(SLIDER_CAPTION_BG_COLOR)
 #define SLIDER_CAPTION_BG_COLOR DISPLAY_BACKGROUND_COLOR
+#endif
 
 /*
  * PROGMEM caption strings for sliders
@@ -73,13 +91,21 @@ struct SliderStaticInfoStruct {
  *     BUTTONS
  ********************/
 #define BUTTON_WIDTH            BUTTON_WIDTH_4
+#if NUMBER_OF_RIGHT_SLIDERS > 0
 #define BUTTONS_START_X         ((DISPLAY_WIDTH - BUTTON_WIDTH) / 2)
+#else
+#define BUTTONS_START_X         (SLIDER_BAR_LENGTH + BUTTON_DEFAULT_SPACING)
+#endif
 #define BUTTON_HEIGHT           (SLIDER_BAR_WIDTH + SLIDER_CAPTION_SIZE)
 #define BUTTON_TEXT_SIZE        7
 
 // PROGMEM text strings for buttons
 const char sString_Load[] PROGMEM = "Load\nvalues";
 const char sString_Store[] PROGMEM = "Store\nvalues";
+const char sString_LedOn[] PROGMEM = "LED On";
+const char sString_LedOff[] PROGMEM = "LED Off";
+const char sString_On[] PROGMEM = "On";
+const char sString_Off[] PROGMEM = "Off";
 const char sString_Button1[] PROGMEM = "Button_1";
 const char sString_Button2[] PROGMEM = "Button_2";
 const char sString_Button3[] PROGMEM = "Button_3";
@@ -88,6 +114,22 @@ const char sString_Button5[] PROGMEM = "Button_5";
 const char sString_Button6[] PROGMEM = "Button_6";
 const char sString_Button7[] PROGMEM = "Button_7";
 const char sString_Button8[] PROGMEM = "Button_8";
+
+struct ButtonStaticInfoStruct {
+    int16_t Value;
+    const char *ButtonText; // String in PROGMEM
+    const char *ButtonTextForValueTrue; // if not 0 | NULL | nullptr a Red/Green toggle button is created
+};
+
+/********************
+ *     COMMON
+ ********************/
+#if !defined(SLIDER_AND_BUTTON_START_Y)
+#define SLIDER_AND_BUTTON_START_Y   BUTTON_HEIGHT_6
+#endif
+#if !defined(SLIDER_AND_BUTTON_DELTA_Y)
+#define SLIDER_AND_BUTTON_DELTA_Y   (2 * SLIDER_BAR_WIDTH)
+#endif
 
 void initSlidersAndButtons(const SliderStaticInfoStruct *aLeftSliderStaticPGMInfoPtr,const SliderStaticInfoStruct *aRightSliderStaticPGMInfoPtr);
 void drawSlidersAndButtons(void);

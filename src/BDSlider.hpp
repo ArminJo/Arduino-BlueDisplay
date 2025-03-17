@@ -118,6 +118,22 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
 }
 
 /*
+ * @param aFlags - See #FLAG_SLIDER_SHOW_BORDER etc.
+ */
+void BDSlider::setFlags(int16_t aFlags) {
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_FLAGS, aFlags);
+}
+
+void BDSlider::setCallback(void (*aOnChangeHandler)(BDSlider*, int16_t)) {
+#if __SIZEOF_POINTER__ == 4
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderIndex, SUBFUNCTION_SLIDER_SET_CALLBACK, aOnChangeHandler,
+                (reinterpret_cast<uint32_t>(aOnChangeHandler) >> 16));
+#else
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_CALLBACK, aOnChangeHandler);
+#endif
+}
+
+/*
  * For description see BDButton::deinit()
  */
 void BDSlider::deinit() {
@@ -340,7 +356,8 @@ void BDSlider::setMinMaxValue(int16_t aMinValue, int16_t aMaxValue) {
 }
 
 void BDSlider::setBorderSizesAndColor(uint8_t aLongBorderWidth, uint8_t aShortBorderWidth, color16_t aBorderColor) {
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 5, mSliderIndex, SUBFUNCTION_SLIDER_SET_BORDER_SIZES_AND_COLOR, aLongBorderWidth, aShortBorderWidth, aBorderColor);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 5, mSliderIndex, SUBFUNCTION_SLIDER_SET_BORDER_SIZES_AND_COLOR, aLongBorderWidth,
+            aShortBorderWidth, aBorderColor);
 }
 
 void BDSlider::printValue(const char *aValueString) {
