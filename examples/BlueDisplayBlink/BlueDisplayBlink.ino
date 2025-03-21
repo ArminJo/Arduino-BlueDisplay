@@ -54,7 +54,7 @@ void initDisplay(void);
 void drawGui(void);
 
 // PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
-const char StartMessage[] = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
+const char StartMessage[] PROGMEM = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
 
 /*******************************************************************************************
  * Program code starts here
@@ -89,7 +89,7 @@ void setup() {
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 // Just to know which program is running on my Arduino
-    Serial.println(StartMessage);
+    Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
 #elif !defined(BD_USE_SIMPLE_SERIAL)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
     if (!BlueDisplay1.isConnectionEstablished()) {
@@ -97,8 +97,8 @@ void setup() {
     || defined(SERIALUSB_PID)  || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_attiny3217)
         delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
-        // If connection is enabled, this message was already sent as BlueDisplay1.debug()
-        Serial.println(StartMessage);
+        // If connection is enabled, this message was already sent as BlueDisplay1.debug() by initDisplay()
+        Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
     }
 #endif
 }

@@ -512,11 +512,7 @@ void setup() {
      * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
-#if defined(BD_USE_SIMPLE_SERIAL)
-    BlueDisplay1.initCommunication(&initDisplay, &redrawDisplay); // introduces up to 1.5 seconds delay
-#else
     BlueDisplay1.initCommunication(&Serial, &initDisplay, &redrawDisplay); // introduces up to 1.5 seconds delay
-#endif
     registerSwipeEndCallback(&doSwipeEndDSO);
     registerTouchUpCallback(&doSwitchInfoModeOnTouchUp);
     registerLongTouchDownCallback(&doLongTouchDownDSO, 900);

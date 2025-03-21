@@ -216,12 +216,11 @@ void initDisplay(void) {
     sTextSize = sCurrentDisplayHeight / 16;
     sTextSizeVCC = sTextSize * 2;
 
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL, sCurrentDisplayWidth, sCurrentDisplayHeight);
+    // Lock the screen orientation to avoid screen flip while rotating the smartphone
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_SCREEN_ORIENTATION_LOCK_CURRENT, sCurrentDisplayWidth, sCurrentDisplayHeight);
 
     sSensorChangeCallCountForZeroAdjustment = 0;
     registerSensorChangeCallback(FLAG_SENSOR_TYPE_ACCELEROMETER, FLAG_SENSOR_DELAY_UI, FLAG_SENSOR_SIMPLE_FILTER, &doSensorChange);
-    // Lock the screen orientation to avoid screen flip while rotating the smartphone
-    BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_CURRENT);
 
     SliderSpeed.init(0, sCurrentDisplayHeight / 32, sSliderWidth * 3, sSliderHeightLaser, sSliderHeightLaser,
             sSliderHeightLaser / 2, SLIDER_BACKGROUND_COLOR, SLIDER_BAR_COLOR, FLAG_SLIDER_VERTICAL_SHOW_NOTHING, &doLaserPosition);
@@ -326,7 +325,7 @@ void BDsetup() {
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
 // Just to know which program is running on my Arduino
-    Serial.println(StartMessage);
+    Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
 #elif !defined(BD_USE_SIMPLE_SERIAL)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
     if (!BlueDisplay1.isConnectionEstablished()) {
@@ -335,7 +334,7 @@ void BDsetup() {
         delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
         // If connection is enabled, this message was already sent as BlueDisplay1.debug()
-        Serial.println(StartMessage);
+        Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
     }
 #endif
 

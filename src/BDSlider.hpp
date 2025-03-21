@@ -62,7 +62,7 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
         int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
         void (*aOnChangeHandler)(BDSlider*, uint16_t)) {
     init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags,
-            reinterpret_cast<void (*)(BDSlider*, int16_t)>(aOnChangeHandler));
+            (void (*)(BDSlider*, int16_t))(aOnChangeHandler));
 }
 #endif
 

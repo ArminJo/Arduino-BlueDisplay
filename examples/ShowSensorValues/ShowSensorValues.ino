@@ -137,7 +137,7 @@ void drawGui(void);
 char sStringBuffer[20];
 
 // PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
-const char StartMessage[] = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
+const char StartMessage[] PROGMEM = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
 
 // Helper macro for getting a macro definition as string
 #if !defined(STR)
@@ -180,7 +180,7 @@ void setup() {
 
 #  if !(defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER) || defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER))
     // Just to know which program is running on my Arduino
-    Serial.println(StartMessage);
+    Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
 #  endif
 #elif !defined(BD_USE_SIMPLE_SERIAL)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
@@ -191,7 +191,7 @@ void setup() {
         delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #    endif
         // If connection is enabled, this message was already sent as BlueDisplay1.debug()
-        Serial.println(StartMessage);
+        Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
     }
 # endif
 #endif
@@ -320,11 +320,9 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback *aSensorCallbackI
  */
 void initDisplay(void) {
     // Initialize display size and flags
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH,
-    DISPLAY_HEIGHT);
-
     // Screen orientation is fixed to the orientation at connect time
-    BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_CURRENT);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_SCREEN_ORIENTATION_LOCK_CURRENT, DISPLAY_WIDTH,
+    DISPLAY_HEIGHT);
 
     // FLAG_SENSOR_DELAY_UI -> 60 ms sensor rate, FLAG_SENSOR_DELAY_NORMAL -> 200 ms sensor rate
 #if !defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER)

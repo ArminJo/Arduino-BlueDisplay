@@ -124,16 +124,8 @@ void BlueDisplay::resetLocal() {
  * since connect and reorientation event also calls the redraw callback.
  *
  * Usage:
- *  uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &drawGui); // introduces up to 1.5 seconds delay
- *  #if !defined(BD_USE_SIMPLE_SERIAL)
- *  if (tConnectDurationMillis > 0) {
- *      Serial.print("Connection established after ");
- *      Serial.print(tConnectDurationMillis);
- *      Serial.println(" ms");
- *  } else {
- *      Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
- *  }
- *  #endif
+ *  uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &drawGui);
+ *  Introduces up to 1.5 seconds delay (CONNECTIOM_TIMEOUT_MILLIS)
  *
  * @return The milliseconds used to connect, 0 if no connection was made
  */
@@ -154,19 +146,20 @@ uint_fast16_t BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*
     clearSerialInputBuffer();
 #endif
 
+//    return requestMaxCanvasSizeBlockingWait(CONNECTIOM_TIMEOUT_MILLIS); // this call costs 14 bytes
 // This results in a data event, which sends size and timestamp
     requestMaxCanvasSize();
 
     for (uint_fast16_t i = 0; i < CONNECTIOM_TIMEOUT_MILLIS; i += 10) {
         /*
-         * Wait 300 ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
+         * Wait CONNECTIOM_TIMEOUT_MILLIS ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
          * Time measured is between 50 and 150 ms (or mostly between 80 and 120) for Bluetooth.
          * But I have seen 990 ms too :-(( , which corresponds to a communication lag of 500 ms in each direction,
          * even if we have a 1 second delay before initCommunication();
          */
         delayMillisWithCheckAndHandleEvents(10);
         if (mBlueDisplayConnectionEstablished) { // is set by delay(WithCheckAndHandleEvents()
-            // Handler are called initially by the received canvas size event
+            // Handler are called by the received canvas size event, if mBlueDisplayConnectionEstablished was not set before
             return i;
             break;
         }
@@ -175,23 +168,24 @@ uint_fast16_t BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*
 }
 
 /*
- * Call with BlueDisplay1.initCommunication(&Serial, &connectHandler);
+ * Call with BlueDisplay1.initCommunication(&Serial, &initDisplay, ...);
  */
 #if defined(ARDUINO)
 void BlueDisplay::initCommunication(Print *aSerial, void (*aConnectCallback)(), void (*aRedrawCallback)(),
         void (*aReorientationCallback)()) {
 #  if defined(BD_USE_SIMPLE_SERIAL)
     (void) aSerial;
-    BlueDisplay1.initCommunication(aConnectCallback,aRedrawCallback,aReorientationCallback);
+    // No printing here, in order not to avoid vector collisions by linking the Serial object
+    BlueDisplay1.initCommunication(aConnectCallback, aRedrawCallback, aReorientationCallback);
 #  else
     uint_fast16_t tConnectDurationMillis = BlueDisplay1.initCommunication(aConnectCallback, aRedrawCallback,
             aReorientationCallback);
     if (tConnectDurationMillis > 0) {
-        aSerial->print("Connection established after ");
+        aSerial->print("BD Connection established after ");
         aSerial->print(tConnectDurationMillis);
         aSerial->println(" ms");
     } else {
-        aSerial->println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
+        aSerial->println(F("No BD connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
     }
 #  endif
 }
@@ -210,6 +204,11 @@ void BlueDisplay::sendSync() {
     }
 }
 
+/**
+ * @param aFlags combination of BD_FLAG_FIRST_RESET_ALL, BD_FLAG_TOUCH_BASIC_DISABLE,
+ *         BD_FLAG_ONLY_TOUCH_MOVE_DISABLE, BD_FLAG_LONG_TOUCH_ENABLE, BD_FLAG_USE_MAX_SIZE
+ *         or combination of BD_FLAG_SCREEN_ORIENTATION_*
+ */
 void BlueDisplay::setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHeight) {
     mRequestedDisplaySize.XWidth = aWidth;
     mRequestedDisplaySize.YHeight = aHeight;
@@ -259,7 +258,7 @@ void BlueDisplay::setLongTouchDownTimeout(uint16_t aLongTouchDownTimeoutMillis) 
 }
 
 /**
- * @param aLockMode one of FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE, FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT,
+ * @param aLockMode combination of FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE, FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT,
  *         FLAG_SCREEN_ORIENTATION_LOCK_CURRENT or FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK
  */
 void BlueDisplay::setScreenOrientationLock(uint8_t aLockMode) {
@@ -419,7 +418,6 @@ void BlueDisplay::drawVectorDegree(uint16_t aStartX, uint16_t aStartY, uint16_t 
         int16_t aThickness) {
     sendUSARTArgs(FUNCTION_DRAW_VECTOR_DEGREE, 6, aStartX, aStartY, aLength, aDegree, aColor, aThickness);
 }
-
 
 /*
  * aRadian in float radian, not degree
@@ -1385,6 +1383,29 @@ void BlueDisplay::getInfo(uint8_t aInfoSubcommand, void (*aInfoHandler)(uint8_t,
  */
 void BlueDisplay::requestMaxCanvasSize() {
     sendUSARTArgs(FUNCTION_REQUEST_MAX_CANVAS_SIZE, 0);
+}
+
+/*
+ * requestMaxCanvasSize and do a blocking wait for the response to be received
+ */
+uint_fast16_t BlueDisplay::requestMaxCanvasSizeBlockingWait(uint_fast16_t aTimeoutMillis) {
+    sBDEventJustReceived = false;
+    sendUSARTArgs(FUNCTION_REQUEST_MAX_CANVAS_SIZE, 0);
+    for (uint_fast16_t i = 0; i < aTimeoutMillis; i += 10) {
+        /*
+         * Wait aTimeoutMillis ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
+         * Time measured is between 50 and 150 ms (or mostly between 80 and 120) for Bluetooth.
+         * But I have seen 990 ms too :-(( , which corresponds to a communication lag of 500 ms in each direction,
+         * even if we have a 1 second delay before initCommunication();
+         */
+        delayMillisWithCheckAndHandleEvents(10);
+        if (sBDEventJustReceived) { // is set by delay(WithCheckAndHandleEvents()
+            // Handler are called by the received canvas size event, if mBlueDisplayConnectionEstablished was not set before
+            return i;
+            break;
+        }
+    }
+    return 0;
 }
 
 #if defined(__AVR__)

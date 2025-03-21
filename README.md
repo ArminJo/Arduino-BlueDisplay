@@ -45,7 +45,10 @@ Connecting the Arduino with an USB cable to your smartphone requires an USB-OTG 
 - **Graphic + text** output as well as **printf implementation**.
 - Draw **chart** from byte or short values. Enables clearing of last drawn chart.
 - Play system tones.
-- **Touch button + slider** objects with tone feedback.
+- **Touch button + slider** objects with tone feedback and 16 bit values.
+- Sliders can have arbitrary start and end values.
+- Buttons can be **Red/Green toggle** button with different text for both states.
+- Buttons can be **autorepeat buttons** with 2 different repeat rates.
 - Button and slider callback as well as touch and **sensor events** are sent back to Arduino.
 - Automatic and manually **scaling of display region**.
 - Easy mapping of UTF-8 characters like Ohm, Celsius etc..
@@ -80,17 +83,8 @@ void initDisplay(void);
 void drawGui(void);
 
 void setup() {
-    Serial.begin(BLUETOOTH_BAUD_RATE);
-    BlueDisplay1.initCommunication(&initDisplay, &drawGui);
-#if !defined(BD_USE_SIMPLE_SERIAL)
-    if (tConnectDurationMillis > 0) {
-        Serial.print("Connection established after ");
-        Serial.print(tConnectDurationMillis);
-        Serial.println(" ms");
-    } else {
-        Serial.println(F("No connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
-    }
-#endif
+    initSerial(BLUETOOTH_BAUD_RATE); // Converted to Serial.begin(BLUETOOTH_BAUD_RATE) by default
+    BlueDisplay1.initCommunication(&Serial,&initDisplay, &drawGui); // Introduces up to 1.5 seconds delay and calls initDisplay(), if BT connection is available
 }
 void loop() {
 ...
@@ -376,6 +370,7 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ### Version 4.4.2
 - Added `setCallback()` and `setFlags()` for buttons and sliders.
 - Modified ManySlidersAndButtons example.
+- Screen orientation flags now also possible in setFlagsAndSize().
 
 ### Version 4.4.0 - The version compatible with app version 4.4
 - Removed `mMaxDisplaySize`, because it was just a copy of `CurrentDisplaySize`.

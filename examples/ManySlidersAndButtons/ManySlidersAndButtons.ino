@@ -200,18 +200,27 @@ void TestNewSliderAndButton();
 void doTestSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue);
 void doTestButton(BDButton *aTheTouchedButton, int16_t aValue);
 
+const char StartMessage[] PROGMEM = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
+
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
-    Serial.begin(115200);
 
-    BlueDisplay1.initCommunication(&Serial, &initDisplay); // initializes Serial and introduces up to 1.5 seconds delay
+#if defined(ESP32)
+    Serial.begin(115200);
+    Serial.println(StartMessage);
+    initSerial("ESP-BD_Example");
+    Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
+#else
+    initSerial(); // On standard AVR platforms this results in Serial.begin(BLUETOOTH_BAUD_RATE) or Serial.begin(9600)
+#endif
+    BlueDisplay1.initCommunication(&Serial, &initDisplay); // Introduces up to 1.5 seconds delay and calls initDisplay(), if BT connection is available
 
 #if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
     || defined(SERIALUSB_PID)  || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_attiny3217)
 delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
 // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing BD library version " VERSION_BLUE_DISPLAY));
+    Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
 
     Serial.println(F("Setup finished"));
 }

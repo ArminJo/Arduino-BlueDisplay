@@ -129,7 +129,7 @@ static const float NUMBER_INITIAL_VALUE_DO_NOT_SHOW = 1e-40f;
 /**********************
  * Basic
  *********************/
-// Sub functions for SET_FLAGS_AND_SIZE
+// Sub functions for SET_FLAGS_AND_SIZE / setFlagsAndSize()
 // Reset buttons, sliders, sensors, orientation locking, flags (see next lines) and character mappings
 static const int BD_FLAG_FIRST_RESET_ALL = 0x01;
 //
@@ -137,6 +137,15 @@ static const int BD_FLAG_TOUCH_BASIC_DISABLE = 0x02; // Do not send plain touch 
 static const int BD_FLAG_ONLY_TOUCH_MOVE_DISABLE = 0x04; // Do not send MOVE, only UP and DOWN.
 static const int BD_FLAG_LONG_TOUCH_ENABLE = 0x08; // If long touch detection is required. This delays the sending of plain DOWN Events.
 static const int BD_FLAG_USE_MAX_SIZE = 0x10;      // Use maximum display size for given geometry. -> Scale automatically to screen.
+// Here we use the same values as below, but shifted by 8 bytes
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x0000;
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT = 0x0100;
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x0200;
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x0300;
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE = 0x0600; // both landscapes are allowed
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_PORTRAIT = 0x0700;
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_LANDSCAPE = 0x0800;
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_PORTRAIT = 0x0900;
 
 /*********************************************
  * Flags for setScreenOrientationLock()
@@ -363,6 +372,7 @@ public:
     void getInfo(uint8_t aInfoSubcommand, void (*aInfoHandler)(uint8_t, uint8_t, uint16_t, ByteShortLongFloatUnion));
     // This call results in a reorientation callback
     void requestMaxCanvasSize();
+    uint_fast16_t requestMaxCanvasSizeBlockingWait(uint_fast16_t aTimeoutMillis);
 
     void setSensor(uint8_t aSensorType, bool aDoActivate, uint8_t aSensorRate, uint8_t aFilterFlag);
 
@@ -437,6 +447,7 @@ float getCPUTemperature(void);
  *
  * Version 4.4.2
  * - Added setCallback() and setFlags() for buttons and sliders.
+ * - Screen orientation flags now also possible in setFlagsAndSize().
  *
  * Version 4.4.0 - The version compatible with app version 4.4.1
  * - Removed mMaxDisplaySize, because it was just a copy of CurrentDisplaySize, which is now HostDisplaySize etc..

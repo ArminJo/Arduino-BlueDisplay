@@ -13,7 +13,7 @@
  *  Move -> moves randomly in the programmed border. Currently horizontal 45 to 135 and vertical 0 to 45
  *
  *
- *  Copyright (C) 2015-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
@@ -158,8 +158,8 @@ void doSensorChange(uint8_t aSensorType, struct SensorCallback *aSensorCallbackI
 uint8_t getRandomValue(ServoControlStruct *aServoControlStruct, ServoEasing *aServoEasing);
 
 // PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
-const char StartMessage[] = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
-const char ServoInfoMessage[] =
+const char StartMessage[] PROGMEM = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
+const char ServoInfoMessage[] PROGMEM =
         "Horizontal servo pin=" STR(HORIZONTAL_SERVO_PIN) ", vertical servo pin=" STR(VERTICAL_SERVO_PIN) ", laser pin=" STR(LASER_POWER_PIN);
 
 /*******************************************************************************************
@@ -213,8 +213,8 @@ void setup() {
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
     // Just to know which program is running on my Arduino
-    Serial.println(StartMessage);
-    Serial.println(ServoInfoMessage);
+    Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
+    Serial.println(reinterpret_cast<const __FlashStringHelper *>(ServoInfoMessage));
 #elif !defined(BD_USE_SIMPLE_SERIAL)
     // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
     if (!BlueDisplay1.isConnectionEstablished()) {
@@ -223,8 +223,8 @@ void setup() {
         delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
         // If connection is enabled, this message was already sent as BlueDisplay1.debug()
-        Serial.println(StartMessage);
-        Serial.println(ServoInfoMessage);
+        Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
+        Serial.println(reinterpret_cast<const __FlashStringHelper *>(ServoInfoMessage));
     }
 #endif
 
@@ -339,7 +339,8 @@ void initDisplay(void) {
 
     sTextSize = sCurrentDisplayHeight / 9;
 
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL, sCurrentDisplayWidth, sCurrentDisplayHeight);
+    // Since landscape has 2 orientations, let the user choose the right one.
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE, sCurrentDisplayWidth, sCurrentDisplayHeight);
 
 #if !defined(BD_USE_SIMPLE_SERIAL) && (defined(BD_USE_SERIAL1) || defined(ESP32))
     Serial.print("RequestedDisplayWidth=");
@@ -348,9 +349,6 @@ void initDisplay(void) {
     Serial.println(sCurrentDisplayHeight);
 #endif
     tSensorChangeCallCount = 0;
-    // Since landscape has 2 orientations, let the user choose the right one.
-    BlueDisplay1.setScreenOrientationLock(FLAG_SCREEN_ORIENTATION_LOCK_CURRENT);
-
     uint16_t tSliderSize = sCurrentDisplayHeight / 2;
 
     /*

@@ -310,8 +310,8 @@ void BDButton::setCaptionFromStringArray(const __FlashStringHelper* const *aPGMT
 #endif
 
 /*
- * Sets text for value true (green button) if different from default false (red button) text
- * And implicitly converts button to a green button
+ * Sets text for value true (green) if different from default false (red) text
+ * This also implicitly converts button to a red/green button
  */
 void BDButton::setTextForValueTrue(const char *aText) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
