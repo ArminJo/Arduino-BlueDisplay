@@ -363,8 +363,8 @@ void initTimer2(void);
 
 void initDisplay(void) {
     BlueDisplay1.setFlagsAndSize(
-            BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_LONG_TOUCH_ENABLE | BD_FLAG_ONLY_TOUCH_MOVE_DISABLE,
-            DISPLAY_WIDTH, DISPLAY_HEIGHT);
+            BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_LONG_TOUCH_ENABLE | BD_FLAG_ONLY_TOUCH_MOVE_DISABLE
+                    | BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
     BlueDisplay1.setCharacterMapping(0xD1, 0x21D1); // Ascending in UTF16 - for printInfo()
     BlueDisplay1.setCharacterMapping(0xD2, 0x21D3); // Descending in UTF16 - for printInfo()
     BlueDisplay1.setCharacterMapping(0xD4, 0x2227); // UP (logical AND) in UTF16
@@ -1898,13 +1898,11 @@ void printfTriggerDelay(char *aDataBufferPtr, uint16_t aTriggerDelayMillisOrMicr
 
 void printSingleshotMarker() {
 // draw an S to indicate running single shot trigger
-    BlueDisplay1.drawChar(SINGLESHOT_PPRINT_VALUE_X, FONT_SIZE_INFO_LONG_ASC, 'S', FONT_SIZE_INFO_LONG, COLOR16_BLACK,
-    COLOR_INFO_BACKGROUND);
+    BlueDisplay1.drawChar(SINGLESHOT_PPRINT_VALUE_X, 0, 'S', FONT_SIZE_INFO_LONG, COLOR16_BLACK, COLOR_INFO_BACKGROUND);
 }
 
 void clearSingleshotMarker() {
-    BlueDisplay1.drawChar(SINGLESHOT_PPRINT_VALUE_X, FONT_SIZE_INFO_LONG_ASC, ' ', FONT_SIZE_INFO_LONG, COLOR16_BLACK,
-    COLOR_BACKGROUND_DSO);
+    BlueDisplay1.drawChar(SINGLESHOT_PPRINT_VALUE_X, 0, ' ', FONT_SIZE_INFO_LONG, COLOR16_BLACK, COLOR_BACKGROUND_DSO);
 }
 
 /*
@@ -1998,8 +1996,7 @@ void printInfo(bool aRecomputeValues) {
                 tTimebaseUnitChar, tSlopeChar, tMinStringBuffer, tAverageStringBuffer, tMaxStringBuffer, tP2PStringBuffer,
                 tTriggerStringBuffer, tReferenceChar);
         memcpy_P(&sStringBuffer[8], ADCInputMUXChannelStrings[MeasurementControl.ADMUXChannel], 4);
-        BlueDisplay1.drawText(INFO_LEFT_MARGIN, FONT_SIZE_INFO_LONG_ASC, sStringBuffer, FONT_SIZE_INFO_LONG, COLOR16_BLACK,
-        COLOR_INFO_BACKGROUND);
+        BlueDisplay1.drawText(INFO_LEFT_MARGIN, 0, sStringBuffer, FONT_SIZE_INFO_LONG, COLOR16_BLACK, COLOR_INFO_BACKGROUND);
 
         /*
          * 2. line - timing, period, 1st interval, 2nd interval
@@ -2025,8 +2022,8 @@ void printInfo(bool aRecomputeValues) {
             printfTriggerDelay(&sStringBuffer[40], MeasurementControl.TriggerDelayMillisOrMicros);
         }
 
-        BlueDisplay1.drawText(INFO_LEFT_MARGIN, FONT_SIZE_INFO_LONG_ASC + FONT_SIZE_INFO_LONG, sStringBuffer, FONT_SIZE_INFO_LONG,
-        COLOR16_BLACK, COLOR_INFO_BACKGROUND);
+        BlueDisplay1.drawText(INFO_LEFT_MARGIN, FONT_SIZE_INFO_LONG, sStringBuffer, FONT_SIZE_INFO_LONG, COLOR16_BLACK,
+        COLOR_INFO_BACKGROUND);
 
     } else {
         /*
@@ -2056,8 +2053,7 @@ void printInfo(bool aRecomputeValues) {
         }
 #endif
 #endif
-        BlueDisplay1.drawText(INFO_LEFT_MARGIN, FONT_SIZE_INFO_SHORT_ASC, sStringBuffer, FONT_SIZE_INFO_SHORT, COLOR16_BLACK,
-        COLOR_INFO_BACKGROUND);
+        BlueDisplay1.drawText(INFO_LEFT_MARGIN, 0, sStringBuffer, FONT_SIZE_INFO_SHORT, COLOR16_BLACK, COLOR_INFO_BACKGROUND);
     }
 }
 
@@ -2098,7 +2094,7 @@ void printTriggerInfo(void) {
     uint16_t tXPos = TRIGGER_LEVEL_INFO_SHORT_X;
     uint8_t tFontsize = FONT_SIZE_INFO_SHORT;
     if (DisplayControl.showInfoMode == INFO_MODE_NO_INFO) {
-        tYPos = FONT_SIZE_INFO_SHORT_ASC;
+        tYPos = 0;
     } else if (DisplayControl.showInfoMode == INFO_MODE_LONG_INFO) {
         tXPos = TRIGGER_LEVEL_INFO_LONG_X;
         tYPos = TRIGGER_LEVEL_INFO_LONG_Y;
@@ -2119,8 +2115,8 @@ void printVCCAndTemperature(void) {
         dtostrf(MeasurementControl.VCC, 4, 2, &sStringBuffer[30]);
 
         snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%s volt %s\xB0" "C"), &sStringBuffer[30], &sStringBuffer[40]); // \xB0 is degree character
-        BlueDisplay1.drawText(BUTTON_WIDTH_3_POS_2, SETTINGS_PAGE_INFO_Y, sStringBuffer,
-        TEXT_SIZE_11, COLOR16_BLACK, COLOR_BACKGROUND_DSO);
+        BlueDisplay1.drawText(BUTTON_WIDTH_3_POS_2, SETTINGS_PAGE_INFO_Y, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK,
+                COLOR_BACKGROUND_DSO);
     }
 }
 
@@ -2183,8 +2179,7 @@ uint16_t getStackUnusedBytes() {
 void printFreeStack(void) {
     uint16_t tUntouchesBytesOnStack = getStackUnusedBytes();
     snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%4u Stack[bytes]"), tUntouchesBytesOnStack);
-    BlueDisplay1.drawText(0, SETTINGS_PAGE_INFO_Y, sStringBuffer,
-    TEXT_SIZE_11, COLOR16_BLACK, COLOR_BACKGROUND_DSO);
+    BlueDisplay1.drawText(0, SETTINGS_PAGE_INFO_Y, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK, COLOR_BACKGROUND_DSO);
 }
 
 /*

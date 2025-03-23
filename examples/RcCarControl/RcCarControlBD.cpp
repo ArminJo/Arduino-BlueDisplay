@@ -177,9 +177,9 @@ void drawGui(void) {
     TouchButtonFollowerOnOff.drawButton();
     SliderShowUSDistance.drawSlider();
     // draw cm string
-    // y Formula is: mPositionY + tSliderLongWidth + aTextLayoutInfo.mMargin + (int) (0.76 * aTextLayoutInfo.mSize)
+    // y Formula is: mPositionY + tSliderLongWidth + aTextLayoutInfo.mMargin
     BlueDisplay1.drawText(sCurrentDisplayWidth / 2 + sSliderWidth + 3 * getTextWidth(sTextSize),
-    BUTTON_HEIGHT_4_DYN_LINE_2 - BUTTON_VERTICAL_SPACING_DYN + sTextSize / 2 + getTextAscend(sTextSize), "cm", sTextSize,
+    BUTTON_HEIGHT_4_DYN_LINE_2 - BUTTON_VERTICAL_SPACING_DYN + sTextSize / 2, "cm", sTextSize,
     COLOR16_BLACK, COLOR16_WHITE);
     // draw Laser Position string
     BlueDisplay1.drawText(0, sCurrentDisplayHeight / 32 + sSliderHeightLaser + sTextSize, "Laser position", sTextSize,

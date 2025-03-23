@@ -181,9 +181,9 @@ inline void resetTimingDebug() {
 #define DATABUFFER_SIZE   580
 
 #define ADC_START_CHANNEL   3  // see also ChannelSelectButtonString
-#define INFO_UPPER_MARGIN   (1 + TEXT_SIZE_11_ASCEND)
-#define INFO_LINE_SPACING   2
-#define INFO_LEFT_MARGIN    4
+#define INFO_UPPER_MARGIN   1
+#define INFO_LINE_SPACING   1
+#define INFO_LEFT_MARGIN    2
 
 #define THOUSANDS_SEPARATOR '.'
 /*

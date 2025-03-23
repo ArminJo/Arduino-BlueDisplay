@@ -95,7 +95,7 @@ void doBack(BDButton *aTheTouchedButton, int16_t aValue);
  */
 BDSlider TouchSliderDelay;
 // handler for value change
-void doDelay(BDSlider *aTheTouchedSlider, uint16_t aSliderValue);
+void doDelay(BDSlider *aTheTouchedSlider, int16_t aSliderValue);
 
 void printDemoString(void);
 
@@ -171,7 +171,7 @@ void setup() {
         delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
         // If connection is enabled, this message was already sent as BlueDisplay1.debug()
-        Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
+        Serial.println(reinterpret_cast<const __FlashStringHelper*>(StartMessage));
     }
 #endif
 
@@ -377,8 +377,7 @@ void printTime() {
     snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(),
             second());
     BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer,
-            11,
-            COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
+            11, COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
 }
 #endif
 
@@ -429,7 +428,7 @@ void doGetDelay(BDButton *aTheTouchedButton, int16_t aValue) {
 /*
  * Is called by touch or move on slider and sets the new delay according to the passed slider value
  */
-void doDelay(BDSlider *aTheTouchedSlider __attribute__((unused)), uint16_t aSliderValue) {
+void doDelay(BDSlider *aTheTouchedSlider __attribute__((unused)), int16_t aSliderValue) {
     sDelay = aSliderValue;
 }
 
@@ -496,7 +495,7 @@ void printDemoString(void) {
                 + ((int16_t) (COLOR16_GET_GREEN(COLOR_CAPTION) - COLOR16_GET_GREEN(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
         uint8_t ColorBlue = COLOR16_GET_BLUE(COLOR_DEMO_BACKGROUND)
                 + ((int16_t) ( COLOR16_GET_BLUE(COLOR_CAPTION) - COLOR16_GET_BLUE(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
-        BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH / 2 - 2 * getTextWidth(36), 4 + getTextAscend(36), "Demo", 36,
+        BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH / 2 - 2 * getTextWidth(36), 4, "Demo", 36,
                 COLOR16(ColorRed, ColorGreen, ColorBlue), COLOR_DEMO_BACKGROUND);
     }
 }

@@ -159,7 +159,8 @@ uint8_t getRandomValue(ServoControlStruct *aServoControlStruct, ServoEasing *aSe
 
 // PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
 const char StartMessage[] PROGMEM = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
-const char ServoInfoMessage[] PROGMEM =
+const char ServoInfoMessage[] PROGMEM
+        =
         "Horizontal servo pin=" STR(HORIZONTAL_SERVO_PIN) ", vertical servo pin=" STR(VERTICAL_SERVO_PIN) ", laser pin=" STR(LASER_POWER_PIN);
 
 /*******************************************************************************************
@@ -223,8 +224,8 @@ void setup() {
         delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #  endif
         // If connection is enabled, this message was already sent as BlueDisplay1.debug()
-        Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
-        Serial.println(reinterpret_cast<const __FlashStringHelper *>(ServoInfoMessage));
+        Serial.println(reinterpret_cast<const __FlashStringHelper*>(StartMessage));
+        Serial.println(reinterpret_cast<const __FlashStringHelper*>(ServoInfoMessage));
     }
 #endif
 
@@ -340,7 +341,8 @@ void initDisplay(void) {
     sTextSize = sCurrentDisplayHeight / 9;
 
     // Since landscape has 2 orientations, let the user choose the right one.
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE, sCurrentDisplayWidth, sCurrentDisplayHeight);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE, sCurrentDisplayWidth,
+            sCurrentDisplayHeight);
 
 #if !defined(BD_USE_SIMPLE_SERIAL) && (defined(BD_USE_SERIAL1) || defined(ESP32))
     Serial.print("RequestedDisplayWidth=");
@@ -532,8 +534,7 @@ void doSetBias(BDButton *aTheTouchedButton, int16_t aValue) {
     sYBiasValue = sLastSensorYValue;
     // show message in order to see the effect
     BlueDisplay1.clearDisplay();
-    BlueDisplay1.drawText(0, sTextSize + getTextAscend(sTextSize), "old position is taken \rfor horizontal input\r", sTextSize,
-    COLOR16_BLACK, COLOR16_GREEN);
+    BlueDisplay1.drawText(0, sTextSize, "old position is taken \rfor horizontal input\r", sTextSize, COLOR16_BLACK, COLOR16_GREEN);
     delayMillisWithCheckAndHandleEvents(2500);
     drawGui();
 }

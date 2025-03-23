@@ -60,6 +60,23 @@
 /*
  * PROGMEM caption strings for sliders
  */
+const char sString_ParameterValue1[] PROGMEM = "Parameter value 1";
+const char sString_ParameterValue2[] PROGMEM = "Parameter value 2";
+const char sString_ParameterValue3[] PROGMEM = "Parameter value 3";
+const char sString_ParameterValue4[] PROGMEM = "Parameter value 4";
+const char sString_ParameterValue5[] PROGMEM = "Parameter value 5";
+const char sString_ParameterValue6[] PROGMEM = "Parameter value 6";
+const char sString_ParameterValue7[] PROGMEM = "Parameter value 7";
+const char sString_ParameterValue8[] PROGMEM = "Parameter value 8";
+const char sString_ParameterValue9[] PROGMEM = "Parameter value 9";
+const char sString_ParameterValue10[] PROGMEM = "Parameter value 10";
+const char sString_ParameterValue11[] PROGMEM = "Parameter value 11";
+const char sString_ParameterValue12[] PROGMEM = "Parameter value 12";
+const char sString_ParameterValue13[] PROGMEM = "Parameter value 13";
+const char sString_ParameterValue14[] PROGMEM = "Parameter value 14";
+const char sString_ParameterValue15[] PROGMEM = "Parameter value 15";
+const char sString_ParameterValue16[] PROGMEM = "Parameter value 16";
+
 const char sString_AnalogValue1[] PROGMEM = "Analog value 1";
 const char sString_AnalogValue2[] PROGMEM = "Analog value 2";
 const char sString_AnalogValue3[] PROGMEM = "Analog value 3";
@@ -131,7 +148,8 @@ struct ButtonStaticInfoStruct {
 #define SLIDER_AND_BUTTON_DELTA_Y   (2 * SLIDER_BAR_WIDTH)
 #endif
 
-void initSlidersAndButtons(const SliderStaticInfoStruct *aLeftSliderStaticPGMInfoPtr,const SliderStaticInfoStruct *aRightSliderStaticPGMInfoPtr);
+void initSlidersAndButtons(const SliderStaticInfoStruct *aLeftSliderStaticPGMInfoPtr,
+        const SliderStaticInfoStruct *aRightSliderStaticPGMInfoPtr);
 void drawSlidersAndButtons(void);
 void storeSliderValuesToEEPROM();
 void loadSliderValuesFromEEPROM();
@@ -140,6 +158,5 @@ void loadSliderValuesFromEEPROM();
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 #endif
-
 
 #endif // _MANY_SLIDER_AND_BUTTONS_HELPER_H

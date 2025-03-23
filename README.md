@@ -185,12 +185,18 @@ But if you have a [codepage](https://en.wikipedia.org/wiki/Windows_code_page) wh
 <br/>
 
 # Element positioning
-## Text
+## Text 
+- Text Y position is upper left corner of character
+- Text Y bottom position is position + TextSize
+- Text Y middle position is position + TextSize / 2
+
+### before version 5.0 we had:
 - Text Y position is baseline of character.
 - Text Y top position is (Y position - ascend) - use getTextAscend(TextSize).
 - Text Y bottom position is position + descend.
 - Text Y middle position is position - ((ascend - descend) / 2) - see getTextMiddleCorrection().
 - Text position for local implementation is upper left corner of character.
+
 
 ## Button and Slider
 - Slider position is upper left corner of slider
@@ -367,7 +373,8 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
 
 # Revision History
-### Version 4.4.2
+### Version 5.0.0
+- Text Y and X position is upper left corner of character.
 - Added `setCallback()` and `setFlags()` for buttons and sliders.
 - Modified ManySlidersAndButtons example.
 - Screen orientation flags now also possible in setFlagsAndSize().

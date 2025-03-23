@@ -267,8 +267,8 @@ void Chart::drawXAxisTitle() const {
          * draw axis title
          */
         uint16_t tTextLenPixel = strlen(mXTitleText) * getTextWidth(mTitleTextSize);
-        DisplayForChart.drawText(mPositionX + mWidthX - tTextLenPixel - 1, mPositionY - getTextDecend(mTitleTextSize), mXTitleText,
-                mTitleTextSize, mXLabelColor, mBackgroundColor);
+        DisplayForChart.drawText(mPositionX + mWidthX - tTextLenPixel - 1, mPositionY - mTitleTextSize, mXTitleText, mTitleTextSize,
+                mXLabelColor, mBackgroundColor);
     }
 }
 
@@ -404,7 +404,7 @@ void Chart::drawXAxisAndLabels() {
          */
         uint16_t tNumberYTop = tPositionY + 2 * mAxesSize;
 #if !defined(ARDUINO)
-        assertParamMessage((tNumberYTop <= (DisplayForChart.getRequestedDisplayHeight() - getTextDecend(mLabelTextSize))),
+        assertParamMessage((tNumberYTop <= (DisplayForChart.getRequestedDisplayHeight() - mLabelTextSize)),
                 tNumberYTop, "no space for x labels");
 #endif
         uint8_t tTextWidth = getTextWidth(mLabelTextSize);
@@ -497,9 +497,8 @@ void Chart::drawXAxisAndLabels() {
                  */
                 tXStringPixelOffset = (tTextWidth * tStringLength) / 2;
 
-                DisplayForChart.drawText(mPositionX + tXPixelOffsetOfCurrentLabel - tXStringPixelOffset,
-                        tNumberYTop + getTextAscend(mLabelTextSize), tLabelStringBuffer, mLabelTextSize, mXLabelColor,
-                        mBackgroundColor);
+                DisplayForChart.drawText(mPositionX + tXPixelOffsetOfCurrentLabel - tXStringPixelOffset, tNumberYTop,
+                        tLabelStringBuffer, mLabelTextSize, mXLabelColor, mBackgroundColor);
             }
 
             tXPixelOffsetOfCurrentLabel += mGridOrLabelXPixelSpacing * mXLabelDistance; // skip labels, computing it here saves 12 bytes
@@ -642,9 +641,8 @@ void Chart::drawXAxisAndDateLabels(time_t aStartTimestamp,
             /*
              * Draw label
              */
-            BlueDisplay1.drawText(mPositionX + tXPixelOffsetOfCurrentLabel - tXStringPixelOffset,
-                    tNumberYTop + getTextAscend(tCurrentTextSize), tLabelStringBuffer, tCurrentTextSize, mXLabelColor,
-                    mBackgroundColor);
+            BlueDisplay1.drawText(mPositionX + tXPixelOffsetOfCurrentLabel - tXStringPixelOffset, tNumberYTop, tLabelStringBuffer,
+                    tCurrentTextSize, mXLabelColor, mBackgroundColor);
         }
 #if defined(LOCAL_DEBUG)
         Serial.print(F("XPixelOffsetOfCurrentLabel="));
@@ -703,8 +701,8 @@ void Chart::drawYAxisTitle(const int aYOffset) const {
         /**
          * draw axis title - use data color
          */
-        DisplayForChart.drawText(mPositionX + mAxesSize + 1, mPositionY - mHeightY + aYOffset + getTextAscend(mTitleTextSize),
-                mYTitleText, mTitleTextSize, mYLabelColor, mBackgroundColor);
+        DisplayForChart.drawText(mPositionX + mAxesSize + 1, mPositionY - mHeightY + aYOffset, mYTitleText, mTitleTextSize,
+                mYLabelColor, mBackgroundColor);
     }
 }
 
@@ -750,9 +748,9 @@ void Chart::drawYAxisAndLabels() {
 
 // First offset is half of character height
         uint8_t tTextHeight = getTextHeight(mLabelTextSize);
-// clear label space before
+// clear label space before. (tTextHeight / 2) - getTextDecend(tTextHeight) because we do not have text decent here, only ascend
         DisplayForChart.fillRect(tYNumberXStart, mPositionY - (mHeightY - 1), tPositionX - mAxesSize,
-                mPositionY + getTextDecend(tTextHeight), mBackgroundColor);
+                mPositionY + (tTextHeight / 2) - getTextDecend(tTextHeight), mBackgroundColor);
 
 // convert to string
 // initialize both variables to avoid compiler warnings
@@ -768,8 +766,8 @@ void Chart::drawYAxisAndLabels() {
             snprintf(tLabelStringBuffer, sizeof(tLabelStringBuffer), "%*.*f", mYMinStringWidth, mYNumVarsAfterDecimal, tValueFloat);
 #endif
             tValueFloat += mYLabelIncrementValue;
-            DisplayForChart.drawText(tYNumberXStart, mPositionY - tYOffsetForLabel + getTextMiddleCorrection(tTextHeight),
-                    tLabelStringBuffer, mLabelTextSize, mYLabelColor, mBackgroundColor);
+            DisplayForChart.drawText(tYNumberXStart, mPositionY - tYOffsetForLabel - (tTextHeight / 2), tLabelStringBuffer,
+                    mLabelTextSize, mYLabelColor, mBackgroundColor);
             tYOffsetForLabel += mGridOrLabelYPixelSpacing;
         } while (tYOffsetForLabel <= mHeightY);
     }

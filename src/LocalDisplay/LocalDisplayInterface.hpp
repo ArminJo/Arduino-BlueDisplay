@@ -204,8 +204,6 @@ uint16_t LocalDisplayInterface::drawChar(uint16_t aPositionX, uint16_t aPosition
 
 /**
  * Draw text with character upper left at aPositionX, aPositionY
- * Interpretation of aPositionY is different from the BlueDisplay functions, which use the aPositionY as baseline position,
- *    so use getTextAscend(<aTextSize>)) for aPositionX to start at the upper display border.
  * @param aPositionX left position
  * @param aPositionY upper position
  *

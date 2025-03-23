@@ -3,13 +3,12 @@
  *
  * Helper functions for text sizes etc.
  *
- * Text Y position is baseline
- * Text Y top position is position - ascend
- * Text Y bottom position is position + descend
- * Text Y middle position is position - ((ascend - descend) / 2) | see getTextMiddleCorrection()
+ * Text Y and X position is upper left corner of character
+ * Text Y bottom position is position + TextSize
+ * Text Y middle position is position + TextSize / 2
  *
  *
- *  Copyright (C) 2023-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2023-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -126,18 +125,18 @@ uint16_t getTextAscendMinusDescend(uint16_t aTextSize) {
  * Formula for positioning in the middle of a button:
  * YPosition = ButtonTop + (ButtonHeight + getTextAscendMinusDescend())/2
  */
-uint16_t getTextMiddleCorrection(uint16_t aTextSize) {
-#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
-    if (aTextSize == TEXT_SIZE_11) {
-        return (TEXT_SIZE_11_ASCEND - TEXT_SIZE_11_DECEND) / 2;
-    }
-    return (TEXT_SIZE_22_ASCEND - TEXT_SIZE_22_DECEND) / 2;
-#else
-    uint32_t tRetvalue = aTextSize;
-    tRetvalue = ((tRetvalue * 66) + 128) >> 8;
-    return tRetvalue;
-#endif
-}
+//uint16_t getTextMiddleCorrection(uint16_t aTextSize) {
+//#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
+//    if (aTextSize == TEXT_SIZE_11) {
+//        return (TEXT_SIZE_11_ASCEND - TEXT_SIZE_11_DECEND) / 2;
+//    }
+//    return (TEXT_SIZE_22_ASCEND - TEXT_SIZE_22_DECEND) / 2;
+//#else
+//    uint32_t tRetvalue = aTextSize;
+//    tRetvalue = ((tRetvalue * 66) + 128) >> 8;
+//    return tRetvalue;
+//#endif
+//}
 
 /*
  * Fast divide by 11 for MI0283QT2 driver arguments

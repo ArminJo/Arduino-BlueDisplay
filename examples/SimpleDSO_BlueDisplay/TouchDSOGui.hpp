@@ -253,15 +253,15 @@ void computePeriodFrequency(void) {
                     // found and search for next slope
                     tIntegrateValueForTotalPeriods = tIntegrateValue;
 #endif
-                tCount++;
-                if (tCount == 0) {
-                    // set start position for TRIGGER_MODE_FREE, TRIGGER_MODE_EXTERN or delayed trigger.
-                    tStartPositionForPulsPause = i;
-                } else if (tCount == 1) {
-                    // first complete period (pulse + pause) is detected here
-                    MeasurementControl.PeriodSecond = getMicrosFromHorizontalDisplayValue(i - tFirstEndPositionForPulsPause, 1);
-                }
-                tCountPosition = i;
+                    tCount++;
+                    if (tCount == 0) {
+                        // set start position for TRIGGER_MODE_FREE, TRIGGER_MODE_EXTERN or delayed trigger.
+                        tStartPositionForPulsPause = i;
+                    } else if (tCount == 1) {
+                        // first complete period (pulse + pause) is detected here
+                        MeasurementControl.PeriodSecond = getMicrosFromHorizontalDisplayValue(i - tFirstEndPositionForPulsPause, 1);
+                    }
+                    tCountPosition = i;
 #if !defined(__AVR__)
                 }
 #endif
@@ -513,8 +513,8 @@ const char StringTemperature[] PROGMEM = "Temp";
 const char StringVRefint[] PROGMEM = "VRef";
 const char StringVBattDiv2[] PROGMEM = "\xBD" "VBatt";
 #if defined(__AVR__)
-const char *const ADCInputMUXChannelStrings[] = { StringChannel0, StringChannel1, StringChannel2, StringChannel3, StringChannel4,
-        StringTemperature, StringVRefint };
+const char *const ADCInputMUXChannelStrings[] = {StringChannel0, StringChannel1, StringChannel2, StringChannel3, StringChannel4,
+    StringTemperature, StringVRefint};
 #else
 #if defined(STM32F30X)
 const char *const ADCInputMUXChannelStrings[ADC_CHANNEL_COUNT] = { StringChannel2, StringChannel3, StringChannel4,
@@ -872,7 +872,7 @@ void drawStartPage(void) {
 #endif
     TouchButtonSettingsPage.drawButton();
 //Welcome text
-    BlueDisplay1.drawMLText(10, BUTTON_HEIGHT_4_LINE_2 + 34, F("Welcome to\nArduino DSO"), 32, COLOR16_BLUE, COLOR16_NO_BACKGROUND);
+    BlueDisplay1.drawMLText(10, BUTTON_HEIGHT_4_LINE_2, F("Welcome to\nArduino DSO"), 32, COLOR16_BLUE, COLOR16_NO_BACKGROUND);
     BlueDisplay1.drawText(10, BUTTON_HEIGHT_4_LINE_2 + (3 * 32), F("300 kSamples/s"), 22, COLOR16_BLUE, COLOR_BACKGROUND_DSO);
     uint8_t
     tPos = BlueDisplay1.drawText(10, BUTTON_HEIGHT_4_LINE_2 + (3 * 32) + 22, F("V" VERSION_DSO "/" VERSION_BLUE_DISPLAY),
@@ -1121,15 +1121,15 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
             BlueDisplay1.drawLineRel(0, tYPos, DISPLAY_WIDTH, 0, COLOR_GRID_LINES);
             dtostrf(tActualVoltage, tLength, tPrecision, tStringBuffer);
             // draw label over the line
-            BlueDisplay1.drawText(HORIZONTAL_LINE_LABELS_CAPION_X, tYPos + (TEXT_SIZE_11_ASCEND / 2), tStringBuffer, 11,
+            BlueDisplay1.drawText(HORIZONTAL_LINE_LABELS_CAPION_X, tYPos - (TEXT_SIZE_11 / 2), tStringBuffer, TEXT_SIZE_11,
                     COLOR_HOR_REF_LINE_LABEL, COLOR16_NO_BACKGROUND);
             if (tYPos != DISPLAY_HEIGHT / 2) {
-                // line with negative value
+                // now mirror line with negative value
                 BlueDisplay1.drawLineRel(0, DISPLAY_HEIGHT - tYPos, DISPLAY_WIDTH, 0, COLOR_GRID_LINES);
                 dtostrf(-tActualVoltage, tLength, tPrecision, tStringBuffer);
                 // draw label over the line
                 BlueDisplay1.drawText(HORIZONTAL_LINE_LABELS_CAPION_X - TEXT_SIZE_11_WIDTH,
-                        DISPLAY_HEIGHT - tYPos + (TEXT_SIZE_11_ASCEND / 2), tStringBuffer, 11, COLOR_HOR_REF_LINE_LABEL,
+                        DISPLAY_HEIGHT - tYPos - (TEXT_SIZE_11 / 2), tStringBuffer, TEXT_SIZE_11, COLOR_HOR_REF_LINE_LABEL,
                         COLOR16_NO_BACKGROUND);
             }
             tActualVoltage += MeasurementControl.HorizontalGridVoltage;
@@ -1138,8 +1138,8 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
         if (MeasurementControl.OffsetMode == OFFSET_MODE_AUTOMATIC) {
             tActualVoltage = MeasurementControl.HorizontalGridVoltage * MeasurementControl.OffsetGridCount;
         }
-        // draw first caption over the line
-        int8_t tCaptionOffset = 1;
+
+        uint8_t tCaptionOffset = TEXT_SIZE_11; // draw first caption above the line
         // Start at (DISPLAY_VALUE_FOR_ZERO) shift 8) + 1/2 shift8 for better rounding
         for (int32_t tYPosLoop = 0xFF80; tYPosLoop > 0; tYPosLoop -= MeasurementControl.HorizontalGridSizeShift8) {
             uint16_t tYPos = tYPosLoop / 0x100;
@@ -1150,7 +1150,7 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
             BlueDisplay1.drawText(HORIZONTAL_LINE_LABELS_CAPION_X, tYPos - tCaptionOffset, tStringBuffer, 11,
                     COLOR_HOR_REF_LINE_LABEL, COLOR16_NO_BACKGROUND);
             // draw next caption on the line
-            tCaptionOffset = -(TEXT_SIZE_11_ASCEND / 2);
+            tCaptionOffset = TEXT_SIZE_11 / 2;
             tActualVoltage += MeasurementControl.HorizontalGridVoltage;
         }
     }
@@ -1172,7 +1172,8 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
         DisplayControl.LastOffsetGridCount = MeasurementControl.OffsetGridCount;
         tLabelChanged = true;
     }
-    int tCaptionOffset = 1;
+
+    int tCaptionOffset = TEXT_SIZE_11; // draw first caption above the line
     color16_t tLabelColor;
     int tPosX;
     for (int tYPos = DISPLAY_VALUE_FOR_ZERO; tYPos > 0; tYPos -= HORIZONTAL_GRID_HEIGHT) {
@@ -1180,8 +1181,7 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
             // clear old label
             int tXpos = DISPLAY_WIDTH - PIXEL_AFTER_LABEL - (5 * TEXT_SIZE_11_WIDTH);
             int tY = tYPos - tCaptionOffset;
-            BlueDisplay1.fillRect(tXpos, tY - TEXT_SIZE_11_ASCEND, DISPLAY_WIDTH - PIXEL_AFTER_LABEL + 1,
-                    tY + TEXT_SIZE_11_HEIGHT - TEXT_SIZE_11_ASCEND, COLOR_BACKGROUND_DSO);
+            BlueDisplay1.fillRect(tXpos, tY, DISPLAY_WIDTH - PIXEL_AFTER_LABEL + 1, tY + TEXT_SIZE_11_HEIGHT, COLOR_BACKGROUND_DSO);
             // restore last vertical line since label may overlap these line
             BlueDisplay1.drawLineRel(9 * TIMING_GRID_WIDTH - 1, tY, 0, TEXT_SIZE_11_HEIGHT, COLOR_GRID_LINES);
         }
@@ -1199,7 +1199,7 @@ void drawGridLinesWithHorizLabelsAndTriggerLine() {
             tLabelColor = COLOR_HOR_GRID_LINE_LABEL_NEGATIVE;
         }
         BlueDisplay1.drawText(tPosX, tYPos - tCaptionOffset, sStringBuffer, TEXT_SIZE_11, tLabelColor, COLOR_BACKGROUND_DSO);
-        tCaptionOffset = -(TEXT_SIZE_11_ASCEND / 2);
+        tCaptionOffset = TEXT_SIZE_11 / 2;
         tActualVoltage += ScaleVoltagePerDiv[MeasurementControl.DisplayRangeIndexForPrint];
     }
 #endif
@@ -1671,7 +1671,7 @@ void doVoltagePicker(BDSlider *aTheTouchedSlider, int16_t aValue) {
 
     int tYPos = SLIDER_VPICKER_INFO_SHORT_Y;
     if (DisplayControl.showInfoMode == INFO_MODE_NO_INFO) {
-        tYPos = FONT_SIZE_INFO_SHORT_ASC;
+        tYPos = 0;
     } else if (DisplayControl.showInfoMode == INFO_MODE_LONG_INFO) {
         tYPos = SLIDER_VPICKER_INFO_LONG_Y;
     }

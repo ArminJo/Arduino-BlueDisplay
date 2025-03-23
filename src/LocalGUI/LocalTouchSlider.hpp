@@ -514,22 +514,22 @@ int LocalTouchSlider::printValue() {
     if (!(mFlags & FLAG_SLIDER_SHOW_VALUE)) {
         return 0;
     }
-    unsigned int tValuePositionY = mPositionYBottom + mBarWidth / 2 + getTextAscend(TEXT_SIZE_11);
+    unsigned int tValuePositionY = mPositionYBottom + mBarWidth / 2;
     if (mCaption != nullptr && !((mFlags & FLAG_SLIDER_IS_HORIZONTAL) && (mFlags & FLAG_SLIDER_SHOW_VALUE))) {
-        // print below value
+        // For vertical slider, print value below caption string
         tValuePositionY += TEXT_SIZE_11_HEIGHT;
     }
 
-    if (tValuePositionY > LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_DECEND) {
+    if (tValuePositionY > LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT) {
         // fallback
         failParamMessage(tValuePositionY, "Value Bottom wrong");
-        tValuePositionY = LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_DECEND;
+        tValuePositionY = LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT;
     }
 
     // Convert to string
     char tValueAsString[4];
     snprintf(tValueAsString, sizeof(tValueAsString), "%03d", mValue);
-    return LocalDisplay.drawText(mPositionX + mXOffsetValue, tValuePositionY - TEXT_SIZE_11_ASCEND, tValueAsString, 1, mValueColor,
+    return LocalDisplay.drawText(mPositionX + mXOffsetValue, tValuePositionY, tValueAsString, 1, mValueColor,
             mValueCaptionBackgroundColor);
 }
 
@@ -538,17 +538,17 @@ int LocalTouchSlider::printValue() {
  */
 int LocalTouchSlider::printValue(const char *aValueString) {
 
-    unsigned int tValuePositionY = mPositionYBottom + mBarWidth / 2 + getTextAscend(TEXT_SIZE_11);
+    unsigned int tValuePositionY = mPositionYBottom + mBarWidth / 2;
     if (mCaption != nullptr && !((mFlags & FLAG_SLIDER_IS_HORIZONTAL) && (mFlags & FLAG_SLIDER_SHOW_VALUE))) {
-        // print below value
+        // For vertical slider, print caption below value string
         tValuePositionY += TEXT_SIZE_11_HEIGHT;
     }
 
-    if (tValuePositionY > LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_DECEND) {
+    if (tValuePositionY > LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT) {
         // fallback
-        tValuePositionY = LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_DECEND;
+        tValuePositionY = LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT;
     }
-    return LocalDisplay.drawText(mPositionX + mXOffsetValue, tValuePositionY - TEXT_SIZE_11_ASCEND, aValueString, 1, mValueColor,
+    return LocalDisplay.drawText(mPositionX + mXOffsetValue, tValuePositionY, aValueString, 1, mValueColor,
             mValueCaptionBackgroundColor);
 }
 

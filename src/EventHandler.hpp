@@ -360,7 +360,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 
 #if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS) && defined(SUPPORT_LOCAL_DISPLAY)
     if (tEventType <= EVENT_TOUCH_ACTION_MOVE && isDisplayXYValuesEnabled()) {
-        printEventTouchPositionData(30, 2 + TEXT_SIZE_11_ASCEND, COLOR16_BLACK, COLOR16_WHITE);
+        printEventTouchPositionData(30, 2, COLOR16_BLACK, COLOR16_WHITE);
     }
 #endif
 

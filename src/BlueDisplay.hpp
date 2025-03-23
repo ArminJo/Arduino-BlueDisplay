@@ -523,25 +523,25 @@ void BlueDisplay::clearTextArea(uint16_t aPositionX, uint16_t aPositionY, uint8_
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.fillRect(aPositionX, aPositionY, aStringLength * getTextWidth(aFontSize), getTextHeight(aFontSize), aClearColor);
 #endif
-    fillRectRel(aPositionX, aPositionY - getTextAscend(aFontSize), aStringLength * getTextWidth(aFontSize),
-            getTextHeight(aFontSize), aClearColor);
+    fillRectRel(aPositionX, aPositionY, aStringLength * getTextWidth(aFontSize), getTextHeight(aFontSize), aClearColor);
 }
 
 /**
  * @param aPositionX left position
- * @param aPositionY baseline position - use (upper_position + getTextAscend(<aFontSize>))
+ * @param aPositionY compensated with getTextAscend(aFontSize) to see complete number if aPositionY is 0.
  * @return start x for next character / x + getTextWidth(aCharSize)
  */
 uint16_t BlueDisplay::drawChar(uint16_t aPositionX, uint16_t aPositionY, char aChar, uint16_t aCharSize, color16_t aCharacterColor,
         color16_t aBackgroundColor) {
     uint16_t tRetValue = 0;
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    tRetValue = LocalDisplay.drawChar(aPositionX, aPositionY - getTextAscend(aCharSize), aChar, getFontScaleFactorFromTextSize(aCharSize), aCharacterColor,
+    tRetValue = LocalDisplay.drawChar(aPositionX, aPositionY, aChar, getFontScaleFactorFromTextSize(aCharSize), aCharacterColor,
             aBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
         tRetValue = aPositionX + getTextWidth(aCharSize);
-        sendUSARTArgs(FUNCTION_DRAW_CHAR, 6, aPositionX, aPositionY, aCharSize, aCharacterColor, aBackgroundColor, aChar);
+        sendUSARTArgs(FUNCTION_DRAW_CHAR, 6, aPositionX, aPositionY, aCharSize, aCharacterColor,
+                aBackgroundColor, aChar);
     }
     return tRetValue;
 }
@@ -549,7 +549,7 @@ uint16_t BlueDisplay::drawChar(uint16_t aPositionX, uint16_t aPositionY, char aC
 /**
  * Draws a text of almost unlimited size on the screen
  * @param aPositionX left position or STRING_ALIGN_RIGHT_XPOS or STRING_ALIGN_MIDDLE_XPOS
- * @param aPositionY baseline position is (upper_position + getTextAscend(<aFontSize>))
+ * @param aPositionY compensated with getTextAscend(aFontSize) to see complete number if aPositionY is 0.
  * @param aStringPtr  If /r is used as newline character, rest of line will be cleared, if /n is used, rest of line will not be cleared.
  * @param aFontSize FontSize of text
  * @param aTextColor Foreground/text color
@@ -560,12 +560,12 @@ uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const c
         color16_t aTextColor, color16_t aBackgroundColor) {
     uint16_t tRetValue = 0;
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY - getTextAscend(aFontSize), (char *) aStringPtr, aFontSize,
+    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY, (char *) aStringPtr, aFontSize,
             aTextColor, aBackgroundColor);
 #endif
     tRetValue = aPositionX + strlen(aStringPtr) * getTextWidth(aFontSize);
-    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aTextColor, aBackgroundColor,
-            strlen(aStringPtr), (uint8_t*) aStringPtr);
+    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aTextColor,
+            aBackgroundColor, strlen(aStringPtr), (uint8_t*) aStringPtr);
     return tRetValue;
 }
 
@@ -579,7 +579,7 @@ void BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const char 
 /**
  * Draws a PGM text of maximum 32 characters (STRING_BUFFER_STACK_SIZE) on the screen
  * @param aPositionX left position or STRING_ALIGN_RIGHT_XPOS or STRING_ALIGN_MIDDLE_XPOS
- * @param aPositionY baseline position is (upper_position + getTextAscend(<aFontSize>))
+ * @param aPositionY compensated with getTextAscend(aFontSize) to see complete number if aPositionY is 0.
  * @param aStringPtr  If /r is used as newline character, rest of line will be cleared, if /n is used, rest of line will not be cleared.
  * @param aFontSize FontSize of text
  * @param aTextColor Foreground/text color
@@ -589,15 +589,15 @@ void BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const char 
 uint16_t BlueDisplay::drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
         color16_t aTextColor, color16_t aBackgroundColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    LocalDisplay.drawText(aPositionX, aPositionY - getTextAscend(aFontSize), aPGMString, aFontSize, aTextColor,
+    LocalDisplay.drawText(aPositionX, aPositionY, aPGMString, aFontSize, aTextColor,
             aBackgroundColor);
 #endif
 #if defined (AVR)
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
     uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, aPGMString);
     uint16_t tRetValue = aPositionX + tTextLength * getTextWidth(aFontSize);
-    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aTextColor, aBackgroundColor,
-            tTextLength, (uint8_t*) tStringBuffer);
+    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aTextColor,
+            aBackgroundColor, tTextLength, (uint8_t*) tStringBuffer);
 #else
     uint8_t tTextLength = strlen(reinterpret_cast<const char*>(aPGMString));
     uint16_t tRetValue = aPositionX + (tTextLength * getTextWidth(aFontSize));
@@ -633,30 +633,31 @@ void BlueDisplay::drawMLText(uint16_t aPositionX, uint16_t aPositionY, const cha
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     // here we have a special (and bigger) function, which handles multiple lines.
-    LocalDisplay.drawMLText(aPositionX, aPositionY - getTextAscend(aFontSize), aStringPtr, aFontSize, aTextColor,
+    LocalDisplay.drawMLText(aPositionX, aPositionY, aStringPtr, aFontSize, aTextColor,
             aBackgroundColor);
 #endif
     // the same as the drawText() function
-    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aTextColor, aBackgroundColor,
-            strlen(aStringPtr), (uint8_t*) aStringPtr);
+    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aTextColor,
+            aBackgroundColor, strlen(aStringPtr), (uint8_t*) aStringPtr);
 }
 
 /**
+ * @param aPositionY compensated with getTextAscend(aFontSize) to see complete number if aPositionY is 0.
  * @param aBackgroundColor if COLOR16_NO_BACKGROUND, then do not clear rest of line
  */
 void BlueDisplay::drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
         color16_t aTextColor, color16_t aBackgroundColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     // here we have a special (and bigger) function, which handles multiple lines.
-    LocalDisplay.drawMLText(aPositionX, aPositionY - getTextAscend(aFontSize), aPGMString, aFontSize, aTextColor,
+    LocalDisplay.drawMLText(aPositionX, aPositionY, aPGMString, aFontSize, aTextColor,
             aBackgroundColor);
 #endif
     // the same as the drawText() function
 #if defined(__AVR__)
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
     uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, aPGMString);
-    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aTextColor, aBackgroundColor,
-            tTextLength, (uint8_t*) tStringBuffer);
+    sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aTextColor,
+            aBackgroundColor, tTextLength, (uint8_t*) tStringBuffer);
 #else
     uint8_t tTextLength = strlen(reinterpret_cast<const char*>(aPGMString));
     sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aTextColor, aBackgroundColor,
@@ -664,6 +665,9 @@ void BlueDisplay::drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __F
 #endif
 }
 
+/**
+ * @param aPositionY compensated with getTextAscend(aFontSize) to see complete number if aPositionY is 0.
+ */
 uint16_t BlueDisplay::drawByte(uint16_t aPositionX, uint16_t aPositionY, int8_t aByte, uint16_t aFontSize, color16_t aFGColor,
         color16_t aBackgroundColor) {
     uint16_t tRetValue = 0;
@@ -674,17 +678,20 @@ uint16_t BlueDisplay::drawByte(uint16_t aPositionX, uint16_t aPositionY, int8_t 
     snprintf(tStringBuffer, sizeof(tStringBuffer), "%4hhd", aByte);
 #endif
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY - getTextAscend(aFontSize), tStringBuffer, aFontSize, aFGColor,
+    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY, tStringBuffer, aFontSize, aFGColor,
             aBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
         tRetValue = aPositionX + 4 * getTextWidth(aFontSize);
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aFGColor, aBackgroundColor, 4,
-                (uint8_t*) tStringBuffer);
+        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aFGColor,
+                aBackgroundColor, 4, (uint8_t*) tStringBuffer);
     }
     return tRetValue;
 }
 
+/**
+ * @param aPositionY compensated with getTextAscend(aFontSize) to see complete number if aPositionY is 0.
+ */
 uint16_t BlueDisplay::drawUnsignedByte(uint16_t aPositionX, uint16_t aPositionY, uint8_t aUnsignedByte, uint16_t aFontSize,
         color16_t aFGColor, color16_t aBackgroundColor) {
     uint16_t tRetValue = 0;
@@ -695,17 +702,20 @@ uint16_t BlueDisplay::drawUnsignedByte(uint16_t aPositionX, uint16_t aPositionY,
     snprintf(tStringBuffer, sizeof(tStringBuffer), "%3u", aUnsignedByte);
 #endif
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY - getTextAscend(aFontSize), tStringBuffer, aFontSize, aFGColor,
+    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY, tStringBuffer, aFontSize, aFGColor,
             aBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
         tRetValue = aPositionX + 3 * getTextWidth(aFontSize);
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aFGColor, aBackgroundColor, 3,
-                (uint8_t*) tStringBuffer);
+        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aFGColor,
+                aBackgroundColor, 3, (uint8_t*) tStringBuffer);
     }
     return tRetValue;
 }
 
+/**
+ * @param aPositionY compensated with getTextAscend(aFontSize) to see complete number if aPositionY is 0.
+ */
 uint16_t BlueDisplay::drawShort(uint16_t aPositionX, uint16_t aPositionY, int16_t aShort, uint16_t aFontSize, color16_t aFGColor,
         color16_t aBackgroundColor) {
     uint16_t tRetValue = 0;
@@ -716,17 +726,20 @@ uint16_t BlueDisplay::drawShort(uint16_t aPositionX, uint16_t aPositionY, int16_
     snprintf(tStringBuffer, sizeof(tStringBuffer), "%6hd", aShort);
 #endif
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY - getTextAscend(aFontSize), tStringBuffer, aFontSize, aFGColor,
+    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY, tStringBuffer, aFontSize, aFGColor,
             aBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
         tRetValue = aPositionX + 6 * getTextWidth(aFontSize);
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aFGColor, aBackgroundColor, 6,
-                (uint8_t*) tStringBuffer);
+        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aFGColor,
+                aBackgroundColor, 6, (uint8_t*) tStringBuffer);
     }
     return tRetValue;
 }
 
+/**
+ * @param aPositionY compensated with getTextAscend(aFontSize) to see complete number if aPositionY is 0.
+ */
 uint16_t BlueDisplay::drawLong(uint16_t aPositionX, uint16_t aPositionY, int32_t aLong, uint16_t aFontSize, color16_t aFGColor,
         color16_t aBackgroundColor) {
     uint16_t tRetValue = 0;
@@ -739,13 +752,13 @@ uint16_t BlueDisplay::drawLong(uint16_t aPositionX, uint16_t aPositionY, int32_t
     snprintf(tStringBuffer, sizeof(tStringBuffer), "%11ld", aLong);
 #endif
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY - getTextAscend(aFontSize), tStringBuffer, aFontSize, aFGColor,
+    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY, tStringBuffer, aFontSize, aFGColor,
             aBackgroundColor);
 #endif
     if (USART_isBluetoothPaired()) {
         tRetValue = aPositionX + 11 * getTextWidth(aFontSize);
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aFGColor, aBackgroundColor, 11,
-                (uint8_t*) tStringBuffer);
+        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aFGColor,
+                aBackgroundColor, 11, (uint8_t*) tStringBuffer);
     }
     return tRetValue;
 }
@@ -1284,23 +1297,25 @@ uint16_t BlueDisplay::drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, cons
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
     uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, reinterpret_cast<const __FlashStringHelper*>(aPGMString));
 #  if defined(SUPPORT_LOCAL_DISPLAY)
-    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY - getTextAscend(aFontSize),
-            reinterpret_cast<const __FlashStringHelper*>(aPGMString), aFontSize, aTextColor, aBackgroundColor);
+    tRetValue = LocalDisplay.drawText(aPositionX, aPositionY, reinterpret_cast<const __FlashStringHelper*>(aPGMString), aFontSize, aTextColor, aBackgroundColor);
 #  endif
     if (USART_isBluetoothPaired()) {
         tRetValue = aPositionX + tTextLength * getTextWidth(aFontSize);
-        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize, aTextColor, aBackgroundColor,
-                tTextLength, (uint8_t*) tStringBuffer);
+        sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 5, aPositionX, aPositionY, aFontSize,
+                aTextColor, aBackgroundColor, tTextLength, (uint8_t*) tStringBuffer);
     }
     return tRetValue;
 }
 
+/**
+ * Draws a PGM text of maximum 32 characters (STRING_BUFFER_STACK_SIZE) on the screen
+ * Take size and colors from preceding drawText command
+ */
 void BlueDisplay::drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
     uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, reinterpret_cast<const __FlashStringHelper*>(aPGMString));
 #  if defined(SUPPORT_LOCAL_DISPLAY)
-    LocalDisplay.drawText(aPositionX, aPositionY - getTextAscend(TEXT_SIZE_11),
-            reinterpret_cast<const __FlashStringHelper*>(aPGMString), tTextLength, COLOR16_BLACK, COLOR16_WHITE);
+    LocalDisplay.drawText(aPositionX, aPositionY,            reinterpret_cast<const __FlashStringHelper*>(aPGMString), tTextLength, COLOR16_BLACK, COLOR16_WHITE);
 #  endif
     sendUSARTArgsAndByteBuffer(FUNCTION_DRAW_STRING, 2, aPositionX, aPositionY, tTextLength, (uint8_t*) tStringBuffer);
 }
@@ -1636,9 +1651,9 @@ void BlueDisplay::testDisplay() {
         /*
          * Character and text
          */
-        drawChar(150, TEXT_SIZE_11_ASCEND, 'y', TEXT_SIZE_11, tColorArray[1], COLOR16_YELLOW);
-        drawText(0, 50 + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR16_BLACK, COLOR16_WHITE);
-        drawText(0, 50 + TEXT_SIZE_11_HEIGHT + TEXT_SIZE_11_ASCEND, "Calibration", TEXT_SIZE_11, COLOR16_WHITE, COLOR16_BLACK);
+        drawChar(150, 0, 'y', TEXT_SIZE_11, tColorArray[1], COLOR16_YELLOW);
+        drawText(0, 50, "Calibration", TEXT_SIZE_11, COLOR16_BLACK, COLOR16_WHITE);
+        drawText(0, 50 + TEXT_SIZE_11_HEIGHT, "Calibration", TEXT_SIZE_11, COLOR16_WHITE, COLOR16_BLACK);
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     /*

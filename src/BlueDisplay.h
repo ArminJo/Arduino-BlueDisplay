@@ -28,11 +28,9 @@
  */
 
 /*
- * Text Y position is baseline of character
- * Text Y top position is (Y position - ascend) - use getTextAscend(TextSize)
- * Text Y bottom position is position + descend
- * Text Y middle position is position - ((ascend - descend) / 2) - see getTextMiddleCorrection()
- * Text position for local implementation is upper left corner of character
+ * Text Y and X position is upper left corner of character
+ * Text Y bottom position is position + TextSize
+ * Text Y middle position is position + TextSize / 2
  *
  * Slider position is upper left corner of slider
  * Button position is upper left corner of button
@@ -42,10 +40,10 @@
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
-#define VERSION_BLUE_DISPLAY "4.4.2"
-#define VERSION_BLUE_DISPLAY_MAJOR 4
-#define VERSION_BLUE_DISPLAY_MINOR 4
-#define VERSION_BLUE_DISPLAY_PATCH 2
+#define VERSION_BLUE_DISPLAY "5.0.0"
+#define VERSION_BLUE_DISPLAY_MAJOR 5
+#define VERSION_BLUE_DISPLAY_MINOR 0
+#define VERSION_BLUE_DISPLAY_PATCH 0
 // The change log is at the bottom of the file
 
 /*
@@ -445,8 +443,10 @@ float getCPUTemperature(void);
 
 /*
  *
- * Version 4.4.2
- * - Added setCallback() and setFlags() for buttons and sliders.
+ * Version 5.0.0
+ * - Text Y and X position is upper left corner of character.
+ * - Added `setCallback()` and `setFlags()` for buttons and sliders.
+ * - Modified ManySlidersAndButtons example.
  * - Screen orientation flags now also possible in setFlagsAndSize().
  *
  * Version 4.4.0 - The version compatible with app version 4.4.1

@@ -540,7 +540,7 @@ void doShowTimeAtTouchPosition(struct TouchEvent *const aTouchPosition) {
                 - (tPixelDifference * STORAGE_INTERVAL_SECONDS);
         char tTimeString[6];
         convertUnixTimestampToHourAndMinuteString(tTimeString, tTimeOfTouchPosition);
-        BlueDisplay1.drawText(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE / 2, tTimeString,
+        BlueDisplay1.drawText(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE, tTimeString,
         BASE_TEXT_SIZE, CHART_DATA_COLOR, sBackgroundColor);
         // Clear last indicator
         if (sLastPosition.PositionX != 0) {
@@ -596,9 +596,8 @@ void drawDisplay() {
     TouchButton2days.drawButton();
     TouchButton1day.drawButton();
     TouchButton12Hour.drawButton();
-    BlueDisplay1.drawText(BUTTONS_START_X + (2 * BASE_TEXT_SIZE),
-            (BlueDisplay1.getRequestedDisplayHeight() / 4) + (BASE_TEXT_SIZE / 8), F("Day(s)"),
-            BASE_TEXT_SIZE + (BASE_TEXT_SIZE / 2), COLOR16_GREEN, sBackgroundColor);
+    BlueDisplay1.drawText(BUTTONS_START_X + (2 * BASE_TEXT_SIZE), (BlueDisplay1.getRequestedDisplayHeight() / 4) - BASE_TEXT_SIZE,
+            F("Day(s)"), BASE_TEXT_SIZE + (BASE_TEXT_SIZE / 2), COLOR16_GREEN, sBackgroundColor);
 
 #if defined(E2END)
     TouchButtonStoreToEEPROM.drawButton();
@@ -737,7 +736,7 @@ void printCO2Value() {
     char tStringBuffer[5];
     uint16_t tCO2Value = (sCO2Array[CO2_ARRAY_SIZE - 1] * CO2_COMPRESSION_FACTOR) + CO2_BASE_VALUE;
     snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("%4d"), tCO2Value);
-    BlueDisplay1.drawText(CHART_START_X + (CHART_WIDTH / 2), 3 * BASE_TEXT_SIZE, tStringBuffer, 3 * BASE_TEXT_SIZE,
+    BlueDisplay1.drawText(CHART_START_X + (CHART_WIDTH / 2), BASE_TEXT_SIZE, tStringBuffer, 3 * BASE_TEXT_SIZE,
     CHART_DATA_COLOR, sBackgroundColor);
 }
 
@@ -853,7 +852,7 @@ void printTime() {
             year(tTimestamp), hour(tTimestamp), minute(tTimestamp), second(tTimestamp));
 #pragma GCC diagnostic pop
 #endif //defined(USE_C_TIME)
-    BlueDisplay1.drawText(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - (3 * BASE_TEXT_SIZE), tStringBuffer,
+    BlueDisplay1.drawText(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - (4 * BASE_TEXT_SIZE), tStringBuffer,
     BASE_TEXT_SIZE, sTextColor, sBackgroundColor);
 }
 

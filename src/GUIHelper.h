@@ -4,7 +4,7 @@
  * Definitions for GUI layouts and text sizes
  *
  *
- *  Copyright (C) 2014-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
@@ -129,7 +129,7 @@ uint16_t getTextHeight(uint16_t aTextSize);
 uint16_t getTextWidth(uint16_t aTextSize);
 uint16_t getTextAscend(uint16_t aTextSize);
 uint16_t getTextAscendMinusDescend(uint16_t aTextSize);
-uint16_t getTextMiddleCorrection(uint16_t aTextSize);
+//uint16_t getTextMiddleCorrection(uint16_t aTextSize);
 
 uint16_t getFontScaleFactorFromTextSize(uint16_t aTextSize);
 

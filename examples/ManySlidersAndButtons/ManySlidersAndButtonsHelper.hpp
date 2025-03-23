@@ -156,6 +156,7 @@ void initSlidersAndButtons(const SliderStaticInfoStruct *aLeftSliderStaticPGMInf
         if (tButtonStaticPGMInfo.ButtonTextForValueTrue != nullptr) {
             tBDButtonParameterStruct.aFlags |= FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN;
         }
+
         sButtonArray[i].init(&tBDButtonParameterStruct);
         if (tButtonStaticPGMInfo.ButtonTextForValueTrue != nullptr) {
             sButtonArray[i].setTextForValueTrue(reinterpret_cast<const __FlashStringHelper*>(tButtonStaticPGMInfo.ButtonTextForValueTrue));
@@ -215,6 +216,9 @@ void storeSliderValuesToEEPROM() {
 #endif
 }
 
+/*
+ * No range checking here!
+ */
 void loadSliderValuesFromEEPROM() {
 #if defined(EEMEM)
 # if NUMBER_OF_LEFT_SLIDERS > 0

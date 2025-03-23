@@ -2,8 +2,8 @@
  * ManySlidersAndButtons.cpp
  *
  * Example for 8 / 16 sliders and 8 buttons
- * to control 8 / 16 analog values and 6 functions of an arduino application.
- * Buttons can be Red/Green toggle buttons.
+ * to control 8 / 16 Parameter values and 6 functions of an arduino application.
+ * Buttons can be Red/Green toggle buttons like the 3. one.
  * Includes the implementation of a 4 value slider (PATTERN_SLIDER) with user provided text value.
  *
  *  Copyright (C) 2025  Armin Joachimsmeyer
@@ -32,6 +32,8 @@
 #define NUMBER_OF_RIGHT_SLIDERS     6
 #define NUMBER_OF_BUTTONS           7
 #define DISPLAY_BACKGROUND_COLOR COLOR16_WHITE
+
+#define  CAPTION_TEXT_SIZE          16
 
 /*
  * We use fixed screen layout here, to be able to use constants for all the positioning and size values
@@ -102,7 +104,7 @@ static const SliderStaticInfoStruct sLeftSliderStaticInfoArray[NUMBER_OF_LEFT_SL
         , { sString_PositiveRange, 100, 200, 200 } /*PositiveRange*/
 #  endif
 #  if NUMBER_OF_LEFT_SLIDERS > 7
-        , { sString_AnalogValue8, 0, 255, 200 } /*Analog value 8*/
+        , { sString_ParameterValue8, 0, 255, 200 } /*Parameter value 8*/
 #  endif
         };
 #endif
@@ -116,28 +118,28 @@ static const SliderStaticInfoStruct sRightSliderStaticInfoArray[NUMBER_OF_RIGHT_
 static const SliderStaticInfoStruct sRightSliderStaticInfoArray[NUMBER_OF_RIGHT_SLIDERS]= {
 #endif
 #if NUMBER_OF_RIGHT_SLIDERS > 0
-        { sString_AnalogValue9, 0, 255, 200 } /*Analog value 9*/
+        { sString_ParameterValue9, 0, 255, 200 } /*Parameter value 9*/
 #endif
 #if NUMBER_OF_RIGHT_SLIDERS > 1
-        , { sString_AnalogValue10, 0, 255, 200 } /*Analog value 10*/
+        , { sString_ParameterValue10, 0, 255, 200 } /*Parameter value 10*/
 #endif
 #if NUMBER_OF_RIGHT_SLIDERS > 2
-        , { sString_AnalogValue11, 0, 255, 200 } /*Analog value 11*/
+        , { sString_ParameterValue11, 0, 255, 200 } /*Parameter value 11*/
 #endif
 #if NUMBER_OF_RIGHT_SLIDERS > 3
-        , { sString_AnalogValue12, 0, 255, 200 } /*Analog value 12*/
+        , { sString_ParameterValue12, 0, 255, 200 } /*Parameter value 12*/
 #endif
 #if NUMBER_OF_RIGHT_SLIDERS > 4
-        , { sString_AnalogValue13, 0, 255, 200 } /*Analog value 13*/
+        , { sString_ParameterValue13, 0, 255, 200 } /*Parameter value 13*/
 #endif
 #if NUMBER_OF_RIGHT_SLIDERS > 5
-        , { sString_AnalogValue14, 0, 255, 200 } /*Analog value 14*/
+        , { sString_ParameterValue14, 0, 255, 200 } /*Parameter value 14*/
 #endif
 #if NUMBER_OF_RIGHT_SLIDERS > 6
-        ,{ sString_AnalogValue15, 0, 255, 200 } /*Analog value 15*/
+        ,{ sString_ParameterValue15, 0, 255, 200 } /*Parameter value 15*/
 #endif
 #if NUMBER_OF_RIGHT_SLIDERS > 7
-        ,{ sString_AnalogValue16, 0, 255, 200 } /*Analog value 16*/
+        ,{ sString_ParameterValue16, 0, 255, 200 } /*Parameter value 16*/
 #endif
         };
 #endif
@@ -153,8 +155,11 @@ const char sString_Test[] PROGMEM = "Test";
  * !!!Must be the same order as used in sButtonsTextArray!!!
  */
 typedef enum {
-    LOAD_BUTTON = 0, STORE_BUTTON, LED_BUTTON, TEST_BUTTON, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8
+    LOAD_BUTTON = 0, STORE_BUTTON, LED_BUTTON, TEST_BUTTON, BUTTON_AUTOREPEAT, BUTTON_6, BUTTON_7, BUTTON_8
 } button_Index_t;
+
+// Button text must be declared as PROGMEM separately for AVR, and cannot be used directly in initialization below
+const char sString_ButtonAutorepeat[] PROGMEM = "Auto\nrepeat"; // 2 line text
 
 /*
  * PROGMEM array of PROGMEM structures for buttons
@@ -167,13 +172,13 @@ static const ButtonStaticInfoStruct sButtonStaticInfoStructArray[NUMBER_OF_BUTTO
         LOAD_BUTTON, sString_Load, nullptr, /*Load values*/
         STORE_BUTTON, sString_Store, nullptr /*Store values*/
 #if NUMBER_OF_BUTTONS > 2
-        , 0, sString_LedOff, sString_LedOn /* This creates a red green button */
+        , 0, sString_LedOff, sString_LedOn /* This creates a RED / GREEN button */
 #endif
 #if NUMBER_OF_BUTTONS > 3
         , TEST_BUTTON, sString_Test, nullptr
 #endif
 #if NUMBER_OF_BUTTONS > 4
-        , BUTTON_5, sString_Button5, nullptr
+        , BUTTON_AUTOREPEAT, sString_ButtonAutorepeat, nullptr /* Autorepeat timing must be set manually in initDisplay() */
 #endif
 #if NUMBER_OF_BUTTONS > 5
         , BUTTON_6, sString_Button6, nullptr
@@ -196,6 +201,7 @@ void doButton(BDButton *aTheTouchedButton, int16_t aValue);
 
 void initDisplay(void);
 void drawDisplay(void);
+void handleAutoRepeat();
 void TestNewSliderAndButton();
 void doTestSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue);
 void doTestButton(BDButton *aTheTouchedButton, int16_t aValue);
@@ -220,7 +226,7 @@ void setup() {
 delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
 // Just to know which program is running on my Arduino
-    Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
+    Serial.println(reinterpret_cast<const __FlashStringHelper*>(StartMessage));
 
     Serial.println(F("Setup finished"));
 }
@@ -232,7 +238,7 @@ void loop() {
      * Your code here
      */
 
-    delay(sLeftSliderValues[DELAY_SLIDER]); // Using value of DELAY_SLIDER
+    delayMillisWithCheckAndHandleEvents(sLeftSliderValues[DELAY_SLIDER]); // Using value of DELAY_SLIDER and check for new data
 }
 
 /*
@@ -251,14 +257,18 @@ void initDisplay(void) {
     sLeftSliderArray[PATTERN_SLIDER].setFlags(FLAG_SLIDER_IS_HORIZONTAL); // Reset FLAG_SLIDER_SHOW_VALUE flag, since we provide the value text by our own
     sLeftSliderArray[PATTERN_SLIDER].setCallback(&doPatternSlider);
 
+    /*
+     * After 700 ms repeat 5 times every 500ms, after this, repeat every 100 ms
+     */
+    sButtonArray[BUTTON_AUTOREPEAT].setButtonAutorepeatTiming(700, 500, 5, 100);
     drawDisplay();
 }
 
 void drawDisplay(void) {
     BlueDisplay1.clearDisplay(DISPLAY_BACKGROUND_COLOR);
-    BlueDisplay1.drawText(STRING_ALIGN_MIDDLE_XPOS, 16,
+    BlueDisplay1.drawText(STRING_ALIGN_MIDDLE_XPOS, CAPTION_TEXT_SIZE / 2,
             F(STR(NUMBER_OF_LEFT_SLIDERS) " + " STR(NUMBER_OF_RIGHT_SLIDERS) " sliders + " STR(NUMBER_OF_BUTTONS) " buttons demo"),
-            16, COLOR16_BLUE, DISPLAY_BACKGROUND_COLOR);
+            CAPTION_TEXT_SIZE, COLOR16_BLUE, DISPLAY_BACKGROUND_COLOR);
     drawSlidersAndButtons();
     doPatternSlider(&sLeftSliderArray[PATTERN_SLIDER], sLeftSliderValues[PATTERN_SLIDER]); // Print value string after drawing slider
 }
@@ -273,11 +283,11 @@ void doSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue) {
     bool tIsLeftSlider = tSliderIndex < NUMBER_OF_LEFT_SLIDERS;
     if (tIsLeftSlider) {
         // Left sliders with index from 0 to NUMBER_OF_LEFT_SLIDERS - 1
-        sLeftSliderValues[tSliderIndex] = aSliderValue;
+        sLeftSliderValues[tSliderIndex] = aSliderValue; // Store value for later usage
     } else {
         // Right sliders with index from NUMBER_OF_LEFT_SLIDERS to NUMBER_OF_LEFT_SLIDERS + NUMBER_OF_RIGHT_SLIDERS - 1
         tSliderIndex -= NUMBER_OF_LEFT_SLIDERS;
-        sRightSliderValues[tSliderIndex] = aSliderValue;
+        sRightSliderValues[tSliderIndex] = aSliderValue; // Store value for later usage
     }
 
     if (tIsLeftSlider) {
@@ -320,6 +330,9 @@ void doSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue) {
  */
 void doPatternSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue) {
     const char *tValueString;
+
+    sLeftSliderValues[PATTERN_SLIDER] = aSliderValue; // Store value for later usage
+
     switch (aSliderValue) {
     case 0:
         tValueString = "  Constant temperature";
@@ -355,10 +368,19 @@ void doButton(BDButton *aTheTouchedButton, int16_t aValue) {
     case TEST_BUTTON:
         TestNewSliderAndButton();
         break;
+    case BUTTON_AUTOREPEAT:
+        handleAutoRepeat();
+        break;
     default:
         BlueDisplay1.debug("Pressed button ", (uint8_t) (aTheTouchedButton->mButtonIndex + 1)); // Start with button number 1
         break;
     }
+}
+
+void handleAutoRepeat() {
+    static int sCount = 0;
+    sCount++;
+    BlueDisplay1.drawShort(0, 0, sCount, BUTTON_TEXT_SIZE + BUTTON_TEXT_SIZE / 2, COLOR16_RED, DISPLAY_BACKGROUND_COLOR);
 }
 
 /**

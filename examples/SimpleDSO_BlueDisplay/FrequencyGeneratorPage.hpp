@@ -267,8 +267,8 @@ void initFrequencyGeneratorPageGui() {
         if (i == BUTTON_INDEX_SELECTED_INITIAL) {
             tButtonColor = BUTTON_AUTO_RED_GREEN_TRUE_COLOR;
         }
-        TouchButtonFrequencyRanges[i].init(tXPos, tYPos, BUTTON_WIDTH_5 + BUTTON_DEFAULT_SPACING_HALF,
-        BUTTON_HEIGHT_5, tButtonColor, reinterpret_cast<const __FlashStringHelper*>(RangeButtonStrings[i]), TEXT_SIZE_22,
+        TouchButtonFrequencyRanges[i].init(tXPos, tYPos, BUTTON_WIDTH_5 + BUTTON_DEFAULT_SPACING_HALF, BUTTON_HEIGHT_5,
+                tButtonColor, reinterpret_cast<const __FlashStringHelper*>(RangeButtonStrings[i]), TEXT_SIZE_22,
                 FLAG_BUTTON_DO_BEEP_ON_TOUCH, i, &doSetFrequencyRange);
 
         tXPos += BUTTON_WIDTH_5 + BUTTON_DEFAULT_SPACING - 2;
@@ -281,12 +281,12 @@ void initFrequencyGeneratorPageGui() {
             &doFrequencyGeneratorStartStop);
     TouchButtonFrequencyStartStop.setTextForValueTrue(F("Stop"));
 
-    TouchButtonGetFrequency.init(BUTTON_WIDTH_3_POS_2, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
-    BUTTON_HEIGHT_4, COLOR16_BLUE, F("Hz..."), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetFrequency);
+    TouchButtonGetFrequency.init(BUTTON_WIDTH_3_POS_2, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3, BUTTON_HEIGHT_4,
+    COLOR16_BLUE, F("Hz..."), TEXT_SIZE_22, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetFrequency);
 
 #if defined(__AVR__)
-    TouchButtonWaveform.init(BUTTON_WIDTH_3_POS_3, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3,
-    BUTTON_HEIGHT_4, COLOR16_BLUE, "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, sFrequencyInfo.Waveform, &doWaveformMode);
+    TouchButtonWaveform.init(BUTTON_WIDTH_3_POS_3, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, COLOR16_BLUE,
+            "", TEXT_SIZE_18, FLAG_BUTTON_DO_BEEP_ON_TOUCH, sFrequencyInfo.Waveform, &doWaveformMode);
     setWaveformButtonText();
 #endif
 }
@@ -302,15 +302,14 @@ void drawFrequencyGeneratorPage(void) {
 #endif
     TouchSliderFrequency.drawSlider();
 
-    BlueDisplay1.drawText(TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1"), TEXT_SIZE_11,
+    BlueDisplay1.drawText(TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE, F("1"), TEXT_SIZE_11,
     COLOR16_BLUE, COLOR_BACKGROUND_FREQ);
 #if defined(__AVR__)
-    BlueDisplay1.drawText(DISPLAY_WIDTH - 5 * TEXT_SIZE_11_WIDTH,
-    FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, F("1000"), TEXT_SIZE_11, COLOR16_BLUE,
-    COLOR_BACKGROUND_FREQ);
+    BlueDisplay1.drawText(DISPLAY_WIDTH - 5 * TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE, F("1000"), TEXT_SIZE_11,
+    COLOR16_BLUE, COLOR_BACKGROUND_FREQ);
 #else
     BlueDisplay1.drawText(BlueDisplay1.getRequestedDisplayWidth() - 5 * TEXT_SIZE_11_WIDTH,
-    FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE + TEXT_SIZE_11_HEIGHT, ("1000"), TEXT_SIZE_11, COLOR16_BLUE,
+    FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE, ("1000"), TEXT_SIZE_11, COLOR16_BLUE,
     COLOR_BACKGROUND_FREQ);
 #endif
 
@@ -500,16 +499,17 @@ void printFrequencyAndPeriod() {
 
 #if defined(__AVR__)
     dtostrf(sFrequencyInfo.FrequencyNormalizedTo_1_to_1000, 9, 3, &sStringBuffer[20]);
-    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%s%cHz"), &sStringBuffer[20], FrequencyRangeChars[sFrequencyInfo.FrequencyRangeIndex]);
+    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%s%cHz"), &sStringBuffer[20],
+            FrequencyRangeChars[sFrequencyInfo.FrequencyRangeIndex]);
 
 #else
     snprintf(sStringBuffer, sizeof sStringBuffer, "%9.3f%cHz", sFrequencyInfo.FrequencyNormalizedTo_1_to_1000,
             FrequencyRangeChars[sFrequencyInfo.FrequencyRangeIndex]);
 #endif
 
-// print frequency
-    BlueDisplay1.drawText(FREQ_SLIDER_X + 2 * TEXT_SIZE_22_WIDTH, TEXT_SIZE_22_HEIGHT, sStringBuffer, TEXT_SIZE_22,
-    COLOR16_RED, COLOR_BACKGROUND_FREQ);
+// print frequency with TEXT_SIZE_11 upper margin
+    BlueDisplay1.drawText(FREQ_SLIDER_X + 2 * TEXT_SIZE_22_WIDTH, 2, sStringBuffer, TEXT_SIZE_22, COLOR16_RED,
+            COLOR_BACKGROUND_FREQ);
 
 // output period use float, since we have 1/8 us for square wave
     tPeriodMicros = getPeriodMicros();
@@ -526,8 +526,8 @@ void printFrequencyAndPeriod() {
 #else
     snprintf(sStringBuffer, sizeof sStringBuffer, "%10.3f%cs", tPeriodMicros, tUnitChar);
 #endif
-    BlueDisplay1.drawText(FREQ_SLIDER_X, TEXT_SIZE_22_HEIGHT + 4 + TEXT_SIZE_22_ASCEND, sStringBuffer, TEXT_SIZE_22,
-    COLOR16_BLUE, COLOR_BACKGROUND_FREQ);
+    // Print with margin 4
+    BlueDisplay1.drawText(FREQ_SLIDER_X, 2 + TEXT_SIZE_22_HEIGHT, sStringBuffer, TEXT_SIZE_22, COLOR16_BLUE, COLOR_BACKGROUND_FREQ);
 
 // 950 byte program memory required for pow() and log10f()
     uint16_t tSliderValue;
