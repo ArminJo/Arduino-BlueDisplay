@@ -151,6 +151,7 @@ struct ButtonStaticInfoStruct {
 void initSlidersAndButtons(const SliderStaticInfoStruct *aLeftSliderStaticPGMInfoPtr,
         const SliderStaticInfoStruct *aRightSliderStaticPGMInfoPtr);
 void drawSlidersAndButtons(void);
+uint8_t copyPGMStringStoredInPGMVariable(char *aStringBuffer, void *aPGMStringPtrStoredInPGMVariable);
 void storeSliderValuesToEEPROM();
 void loadSliderValuesFromEEPROM();
 

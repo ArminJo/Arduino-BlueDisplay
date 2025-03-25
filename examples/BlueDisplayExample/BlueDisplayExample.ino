@@ -7,7 +7,7 @@
  *  2. By slider
  *  3. By numeric keypad
  *
- *  Output of actual delay value is numeric and by slider bar
+ *  Output of actual delay value is numeric, by slider bar and by speech
  *
  *  For handling time, the Arduino "time" library is used. You can install it also with "Tools -> Manage Libraries..." or "Ctrl+Shift+I" -> use "timekeeping" as filter string.
  *  The sources can also be found here: https://github.com/PaulStoffregen/Time
@@ -50,6 +50,7 @@
 //#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate.
 #define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves up to 180 bytes program memory and 14 bytes RAM.
 #define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Saves up to 88 bytes program memory and 4 bytes RAM.
+//#define DO_NOT_NEED_SPEAK_EVENTS            // Disables SpeakingDone event handling. Saves up to 54 bytes program memory and 18 bytes RAM.
 //#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
 //#define BD_USE_SIMPLE_SERIAL                // Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise.
 //#define BD_USE_USB_SERIAL                   // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection to your smartphone / tablet.
@@ -67,6 +68,8 @@ bool sConnected = false;
 bool doBlink = true;
 bool sInTestPage = false; // Creates a new page and displays test patterns
 
+#define DELAY_FOR_SPEECH_AFTER_LAST_DELAY_CHANGE_MILLIS  300 // Start talking after 500 ms after last delay change. Must be bigger than autorepeat period!
+unsigned long sMillisOfLastDelayChange = 0;
 int16_t sDelay = DELAY_START_VALUE; // 600
 
 // a string buffer for any purpose...
@@ -233,6 +236,16 @@ void loop() {
             }
         }
         /*
+         * Speak delay value after last delay change
+         */
+        if (sMillisOfLastDelayChange != 0
+                && millis() - DELAY_FOR_SPEECH_AFTER_LAST_DELAY_CHANGE_MILLIS > sMillisOfLastDelayChange) {
+            char tStringBuffer[28];
+            snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Delay is %d milliseconds"), sDelay);
+            BlueDisplay1.speakString(tStringBuffer);
+            sMillisOfLastDelayChange = 0;
+        }
+        /*
          * print time every second
          */
         unsigned long tMillis = millis();
@@ -247,9 +260,7 @@ void loop() {
 
 void initDisplay(void) {
 
-    // We can set BD_FLAG_TOUCH_BASIC_DISABLE it here, but it is set anyway if DO_NOT_NEED_BASIC_TOUCH_EVENTS is defined
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, LOCAL_DISPLAY_WIDTH,
-    LOCAL_DISPLAY_HEIGHT);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, LOCAL_DISPLAY_WIDTH, LOCAL_DISPLAY_HEIGHT);
 
     TouchButtonPlus.init(270, 80, 40, 40, COLOR16_YELLOW, F("+"), 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
     DELAY_CHANGE_VALUE, &doPlusMinus);
@@ -273,7 +284,7 @@ void initDisplay(void) {
     TouchButtonBack.init(BUTTON_WIDTH_4_POS_4, 0, BUTTON_WIDTH_4, BUTTON_HEIGHT_6, COLOR16_RED, "Back", TEXT_SIZE_22,
     FLAG_BUTTON_DO_BEEP_ON_TOUCH, -1, &doBack);
 
-    TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE, COLOR16_YELLOW, COLOR16_GREEN,
+    TouchSliderDelay.init(SLIDER_X_POSITION, 40, 12, 150, 100, DELAY_START_VALUE / 10, COLOR16_YELLOW, COLOR16_GREEN,
             FLAG_SLIDER_SHOW_BORDER | FLAG_SLIDER_SHOW_VALUE | FLAG_SLIDER_IS_HORIZONTAL, &doDelay);
     TouchSliderDelay.setCaptionProperties(TEXT_SIZE_22, FLAG_SLIDER_VALUE_CAPTION_ALIGN_RIGHT, 4, COLOR16_RED,
     COLOR_DEMO_BACKGROUND);
@@ -294,7 +305,11 @@ void initDisplay(void) {
     setTime(BlueDisplay1.getHostUnixTimestamp());
 #endif
 
-    BlueDisplay1.debug(StartMessage);
+    BlueDisplay1.debug(reinterpret_cast<const __FlashStringHelper*>(StartMessage));
+
+    // Talk functions are only implemented in Android > 5.0 (Lollipop)
+    BlueDisplay1.speakSetVoice(F("en-us-x-iol-local")); // male voice
+    BlueDisplay1.speakStringBlockingWait(F("Display ready")); // Maximum 32 characters supported for F("")
 }
 
 void drawGui(void) {
@@ -313,6 +328,11 @@ void drawGui(void) {
  */
 void doBDExampleBlinkStartStop(BDButton *aTheTouchedButton __attribute__((unused)), int16_t aValue) {
     doBlink = aValue;
+    if (doBlink) {
+        BlueDisplay1.speakString(F("Started"));
+    } else {
+        BlueDisplay1.speakString(F("Stopped"));
+    }
 }
 
 /*
@@ -401,12 +421,13 @@ void doPlusMinus(BDButton *aTheTouchedButton __attribute__((unused)), int16_t aV
      * Example for debug/toast output by BlueDisplay
      */
     BlueDisplay1.debug("Delay=", sDelay);
+    sMillisOfLastDelayChange = millis();
 }
 
 /*
  * Handler for number receive event - set delay to value
  */
-void doSetDelay(float aValue) {
+void doSetDelayNumerical(float aValue) {
 // clip value
     if (aValue > 100000) {
         aValue = 100000;
@@ -416,13 +437,14 @@ void doSetDelay(float aValue) {
     sDelay = aValue;
     // set slider bar accordingly
     TouchSliderDelay.setValueAndDrawBar(sDelay);
+    sMillisOfLastDelayChange = millis();
 }
 
 /*
  * Request delay value as number
  */
 void doGetDelay(BDButton *aTheTouchedButton, int16_t aValue) {
-    BlueDisplay1.getNumberWithShortPrompt(&doSetDelay, "delay [ms]");
+    BlueDisplay1.getNumberWithShortPrompt(&doSetDelayNumerical, "delay [ms]");
 }
 
 /*
@@ -430,6 +452,7 @@ void doGetDelay(BDButton *aTheTouchedButton, int16_t aValue) {
  */
 void doDelay(BDSlider *aTheTouchedSlider __attribute__((unused)), int16_t aSliderValue) {
     sDelay = aSliderValue;
+    sMillisOfLastDelayChange = millis();
 }
 
 /*
@@ -448,9 +471,10 @@ void doTest(BDButton *aTheTouchedButton, int16_t aValue) {
     sInTestPage = true;
     BDButton::deactivateAll();
     BDSlider::deactivateAll();
-    BlueDisplay1.clearDisplay();
-    TouchButtonBack.drawButton(); // this also activates the button
-    BlueDisplay1.testDisplay(); // Blocking draw of test patterns
+    BlueDisplay1.testDisplay(&TouchButtonBack, &sInTestPage); // Blocking draw of test patterns
+    if (!sInTestPage) {
+        drawGui(); // redraw GUI, because we left test page before by Back button
+    }
 }
 
 #define MILLIS_PER_CHANGE 20 // gives minimal 2 seconds
@@ -495,7 +519,7 @@ void printDemoString(void) {
                 + ((int16_t) (COLOR16_GET_GREEN(COLOR_CAPTION) - COLOR16_GET_GREEN(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
         uint8_t ColorBlue = COLOR16_GET_BLUE(COLOR_DEMO_BACKGROUND)
                 + ((int16_t) ( COLOR16_GET_BLUE(COLOR_CAPTION) - COLOR16_GET_BLUE(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
-        BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH / 2 - 2 * getTextWidth(36), 4, "Demo", 36,
+        BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH / 2 - 2 * getTextWidth(36), 2, "Demo", 36,
                 COLOR16(ColorRed, ColorGreen, ColorBlue), COLOR_DEMO_BACKGROUND);
     }
 }

@@ -120,6 +120,10 @@ void setSwipeEndCallbackEnabled(bool aSwipeEndCallbackEnabled);
 extern bool sSwipeEndCallbackEnabled;  // for temporarily disabling swipe callbacks
 #endif
 
+#if !defined(DO_NOT_NEED_SPEAK_EVENTS)
+void registerSpeakingDoneCallback(void (*aSpeakingDoneCallback)(int16_t tErrorCode));
+#endif
+
 void registerConnectCallback(void (*aConnectCallback)(void));
 
 void registerReorientationCallback(void (*aReorientationCallback)(void));

@@ -49,6 +49,7 @@
 #define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
 #define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 #define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Saves up to 88 bytes program memory and 4 bytes RAM.
+#define DO_NOT_NEED_SPEAK_EVENTS            // Disables SpeakingDone event handling. Saves up to 54 bytes program memory and 18 bytes RAM.
 #define ONLY_CONNECT_EVENT_REQUIRED       // Disables reorientation, redraw and SensorChange events
 //#define BD_USE_SIMPLE_SERIAL              // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 //#define BD_USE_USB_SERIAL                 // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
@@ -155,11 +156,12 @@ const char sString_Test[] PROGMEM = "Test";
  * !!!Must be the same order as used in sButtonsTextArray!!!
  */
 typedef enum {
-    LOAD_BUTTON = 0, STORE_BUTTON, LED_BUTTON, TEST_BUTTON, BUTTON_AUTOREPEAT, BUTTON_6, BUTTON_7, BUTTON_8
+    LOAD_BUTTON = 0, STORE_BUTTON, LED_BUTTON, TEST_BUTTON, BUTTON_AUTOREPEAT, BUTTON_SPEAK, BUTTON_7, BUTTON_8
 } button_Index_t;
 
 // Button text must be declared as PROGMEM separately for AVR, and cannot be used directly in initialization below
 const char sString_ButtonAutorepeat[] PROGMEM = "Auto\nrepeat"; // 2 line text
+const char sString_ButtonSpeak[] PROGMEM = "Speak"; // 2 line text
 
 /*
  * PROGMEM array of PROGMEM structures for buttons
@@ -181,7 +183,7 @@ static const ButtonStaticInfoStruct sButtonStaticInfoStructArray[NUMBER_OF_BUTTO
         , BUTTON_AUTOREPEAT, sString_ButtonAutorepeat, nullptr /* Autorepeat timing must be set manually in initDisplay() */
 #endif
 #if NUMBER_OF_BUTTONS > 5
-        , BUTTON_6, sString_Button6, nullptr
+        , BUTTON_SPEAK, sString_ButtonSpeak, nullptr
 #endif
 #if NUMBER_OF_BUTTONS > 6
         , BUTTON_7, sString_Button7, nullptr
@@ -246,7 +248,7 @@ void loop() {
  */
 void initDisplay(void) {
 // Initialize display size and flags
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
     initSlidersAndButtons(sLeftSliderStaticInfoArray, sRightSliderStaticInfoArray, sButtonStaticInfoStructArray);
     // Here slider values are loaded from EEPROM
@@ -262,6 +264,7 @@ void initDisplay(void) {
      */
     sButtonArray[BUTTON_AUTOREPEAT].setButtonAutorepeatTiming(700, 500, 5, 100);
     drawDisplay();
+    BlueDisplay1.speakStringBlockingWait(F("Display ready")); // Maximum 32 characters supported for F("")
 }
 
 void drawDisplay(void) {
@@ -353,6 +356,26 @@ void doPatternSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue) {
 #pragma GCC diagnostic pop
 }
 
+void handleAutoRepeat() {
+    static int sCount = 0;
+    sCount++;
+    BlueDisplay1.drawShort(0, 0, sCount, BUTTON_TEXT_SIZE + BUTTON_TEXT_SIZE / 2, COLOR16_RED, DISPLAY_BACKGROUND_COLOR);
+}
+
+void handleSpeak() {
+    static int sSliderIndex = 0;
+    char tSliderNameBuffer[16];
+    copyPGMStringStoredInPGMVariable(tSliderNameBuffer, (void*) &sLeftSliderStaticInfoArray[sSliderIndex].SliderName);
+
+    char tStringBuffer[44];
+    snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Value of slider %s is %d"), tSliderNameBuffer,
+            sLeftSliderValues[sSliderIndex]);
+
+//    BlueDisplay1.debug(tStringBuffer);
+    BlueDisplay1.speakStringBlockingWait(tStringBuffer);
+    sSliderIndex++;
+}
+
 void doButton(BDButton *aTheTouchedButton, int16_t aValue) {
     switch (aTheTouchedButton->mButtonIndex) {
     case LOAD_BUTTON:
@@ -371,16 +394,13 @@ void doButton(BDButton *aTheTouchedButton, int16_t aValue) {
     case BUTTON_AUTOREPEAT:
         handleAutoRepeat();
         break;
+    case BUTTON_SPEAK:
+        handleSpeak();
+        break;
     default:
         BlueDisplay1.debug("Pressed button ", (uint8_t) (aTheTouchedButton->mButtonIndex + 1)); // Start with button number 1
         break;
     }
-}
-
-void handleAutoRepeat() {
-    static int sCount = 0;
-    sCount++;
-    BlueDisplay1.drawShort(0, 0, sCount, BUTTON_TEXT_SIZE + BUTTON_TEXT_SIZE / 2, COLOR16_RED, DISPLAY_BACKGROUND_COLOR);
 }
 
 /**

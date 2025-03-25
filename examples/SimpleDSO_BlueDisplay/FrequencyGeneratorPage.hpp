@@ -16,7 +16,7 @@
  * 2nd order (better for sawtooth):        1 kOhm and 22 nF  -> 4.7 kOhm and 4.7 nF
  *
  *
- *  Copyright (C) 2015-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2025  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.

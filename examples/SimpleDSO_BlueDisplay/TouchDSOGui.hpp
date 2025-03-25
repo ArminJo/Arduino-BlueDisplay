@@ -253,15 +253,15 @@ void computePeriodFrequency(void) {
                     // found and search for next slope
                     tIntegrateValueForTotalPeriods = tIntegrateValue;
 #endif
-                    tCount++;
-                    if (tCount == 0) {
-                        // set start position for TRIGGER_MODE_FREE, TRIGGER_MODE_EXTERN or delayed trigger.
-                        tStartPositionForPulsPause = i;
-                    } else if (tCount == 1) {
-                        // first complete period (pulse + pause) is detected here
-                        MeasurementControl.PeriodSecond = getMicrosFromHorizontalDisplayValue(i - tFirstEndPositionForPulsPause, 1);
-                    }
-                    tCountPosition = i;
+                tCount++;
+                if (tCount == 0) {
+                    // set start position for TRIGGER_MODE_FREE, TRIGGER_MODE_EXTERN or delayed trigger.
+                    tStartPositionForPulsPause = i;
+                } else if (tCount == 1) {
+                    // first complete period (pulse + pause) is detected here
+                    MeasurementControl.PeriodSecond = getMicrosFromHorizontalDisplayValue(i - tFirstEndPositionForPulsPause, 1);
+                }
+                tCountPosition = i;
 #if !defined(__AVR__)
                 }
 #endif
@@ -513,8 +513,8 @@ const char StringTemperature[] PROGMEM = "Temp";
 const char StringVRefint[] PROGMEM = "VRef";
 const char StringVBattDiv2[] PROGMEM = "\xBD" "VBatt";
 #if defined(__AVR__)
-const char *const ADCInputMUXChannelStrings[] = {StringChannel0, StringChannel1, StringChannel2, StringChannel3, StringChannel4,
-    StringTemperature, StringVRefint};
+const char *const ADCInputMUXChannelStrings[] = { StringChannel0, StringChannel1, StringChannel2, StringChannel3, StringChannel4,
+        StringTemperature, StringVRefint };
 #else
 #if defined(STM32F30X)
 const char *const ADCInputMUXChannelStrings[ADC_CHANNEL_COUNT] = { StringChannel2, StringChannel3, StringChannel4,
@@ -1234,8 +1234,8 @@ void setSlopeButtonText(void) {
 }
 
 void setTriggerModeButtonText(void) {
-    TouchButtonTriggerMode.setTextFromStringArray((const __FlashStringHelper* const*) sTriggerModeButtonTextStringArray,
-            MeasurementControl.TriggerMode, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonTriggerMode.setPGMTextFromPGMArray(sTriggerModeButtonTextStringArray, MeasurementControl.TriggerMode,
+            (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
 void setAutoRangeModeAndButtonText(bool aNewAutoRangeMode) {
@@ -1250,8 +1250,8 @@ void setAutoRangeModeAndButtonText(bool aNewAutoRangeMode) {
 }
 
 void setAutoOffsetButtonText(void) {
-    TouchButtonAutoOffsetMode.setTextFromStringArray((const __FlashStringHelper* const*) sAutoOffsetButtonTextStringArray,
-            MeasurementControl.OffsetMode, (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
+    TouchButtonAutoOffsetMode.setPGMTextFromPGMArray(sAutoOffsetButtonTextStringArray, MeasurementControl.OffsetMode,
+            (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS));
 }
 
 void setACModeButtonText(void) {

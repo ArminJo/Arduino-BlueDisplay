@@ -136,27 +136,40 @@ static const int BD_FLAG_ONLY_TOUCH_MOVE_DISABLE = 0x04; // Do not send MOVE, on
 static const int BD_FLAG_LONG_TOUCH_ENABLE = 0x08; // If long touch detection is required. This delays the sending of plain DOWN Events.
 static const int BD_FLAG_USE_MAX_SIZE = 0x10;      // Use maximum display size for given geometry. -> Scale automatically to screen.
 // Here we use the same values as below, but shifted by 8 bytes
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x0000;
+/*********************************************
+ * Flags for setScreenOrientationLock()
+ * We have almost same values as used in Android
+ * LANDSCAPE is 0 on Android, but we abuse the value 3 of SCREEN_ORIENTATION_BEHIND for it to have 0 as unlock
+ *********************************************/
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x0000; // Unlock is -1 on Android, Landscape is 0 on Android,
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x0300; // Landscape is 0 on Android, 3 is SCREEN_ORIENTATION_BEHIND in Android
 static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT = 0x0100;
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x0200;
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x0300;
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_USER = 0x0200; // User preferred rotation
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR = 0x0400; // force usage of sensor
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_NOSENSOR = 0x0500; // ignore sensor
 static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE = 0x0600; // both landscapes are allowed
 static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_PORTRAIT = 0x0700;
 static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_LANDSCAPE = 0x0800;
 static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_PORTRAIT = 0x0900;
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_FULLSENSOR = 0x0A00; // enable also 180 degree rotation by sensor
+static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x0E00; // lock to current orientation
 
 /*********************************************
  * Flags for setScreenOrientationLock()
- * We have the same values as used in Android
+ * We have almost same values as used in Android
  *********************************************/
-static const int FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x00;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x00;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x03;
 static const int FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT = 0x01;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x02;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x03;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_USER = 0x02;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_SENSOR = 0x04;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_NOSENSOR = 0x0500; // ignore sensor
 static const int FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE = 0x06; // both landscapes are allowed
 static const int FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_PORTRAIT = 0x07;
 static const int FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_LANDSCAPE = 0x08;
 static const int FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_PORTRAIT = 0x09;
+static const int FLAG_SCREEN_ORIENTATION_LOCK_FULLSENSOR = 0x0A; // enable also 180 degree rotation by sensor
+static const int FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x0E;
 
 /**********************
  * Tone
@@ -237,6 +250,18 @@ public:
     void playTone(uint8_t aToneIndex, int16_t aToneDuration);
     void playTone(uint8_t aToneIndex, int16_t aToneDuration, uint8_t aToneVolume);
     void playFeedbackTone(uint8_t aFeedbackToneType);
+
+    void speakSetLocale(const char *aLocaleString);
+    void speakSetVoice(const char *aVoiceString); // One of the Voice strings printed in log at level Info at BD application startup
+    void speakString(const char *aString);
+    void speakStringAddToQueue(const char *aString);
+    void speakStringBlockingWait(const char *aString, boolean aAddToQueue = false);
+    void speakSetLocale(const __FlashStringHelper *aLocaleString);
+    void speakSetVoice(const __FlashStringHelper *aVoiceString);
+    void speakString(const __FlashStringHelper *aPGMString);
+    void speakStringAddToQueue(const __FlashStringHelper *aPGMString);
+    void speakStringBlockingWait(const __FlashStringHelper *aPGMString, bool aAddToQueue = false);
+
     void setLongTouchDownTimeout(uint16_t aLongTouchDownTimeoutMillis);
 
     void clearDisplay(color16_t aColor = COLOR16_WHITE);
@@ -256,14 +281,14 @@ public:
     void fillRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth, int16_t aHeight, color16_t aColor);
     uint16_t drawChar(uint16_t aPositionX, uint16_t aPositionY, char aChar, uint16_t aCharSize, color16_t aCharacterColor,
             color16_t aBackgroundColor);
-    void drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr);
+    void drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aString);
     void drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString);
-    uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize, color16_t aTextColor,
+    uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aString, uint16_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor);
     uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
             color16_t aTextColor, color16_t aBackgroundColor);
     void clearTextArea(uint16_t aPositionX, uint16_t aPositionY, uint8_t aStringLength, uint16_t aFontSize, color16_t aClearColor);
-    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize, color16_t aTextColor,
+    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aString, uint16_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor);
     void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
             color16_t aTextColor, color16_t aBackgroundColor);
@@ -284,12 +309,12 @@ public:
             bool aClearOnNewScreen);
     void setWriteStringPosition(uint16_t aPositionX, uint16_t aPositionY);
     void setWriteStringPositionColumnLine(uint16_t aColumnNumber, uint16_t aLineNumber);
-    void writeString(const char *aStringPtr);
+    void writeString(const char *aString);
     void writeString(const __FlashStringHelper *aPGMString);
-    void writeString(const char *aStringPtr, uint8_t aStringLength);
+    void writeString(const char *aString, uint8_t aStringLength);
 
-    void debugMessage(const char *aStringPtr);
-    void debug(const char *aStringPtr);
+    void debugMessage(const char *aString);
+    void debug(const char *aString);
 #if defined(F)
     void debug(const __FlashStringHelper *aPGMString);
 #endif
@@ -396,7 +421,7 @@ public:
     void drawGreyscale(uint16_t aXPos, uint16_t tYPos, uint16_t aHeight);
     void drawStar(int aXCenter, int aYCenter, int tOffsetCenter, int tLength, int tOffsetDiagonal, int tLengthDiagonal,
             color16_t aColor, int16_t aThickness);
-    void testDisplay();
+    void testDisplay(BDButton *aBackButton = nullptr, bool *stillInTestPage = nullptr);
     void generateColorSpectrum();
 
 };
@@ -418,9 +443,9 @@ extern bool isLocalDisplayAvailable;
 extern "C" {
 #endif
 // For use in syscalls.c
-uint16_t drawTextC(uint16_t aPositionX, uint16_t aPositionY, const char *aStringPtr, uint16_t aFontSize, color16_t aTextColor,
+uint16_t drawTextC(uint16_t aPositionX, uint16_t aPositionY, const char *aString, uint16_t aFontSize, color16_t aTextColor,
         color16_t aBackgroundColor);
-void writeStringC(const char *aStringPtr, uint8_t aStringLength);
+void writeStringC(const char *aString, uint8_t aStringLength);
 #ifdef __cplusplus
 }
 #endif
@@ -444,6 +469,7 @@ float getCPUTemperature(void);
 /*
  *
  * Version 5.0.0
+ * - Speak functions added.
  * - Text Y and X position is upper left corner of character.
  * - Added `setCallback()` and `setFlags()` for buttons and sliders.
  * - Modified ManySlidersAndButtons example.
@@ -472,7 +498,7 @@ float getCPUTemperature(void);
  * - Major refactoring, many bug fixes and seamless support of local display.
  * - All *Rel*() functions now have signed delta parameters.
  * - Fixed bugs in drawLineRelWithThickness() and Button list for local display.
- * - Added debug(const __FlashStringHelper *aStringPtr).
+ * - Added debug(const __FlashStringHelper *aString).
  * - Added bool delay(AndCheckForEvent().
  *
  * Version 3.0.2

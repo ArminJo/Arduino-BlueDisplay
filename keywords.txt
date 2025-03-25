@@ -22,14 +22,16 @@ sendSync	KEYWORD2
 setFlagsAndSize	KEYWORD2
 setCodePage	KEYWORD2
 setCharacterMapping	KEYWORD2
+setScreenOrientationLock	KEYWORD2
+setScreenBrightness	KEYWORD2
 
 playTone	KEYWORD2
 playFeedbackTone	KEYWORD2
 setLongTouchDownTimeout	KEYWORD2
 
 clearDisplay	KEYWORD2
+clearDisplayOptional	KEYWORD2
 drawDisplayDirect	KEYWORD2
-setScreenOrientationLock	KEYWORD2
 
 drawPixel	KEYWORD2
 drawCircle	KEYWORD2
@@ -38,17 +40,19 @@ drawRect	KEYWORD2
 drawRectRel	KEYWORD2
 fillRect	KEYWORD2
 fillRectRel	KEYWORD2
+
 drawChar	KEYWORD2
 drawText	KEYWORD2
+drawMLText	KEYWORD2
 clearTextArea	KEYWORD2
 drawByte	KEYWORD2
 drawUnsignedByte	KEYWORD2
 drawShort	KEYWORD2
 drawLong	KEYWORD2
 
-setPrintfSizeAndColorAndFlag	KEYWORD2
-setPrintfPosition	KEYWORD2
-setPrintfPositionColumnLine	KEYWORD2
+setWriteStringSizeAndColorAndFlag	KEYWORD2
+setWriteStringPosition	KEYWORD2
+setWriteStringPositionColumnLine	KEYWORD2
 writeString	KEYWORD2
 
 debugMessage	KEYWORD2
@@ -67,35 +71,43 @@ drawLineRelWithThickness	KEYWORD2
 
 drawChartByteBuffer	KEYWORD2
 
-getCurrentDisplaySize	KEYWORD2
-getCurrentDisplayWidth	KEYWORD2
-getCurrentDisplayHeight	KEYWORD2
-getReferenceDisplaySize	KEYWORD2
-getDisplayWidth	KEYWORD2
-getDisplayHeight	KEYWORD2
+getHostDisplaySize	KEYWORD2
+getHostDisplayWidth	KEYWORD2
+getHostDisplayHeight	KEYWORD2
+getRequestedDisplaySize	KEYWORD2
+getRequestedDisplaySize	KEYWORD2
+getRequestedDisplayHeight	KEYWORD2
 isDisplayOrientationLandscape	KEYWORD2
 
+getHostUnixTimestamp	KEYWORD2
+setHostUnixTimestamp	KEYWORD2
+
 refreshVector	KEYWORD2
+
+speakSetLocale	KEYWORD2
+speakSetVoice	KEYWORD2
+speakString	KEYWORD2
+speakStringAddToQueue	KEYWORD2
+speakStringBlockingWait	KEYWORD2
 
 getNumber	KEYWORD2
 getNumberWithShortPrompt	KEYWORD2
 getInfo	KEYWORD2
 requestMaxCanvasSize	KEYWORD2
+requestMaxCanvasSizeBlockingWait	KEYWORD2
 
 setSensor	KEYWORD2
 
-drawMLText	KEYWORD2
 drawTextPGM	KEYWORD2
 getNumberWithShortPromptPGM	KEYWORD2
 printVCCAndTemperaturePeriodically	KEYWORD2
 
-clearDisplayAndDisableButtonsAndSliders	KEYWORD2
-
+# From GUIHelper.h
 getTextHeight	KEYWORD2
 getTextWidth	KEYWORD2
 getTextAscend	KEYWORD2
 getTextAscendMinusDescend	KEYWORD2
-getTextMiddle	KEYWORD2
+getFontScaleFactorFromTextSize	KEYWORD2
 
 # Button and slider stuff from BlueDisplay.h
 clearDisplayAndDisableButtonsAndSliders	KEYWORD2
@@ -106,6 +118,9 @@ activateAllButtons	KEYWORD2
 deactivateAllButtons	KEYWORD2
 setButtonsTouchTone	KEYWORD2
 setGlobalFlags	KEYWORD2
+setCallback	KEYWORD2
+setFlags	KEYWORD2
+setInitParameters	KEYWORD2
 init	KEYWORD2
 deinit	KEYWORD2
 initPGM	KEYWORD2
@@ -116,6 +131,8 @@ setText	KEYWORD2
 setTextPGM	KEYWORD2
 setTextForValueTrue	KEYWORD2
 setTextAndDraw	KEYWORD2
+setTextFromStringArray	KEYWORD2
+setPGMTextFromPGMArray	KEYWORD2
 setValue	KEYWORD2
 setValueAndDraw	KEYWORD2
 setButtonColor	KEYWORD2
@@ -126,13 +143,16 @@ activate	KEYWORD2
 deactivate	KEYWORD2
 activateAll	KEYWORD2
 deactivateAll	KEYWORD2
+disableAutorepeatUntilEndOfTouch	KEYWORD2
 
 # from BDSlider.h
 resetAllSliders	KEYWORD2
 activateAllSliders	KEYWORD2
 deactivateAllSliders	KEYWORD2
-init	KEYWORD2
-deinit	KEYWORD2
+#setCallback	KEYWORD2
+#setFlags	KEYWORD2
+#init	KEYWORD2
+#deinit	KEYWORD2
 drawSlider	KEYWORD2
 drawBorder	KEYWORD2
 setValue	KEYWORD2
@@ -154,13 +174,7 @@ activateAll	KEYWORD2
 deactivateAll	KEYWORD2
 
 # from BlueSerial.h
-sendUSARTArgs	KEYWORD2
-sendUSARTArgsAndByteBuffer	KEYWORD2
-sendUSART5Args	KEYWORD2
-sendUSART5ArgsAndByteBuffer	KEYWORD2
-USART_isBluetoothPaired	KEYWORD2
 initSimpleSerial	KEYWORD2
-USART_send	KEYWORD2
 
 # from EventHandler.h
 delayMillisWithCheckAndHandleEvents	KEYWORD2
@@ -173,6 +187,7 @@ registerReorientationCallback	KEYWORD2
 registerRedrawCallback	KEYWORD2
 getRedrawCallback	KEYWORD2
 registerSensorChangeCallback	KEYWORD2
+registerSpeakingDoneCallback	KEYWORD2
 
 registerTouchDownCallback	KEYWORD2
 registerTouchMoveCallback	KEYWORD2
@@ -187,33 +202,98 @@ simpleTouchDownHandlerOnlyForSlider	KEYWORD2
 simpleTouchMoveHandlerForSlider	KEYWORD2
 
 # from Chart
-init	KEYWORD2
 initChart	KEYWORD2
-initXLabel	KEYWORD2
-initYLabel	KEYWORD2
-stepYLabel	KEYWORD2
-initYLabel	KEYWORD2
-setXLabelStartValue				KEYWORD2
-setYLabelStartValue				KEYWORD2
-setXLabelIncrementValue				KEYWORD2
-setYLabelIncrementValue				KEYWORD2
-
 initChartColors	KEYWORD2
-drawChart		KEYWORD2
-drawChartData	KEYWORD2
-drawGrid		KEYWORD2
-drawXAxis		KEYWORD2
-drawYAxis		KEYWORD2
-drawAxes		KEYWORD2
-clear			KEYWORD2
-getHeightY		KEYWORD2
-getPositionX	KEYWORD2
-getPositionY	KEYWORD2
-getWidthX		KEYWORD2
-setHeightY		KEYWORD2
+setDataColor	KEYWORD2
+setBackgroundColor	KEYWORD2
+setLabelColor	KEYWORD2
+clear	KEYWORD2
+
+setWidthX	KEYWORD2
+setHeightY	KEYWORD2
 setPositionX	KEYWORD2
 setPositionY	KEYWORD2
-setWidthX		KEYWORD2
+setGridOrLabelPixelSpacing	KEYWORD2
+getWidthX	KEYWORD2
+getHeightY	KEYWORD2
+getPositionX	KEYWORD2
+getPositionY	KEYWORD2
+
+# Draw Chart
+drawAxesAndLabels	KEYWORD2
+drawAxesAndGrid	KEYWORD2
+drawChartDataDirect	KEYWORD2
+drawChartDataWithYOffset	KEYWORD2
+drawChartData	KEYWORD2
+drawChartDataFloat	KEYWORD2
+drawGrid	KEYWORD2
+
+#
+# X Axis
+#
+drawXAxisAndLabels	KEYWORD2
+drawXAxisAndDateLabels	KEYWORD2
+setXLabelDistance	KEYWORD2
+setXBigLabelDistance	KEYWORD2
+setXRegularAndBigLabelDistance	KEYWORD2
+setGridOrLabelXPixelSpacing	KEYWORD2
+getGridOrLabelXPixelSpacing	KEYWORD2
+# X Label
+initXLabel	KEYWORD2
+initXLabelTimestamp	KEYWORD2
+disableXLabel	KEYWORD2
+setLabelStringFunction	KEYWORD2
+convertMinutesToString	KEYWORD2
+# X Start value
+setXLabelStartValue	KEYWORD2
+setXLabelStartValueByIndex	KEYWORD2
+getXLabelStartValue	KEYWORD2
+stepXLabelStartValue	KEYWORD2
+# X Access factor
+setXLabelBaseIncrementValue	KEYWORD2
+setXLabelScaleFactor	KEYWORD2
+getXLabelScaleFactor	KEYWORD2
+setXDataScaleFactor	KEYWORD2
+getXDataScaleFactor	KEYWORD2
+setXLabelAndXDataScaleFactor	KEYWORD2
+# X conversions
+reduceWithXLabelScaleFactor	KEYWORD2
+reduceLongWithXLabelScaleFactor	KEYWORD2
+reduceFloatWithXLabelScaleFactor	KEYWORD2
+enlargeLongWithXLabelScaleFactor	KEYWORD2
+enlargeFloatWithXLabelScaleFactor	KEYWORD2
+reduceLongWithIntegerScaleFactor	KEYWORD2
+getIntegerScaleFactorAsString	KEYWORD2
+reduceFloatWithIntegerScaleFactor	KEYWORD2
+computeXLabelAndXDataScaleFactor	KEYWORD2
+computeAndSetXLabelAndXDataScaleFactor	KEYWORD2
+# X Title
+setXTitleText	KEYWORD2
+drawXAxisTitle	KEYWORD2
+setTitleTextSize	KEYWORD2
+setXTitleTextAndSize	KEYWORD2
+
+#
+# Y Axis
+#
+drawYAxisAndLabels	KEYWORD2
+setGridOrLabelYPixelSpacing	KEYWORD2
+getGridOrLabelYPixelSpacing	KEYWORD2
+setXLabelAndGridOffset	KEYWORD2
+# Y Label
+initYLabel	KEYWORD2
+disableYLabel	KEYWORD2
+# Y Start value
+setYLabelStartValue	KEYWORD2
+getYLabelStartValue	KEYWORD2
+setYDataFactor	KEYWORD2
+stepYLabelStartValue	KEYWORD2
+setYLabelBaseIncrementValue	KEYWORD2
+# Y Title
+setYTitleText	KEYWORD2
+setYTitleTextAndSize	KEYWORD2
+drawYAxisTitle	KEYWORD2
+
 #######################################
 # Constants (LITERAL1)
 #######################################

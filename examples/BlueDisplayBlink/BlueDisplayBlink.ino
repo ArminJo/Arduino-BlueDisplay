@@ -34,6 +34,7 @@
 //#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
 //#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 #define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events.
+//#define DO_NOT_NEED_SPEAK_EVENTS            // Disables SpeakingDone event handling. Saves up to 54 bytes program memory and 18 bytes RAM.
 //#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
 //#define BD_USE_SIMPLE_SERIAL                // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 //#define BD_USE_USB_SERIAL                   // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
@@ -139,7 +140,11 @@ void initDisplay(void) {
             &doBlinkStartStop);
     TouchButtonBlinkStartStop.setTextForValueTrue("Stop");
 
-    BlueDisplay1.debug(StartMessage);
+    BlueDisplay1.debug(reinterpret_cast<const __FlashStringHelper*>(StartMessage));
+
+    // Talk functions are only implemented in Android > 5.0 (Lollipop)
+    BlueDisplay1.speakSetLocale(F("en-us"));
+    BlueDisplay1.speakStringBlockingWait(F("Display ready")); // Maximum 32 characters supported for F("")
 }
 
 /*

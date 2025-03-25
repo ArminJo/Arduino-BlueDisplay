@@ -201,6 +201,20 @@ void drawSlidersAndButtons(void) {
 #endif
 }
 
+uint8_t copyPGMStringStoredInPGMVariable(char *aStringBuffer, void *aPGMStringPtrStoredInPGMVariable) {
+    const char *tSliderNamePtr = (const char*) pgm_read_ptr(aPGMStringPtrStoredInPGMVariable);
+    PGM_P tPGMString = reinterpret_cast<PGM_P>(tSliderNamePtr);
+    /*
+     * compute string length
+     */
+    uint8_t tLength = strlen_P(tPGMString);
+    /*
+     * copy string up to length
+     */
+    strncpy_P(aStringBuffer, tPGMString, tLength + 1);
+    return tLength;
+}
+
 /*
  * Functions used by Reset and Store buttons
  * Dummy for CPU without EEprom

@@ -43,15 +43,15 @@ Connecting the Arduino with an USB cable to your smartphone requires an USB-OTG 
 
 # Features
 - **Graphic + text** output as well as **printf implementation**.
-- Draw **chart** from byte or short values. Enables clearing of last drawn chart.
-- Play system tones.
 - **Touch button + slider** objects with tone feedback and 16 bit values.
+- Draw **chart** from byte or short values. Enables clearing of last drawn chart.
+- **Voice output** with Android TextToSpeech for Android > 5.0 (Lollipop).
+- **Touch and sensor events** are sent to Arduino.
+- Automatic and manually **scaling of display region**.
 - Sliders can have arbitrary start and end values.
 - Buttons can be **Red/Green toggle** button with different text for both states.
 - Buttons can be **autorepeat buttons** with 2 different repeat rates.
-- Button and slider callback as well as touch and **sensor events** are sent back to Arduino.
-- Automatic and manually **scaling of display region**.
-- Easy mapping of UTF-8 characters like Ohm, Celsius etc..
+- Easy mapping of any UTF-8 characters like Ohm, Celsius etc..
 - Up to **115200 Baud** using **HC-05** modules or** USB OTG**.
 - **USB OTG connection** can be used instead of Bluetooth.
 - Local display of received and sent commands for debugging purposes.
@@ -63,7 +63,6 @@ Connecting the Arduino with an USB cable to your smartphone requires an USB-OTG 
 - Touch button + slider implementations for HX8347D and SSD1289 controller.
 - Local event support for ADS7846 resistive touch controller.
 - Local and remote displays can be used simultaneously and are synchonized when possible.
-
 
 <br/>
 
@@ -91,9 +90,10 @@ void loop() {
     checkAndHandleEvents();
 }
 void initDisplay(void) {
-    // Initialize display size and flags
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE, 320, 240);
-    // Initialize all GUI elements here
+    // Initialize display size and flags and orientation locks
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_TOUCH_BASIC_DISABLE | BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE, 320, 240);
+    // Initialize all GUI elements here ...
+    BlueDisplay1.speakStringBlockingWait(F("Display ready")); // Maximum 32 characters supported for F("")
  ...
 }
 void drawGui(void) {
@@ -124,7 +124,7 @@ For detailed information to sensors see [ShowSensorValues example](https://githu
 <br/>
 
 # Lines and anti-aliasing
-Lines and vectors, that are not horizontal or vertical are drawn with anti-aliasing. 
+Lines and vectors, that are not horizontal or vertical are drawn with anti-aliasing.
 This has the disadvantage that these lines cannot be removed witout residual by overwriting them with background color.
 You must use the *WithAliasing() function variant if you have a diagonal line or vector that you want to remove by overwriting.
 
@@ -149,6 +149,7 @@ Modify them by enabling / disabling them, or change the values if applicable.
 | `BLUETOOTH_BAUD_RATE` | 9600 | Change this, if you have [reprogrammed](https://github.com/ArminJo/Arduino-BlueDisplay#btmoduleprogrammer) the HC05 module for another baud rate e.g.115200. |
 | `DO_NOT_NEED_BASIC_TOUCH_EVENTS` | disabled | Disables basic touch events down, move and up. Saves up to 180 bytes program memory and 14 bytes RAM. |
 | `DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS` | disabled | Disables LongTouchDown and SwipeEnd events. Saves up to 88 bytes program memory and 4 bytes RAM. |
+| `DO_NOT_NEED_SPEAK_EVENTS` | disabled | Disables SpeakingDone event handling. Saves up to 54 bytes program memory and 18 bytes RAM. |
 | `ONLY_CONNECT_EVENT_REQUIRED` | disabled | Disables reorientation, redraw and sensor-change events. Saves up to 50 bytes program memory and 4 bytes RAM. |
 | `BD_USE_SIMPLE_SERIAL` | disabled | Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise. |
 | `BD_USE_USB_SERIAL` | disabled | Activate it, if you want to force using **Serial** instead of **Serial1** for **direct USB cable connection** to your smartphone / tablet. This is only required on platforms, which have Serial1 available. |
@@ -185,7 +186,7 @@ But if you have a [codepage](https://en.wikipedia.org/wiki/Windows_code_page) wh
 <br/>
 
 # Element positioning
-## Text 
+## Text
 - Text Y position is upper left corner of character
 - Text Y bottom position is position + TextSize
 - Text Y middle position is position + TextSize / 2
@@ -346,6 +347,8 @@ Using a delay of HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_<USB or 
 The extras folder (in the Arduino IDE use "Sketch > Show Sketch Folder" (or Ctrl+K) and then in the libraries/BlueDisplay/extras directory)
 contains more schematics, breadboard layouts and pictures which may help you building the example projects.
 
+It also contains a [list of all available voices](https://github.com/ArminJo/Arduino-BlueDisplay/blob/master/src/TTS-ListOfAllVoices.txt) found on my device as found in the startup log at debug level Info.
+
 # Hints
 ### Opening the apps menu
 For full screen applications, the app's menu is called by swiping horizontal from the left edge of the screen.
@@ -374,6 +377,7 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 
 # Revision History
 ### Version 5.0.0
+- Voice output with Android TextToSpeech for Android > 5.0 (Lollipop).
 - Text Y and X position is upper left corner of character.
 - Added `setCallback()` and `setFlags()` for buttons and sliders.
 - Modified ManySlidersAndButtons example.

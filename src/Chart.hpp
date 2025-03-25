@@ -400,7 +400,7 @@ void Chart::drawXAxisAndLabels() {
 
     if (mFlags & CHART_X_LABEL_USED) {
         /*
-         * Clear label space before
+         * Clear complete label space before
          */
         uint16_t tNumberYTop = tPositionY + 2 * mAxesSize;
 #if !defined(ARDUINO)
@@ -527,7 +527,7 @@ void Chart::drawXAxisAndDateLabels(time_t aStartTimestamp,
     DisplayForChart.fillRectRel(mPositionX - (mAxesSize - 1), mPositionY, mWidthX + (mAxesSize - 1), mAxesSize, mAxesColor);
 
     /*
-     * Clear label space
+     * Clear complete label space
      */
     uint16_t tNumberYTop = mPositionY + 2 * mAxesSize;
 #if !defined(ARDUINO)
@@ -1385,9 +1385,9 @@ long Chart::reduceLongWithIntegerScaleFactor(long aValue, int aIntegerScaleFacto
 }
 
 /*
- * Compute xDataFactor such, that data fills X axis
+ * Compute X Data and Label scale factor such, that data fills X axis
  */
-int16_t Chart::computeXFactor(uint16_t aDataLength) {
+int16_t Chart::computeXLabelAndXDataScaleFactor(uint16_t aDataLength) {
     int16_t tNewScale;
     if (mWidthX > aDataLength) {
         /*
@@ -1407,7 +1407,7 @@ int16_t Chart::computeXFactor(uint16_t aDataLength) {
 }
 
 void Chart::computeAndSetXLabelAndXDataScaleFactor(uint16_t aDataLength, int8_t aMaxScaleFactor) {
-    int16_t tXScaleFactor = computeXFactor(aDataLength);
+    int16_t tXScaleFactor = computeXLabelAndXDataScaleFactor(aDataLength);
     if (tXScaleFactor > aMaxScaleFactor) {
         tXScaleFactor = aMaxScaleFactor;
     }

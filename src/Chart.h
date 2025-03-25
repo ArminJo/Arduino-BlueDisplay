@@ -96,6 +96,9 @@ public:
     uint16_t getPositionX(void) const;
     uint16_t getPositionY(void) const;
 
+    /*
+     * Draw chart functions - non axis related
+     */
     void drawAxesAndLabels();
     void drawAxesAndGrid(void);
     bool drawChartDataDirect(const uint8_t *aDataPointer, const uint16_t aLengthOfValidData, const uint8_t aMode);
@@ -121,13 +124,13 @@ public:
      * X Label
      */
     // Init
-    void initXLabelTimestamp(const int aXLabelStartValue, const long aXLabelIncrementValue, const uint8_t aXLabelScaleFactor,
-            const uint8_t aXMinStringWidth);
     void initXLabel(const float aXLabelStartValue, const float aXLabelIncrementValue, const uint8_t aXLabelScaleFactor,
             uint8_t aXMinStringWidthIncDecimalPoint, uint8_t aXNumVarsAfterDecimal);
+    void initXLabelTimestamp(const int aXLabelStartValue, const long aXLabelIncrementValue, const uint8_t aXLabelScaleFactor,
+            const uint8_t aXMinStringWidth);
     void disableXLabel(void);
 
-    // label string generation
+    // Label string generation
     void setLabelStringFunction(int (*aXLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue));
     static int convertMinutesToString(char *aLabelStringBuffer, time_float_union aXvalue);
 
@@ -140,22 +143,24 @@ public:
     // Increment value
     void setXLabelBaseIncrementValue(float xLabelIncrementValueFloat);
 
-    // access factors
+    // Access factors
     void setXLabelScaleFactor(int aXLabelScaleFactor);
     int getXLabelScaleFactor(void) const;
     void setXDataScaleFactor(int8_t aIntegerScaleFactor);
     int8_t getXDataScaleFactor(void) const;
     void setXLabelAndXDataScaleFactor(int aXFactor);
 
+    // Conversions with ScaleFactor
     void reduceWithXLabelScaleFactor(time_float_union *aValue);
     long reduceLongWithXLabelScaleFactor(long aValue);
     float reduceFloatWithXLabelScaleFactor(float Value);
     long enlargeLongWithXLabelScaleFactor(long Value);
     float enlargeFloatWithXLabelScaleFactor(float Value);
+    // Conversions with IntegerScaleFactor
     static long reduceLongWithIntegerScaleFactor(long aValue, int aScaleFactor);
     static void getIntegerScaleFactorAsString(char *tStringBuffer, int aScaleFactor);
     static float reduceFloatWithIntegerScaleFactor(float aValue, int aScaleFactor);
-    int16_t computeXFactor(uint16_t aDataLength);
+    int16_t computeXLabelAndXDataScaleFactor(uint16_t aDataLength);
     void computeAndSetXLabelAndXDataScaleFactor(uint16_t aDataLength, int8_t aMaxScaleFactor);
 
     // X Title
@@ -163,6 +168,7 @@ public:
     void drawXAxisTitle() const;
     void setTitleTextSize(const uint8_t aTitleTextSize); // Sets chart X + Y title text size
     void setXTitleTextAndSize(const char *aTitleText, const uint8_t aTitleTextSize); // Sets chart X + Y title text size
+
     /*
      *  Y Axis
      */
@@ -179,8 +185,8 @@ public:
 
     // Start value
     void setYLabelStartValue(float yLabelStartValueFloat);
-    void setYDataFactor(float aYDataFactor);
     float getYLabelStartValue(void) const;
+    void setYDataFactor(float aYDataFactor);
     float stepYLabelStartValue(int aSteps);
 
     // Increment value

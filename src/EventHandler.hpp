@@ -85,6 +85,14 @@ void (*sLongTouchDownCallback)(struct TouchEvent*) = nullptr; // The callback ha
 void (*sSwipeEndCallback)(struct Swipe*) = nullptr; // can be called by event handler and by local touch up handler, which recognizes the swipe
 bool sSwipeEndCallbackEnabled = false;  // for temporarily disabling swipe callbacks
 #endif
+#if !defined(DO_NOT_NEED_SPEAK_EVENTS)
+void (*sSpeakingDoneCallback)(int16_t tErrorCode) = nullptr;
+BluetoothEvent sBDSpecialEventJustReceived; // complete Event structure used, if events are polled with sBDSpecialEventJustReceived
+bool sBDSpecialEventWasJustReceived = false;
+void registerSpeakingDoneCallback(void (*aSpeakingDoneCallback)(int16_t tErrorCode)) {
+    sSpeakingDoneCallback = aSpeakingDoneCallback;
+}
+#endif
 
 void (*sConnectCallback)() = nullptr;
 void (*sRedrawCallback)() = nullptr; // Intended to redraw screen, if size of display changes.
@@ -529,6 +537,20 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
                 tEvent.EventData.IntegerInfoCallbackData.SubFunction, tEvent.EventData.IntegerInfoCallbackData.ByteInfo,
                 tEvent.EventData.IntegerInfoCallbackData.ShortInfo, tEvent.EventData.IntegerInfoCallbackData.LongInfo);
         break;
+
+#if !defined(DO_NOT_NEED_SPEAK_EVENTS)
+    case EVENT_SPEAKING_DONE:
+        /*
+         * Set data used for polling
+         */
+        sBDSpecialEventJustReceived = tEvent;
+        sBDSpecialEventWasJustReceived = true;
+
+        if (sSpeakingDoneCallback != nullptr) {
+            sSpeakingDoneCallback(tEvent.EventData.UnsignedShortArray[0]);
+        }
+        break;
+#endif
 
     case EVENT_REORIENTATION:
     case EVENT_REQUESTED_DATA_CANVAS_SIZE:

@@ -1,0 +1,956 @@
+1 es-us-x-sfb-local
+2 ur-PK-language
+3 ja-jp-x-htm-network
+4 ru-ru-x-rud-local
+5 th-th-x-thd-network
+6 nl-nl-x-yfr-network
+7 it-it-x-itd-local
+8 en-AU-language
+9 as-in-x-end-local
+10 vi-vn-x-vif-network
+11 uk-UA-language
+12 sv-se-x-lfs-local
+13 cmn-tw-x-ctc-network
+14 en-us-x-tpf-local
+15 bn-in-x-bnd-local
+16 yue-hk-x-yuf-network
+17 cy-gb-x-cyf-local
+18 en-in-x-end-network
+19 nl-nl-x-yfr-local
+20 ur-in-x-urc-local
+21 cy-gb-x-cyf-network
+22 pl-pl-x-afb-local
+23 fr-ca-x-cab-local
+24 id-id-x-idd-network
+25 id-id-x-idc-local
+26 da-dk-x-sfp-network
+27 bn-BD-language
+28 ml-in-x-mlc-local
+29 hr-HR-language
+30 zh-TW-language
+31 mni-in-x-end-local
+32 en-au-x-aua-network
+33 en-GB-language
+34 vi-vn-x-vid-network
+35 yue-hk-x-yud-network
+36 cmn-cn-x-cce-network
+37 ko-kr-x-koc-network
+38 en-gb-x-gba-network
+39 pl-pl-x-bmg-network
+40 ml-IN-language
+41 en-us-x-sfg-network
+42 hi-in-x-hid-network
+43 en-au-x-aud-local
+44 pl-pl-x-zfg-network
+45 tr-tr-x-tmc-local
+46 fr-fr-x-vlf-network
+47 cmn-cn-x-ccc-local
+48 bn-in-x-bnc-network
+49 en-au-x-aua-local
+50 ar-language
+51 cmn-tw-x-ctc-local
+52 et-ee-x-tms-network
+53 vi-vn-x-vie-local
+54 de-de-x-deg-network
+55 fr-CA-language
+56 doi-in-x-end-local
+57 ms-my-x-msc-local
+58 ja-jp-x-jab-network
+59 it-IT-language
+60 bs-ba-x-bsm-local
+61 jv-id-x-jvf-local
+62 bn-bd-x-ban-network
+63 en-gb-x-gbc-network
+64 bn-bd-x-ban-local
+65 ar-xa-x-ard-network
+66 hr-hr-x-hra-local
+67 cmn-cn-x-ssa-network
+68 el-GR-language
+69 sat-IN-language
+70 en-us-x-sfg-local
+71 fil-PH-language
+72 en-in-x-ene-local
+73 pl-pl-x-jmk-network
+74 ru-ru-x-rue-network
+75 bn-IN-language
+76 es-us-x-esc-local
+77 fi-FI-language
+78 fr-ca-x-cab-network
+79 hu-HU-language
+80 fr-FR-language
+81 fil-ph-x-fie-local
+82 da-DK-language
+83 ja-jp-x-jad-network
+84 sv-se-x-afp-local
+85 fil-ph-x-fid-network
+86 ml-in-x-mlc-network
+87 kn-in-x-knc-local
+88 si-lk-x-sin-local
+89 sk-sk-x-sfk-local
+90 en-us-x-iob-local
+91 bg-bg-x-ifk-local
+92 cmn-cn-x-ccc-network
+93 th-th-x-thd-local
+94 km-KH-language
+95 he-il-x-heb-network
+96 bs-ba-language
+97 mr-in-x-mra-network
+98 es-us-x-esf-local
+99 kn-in-x-knd-network
+100 pa-in-x-pac-local
+101 ar-xa-x-are-local
+102 mr-in-x-mrd-local
+103 hu-hu-x-kfl-network
+104 pt-pt-x-jmn-network
+105 nl-nl-x-lfc-network
+106 fr-fr-x-frc-network
+107 nl-nl-x-dma-network
+108 cs-cz-x-jfs-local
+109 tr-tr-x-efu-network
+110 et-ee-x-tms-local
+111 hr-hr-x-hrb-network
+112 en-au-x-auc-network
+113 es-es-x-eef-local
+114 en-gb-x-gbc-local
+115 es-es-x-eec-local
+116 gu-in-x-gud-local
+117 sw-ke-x-swm-local
+118 tr-tr-x-mfm-local
+119 is-is-x-isf-local
+120 hi-in-x-hie-local
+121 sv-se-x-dmc-local
+122 ur-in-x-urc-network
+123 ms-my-x-msg-network
+124 fi-fi-x-afi-local
+125 ca-ES-language
+126 en-us-x-tpd-network
+127 nb-no-x-cfl-local
+128 gu-in-x-gud-network
+129 ko-kr-x-kod-local
+130 ta-IN-language
+131 is-is-x-isf-network
+132 es-us-x-esf-network
+133 yue-hk-x-jar-network
+134 sr-rs-x-gfg-network
+135 en-us-x-tpc-network
+136 vi-vn-x-gft-network
+137 fr-fr-x-frb-local
+138 he-il-x-hee-network
+139 en-au-x-aub-local
+140 de-de-x-nfh-local
+141 el-gr-x-vfz-local
+142 pl-pl-x-afb-network
+143 pt-PT-language
+144 en-in-x-end-local
+145 ja-jp-x-jad-local
+146 sv-se-x-dmc-network
+147 ar-xa-x-arc-local
+148 ko-kr-x-ism-local
+149 gu-IN-language
+150 or-IN-language
+151 or-in-x-end-local
+152 pt-br-x-pte-local
+153 es-es-x-eed-local
+154 he-il-x-hec-network
+155 nb-no-x-rfj-network
+156 nl-be-x-bed-network
+157 ms-my-x-msg-local
+158 fr-fr-x-frd-network
+159 bg-bg-x-ifk-network
+160 id-id-x-idd-local
+161 yue-hk-x-yuf-local
+162 brx-IN-language
+163 ja-JP-language
+164 gu-in-x-guc-network
+165 es-ES-language
+166 pl-pl-x-jmk-local
+167 ms-MY-language
+168 fil-ph-x-fid-local
+169 nl-be-x-bec-network
+170 fil-ph-x-fie-network
+171 mr-in-x-mrc-local
+172 ar-xa-x-ard-local
+173 yue-hk-x-jar-local
+174 yue-hk-x-yue-local
+175 su-id-x-suf-network
+176 te-in-x-teg-local
+177 nb-no-x-cfl-network
+178 en-gb-x-gbb-local
+179 it-it-x-itb-local
+180 su-ID-language
+181 th-TH-language
+182 zh-CN-language
+183 ru-RU-language
+184 en-us-x-iob-network
+185 nb-no-x-cmj-network
+186 en-us-x-iol-network
+187 ar-xa-x-arz-local
+188 pl-pl-x-zfg-local
+189 ru-ru-x-ruc-network
+190 pt-BR-language
+191 ru-ru-x-rue-local
+192 pa-in-x-pag-local
+193 id-id-x-dfz-network
+194 pa-IN-language
+195 en-us-x-iom-network
+196 nl-nl-x-lfc-local
+197 id-id-x-dfz-local
+198 ks-IN-language
+199 doi-IN-language
+200 lv-LV-language
+201 fr-ca-x-cac-local
+202 tr-tr-x-tmc-network
+203 pt-pt-x-jfb-network
+204 hi-in-x-hia-local
+205 it-it-x-kda-network
+206 fr-fr-x-fra-local
+207 ko-kr-x-kob-network
+208 mr-IN-language
+209 he-il-x-hed-network
+210 tr-tr-x-efu-local
+211 nb-no-x-tfs-local
+212 jv-id-x-jvf-network
+213 et-EE-language
+214 ko-KR-language
+215 pt-br-x-afs-local
+216 id-id-x-idc-network
+217 en-NG-language
+218 en-in-x-enc-local
+219 te-IN-language
+220 th-th-x-thc-local
+221 ja-jp-x-jac-local
+222 cmn-tw-x-ctd-network
+223 he-il-x-hee-local
+224 ca-es-x-caf-network
+225 vi-vn-x-vie-network
+226 da-dk-x-nmm-network
+227 tr-tr-x-cfs-local
+228 hi-in-x-hid-local
+229 es-es-x-eee-local
+230 en-gb-x-gbd-local
+231 hi-in-x-hic-network
+232 pl-pl-x-oda-network
+233 en-gb-x-gbg-local
+234 mr-in-x-mrd-network
+235 en-gb-x-rjs-local
+236 sq-al-x-sqm-network
+237 en-us-x-iom-local
+238 it-it-x-kda-local
+239 en-in-x-enc-network
+240 th-th-x-thc-network
+241 fil-ph-x-fic-local
+242 ko-kr-x-kod-network
+243 bn-in-x-bnd-network
+244 pt-pt-x-sfs-local
+245 cmn-cn-x-ssa-local
+246 si-lk-x-sin-network
+247 en-au-x-aub-network
+248 fr-ca-x-caa-network
+249 de-de-x-deb-network
+250 en-in-x-ene-network
+251 id-ID-language
+252 pa-in-x-pag-network
+253 vi-vn-x-gft-local
+254 mai-in-x-end-local
+255 hr-hr-x-hra-network
+256 lt-lt-language
+257 en-ng-x-tfn-network
+258 tr-tr-x-ama-network
+259 sa-IN-language
+260 da-dk-x-nmm-local
+261 da-dk-x-vfb-network
+262 pl-pl-x-oda-local
+263 sv-se-x-afp-network
+264 tr-TR-language
+265 sw-ke-x-swm-network
+266 ko-kr-x-koc-local
+267 es-us-x-esd-local
+268 en-US-language
+269 lt-lt-x-amc-network
+270 hi-in-x-hia-network
+271 da-dk-x-kfm-network
+272 sq-al-language
+273 fr-fr-x-frc-local
+274 su-id-x-suf-local
+275 es-us-x-sfb-network
+276 ru-ru-x-rud-network
+277 en-gb-x-gba-local
+278 kn-in-x-knd-local
+279 sd-IN-language
+280 pa-in-x-pae-local
+281 yue-HK-language
+282 sat-in-x-end-local
+283 id-id-x-ide-network
+284 ja-jp-x-htm-local
+285 ru-ru-x-ruf-local
+286 en-ng-x-tfn-local
+287 ja-jp-x-jac-network
+288 sv-se-x-cfg-local
+289 ur-in-x-urb-network
+290 en-au-x-aud-network
+291 hi-IN-language
+292 sv-se-x-cmh-network
+293 brx-in-x-end-local
+294 ml-in-x-mle-local
+295 pt-br-x-ptd-local
+296 da-dk-x-kfm-local
+297 en-us-x-tpd-local
+298 ro-ro-x-vfv-network
+299 id-id-x-ide-local
+300 cmn-cn-x-ccd-network
+301 mni-IN-language
+302 nb-NO-language
+303 fr-ca-x-caa-local
+304 ur-pk-x-cfn-local
+305 hu-hu-x-kfl-local
+306 fr-ca-x-cad-local
+307 yue-hk-x-yuc-network
+308 vi-VN-language
+309 vi-vn-x-vif-local
+310 is-is-language
+311 pt-pt-x-pmj-local
+312 nl-nl-x-tfb-network
+313 nb-no-x-rfj-local
+314 fr-ca-x-cac-network
+315 en-gb-x-rjs-network
+316 ru-ru-x-ruc-local
+317 ru-ru-x-ruf-network
+318 he-il-x-heb-local
+319 ks-in-x-end-local
+320 pt-pt-x-sfs-network
+321 fil-ph-x-fic-network
+322 es-es-x-eea-network
+323 ur-in-x-urb-local
+324 ru-ru-x-dfc-local
+325 fil-ph-x-cfc-network
+326 kok-in-x-end-local
+327 cs-cz-x-jfs-network
+328 it-it-x-itc-local
+329 bn-in-x-bnc-local
+330 pa-in-x-pac-network
+331 ro-RO-language
+332 en-in-x-ena-network
+333 uk-ua-x-hfd-local
+334 nl-be-x-bec-local
+335 yue-hk-x-yud-local
+336 ms-my-x-mse-network
+337 pl-PL-language
+338 ar-xa-x-are-network
+339 vi-vn-x-vic-network
+340 he-il-language
+341 vi-vn-x-vic-local
+342 sa-in-x-end-local
+343 sr-rs-language
+344 en-au-x-auc-local
+345 en-gb-x-gbb-network
+346 ne-np-x-nep-local
+347 fil-ph-x-cfc-local
+348 cmn-tw-x-cte-local
+349 hi-in-x-hie-network
+350 ne-np-x-nep-network
+351 en-us-x-iog-network
+352 ne-NP-language
+353 de-de-x-deg-local
+354 de-de-x-nfh-network
+355 nl-BE-language
+356 km-kh-x-khm-network
+357 ur-IN-language
+358 si-LK-language
+359 sk-sk-x-sfk-network
+360 gu-in-x-guc-local
+361 pt-br-x-pte-network
+362 sv-se-x-cfg-network
+363 bs-ba-x-bsm-network
+364 fi-fi-x-afi-network
+365 yue-hk-x-yuc-local
+366 lv-lv-x-imr-local
+367 it-it-x-itc-network
+368 sk-SK-language
+369 uk-ua-x-hfd-network
+370 cmn-cn-x-ccd-local
+371 ms-my-x-msd-local
+372 tr-tr-x-ama-local
+373 vi-vn-x-vid-local
+374 te-in-x-teg-network
+375 fr-fr-x-frb-network
+376 te-in-x-tee-local
+377 nl-nl-x-tfb-local
+378 pt-pt-x-jfb-local
+379 en-gb-x-gbg-network
+380 sl-si-x-frm-local
+381 de-DE-language
+382 sv-se-x-cmh-local
+383 mr-in-x-mra-local
+384 it-it-x-itb-network
+385 da-dk-x-vfb-local
+386 ta-in-x-tad-local
+387 pt-pt-x-pmj-network
+388 es-us-x-esd-network
+389 nb-no-x-tmg-local
+390 ru-ru-x-dfc-network
+391 mai-IN-language
+392 fr-ca-x-cad-network
+393 el-gr-x-vfz-network
+394 nl-nl-x-bmh-network
+395 he-il-x-hed-local
+396 en-us-x-tpf-network
+397 en-gb-x-gbd-network
+398 hr-hr-x-hrb-local
+399 sq-al-x-sqm-local
+400 kn-in-x-knc-network
+401 hi-in-x-hic-local
+402 nb-no-x-tfs-network
+403 ca-es-x-caf-local
+404 en-IN-language
+405 kn-IN-language
+406 sd-in-x-end-local
+407 es-es-x-eea-local
+408 ms-my-x-msd-network
+409 te-in-x-tee-network
+410 fr-fr-x-fra-network
+411 pa-in-x-pad-network
+412 sv-se-x-lfs-network
+413 pt-br-x-ptd-network
+414 de-de-x-dea-local
+415 ur-pk-x-cfn-network
+416 ta-in-x-tac-local
+417 es-es-x-eec-network
+418 pt-pt-x-jmn-local
+419 da-dk-x-sfp-local
+420 tr-tr-x-cfs-network
+421 pa-in-x-pae-network
+422 ms-my-x-msc-network
+423 es-us-x-esc-network
+424 nl-be-x-bed-local
+425 lt-lt-x-amc-local
+426 km-kh-x-khm-local
+427 nl-nl-x-bmh-local
+428 he-il-x-hec-local
+429 nb-no-x-cmj-local
+430 ko-kr-x-kob-local
+431 ta-in-x-tac-network
+432 fr-fr-x-vlf-local
+433 en-us-x-iog-local
+434 de-de-x-dea-network
+435 cmn-tw-x-ctd-local
+436 ar-xa-x-arz-network
+437 bg-bg-language
+438 ar-xa-x-arc-network
+439 pl-pl-x-bmg-local
+440 de-de-x-deb-local
+441 ko-kr-x-ism-network
+442 cy-GB-language
+443 en-in-x-ena-local
+444 cs-CZ-language
+445 fr-fr-x-frd-local
+446 pa-in-x-pad-local
+447 jv-ID-language
+448 kok-IN-language
+449 pt-br-x-afs-network
+450 mr-in-x-mrc-network
+451 nl-NL-language
+452 nb-no-x-tmg-network
+453 ja-jp-x-jab-local
+454 en-us-x-tpc-local
+455 ro-ro-x-vfv-local
+456 tr-tr-x-mfm-network
+457 es-es-x-eed-network
+458 sw-ke-language
+459 sl-SI-language
+460 ms-my-x-mse-local
+461 es-US-language
+462 sv-SE-language
+463 cmn-cn-x-cce-local
+464 cmn-tw-x-cte-network
+465 it-it-x-itd-network
+466 as-IN-language
+467 ml-in-x-mle-network
+468 nl-nl-x-dma-local
+469 ta-in-x-tad-network
+470 yue-hk-x-yue-network
+471 lv-lv-x-imr-network
+472 en-us-x-iol-local
+
+#########################
+# Sorted alphabetically # 
+#########################
+ar-language
+ar-xa-x-arc-local
+ar-xa-x-arc-network
+ar-xa-x-ard-local
+ar-xa-x-ard-network
+ar-xa-x-are-local
+ar-xa-x-are-network
+ar-xa-x-arz-local
+ar-xa-x-arz-network
+as-IN-language
+as-in-x-end-local
+bg-bg-language
+bg-bg-x-ifk-local
+bg-bg-x-ifk-network
+bn-BD-language
+bn-IN-language
+bn-bd-x-ban-local
+bn-bd-x-ban-network
+bn-in-x-bnc-local
+bn-in-x-bnc-network
+bn-in-x-bnd-local
+bn-in-x-bnd-network
+brx-IN-language
+brx-in-x-end-local
+bs-ba-language
+bs-ba-x-bsm-local
+bs-ba-x-bsm-network
+ca-ES-language
+ca-es-x-caf-local
+ca-es-x-caf-network
+cmn-cn-x-ccc-local
+cmn-cn-x-ccc-network
+cmn-cn-x-ccd-local
+cmn-cn-x-ccd-network
+cmn-cn-x-cce-local
+cmn-cn-x-cce-network
+cmn-cn-x-ssa-local
+cmn-cn-x-ssa-network
+cmn-tw-x-ctc-local
+cmn-tw-x-ctc-network
+cmn-tw-x-ctd-local
+cmn-tw-x-ctd-network
+cmn-tw-x-cte-local
+cmn-tw-x-cte-network
+cs-CZ-language
+cs-cz-x-jfs-local
+cs-cz-x-jfs-network
+cy-GB-language
+cy-gb-x-cyf-local
+cy-gb-x-cyf-network
+da-DK-language
+da-dk-x-kfm-local
+da-dk-x-kfm-network
+da-dk-x-nmm-local
+da-dk-x-nmm-network
+da-dk-x-sfp-local
+da-dk-x-sfp-network
+da-dk-x-vfb-local
+da-dk-x-vfb-network
+de-DE-language
+de-de-x-dea-local
+de-de-x-dea-network
+de-de-x-deb-local
+de-de-x-deb-network
+de-de-x-deg-local
+de-de-x-deg-network
+de-de-x-nfh-local
+de-de-x-nfh-network
+doi-IN-language
+doi-in-x-end-local
+el-GR-language
+el-gr-x-vfz-local
+el-gr-x-vfz-network
+en-AU-language
+en-GB-language
+en-IN-language
+en-NG-language
+en-US-language
+en-au-x-aua-local
+en-au-x-aua-network
+en-au-x-aub-local
+en-au-x-aub-network
+en-au-x-auc-local
+en-au-x-auc-network
+en-au-x-aud-local
+en-au-x-aud-network
+en-gb-x-gba-local
+en-gb-x-gba-network
+en-gb-x-gbb-local
+en-gb-x-gbb-network
+en-gb-x-gbc-local
+en-gb-x-gbc-network
+en-gb-x-gbd-local
+en-gb-x-gbd-network
+en-gb-x-gbg-local
+en-gb-x-gbg-network
+en-gb-x-rjs-local
+en-gb-x-rjs-network
+en-in-x-ena-local
+en-in-x-ena-network
+en-in-x-enc-local
+en-in-x-enc-network
+en-in-x-end-local
+en-in-x-end-network
+en-in-x-ene-local
+en-in-x-ene-network
+en-ng-x-tfn-local
+en-ng-x-tfn-network
+en-us-x-iob-local
+en-us-x-iob-network
+en-us-x-iog-local
+en-us-x-iog-network
+en-us-x-iol-local
+en-us-x-iol-network
+en-us-x-iom-local
+en-us-x-iom-network
+en-us-x-sfg-local
+en-us-x-sfg-network
+en-us-x-tpc-local
+en-us-x-tpc-network
+en-us-x-tpd-local
+en-us-x-tpd-network
+en-us-x-tpf-local
+en-us-x-tpf-network
+es-ES-language
+es-US-language
+es-es-x-eea-local
+es-es-x-eea-network
+es-es-x-eec-local
+es-es-x-eec-network
+es-es-x-eed-local
+es-es-x-eed-network
+es-es-x-eee-local
+es-es-x-eef-local
+es-us-x-esc-local
+es-us-x-esc-network
+es-us-x-esd-local
+es-us-x-esd-network
+es-us-x-esf-local
+es-us-x-esf-network
+es-us-x-sfb-local
+es-us-x-sfb-network
+et-EE-language
+et-ee-x-tms-local
+et-ee-x-tms-network
+fi-FI-language
+fi-fi-x-afi-local
+fi-fi-x-afi-network
+fil-PH-language
+fil-ph-x-cfc-local
+fil-ph-x-cfc-network
+fil-ph-x-fic-local
+fil-ph-x-fic-network
+fil-ph-x-fid-local
+fil-ph-x-fid-network
+fil-ph-x-fie-local
+fil-ph-x-fie-network
+fr-CA-language
+fr-FR-language
+fr-ca-x-caa-local
+fr-ca-x-caa-network
+fr-ca-x-cab-local
+fr-ca-x-cab-network
+fr-ca-x-cac-local
+fr-ca-x-cac-network
+fr-ca-x-cad-local
+fr-ca-x-cad-network
+fr-fr-x-fra-local
+fr-fr-x-fra-network
+fr-fr-x-frb-local
+fr-fr-x-frb-network
+fr-fr-x-frc-local
+fr-fr-x-frc-network
+fr-fr-x-frd-local
+fr-fr-x-frd-network
+fr-fr-x-vlf-local
+fr-fr-x-vlf-network
+gu-IN-language
+gu-in-x-guc-local
+gu-in-x-guc-network
+gu-in-x-gud-local
+gu-in-x-gud-network
+he-il-language
+he-il-x-heb-local
+he-il-x-heb-network
+he-il-x-hec-local
+he-il-x-hec-network
+he-il-x-hed-local
+he-il-x-hed-network
+he-il-x-hee-local
+he-il-x-hee-network
+hi-IN-language
+hi-in-x-hia-local
+hi-in-x-hia-network
+hi-in-x-hic-local
+hi-in-x-hic-network
+hi-in-x-hid-local
+hi-in-x-hid-network
+hi-in-x-hie-local
+hi-in-x-hie-network
+hr-HR-language
+hr-hr-x-hra-local
+hr-hr-x-hra-network
+hr-hr-x-hrb-local
+hr-hr-x-hrb-network
+hu-HU-language
+hu-hu-x-kfl-local
+hu-hu-x-kfl-network
+id-ID-language
+id-id-x-dfz-local
+id-id-x-dfz-network
+id-id-x-idc-local
+id-id-x-idc-network
+id-id-x-idd-local
+id-id-x-idd-network
+id-id-x-ide-local
+id-id-x-ide-network
+is-is-language
+is-is-x-isf-local
+is-is-x-isf-network
+it-IT-language
+it-it-x-itb-local
+it-it-x-itb-network
+it-it-x-itc-local
+it-it-x-itc-network
+it-it-x-itd-local
+it-it-x-itd-network
+it-it-x-kda-local
+it-it-x-kda-network
+ja-JP-language
+ja-jp-x-htm-local
+ja-jp-x-htm-network
+ja-jp-x-jab-local
+ja-jp-x-jab-network
+ja-jp-x-jac-local
+ja-jp-x-jac-network
+ja-jp-x-jad-local
+ja-jp-x-jad-network
+jv-ID-language
+jv-id-x-jvf-local
+jv-id-x-jvf-network
+km-KH-language
+km-kh-x-khm-local
+km-kh-x-khm-network
+kn-IN-language
+kn-in-x-knc-local
+kn-in-x-knc-network
+kn-in-x-knd-local
+kn-in-x-knd-network
+ko-KR-language
+ko-kr-x-ism-local
+ko-kr-x-ism-network
+ko-kr-x-kob-local
+ko-kr-x-kob-network
+ko-kr-x-koc-local
+ko-kr-x-koc-network
+ko-kr-x-kod-local
+ko-kr-x-kod-network
+kok-IN-language
+kok-in-x-end-local
+ks-IN-language
+ks-in-x-end-local
+lt-lt-language
+lt-lt-x-amc-local
+lt-lt-x-amc-network
+lv-LV-language
+lv-lv-x-imr-local
+lv-lv-x-imr-network
+mai-IN-language
+mai-in-x-end-local
+ml-IN-language
+ml-in-x-mlc-local
+ml-in-x-mlc-network
+ml-in-x-mle-local
+ml-in-x-mle-network
+mni-IN-language
+mni-in-x-end-local
+mr-IN-language
+mr-in-x-mra-local
+mr-in-x-mra-network
+mr-in-x-mrc-local
+mr-in-x-mrc-network
+mr-in-x-mrd-local
+mr-in-x-mrd-network
+ms-MY-language
+ms-my-x-msc-local
+ms-my-x-msc-network
+ms-my-x-msd-local
+ms-my-x-msd-network
+ms-my-x-mse-local
+ms-my-x-mse-network
+ms-my-x-msg-local
+ms-my-x-msg-network
+nb-NO-language
+nb-no-x-cfl-local
+nb-no-x-cfl-network
+nb-no-x-cmj-local
+nb-no-x-cmj-network
+nb-no-x-rfj-local
+nb-no-x-rfj-network
+nb-no-x-tfs-local
+nb-no-x-tfs-network
+nb-no-x-tmg-local
+nb-no-x-tmg-network
+ne-NP-language
+ne-np-x-nep-local
+ne-np-x-nep-network
+nl-BE-language
+nl-NL-language
+nl-be-x-bec-local
+nl-be-x-bec-network
+nl-be-x-bed-local
+nl-be-x-bed-network
+nl-nl-x-bmh-local
+nl-nl-x-bmh-network
+nl-nl-x-dma-local
+nl-nl-x-dma-network
+nl-nl-x-lfc-local
+nl-nl-x-lfc-network
+nl-nl-x-tfb-local
+nl-nl-x-tfb-network
+nl-nl-x-yfr-local
+nl-nl-x-yfr-network
+or-IN-language
+or-in-x-end-local
+pa-IN-language
+pa-in-x-pac-local
+pa-in-x-pac-network
+pa-in-x-pad-local
+pa-in-x-pad-network
+pa-in-x-pae-local
+pa-in-x-pae-network
+pa-in-x-pag-local
+pa-in-x-pag-network
+pl-PL-language
+pl-pl-x-afb-local
+pl-pl-x-afb-network
+pl-pl-x-bmg-local
+pl-pl-x-bmg-network
+pl-pl-x-jmk-local
+pl-pl-x-jmk-network
+pl-pl-x-oda-local
+pl-pl-x-oda-network
+pl-pl-x-zfg-local
+pl-pl-x-zfg-network
+pt-BR-language
+pt-PT-language
+pt-br-x-afs-local
+pt-br-x-afs-network
+pt-br-x-ptd-local
+pt-br-x-ptd-network
+pt-br-x-pte-local
+pt-br-x-pte-network
+pt-pt-x-jfb-local
+pt-pt-x-jfb-network
+pt-pt-x-jmn-local
+pt-pt-x-jmn-network
+pt-pt-x-pmj-local
+pt-pt-x-pmj-network
+pt-pt-x-sfs-local
+pt-pt-x-sfs-network
+ro-RO-language
+ro-ro-x-vfv-local
+ro-ro-x-vfv-network
+ru-RU-language
+ru-ru-x-dfc-local
+ru-ru-x-dfc-network
+ru-ru-x-ruc-local
+ru-ru-x-ruc-network
+ru-ru-x-rud-local
+ru-ru-x-rud-network
+ru-ru-x-rue-local
+ru-ru-x-rue-network
+ru-ru-x-ruf-local
+ru-ru-x-ruf-network
+sa-IN-language
+sa-in-x-end-local
+sat-IN-language
+sat-in-x-end-local
+sd-IN-language
+sd-in-x-end-local
+si-LK-language
+si-lk-x-sin-local
+si-lk-x-sin-network
+sk-SK-language
+sk-sk-x-sfk-local
+sk-sk-x-sfk-network
+sl-SI-language
+sl-si-x-frm-local
+sq-al-language
+sq-al-x-sqm-local
+sq-al-x-sqm-network
+sr-rs-language
+sr-rs-x-gfg-network
+su-ID-language
+su-id-x-suf-local
+su-id-x-suf-network
+sv-SE-language
+sv-se-x-afp-local
+sv-se-x-afp-network
+sv-se-x-cfg-local
+sv-se-x-cfg-network
+sv-se-x-cmh-local
+sv-se-x-cmh-network
+sv-se-x-dmc-local
+sv-se-x-dmc-network
+sv-se-x-lfs-local
+sv-se-x-lfs-network
+sw-ke-language
+sw-ke-x-swm-local
+sw-ke-x-swm-network
+ta-IN-language
+ta-in-x-tac-local
+ta-in-x-tac-network
+ta-in-x-tad-local
+ta-in-x-tad-network
+te-IN-language
+te-in-x-tee-local
+te-in-x-tee-network
+te-in-x-teg-local
+te-in-x-teg-network
+th-TH-language
+th-th-x-thc-local
+th-th-x-thc-network
+th-th-x-thd-local
+th-th-x-thd-network
+tr-TR-language
+tr-tr-x-ama-local
+tr-tr-x-ama-network
+tr-tr-x-cfs-local
+tr-tr-x-cfs-network
+tr-tr-x-efu-local
+tr-tr-x-efu-network
+tr-tr-x-mfm-local
+tr-tr-x-mfm-network
+tr-tr-x-tmc-local
+tr-tr-x-tmc-network
+uk-UA-language
+uk-ua-x-hfd-local
+uk-ua-x-hfd-network
+ur-IN-language
+ur-PK-language
+ur-in-x-urb-local
+ur-in-x-urb-network
+ur-in-x-urc-local
+ur-in-x-urc-network
+ur-pk-x-cfn-local
+ur-pk-x-cfn-network
+vi-VN-language
+vi-vn-x-gft-local
+vi-vn-x-gft-network
+vi-vn-x-vic-local
+vi-vn-x-vic-network
+vi-vn-x-vid-local
+vi-vn-x-vid-network
+vi-vn-x-vie-local
+vi-vn-x-vie-network
+vi-vn-x-vif-local
+vi-vn-x-vif-network
+yue-HK-language
+yue-hk-x-jar-local
+yue-hk-x-jar-network
+yue-hk-x-yuc-local
+yue-hk-x-yuc-network
+yue-hk-x-yud-local
+yue-hk-x-yud-network
+yue-hk-x-yue-local
+yue-hk-x-yue-network
+yue-hk-x-yuf-local
+yue-hk-x-yuf-network
+zh-CN-language
+zh-TW-language
+
+
+
+
+
+
+
+

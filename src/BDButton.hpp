@@ -298,15 +298,6 @@ void BDButton::setCaption(const char *aText, bool doDrawButton) {
 void BDButton::setCaption(const __FlashStringHelper *aPGMText, bool doDrawButton) {
     setText(aPGMText, doDrawButton);
 }
-
-void BDButton::setCaptionFromStringArray(const char *const*aTextStringArrayPtr, uint8_t aStringIndex, bool doDrawButton) {
-    setText(aTextStringArrayPtr[aStringIndex], doDrawButton);
-}
-
-void BDButton::setCaptionFromStringArray(const __FlashStringHelper* const *aPGMTextStringArrayPtr, uint8_t aStringIndex,
-        bool doDrawButton) {
-    setTextFromStringArray(aPGMTextStringArrayPtr, aStringIndex, doDrawButton);
-}
 #endif
 
 /*
@@ -367,13 +358,12 @@ void BDButton::setTextFromStringArray(const char *const*aTextStringArrayPtr, uin
     setText(aTextStringArrayPtr[aStringIndex], doDrawButton);
 }
 
-void BDButton::setTextFromStringArray(const __FlashStringHelper* const *aPGMTextStringArrayPtr, uint8_t aStringIndex,
-        bool doDrawButton) {
+void BDButton::setPGMTextFromPGMArray(const char *const*aPGMTextPGMArrayPtr, uint8_t aStringIndex, bool doDrawButton) {
 #if defined(__AVR__)
-    __FlashStringHelper *tPGMText = (__FlashStringHelper*) pgm_read_word(&aPGMTextStringArrayPtr[aStringIndex]);
+    __FlashStringHelper *tPGMText = (__FlashStringHelper*) pgm_read_word(&aPGMTextPGMArrayPtr[aStringIndex]);
     setText(tPGMText, doDrawButton);
 #else
-    setTextFromStringArray((const char* const*) aPGMTextStringArrayPtr, aStringIndex, doDrawButton);
+    setTextFromStringArray(aPGMTextPGMArrayPtr, aStringIndex, doDrawButton);
 #endif
 }
 

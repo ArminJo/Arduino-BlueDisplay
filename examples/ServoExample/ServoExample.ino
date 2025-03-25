@@ -303,7 +303,7 @@ void loop() {
         /*
          * Print VCC and temperature each second
          */
-        printVCCAndTemperaturePeriodically(BlueDisplay1, sCurrentDisplayWidth / 4, sTextSize, sTextSize,
+        printVCCAndTemperaturePeriodically(BlueDisplay1, sCurrentDisplayWidth / 4, sTextSize / 4, sTextSize,
         VCC_INFO_PERIOD_MILLIS);
     }
 #endif
@@ -534,7 +534,7 @@ void doSetBias(BDButton *aTheTouchedButton, int16_t aValue) {
     sYBiasValue = sLastSensorYValue;
     // show message in order to see the effect
     BlueDisplay1.clearDisplay();
-    BlueDisplay1.drawText(0, sTextSize, "old position is taken \rfor horizontal input\r", sTextSize, COLOR16_BLACK, COLOR16_GREEN);
+    BlueDisplay1.drawText(0, sTextSize / 4, "old position is taken \rfor horizontal input\r", sTextSize, COLOR16_BLACK, COLOR16_GREEN);
     delayMillisWithCheckAndHandleEvents(2500);
     drawGui();
 }

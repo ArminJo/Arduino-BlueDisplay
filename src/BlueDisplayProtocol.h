@@ -114,6 +114,12 @@
 #define EVENT_FIRST_SENSOR_ACTION_CODE      0x30
 #define EVENT_LAST_SENSOR_ACTION_CODE       0x3F
 
+#define EVENT_SPEAKING_DONE                 0x40
+// Values for EVENT_SPEAKING_DONE
+#define EVENT_SPEAKING_OK                   0x00
+#define EVENT_SPEAKING_NOT_AVAILABLE        0x01
+#define EVENT_SPEAKING_ERROR                0x02
+
 #define EVENT_REQUESTED_DATA_CANVAS_SIZE    0x60
 
 #define EVENT_NO_EVENT                      0xFF
@@ -203,7 +209,9 @@ struct IntegerInfoCallback {
 struct BluetoothEvent {
     uint8_t EventType; // Is reset to == EVENT_NO_EVENT just before event is handled
     union EventData {
-        unsigned char ByteArray[RECEIVE_MAX_DATA_SIZE]; // To copy data from input buffer
+        uint8_t ByteArray[RECEIVE_MAX_DATA_SIZE]; // To copy data from input buffer
+        int16_t ShortArray[RECEIVE_MAX_DATA_SIZE / 2]; // To copy data from input buffer
+        uint16_t UnsignedShortArray[RECEIVE_MAX_DATA_SIZE / 2]; // To copy data from input buffer
         struct TouchEvent TouchEventInfo; // for EVENT_TOUCH_ACTION_*
         struct XYSize DisplaySize;
         uint32_t UnixTimestamp;
@@ -298,9 +306,12 @@ struct BluetoothEvent {
 #define FLAG_WRITE_SETTINGS_SET_POSITION            0x01
 #define FLAG_WRITE_SETTINGS_SET_LINE_COLUMN         0x02
 
+//******************************************************
 #define INDEX_LAST_FUNCTION_WITHOUT_DATA            0x5F
-
-// Function with variable data size
+//******************************************************
+/*
+ * Functions with variable data size
+ */
 #define FUNCTION_DRAW_STRING                        0x60
 
 #define STRING_ALIGN_RIGHT_XPOS                     0xFFFF // left is 0 :-)
@@ -349,7 +360,9 @@ struct BluetoothEvent {
 #define FUNCTION_BUTTON_GLOBAL_SETTINGS             0x4A
 #define FUNCTION_BUTTON_DISABLE_AUTOREPEAT_UNTIL_END_OF_TOUCH 0x4B  // 2/2023 not yet implemented
 
-// Function with variable data size
+/*
+ * Functions with variable data size for button
+ */
 #define FUNCTION_BUTTON_CREATE                      0x70
 #define FUNCTION_BUTTON_INIT                        FUNCTION_BUTTON_CREATE
 #define FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE     0x71 // This implicitly changes button to red/green type
@@ -397,10 +410,18 @@ struct BluetoothEvent {
 // Flags for SLIDER_BLOBAL_SETTINGS
 #define SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD 0x01
 
-// Function with variable data size
+/*
+ * Functions with variable data size for slider
+ */
 #define FUNCTION_SLIDER_SET_CAPTION                 0x78
 #define FUNCTION_SLIDER_PRINT_VALUE                 0x79
 #define FUNCTION_SLIDER_SET_VALUE_UNIT_STRING       0x7A
 #define FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING     0x7B
+
+// Talk functions are only implemented in Android > 5.0 (Lollipop)
+#define FUNCTION_SPEAK_SET_LOCALE                   0x80
+#define FUNCTION_SPEAK_SET_VOICE                    0x81 // One of the Voice strings printed in log at level Info at BD application startup
+#define FUNCTION_SPEAK_STRING_FLUSH                 0x88
+#define FUNCTION_SPEAK_STRING_ADD                   0x89
 
 #endif // _BLUEDISPLAYPROTOCOL_H

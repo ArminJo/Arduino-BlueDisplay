@@ -194,8 +194,7 @@ public:
     void setTextForValueTrue(const char *aText);
     void setTextForValueTrue(const __FlashStringHelper *aText);
     void setTextFromStringArray(const char *const*aTextStringArrayPtr, uint8_t aStringIndex, bool doDrawButton = false);
-    void setTextFromStringArray(const __FlashStringHelper *const*aTextStringArrayPtr, uint8_t aStringIndex, bool doDrawButton =
-            false);
+    void setPGMTextFromPGMArray(const char *const*aPGMTextPGMArrayPtr, uint8_t aStringIndex, bool doDrawButton = false);
 
 //#define OMIT_BD_DEPRECATED_FUNCTIONS // For testing :-)
 #if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
