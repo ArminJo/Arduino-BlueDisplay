@@ -382,6 +382,7 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 - Added `setCallback()` and `setFlags()` for buttons and sliders.
 - Modified ManySlidersAndButtons example.
 - Screen orientation flags now also possible in setFlagsAndSize().
+- Increased `STRING_BUFFER_STACK_SIZE` value from 32 to 48.
 
 ### Version 4.4.0 - The version compatible with app version 4.4
 - Removed `mMaxDisplaySize`, because it was just a copy of `CurrentDisplaySize`.

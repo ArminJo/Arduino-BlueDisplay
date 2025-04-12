@@ -393,7 +393,7 @@ void initDisplay(void) {
      */
     TouchButtonServosStartStop.init(0, sCurrentDisplayHeight - sCurrentDisplayHeight / 4, sCurrentDisplayWidth / 4,
             sCurrentDisplayHeight / 4,
-            COLOR16_BLUE, "Start", sTextSize, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoSensorMove,
+            COLOR16_BLUE, "Start", sTextSize, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE, sDoSensorMove,
             &doServosStartStop);
     TouchButtonServosStartStop.setTextForValueTrue(F("Stop"));
 
@@ -407,7 +407,7 @@ void initDisplay(void) {
 
     TouchButtonAutoMove.init(sCurrentDisplayWidth - sCurrentDisplayWidth / 4,
             sCurrentDisplayHeight / 4 - sCurrentDisplayHeight / 16, sCurrentDisplayWidth / 4, sCurrentDisplayHeight / 4,
-            COLOR16_BLUE, "Auto\nmove", sTextSize, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sDoAutoMove,
+            COLOR16_BLUE, "Auto\nmove", sTextSize, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE, sDoAutoMove,
             &doEnableAutoMove);
     TouchButtonAutoMove.setTextForValueTrue(F("Stop"));
 

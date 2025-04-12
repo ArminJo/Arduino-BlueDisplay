@@ -58,9 +58,14 @@ bool BDSlider::operator!=(const BDSlider &aSlider) {
 }
 
 #if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
+/*
+ * Deprecated function because of "uint16_t" parameter of aOnChangeHandler function pointer. The parameter is now "int16_t".
+ */
 void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth, int16_t aBarLength, int16_t aThresholdValue,
         int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
         void (*aOnChangeHandler)(BDSlider*, uint16_t)) {
+
+    // This will give a warning "cast between incompatible function types" but it is kept to support deprecated function calls
     init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags,
             (void (*)(BDSlider*, int16_t))(aOnChangeHandler));
 }
@@ -365,6 +370,20 @@ void BDSlider::printValue(const char *aValueString) {
     mLocalSliderPointer->printValue(aValueString);
 #endif
     sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_PRINT_VALUE, 1, mSliderIndex, strlen(aValueString), aValueString);
+}
+
+void BDSlider::printValue(const __FlashStringHelper *aPGMValueString) {
+#if defined (AVR)
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+    uint8_t tValueStringLength = _clipAndCopyPGMString(tStringBuffer, aPGMValueString);
+#  if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalSliderPointer->printValue(tStringBuffer);
+#  endif
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_PRINT_VALUE, 1, mSliderIndex, tValueStringLength, tStringBuffer);
+#else
+    uint8_t tValueStringLength = strlen(reinterpret_cast<const char*>(aPGMValueString));
+    sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_PRINT_VALUE, 1, mSliderIndex, tValueStringLength, (uint8_t*) aPGMValueString);
+#endif
 }
 
 void BDSlider::activate() {

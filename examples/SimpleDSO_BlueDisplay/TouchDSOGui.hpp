@@ -3,7 +3,7 @@
  *
  * Implements the common (GUI) parts of AVR and ARM development
  *
- *  Copyright (C) 2017-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2017-2025  Armin Joachimsmeyer
  *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
@@ -27,7 +27,7 @@
 #define _TOUCH_DSO_GUI_HPP
 
 uint8_t sLastPickerValue;
-bool sSlowBluetoothMode; // for unstable BT connections
+bool sSlowBluetoothMode; // for unstable BT connections, see https://github.com/ArminJo/Arduino-BlueDisplay/issues/6
 
 #define MIN_SAMPLES_PER_PERIOD_FOR_RELIABLE_FREQUENCY_VALUE 3
 

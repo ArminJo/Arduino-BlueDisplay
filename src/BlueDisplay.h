@@ -474,6 +474,7 @@ float getCPUTemperature(void);
  * - Added `setCallback()` and `setFlags()` for buttons and sliders.
  * - Modified ManySlidersAndButtons example.
  * - Screen orientation flags now also possible in setFlagsAndSize().
+ * - Increased STRING_BUFFER_STACK_SIZE value from 32 to 48.
  *
  * Version 4.4.0 - The version compatible with app version 4.4.1
  * - Removed mMaxDisplaySize, because it was just a copy of CurrentDisplaySize, which is now HostDisplaySize etc..
@@ -550,7 +551,7 @@ float getCPUTemperature(void);
  * Version 3.7
  * - Handling of no input for getNumber.
  * - Slider setScaleFactor() does not scale the current value, mostly delivered as initial value at init().
- * Version 3.6 connect, reconnect and autoconnect improved/added. Improved debug() command. Simplified Red/Green button handling.
+ * Version 3.6 connect, reconnect and autoconnect improved/added. Improved debug() command. Simplified Red/Green toggle button handling.
  * Version 3.5 Slider scaling changed and unit value added.
  * Version 3.4
  *  - Timeout for data messages. Get number initial value fixed.

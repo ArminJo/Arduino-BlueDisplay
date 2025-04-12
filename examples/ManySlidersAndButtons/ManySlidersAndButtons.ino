@@ -174,7 +174,7 @@ static const ButtonStaticInfoStruct sButtonStaticInfoStructArray[NUMBER_OF_BUTTO
         LOAD_BUTTON, sString_Load, nullptr, /*Load values*/
         STORE_BUTTON, sString_Store, nullptr /*Store values*/
 #if NUMBER_OF_BUTTONS > 2
-        , 0, sString_LedOff, sString_LedOn /* This creates a RED / GREEN button */
+        , 0, sString_LedOff, sString_LedOn /* This creates a Red/Green toggle button */
 #endif
 #if NUMBER_OF_BUTTONS > 3
         , TEST_BUTTON, sString_Test, nullptr
@@ -412,7 +412,7 @@ void TestNewSliderAndButton() {
      */
     BDButton *tButton = new BDButton(); // allocates one byte on the heap
     tButton->init((DISPLAY_WIDTH - BUTTON_WIDTH_4) / 2, DISPLAY_HEIGHT - BUTTON_HEIGHT_10, BUTTON_WIDTH_4,
-    BUTTON_HEIGHT_10, 0, "Start", 11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, false, &doTestButton);
+    BUTTON_HEIGHT_10, 0, "Start", 11, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE, false, &doTestButton);
     tButton->setTextForValueTrue("Stop");
     tButton->drawButton();
 

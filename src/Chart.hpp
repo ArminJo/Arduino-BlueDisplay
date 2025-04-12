@@ -1024,15 +1024,14 @@ void Chart::drawChartData(int16_t *aDataPointer, const uint16_t aLengthOfValidDa
 #endif
             break;
         }
-
     }
-
 }
 
 /*
  * Draw 8 bit unsigned (compressed) data with Y offset, i.e. value 0 is on X axis independent of mYLabelStartValue.
  * Uses the BDFunction drawChartByteBufferScaled() which sends the buffer to the host, where it is scaled and rendered
  * Data is uncompressed on the display with mYDataFactor to get chart value and then with the factor from chart value to chart pixel
+ * @param aMode - One of CHART_MODE_PIXEL, CHART_MODE_LINE or CHART_MODE_AREA
  */
 void Chart::drawChartDataWithYOffset(uint8_t *aDataPointer, uint16_t aLengthOfValidData, const uint8_t aMode) {
 
@@ -1047,7 +1046,7 @@ void Chart::drawChartDataWithYOffset(uint8_t *aDataPointer, uint16_t aLengthOfVa
 
     /*
      * Draw to chart index 0 and do not clear last drawn chart line
-     * -tYDisplayFactor, because origin is at upper left and therefore Y values must be subtracted from Y position
+     * -tYDisplayFactor, because chart origin is at upper left and therefore Y values must be subtracted from Y position
      * If we have scale factor -2 for compression we require 2 times as much data
      * If we have scale factor 2 for expansion we require half as much data
      */

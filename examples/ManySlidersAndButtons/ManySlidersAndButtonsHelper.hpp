@@ -154,25 +154,25 @@ void initSlidersAndButtons(const SliderStaticInfoStruct *aLeftSliderStaticPGMInf
         tBDButtonParameterStruct.aValue =tButtonStaticPGMInfo.Value;
         tBDButtonParameterStruct.aPGMText = reinterpret_cast<const __FlashStringHelper*>(tButtonStaticPGMInfo.ButtonText);
         if (tButtonStaticPGMInfo.ButtonTextForValueTrue != nullptr) {
-            tBDButtonParameterStruct.aFlags |= FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN;
+            tBDButtonParameterStruct.aFlags |= FLAG_BUTTON_TYPE_TOGGLE;
         }
 
         sButtonArray[i].init(&tBDButtonParameterStruct);
         if (tButtonStaticPGMInfo.ButtonTextForValueTrue != nullptr) {
             sButtonArray[i].setTextForValueTrue(reinterpret_cast<const __FlashStringHelper*>(tButtonStaticPGMInfo.ButtonTextForValueTrue));
-            tBDButtonParameterStruct.aFlags &= ~FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN;
+            tBDButtonParameterStruct.aFlags &= ~FLAG_BUTTON_TYPE_TOGGLE;
         }
 #else
         tBDButtonParameterStruct.aValue = aButtonStaticPGMInfoPtr[i].Value;
         tBDButtonParameterStruct.aText = aButtonStaticPGMInfoPtr[i].ButtonText;
         if (aButtonStaticPGMInfoPtr[i].ButtonTextForValueTrue != nullptr) {
-            tBDButtonParameterStruct.aFlags |= FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN;
+            tBDButtonParameterStruct.aFlags |= FLAG_BUTTON_TYPE_TOGGLE;
         }
 
         sButtonArray[i].init(&tBDButtonParameterStruct);
         if (aButtonStaticPGMInfoPtr[i].ButtonTextForValueTrue != nullptr) {
             sButtonArray[i].setTextForValueTrue(aButtonStaticPGMInfoPtr[i].ButtonTextForValueTrue);
-            tBDButtonParameterStruct.aFlags &= ~FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN;
+            tBDButtonParameterStruct.aFlags &= ~FLAG_BUTTON_TYPE_TOGGLE;
         }
 #endif
         // Prepare for next line

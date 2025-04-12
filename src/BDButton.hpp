@@ -134,7 +134,7 @@ void BDButton::init(BDButtonPGMTextParameterStruct *aBDButtonParameter) {
  * initialize a button stub
  * If local display is attached, allocate a button (if the local pool is used, do not forget to call deinit()).
  * Multi-line text requires \n as line separator.
- * @param aText  value for false (0) if FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN is set
+ * @param aText  value for false (0) if FLAG_BUTTON_TYPE_TOGGLE is set
  *
  * Assume, that remote display is attached if called here! Use TouchButton::initButton() for only local display.
  */
@@ -237,7 +237,7 @@ void BDButton::setCallback(void (*aOnTouchHandler)(BDButton*, int16_t)) {
 }
 
 /*
- * @param aFlags - See #FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN etc.
+ * @param aFlags - See #FLAG_BUTTON_TYPE_TOGGLE etc.
  */
 void BDButton::setFlags(int16_t aFlags) {
     sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_FLAGS, aFlags);
@@ -302,7 +302,7 @@ void BDButton::setCaption(const __FlashStringHelper *aPGMText, bool doDrawButton
 
 /*
  * Sets text for value true (green) if different from default false (red) text
- * This also implicitly converts button to a red/green button
+ * This also implicitly converts button to a Red/Green toggle button
  */
 void BDButton::setTextForValueTrue(const char *aText) {
 #if defined(SUPPORT_LOCAL_DISPLAY)

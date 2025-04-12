@@ -272,7 +272,7 @@ void initDisplay(void) {
 
 //    TouchButtonBDExampleBlinkStartStop.init(&ButtonStartStopInit, F("Start"), doBlink);
     TouchButtonBDExampleBlinkStartStop.init(30, 150, 140, 55, COLOR_DEMO_BACKGROUND, F("Start"), 44,
-    FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, doBlink, &doBDExampleBlinkStartStop);
+    FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE, doBlink, &doBDExampleBlinkStartStop);
     TouchButtonBDExampleBlinkStartStop.setTextForValueTrue(F("Stop"));
 
 //    TouchButtonValueDirect.init(&ButtonValueDirectInit, F("..."));

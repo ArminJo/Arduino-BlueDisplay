@@ -149,7 +149,7 @@ void handleTouchPanelEvents(void) {
                 tTouchedButton->mOnTouchHandler(tTouchedButton, 0);
             } else {
                 //Red/Green button handling
-                if (tTouchedButton->mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
+                if (tTouchedButton->mFlags & FLAG_BUTTON_TYPE_TOGGLE) {
                     // Toggle value for Red/Green button, because we called findButton() and not checkButton() which would do the handling for us.
                     tTouchedButton->mValue = !tTouchedButton->mValue;
                     if (!(tTouchedButton->mFlags & FLAG_BUTTON_TYPE_MANUAL_REFRESH)) {

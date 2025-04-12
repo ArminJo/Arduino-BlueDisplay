@@ -1298,6 +1298,9 @@ void BlueDisplay::drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, colo
  * Factor == 0 : identity
  * Factor == -1 : compression by 1.5
  * Factor < -1 : compression by factor aIntegerScaleFactor
+ *
+ * @param aChartMode - One of CHART_MODE_PIXEL, CHART_MODE_LINE or CHART_MODE_AREA
+ *
  */
 void BlueDisplay::drawChartByteBufferScaled(uint16_t aXOffset, uint16_t aYOffset, int16_t aIntegerXScaleFactor, float aYScaleFactor,
         uint8_t aLineSize, uint8_t aChartMode, color16_t aColor, color16_t aClearBeforeColor, uint8_t aChartIndex,

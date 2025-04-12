@@ -169,6 +169,7 @@ public:
     void setValue(int16_t aCurrentValue, bool doDrawBar);
 
     void printValue(const char *aValueString);
+    void printValue(const __FlashStringHelper *aPGMValueString);
     void setValueUnitString(const char *aValueUnitString);
     void setValueFormatString(const char *aValueFormatString);
     void setPrintValueProperties(uint8_t aPrintValueSize, uint8_t aPrintValuePositionFlags, uint8_t aPrintValueMargin,

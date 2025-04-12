@@ -40,7 +40,7 @@
 #define DISPLAY_VGA_WIDTH       640
 #define DISPLAY_DEFAULT_HEIGHT  DISPLAY_HALF_VGA_HEIGHT // 240 - value to use if not connected
 #define DISPLAY_DEFAULT_WIDTH   DISPLAY_HALF_VGA_WIDTH  // 320 - value to use if not connected
-#define STRING_BUFFER_STACK_SIZE 32 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE]" for ...PGM() functions.
+#define STRING_BUFFER_STACK_SIZE 48 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE]" for ...PGM() functions.
 #define STRING_BUFFER_STACK_SIZE_FOR_DEBUG_WITH_MESSAGE 34 // Size for buffer allocated on stack with "char tStringBuffer[STRING_BUFFER_STACK_SIZE_FOR_DEBUG]" for debug(const char *aMessage,...) functions.
 
 #if !defined(BACKGROUND_COLOR)

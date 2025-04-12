@@ -365,7 +365,7 @@ struct BluetoothEvent {
  */
 #define FUNCTION_BUTTON_CREATE                      0x70
 #define FUNCTION_BUTTON_INIT                        FUNCTION_BUTTON_CREATE
-#define FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE     0x71 // This implicitly changes button to red/green type
+#define FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE     0x71 // This implicitly changes button to Red/Green toggle type
 #define FUNCTION_BUTTON_SET_TEXT                    0x72
 #define FUNCTION_BUTTON_SET_TEXT_AND_DRAW_BUTTON    0x73
 #define FUNCTION_BUTTON_SET_CAPTION_FOR_VALUE_TRUE  FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE  // Deprecated

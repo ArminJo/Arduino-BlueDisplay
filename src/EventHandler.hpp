@@ -49,7 +49,7 @@ bool sDisableMoveEventsUntilTouchUpIsDone = false; // To suppress move events af
 #endif
 
 bool sBDEventJustReceived = false;
-bool sButtonCalledWithFalse = false; // true if last button callback has the value false/zero. If Red/Green buttons are turning red, this is true. Used for stop detection.
+bool sButtonCalledWithFalse = false; // true if last button callback has the value false/zero. If Red/Green toggle buttons are turning red, this is true. Used for stop detection.
 
 struct BluetoothEvent remoteEvent; // To hold the current received event
 #if defined(BD_USE_SIMPLE_SERIAL)
@@ -278,7 +278,7 @@ bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) {
 }
 
 /*
- * Assume that stop is requested, if a button is called with value 0/false, i.e. a Red/Green button is set to red.
+ * Assume that stop is requested, if a button is called with value 0/false, i.e. a Red/Green toggle button is set to red.
  */
 bool isStopRequested() {
     checkAndHandleEvents();
@@ -286,7 +286,7 @@ bool isStopRequested() {
 }
 
 /*
- * Special delay function for the Red/Green buttons. Returns prematurely if a button turns to red.
+ * Special delay function for the Red/Green toggle buttons. Returns prematurely if a button turns to red.
  * To be used in blocking functions as delay
  * @return  true - as soon as a turn to red is received
  */
@@ -437,9 +437,9 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
             /*
              * We can not call performTouchAction() of the local button here.
              * It is because for autorepeat buttons, CallbackFunctionAddress is the mOriginalButtonOnTouchHandler and not the mOnTouchHandler
-             * and Red/Green button handling will loop between local and remote.
+             * and Red/Green toggle button handling will loop between local and remote.
              */
-            if ((tLocalButton->mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) && !(tLocalButton->mFlags & FLAG_BUTTON_TYPE_MANUAL_REFRESH)) {
+            if ((tLocalButton->mFlags & FLAG_BUTTON_TYPE_TOGGLE) && !(tLocalButton->mFlags & FLAG_BUTTON_TYPE_MANUAL_REFRESH)) {
                 tLocalButton->drawButton(); // handle color change for local button too
             }
             if (tLocalButton->mFlags & FLAG_BUTTON_DO_BEEP_ON_TOUCH) {

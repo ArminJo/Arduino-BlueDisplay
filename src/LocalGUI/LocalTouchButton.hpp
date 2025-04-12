@@ -262,7 +262,7 @@ void LocalTouchButton::setDefaultTextColor(color16_t aDefaultTextColor) {
  * Renders the button on lcd
  */
 void LocalTouchButton::drawButton() {
-    setColorForRedGreenButton(mValue);
+    setColorForToggleButton(mValue);
     // Draw rect
     LocalDisplay.fillRectRel(mPositionX, mPositionY, mWidthX, mHeightY, mButtonColor);
     drawText();
@@ -289,8 +289,8 @@ void LocalTouchButton::drawText() {
     mFlags |= LOCAL_BUTTON_FLAG_IS_ACTIVE;
 
     auto tText = mText;
-    if (mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
-        // Handle text for red green button
+    if (mFlags & FLAG_BUTTON_TYPE_TOGGLE) {
+        // Handle text for Red/Green toggle button
         if (mValue && mTextForTrue != nullptr) {
             tText = mTextForTrue;
         }
@@ -415,7 +415,7 @@ void LocalTouchButton::playFeedbackTone(bool aPlayErrorTone) {
 /**
  * Performs the defined actions for a button:
  * - Play tone
- * - Toggle red green and optionally redraw
+ * - Toggle Red/Green and optionally redraw
  * - Call callback handler
  */
 void LocalTouchButton::performTouchAction() {
@@ -427,10 +427,10 @@ void LocalTouchButton::performTouchAction() {
         playFeedbackTone();
     }
     /*
-     * Red green button handling
+     * Red/Green toggle button handling
      */
-    if (mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
-        // Toggle value and handle color for Red/Green button
+    if (mFlags & FLAG_BUTTON_TYPE_TOGGLE) {
+        // Toggle value and handle color for Red/Green toggle button
         mValue = !mValue;
         if (!(mFlags & FLAG_BUTTON_TYPE_MANUAL_REFRESH)) {
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
@@ -654,11 +654,26 @@ void LocalTouchButton::setTextColor(color16_t aTextColor) {
     mTextColor = aTextColor;
 }
 
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
 /**
  * value 0 -> red, 1 -> green
  */
 void LocalTouchButton::setColorForRedGreenButton(bool aValue) {
-    if (mFlags & FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN) {
+    if (mFlags & FLAG_BUTTON_TYPE_TOGGLE) {
+        if (aValue) {
+            mButtonColor = COLOR16_GREEN;
+        } else {
+            mButtonColor = COLOR16_RED;
+        }
+    }
+}
+#endif
+
+/**
+ * value 0 -> red, 1 -> green
+ */
+void LocalTouchButton::setColorForToggleButton(bool aValue) {
+    if (mFlags & FLAG_BUTTON_TYPE_TOGGLE) {
         if (aValue) {
             mButtonColor = COLOR16_GREEN;
         } else {
@@ -668,7 +683,7 @@ void LocalTouchButton::setColorForRedGreenButton(bool aValue) {
 }
 
 void LocalTouchButton::setValue(int16_t aValue) {
-    setColorForRedGreenButton(aValue);
+    setColorForToggleButton(aValue);
     mValue = aValue;
 }
 
