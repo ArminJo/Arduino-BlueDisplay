@@ -178,6 +178,8 @@ initSimpleSerial	KEYWORD2
 
 # from EventHandler.h
 delayMillisWithCheckAndHandleEvents	KEYWORD2
+delayMillisWithCheckForStartedReceivingAndHandleEvents	KEYWORD2
+checkForStartedReceivingAndHandleEvents	KEYWORD2
 checkAndHandleEvents	KEYWORD2
 registerLongTouchDownCallback	KEYWORD2
 registerSwipeEndCallback	KEYWORD2

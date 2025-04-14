@@ -216,20 +216,32 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs
     }
 }
 
+
+#if defined(ARDUINO)
+bool isReceivingActive() {
+    return (getReceiveBytesAvailable() > 0 || sReceivedEventType != EVENT_NO_EVENT);
+}
+
+#  if !defined(BD_USE_SIMPLE_SERIAL)
+uint8_t getReceiveBufferByte() {
+    return BDSerial.read();
+}
+size_t getReceiveBytesAvailable() {
+    return BDSerial.available();
+}
+
+#  else
+size_t getReceiveBytesAvailable() {
+    return sReceiveBufferIndex > 0; // Best guess
+}
+#  endif
+#endif
+
+
 /*********************************************
  * serialEvent() function for standard serial
  *********************************************/
 #if !defined(BD_USE_SIMPLE_SERIAL)
-#  if defined(ARDUINO)
-uint8_t getReceiveBufferByte() {
-    return BDSerial.read();
-}
-
-size_t getReceiveBytesAvailable() {
-    return BDSerial.available();
-}
-#  endif
-
 /**
  * Check if a touch event has completely received by USART
  * Function is not synchronized because it should only be used by main thread
@@ -253,10 +265,10 @@ void serialEvent(void) {
          * regular operation here
          */
         auto tBytesAvailable = getReceiveBytesAvailable();
-        /*
-         * enough bytes available for next step?
-         */
         if (sReceivedEventType == EVENT_NO_EVENT) {
+            /*
+             * enough bytes available for determine Event type ?
+             */
             if (tBytesAvailable >= 2) {
                 /*
                  * read message length and event tag first
@@ -272,22 +284,22 @@ void serialEvent(void) {
                 tBytesAvailable -= 2;
             }
         }
-        if (sReceivedEventType != EVENT_NO_EVENT) {
-            if (tBytesAvailable > sReceivedDataSize) {
-                // Event complete received, now read data and sync token
-                // Using getReceiveBufferByte() here saves up to 150 bytes :-)
-                unsigned char *tByteArrayPtr = remoteEvent.EventData.ByteArray;
-                int i;
-                for (i = 0; i < sReceivedDataSize; ++i) {
-                    *tByteArrayPtr++ = getReceiveBufferByte();
-                }
-                if (getReceiveBufferByte() == SYNC_TOKEN) {
-                    remoteEvent.EventType = sReceivedEventType;
-                    sReceivedEventType = EVENT_NO_EVENT; // reset EventType buffer
-                    handleEvent(&remoteEvent);
-                } else {
-                    sReceiveBufferOutOfSync = true;
-                }
+        if (sReceivedEventType != EVENT_NO_EVENT && tBytesAvailable > sReceivedDataSize) {
+            /*
+             * Event complete received, now read data and sync token
+             * Using getReceiveBufferByte() here saves up to 150 bytes :-)
+             */
+            unsigned char *tByteArrayPtr = remoteEvent.EventData.ByteArray;
+            int i;
+            for (i = 0; i < sReceivedDataSize; ++i) {
+                *tByteArrayPtr++ = getReceiveBufferByte();
+            }
+            if (getReceiveBufferByte() == SYNC_TOKEN) {
+                remoteEvent.EventType = sReceivedEventType;
+                sReceivedEventType = EVENT_NO_EVENT; // reset EventType buffer
+                handleEvent(&remoteEvent);
+            } else {
+                sReceiveBufferOutOfSync = true;
             }
         }
     }

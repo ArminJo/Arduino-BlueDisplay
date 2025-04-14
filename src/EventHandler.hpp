@@ -257,6 +257,19 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) {
 }
 
 /*
+ * Like delayMillisWithCheckAndHandleEvents, but extends wait, if receiving is active
+ */
+void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis) {
+    unsigned long tStartMillis = millis();
+    while (millis() - tStartMillis < aDelayMillis || isReceivingActive()) {
+        checkAndHandleEvents();
+#if defined(ESP8266)
+        yield(); // required for ESP8266
+#endif
+    }
+}
+
+/*
  * Special delay function for BlueDisplay. Returns prematurely if Event is received.
  * To be used in blocking functions as delay
  * @return  true - as soon as event received
@@ -303,8 +316,24 @@ bool delayMillisAndCheckForStop(uint16_t aDelayMillis) {
     return false;
 }
 
+/*
+ * If receiving was started, wait until event was completely received and processed, but timeout after 40 ms
+ */
+void checkForStartedReceivingAndHandleEvents() {
+    auto tStartMillis = millis();
+    do {
+        checkAndHandleEvents();
+        if (millis() - tStartMillis >= 40) {
+            // If receiving does not terminate within 40 ms, we assume a sync problem because of a skipped input byte
+            sReceiveBufferOutOfSync = true;
+            break;
+        }
+    } while (isReceivingActive());
+}
+
 /**
  * Is called by main loop
+ * Transmission time of a slider event is 1300 us
  */
 void checkAndHandleEvents() {
 #if defined(HAL_WWDG_MODULE_ENABLED)
@@ -326,7 +355,7 @@ void checkAndHandleEvents() {
     handleEvent(&remoteTouchDownEvent);
     handleEvent(&remoteEvent);
 #    else
-    // get Arduino Serial data
+// get Arduino Serial data
     serialEvent(); // calls in turn handleEvent(&remoteEvent);
 #    endif
 #  else
@@ -347,7 +376,7 @@ void checkAndHandleEvents() {
  * It is indirectly called by thread in main loop
  */
 extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
-    // First check if we really have an event here
+// First check if we really have an event here
     if (aEvent->EventType == EVENT_NO_EVENT) {
         return;
     }
@@ -357,13 +386,13 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 #endif
     uint8_t tEventType = aEvent->EventType;
 
-    // local copy of event since the values in the original event may be overwritten if the handler requires long time for its action
+// local copy of event since the values in the original event may be overwritten if the handler requires long time for its action
     struct BluetoothEvent tEvent = *aEvent;
-    // assignment has the same code size as:
+// assignment has the same code size as:
 //    struct BluetoothEvent tEvent;
 //    memcpy(&tEvent, aEvent, sizeof(BluetoothEvent));
 
-    // avoid using event twice
+// avoid using event twice
     aEvent->EventType = EVENT_NO_EVENT;
 
 #if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS) && defined(SUPPORT_LOCAL_DISPLAY)
@@ -679,7 +708,7 @@ void printEventTouchPositionData(int x, int y, color16_t aColor, color16_t aBack
     char tStringBuffer[12];
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-truncation"
-    // We want it this way, but we get a warning '%03i' directive output may be truncated writing between 3 and 5 bytes into a region of size between 2 and 4
+// We want it this way, but we get a warning '%03i' directive output may be truncated writing between 3 and 5 bytes into a region of size between 2 and 4
     snprintf(tStringBuffer, 12, "X:%03i Y:%03i", sCurrentPosition.TouchPosition.PositionX,
             sCurrentPosition.TouchPosition.PositionY);
 #pragma GCC diagnostic pop
