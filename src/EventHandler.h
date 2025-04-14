@@ -97,6 +97,7 @@ void printEventTouchPositionData(int x, int y, color16_t aColor, color16_t aBack
 
 bool isStopRequested(void);
 void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis);
+void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis);
 bool delayMillisAndCheckForEvent(unsigned long aDelayMillis);
 bool delayMillisAndCheckForStop(uint16_t aDelayMillis);
 

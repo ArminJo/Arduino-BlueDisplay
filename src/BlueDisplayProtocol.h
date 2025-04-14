@@ -265,7 +265,7 @@ struct BluetoothEvent {
 #define FUNCTION_GET_INFO                           0x0E
 // Sub functions for FUNCTION_GET_INFO
 #define SUBFUNCTION_GET_INFO_LOCAL_TIME             0x00
-#define SUBFUNCTION_GET_INFO_UTC_TIME               0x01
+#define SUBFUNCTION_GET_INFO_GMT_TIME               0x01
 
 #define FUNCTION_PLAY_TONE                          0x0F
 

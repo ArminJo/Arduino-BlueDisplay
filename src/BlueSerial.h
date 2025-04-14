@@ -42,7 +42,6 @@
  * Simple serial on the MEGA2560 uses USART1
  */
 //#define BD_USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
-
 #if defined(SERIAL_PORT_HARDWARE1) // is defined for Arduino Due
 #define BOARD_HAVE_USART2 // they start counting with 0
 #endif
@@ -116,12 +115,13 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
  */
 #if !defined(BD_USE_SIMPLE_SERIAL)
 uint8_t getReceiveBufferByte(void);
-size_t getReceiveBytesAvailable(void);
 void serialEvent(void); // Is called by Arduino runtime in main loop, if (Serial0_available && serialEvent && Serial0_available()) serialEvent();
 #endif
 
-
 #if defined(ARDUINO)
+bool isReceivingActive();
+size_t getReceiveBytesAvailable(void);
+
 /*
  * Functions which depends on using simple or standard serial on AVR
  */
