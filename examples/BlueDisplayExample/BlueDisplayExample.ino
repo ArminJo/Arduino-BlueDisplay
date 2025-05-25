@@ -88,7 +88,7 @@ BDButton TouchButtonBack;
 // Touch handler for buttons
 void doBDExampleBlinkStartStop(BDButton *aTheTouchedButton, int16_t aValue);
 void doPlusMinus(BDButton *aTheTouchedButton, int16_t aValue);
-void doSetDelay(float aValue);
+void doSetDelayNumerical(float aValue);
 void doGetDelay(BDButton *aTheTouchedButton, int16_t aValue);
 void doTest(BDButton *aTheTouchedButton, int16_t aValue);
 void doBack(BDButton *aTheTouchedButton, int16_t aValue);
@@ -216,7 +216,7 @@ void loop() {
              *  Check touch events 8 times while waiting.
              */
             for (uint8_t i = 0; i < 8; ++i) {
-                delayMillisWithCheckAndHandleEvents(sDelay / 8); // This can lead to display of the test page
+                delayMillisWithCheckAndHandleEvents(sDelay / 8); // This can trigger the display of the test page
                 if (sInTestPage) {
                     return; // leave inner and outer loop immediately
                 }
@@ -228,15 +228,16 @@ void loop() {
             digitalWrite(LED_BUILTIN, LOW);
             BlueDisplay1.fillCircle(LOCAL_DISPLAY_WIDTH / 2, LOCAL_DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
             for (uint8_t i = 0; i < 8; ++i) {
-                delayMillisWithCheckAndHandleEvents(sDelay / 8); // This can lead to display of the test page
+                delayMillisWithCheckAndHandleEvents(sDelay / 8); // This can trigger the display of the test page
                 if (sInTestPage) {
                     return; // leave inner and outer loop immediately
                 }
                 printDemoString();
             }
         }
+
         /*
-         * Speak delay value after last delay change
+         * Speak delay value after last change of delay value
          */
         if (sMillisOfLastDelayChange != 0
                 && millis() - DELAY_FOR_SPEECH_AFTER_LAST_DELAY_CHANGE_MILLIS > sMillisOfLastDelayChange) {

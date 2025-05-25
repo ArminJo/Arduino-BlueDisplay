@@ -43,8 +43,12 @@
 #define CHART_WIDTH     ((CO2_ARRAY_SIZE) / 2)          // 576
 #define DISPLAY_WIDTH   ((CO2_ARRAY_SIZE * 33) / 40)    // 950,4
 #define BASE_TEXT_SIZE  (CO2_ARRAY_SIZE / 40)           // 1152 / 40 = 28.8
+#define BASE_TEXT_SIZE_2  (CO2_ARRAY_SIZE / 20)         // 1152 / 20 = 57.6
+#define BASE_TEXT_SIZE_1_5  ((CO2_ARRAY_SIZE * 3) / 80) // 43.2
+#define BASE_TEXT_SIZE_HALF  ((CO2_ARRAY_SIZE) / 80)    // 14.4
 #define BUTTON_WIDTH    ((CO2_ARRAY_SIZE * 4) / 20)     // 230,4
 #define CHART_START_X   (BASE_TEXT_SIZE * 3)            // 84
+#define CHART_START_Y   (BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE_1_5)
 #define CHART_AXES_SIZE (BASE_TEXT_SIZE / 8)            // 10,5
 #define BUTTONS_START_X ((BASE_TEXT_SIZE * 4) + CHART_WIDTH)
 #define CHART_Y_LABEL_INCREMENT 200L
@@ -169,8 +173,6 @@ uint16_t waitUntilTimeWasUpdated(uint16_t aMaxWaitMillis);
 #if ! defined(USE_C_TIME)
 time_t requestHostUnixTimestamp();
 #endif
-#define TIME_ADJUSTMENT 0
-//#define TIME_ADJUSTMENT SECS_PER_HOUR // To be subtracted from received timestamp
 #define MILLIS_IN_ONE_SECOND 1000L
 #define STORAGE_INTERVAL_SECONDS (5 * SECS_PER_MIN)
 // sNextStorageMillis is required by CO2LoggerAndChart.hpp for toast at connection startup
@@ -421,20 +423,19 @@ void initDisplay(void) {
 #  else
     setSyncInterval(SECS_PER_DAY); // sync with host once per day
 #  endif
-    setTime(BlueDisplay1.getHostUnixTimestamp() - TIME_ADJUSTMENT); // safety net, because we need a reasonable timestamp for initCO2Chart().
 #endif
     delayMillisAndCheckForEvent(150); // Wait for requested time event but terminate at least after 150 ms
 
     BDButton::BDButtonPGMTextParameterStruct tBDButtonPGMParameterStruct; // Saves 480 Bytes for all 5 buttons
 
     BDButton::setInitParameters(&tBDButtonPGMParameterStruct, BUTTONS_START_X, BASE_TEXT_SIZE, (BASE_TEXT_SIZE * 4),
-            tDisplayHeightEighth, COLOR16_GREEN, F("4"), BASE_TEXT_SIZE * 2, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 96, &doDays);
+            tDisplayHeightEighth, COLOR16_GREEN, F("4"), BASE_TEXT_SIZE_2, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 96, &doDays);
     TouchButton4days.init(&tBDButtonPGMParameterStruct);
 
     /*
      * Draw 2 buttons right
      */
-    tBDButtonPGMParameterStruct.aPositionX += (BASE_TEXT_SIZE * 4) + (BASE_TEXT_SIZE / 2); // gap of (BASE_TEXT_SIZE / 2)
+    tBDButtonPGMParameterStruct.aPositionX += (BASE_TEXT_SIZE * 4) + BASE_TEXT_SIZE_HALF; // gap of (BASE_TEXT_SIZE / 2)
     tBDButtonPGMParameterStruct.aValue = 48;
     tBDButtonPGMParameterStruct.aPGMText = F("2");
     TouchButton2days.init(&tBDButtonPGMParameterStruct);
@@ -449,7 +450,7 @@ void initDisplay(void) {
     tBDButtonPGMParameterStruct.aPGMText = F("1");
     TouchButton1day.init(&tBDButtonPGMParameterStruct); // 14 bytes
 
-    int tButtonYSpacing = tDisplayHeightEighth + (BASE_TEXT_SIZE / 2);
+    int tButtonYSpacing = tDisplayHeightEighth + BASE_TEXT_SIZE_HALF;
 
     tBDButtonPGMParameterStruct.aWidthX = BUTTON_WIDTH;
     tBDButtonPGMParameterStruct.aTextSize = BASE_TEXT_SIZE;
@@ -574,11 +575,11 @@ void initCO2Chart() {
     uint16_t tYGridSize = (BlueDisplay1.getRequestedDisplayHeight() / 7);
     sChartMaxValue = ((tChartHeight * (CHART_Y_LABEL_INCREMENT / CO2_COMPRESSION_FACTOR)) / (tYGridSize)) - 1;
     // Grid spacing is CHART_WIDTH / 8 -> 8 columns and height / 6 for 5 lines from 400 to 1400
-    CO2Chart.initChart(CHART_START_X, BlueDisplay1.getRequestedDisplayHeight() - (BASE_TEXT_SIZE + (BASE_TEXT_SIZE / 2)),
-    CHART_WIDTH, tChartHeight, CHART_AXES_SIZE, BASE_TEXT_SIZE, CHART_DISPLAY_GRID, 0, tYGridSize); // GridOrLabelXPixelSpacing is set by doDays() below
+    CO2Chart.initChart(CHART_START_X, CHART_START_Y, CHART_WIDTH, tChartHeight, CHART_AXES_SIZE, BASE_TEXT_SIZE, CHART_DISPLAY_GRID,
+            0, tYGridSize); // GridOrLabelXPixelSpacing is set by doDays() below
 
     CO2Chart.initChartColors(CHART_DATA_COLOR, CHART_AXES_COLOR, CHART_GRID_COLOR, sTextColor, sTextColor, sBackgroundColor);
-    CO2Chart.setYTitleTextAndSize("ppm CO2", BASE_TEXT_SIZE + (BASE_TEXT_SIZE / 2));
+    CO2Chart.setYTitleTextAndSize("ppm CO2", BASE_TEXT_SIZE_1_5);
 
     /*
      * Set values depending on sHoursPerChartToDisplay
@@ -591,14 +592,14 @@ void initCO2Chart() {
 
 void drawDisplay() {
     BlueDisplay1.clearDisplay(sBackgroundColor);
-    CO2Chart.drawYAxisTitle(-(2 * BASE_TEXT_SIZE));
+    CO2Chart.drawYAxisTitle(-BASE_TEXT_SIZE_2);
     drawCO2Chart();
     TouchButton4days.drawButton();
     TouchButton2days.drawButton();
     TouchButton1day.drawButton();
     TouchButton12Hour.drawButton();
-    BlueDisplay1.drawText(BUTTONS_START_X + (2 * BASE_TEXT_SIZE), (BlueDisplay1.getRequestedDisplayHeight() / 4) - BASE_TEXT_SIZE,
-            F("Day(s)"), BASE_TEXT_SIZE + (BASE_TEXT_SIZE / 2), COLOR16_GREEN, sBackgroundColor);
+    BlueDisplay1.drawText(BUTTONS_START_X + BASE_TEXT_SIZE_2, (BlueDisplay1.getRequestedDisplayHeight() / 4) - BASE_TEXT_SIZE,
+            F("Day(s)"), BASE_TEXT_SIZE_1_5, COLOR16_GREEN, sBackgroundColor);
 
 #if defined(E2END)
     TouchButtonStoreToEEPROM.drawButton();
@@ -611,7 +612,7 @@ void drawCO2Chart() {
     printTime(); // gets now()
     printCO2Value();
     // Clear time of marker area
-    BlueDisplay1.clearTextArea(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE / 2, 5, BASE_TEXT_SIZE,
+    BlueDisplay1.clearTextArea(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE_HALF, 5, BASE_TEXT_SIZE,
             sBackgroundColor);
     CO2Chart.clear();
 
@@ -737,7 +738,7 @@ void printCO2Value() {
     char tStringBuffer[5];
     uint16_t tCO2Value = (sCO2Array[CO2_ARRAY_SIZE - 1] * CO2_COMPRESSION_FACTOR) + CO2_BASE_VALUE;
     snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("%4d"), tCO2Value);
-    BlueDisplay1.drawText(CHART_START_X + (CHART_WIDTH / 2), BASE_TEXT_SIZE, tStringBuffer, 3 * BASE_TEXT_SIZE,
+    BlueDisplay1.drawText(CHART_START_X + (CHART_WIDTH / 2), BASE_TEXT_SIZE_HALF, tStringBuffer, 3 * BASE_TEXT_SIZE,
     CHART_DATA_COLOR, sBackgroundColor);
 }
 
@@ -891,8 +892,8 @@ void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShor
     (void) aShortInfo;
     if (aSubcommand == SUBFUNCTION_GET_INFO_LOCAL_TIME) { // safety net
 
-        setTime(aLongInfo.uint32Value - TIME_ADJUSTMENT);
-//        setTime(BlueDisplay1.getHostUnixTimestamp() - TIME_ADJUSTMENT);
+        setTime(aLongInfo.uint32Value);
+//        setTime(BlueDisplay1.getHostUnixTimestamp());
         time_t tTimestamp = now(); // use this timestamp for display etc.
 
         /*
