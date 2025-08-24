@@ -608,12 +608,14 @@ public:
     /*
      * Convenience function
      */
-#if defined(__AVR__)
+#if defined(USE_PCA9685_SERVO_EXPANDER)
+#  if defined(__AVR__)
     bool InitializeAndCheckI2CConnection(Print *aSerial) __attribute__ ((deprecated ("Use initializeAndCheckI2CConnection()")));
     bool initializeAndCheckI2CConnection(Print *aSerial); // Using Print class saves 95 bytes flash
-#else
+#  else
     bool InitializeAndCheckI2CConnection(Stream *aSerial); __attribute__ ((deprecated ("Use initializeAndCheckI2CConnection()")));
     bool initializeAndCheckI2CConnection(Stream *aSerial); // Print class has no flush() here
+#  endif
 #endif
 
     /*
@@ -778,6 +780,11 @@ bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial); // Print class ha
 #endif
 
 /*
+ * Version 3.4.1 - 10/2024
+ * - Renamed InitializeAndCheckI2CConnection() to initializeAndCheckI2CConnection().
+ * - Renamed applyTrimAndreverseToTargetMicrosecondsOrUnits() to applyTrimAndReverseToTargetMicrosecondsOrUnits().
+ * - Housekeeping.
+ *
  * Version 3.4.0 - 10/2024
  * - LightweightServo support for ATmega2560.
  * - Renamed mCurrentMicrosecondsOrUnits to mLastTargetMicrosecondsOrUnits to make clear, that trim and reverse is NOT applied to this value.

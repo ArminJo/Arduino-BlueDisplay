@@ -511,7 +511,7 @@ uint8_t ServoEasing::attachWithTrim(int aPin, int aTrimDegreeOrMicrosecond, int 
 /*
  * Like attach, but keep end position values e.g. of last attach().
  * !!! Can only be used AFTER initial attach() and detach()!!!
- * Can be used to reverse detach() operation
+ * Can be used to reverse / undo a detach() operation
  */
 uint8_t ServoEasing::reattach() {
     /*
@@ -536,15 +536,15 @@ uint8_t ServoEasing::reattach() {
     // No actions for PCA9685 required
 #  if !defined(USE_PCA9685_SERVO_EXPANDER) || defined(USE_SERVO_LIB)
     /*
-     * Call attach() of the underlying Servo library and position to position of detach()
+     * Call attach() of the underlying Servo library and position to the position at the time of detach()
      */
 #    if defined(ARDUINO_ARCH_APOLLO3)
     Servo::attach(mServoPin, MINIMUM_PULSE_WIDTH, MAXIMUM_PULSE_WIDTH);
-    _writeMicrosecondsOrUnits (mLastTargetMicrosecondsOrUnits); // Start at the position of detach()
+    _writeMicrosecondsOrUnits (mLastTargetMicrosecondsOrUnits); // Start at the position at the time of detach()
     return mServoPin; // Sparkfun apollo3 Servo library has no return value for attach :-(
 #    else
     uint8_t tReturnValue = Servo::attach(mServoPin, MINIMUM_PULSE_WIDTH, MAXIMUM_PULSE_WIDTH);
-    _writeMicrosecondsOrUnits(mLastTargetMicrosecondsOrUnits); // Start at the position of detach()
+    _writeMicrosecondsOrUnits(mLastTargetMicrosecondsOrUnits); // Start at the position at the time of detach()
     return tReturnValue;
 #    endif // defined(ARDUINO_ARCH_APOLLO3)
 #  else
@@ -692,8 +692,9 @@ uint8_t ServoEasing::attach(int aPin, int aMicrosecondsForServoLowDegree, int aM
 }
 
 /**
+ * No servo signal is generated for a detached servo. Therefore, it is not blocked and can be moved manually.
  * Mark a detached servo in the array by setting the object pointer to nullptr
- * The next attach() then uses this nullptr pointer position and thus gets the index of the former detached one.
+ * The next attach() or reattach() then uses this nullptr pointer position and thus gets the index of the former detached one.
  */
 void ServoEasing::detach() {
     if (mServoIndex != INVALID_SERVO) {
@@ -2852,10 +2853,10 @@ bool ServoEasing::InitializeAndCheckI2CConnection(Print *aSerial) // Print inste
 bool ServoEasing::InitializeAndCheckI2CConnection(Stream *aSerial) // Print has no flush()
 #endif
 {
-    initializeAndCheckI2CConnection(aSerial);
+    return initializeAndCheckI2CConnection(aSerial);
 }
 #if defined(__AVR__)
-bool ServoEasing::i9nitializeAndCheckI2CConnection(Print *aSerial) // Print instead of Stream saves 95 bytes flash
+bool ServoEasing::initializeAndCheckI2CConnection(Print *aSerial) // Print instead of Stream saves 95 bytes flash
 #else
 bool ServoEasing::initializeAndCheckI2CConnection(Stream *aSerial) // Print has no flush()
 #endif

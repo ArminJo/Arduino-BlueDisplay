@@ -285,11 +285,12 @@ const uint8_t bigNumbers3x4_2[4][33] PROGMEM = {                         // 4-li
 
 // 4x4: https://github.com/wa1hco/BigFont
 // @formatter:on
-class LCDBigNumbers: public Print {
+class LCDBigNumbers: public Print { // @suppress("Class has a virtual method and non-virtual destructor")
 
 public:
-    virtual ~LCDBigNumbers() {
-    }
+// If activated gives linker error: undefined reference to `operator delete(void*, unsigned int)'
+// If disabled I get a Eclipse warning: Class 'LCDBigNumbers' has virtual method 'flush' but non-virtual destructor
+//    virtual ~LCDBigNumbers() {}
 #if defined(USE_PARALLEL_LCD)
     LiquidCrystal *LCD;
 #else

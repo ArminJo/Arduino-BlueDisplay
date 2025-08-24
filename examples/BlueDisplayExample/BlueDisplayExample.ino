@@ -241,7 +241,7 @@ void loop() {
          */
         if (sMillisOfLastDelayChange != 0
                 && millis() - DELAY_FOR_SPEECH_AFTER_LAST_DELAY_CHANGE_MILLIS > sMillisOfLastDelayChange) {
-            char tStringBuffer[28];
+            char tStringBuffer[29];
             snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("Delay is %d milliseconds"), sDelay);
             BlueDisplay1.speakString(tStringBuffer);
             sMillisOfLastDelayChange = 0;

@@ -257,19 +257,6 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) {
 }
 
 /*
- * Like delayMillisWithCheckAndHandleEvents, but extends wait, if receiving is active
- */
-void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis) {
-    unsigned long tStartMillis = millis();
-    while (millis() - tStartMillis < aDelayMillis || isReceivingActive()) {
-        checkAndHandleEvents();
-#if defined(ESP8266)
-        yield(); // required for ESP8266
-#endif
-    }
-}
-
-/*
  * Special delay function for BlueDisplay. Returns prematurely if Event is received.
  * To be used in blocking functions as delay
  * @return  true - as soon as event received
@@ -316,6 +303,20 @@ bool delayMillisAndCheckForStop(uint16_t aDelayMillis) {
     return false;
 }
 
+#if defined(ARDUINO)
+/*
+ * Like delayMillisWithCheckAndHandleEvents, but extends wait, if receiving is active
+ */
+void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis) {
+    unsigned long tStartMillis = millis();
+    while (millis() - tStartMillis < aDelayMillis || isReceivingActive()) {
+        checkAndHandleEvents();
+#if defined(ESP8266)
+        yield(); // required for ESP8266
+#endif
+    }
+}
+
 /*
  * If receiving was started, wait until event was completely received and processed, but timeout after 40 ms
  */
@@ -330,6 +331,7 @@ void checkForStartedReceivingAndHandleEvents() {
         }
     } while (isReceivingActive());
 }
+#endif
 
 /**
  * Is called by main loop

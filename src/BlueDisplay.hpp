@@ -104,7 +104,7 @@ void BlueDisplay::resetLocal() {
  * If host is still Bluetooth connected, this results in a EVENT_REQUESTED_DATA_CANVAS_SIZE event.
  * This event sets mCurrentDisplaySize and mHostUnixTimestamp and in turn calls the ConnectCallback as well as the RedrawCallback.
  *
- * Wait 300 ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
+ * Wait CONNECTIOM_TIMEOUT_MILLIS (1500) ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
  *
  * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth is just enabled here,
  * but the android app (host) is not manually (re)connected to us, so we are most likely not connected here.
@@ -127,7 +127,7 @@ void BlueDisplay::resetLocal() {
  *  uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &drawGui);
  *  Introduces up to 1.5 seconds delay (CONNECTIOM_TIMEOUT_MILLIS)
  *
- * @return The milliseconds used to connect, 0 if no connection was made
+ * @return The milliseconds used to connect including the time the user provided connect handler requires, 0 if no connection was made
  */
 uint_fast16_t BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)(),
         void (*aReorientationCallback)()) {
@@ -331,7 +331,7 @@ void BlueDisplay::speakString(const char *aString) {
 void BlueDisplay::speakStringAddToQueue(const char *aString) {
     sendUSARTArgsAndByteBuffer(FUNCTION_SPEAK_STRING_ADD, 0, strlen(aString), (uint8_t*) aString);
 }
-void BlueDisplay::speakStringBlockingWait(const char *aString, boolean aAddToQueue) {
+void BlueDisplay::speakStringBlockingWait(const char *aString, bool aAddToQueue) {
     if (aAddToQueue) {
         sendUSARTArgsAndByteBuffer(FUNCTION_SPEAK_STRING_ADD, 0, strlen(aString), (uint8_t*) aString);
     } else {

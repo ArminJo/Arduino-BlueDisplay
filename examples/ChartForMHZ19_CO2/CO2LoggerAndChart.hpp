@@ -437,7 +437,11 @@ void initDisplay(void) {
      */
     tBDButtonPGMParameterStruct.aPositionX += (BASE_TEXT_SIZE * 4) + BASE_TEXT_SIZE_HALF; // gap of (BASE_TEXT_SIZE / 2)
     tBDButtonPGMParameterStruct.aValue = 48;
+#if defined(__AVR__)
     tBDButtonPGMParameterStruct.aPGMText = F("2");
+#else
+    tBDButtonParameterStruct.aText = "2";
+#endif
     TouchButton2days.init(&tBDButtonPGMParameterStruct);
 
     tBDButtonPGMParameterStruct.aPositionY += (tDisplayHeightEighth * 2);
@@ -521,7 +525,7 @@ void doDays(BDButton *aTheTouchedButton, int16_t aHoursPerChartToDisplay) {
         tXLabelDistance = 3; // draw label at every 3. grid line, but draw big label still each 2x12 hours by keeping mXBigLabelDistance at 2
     }
     CO2Chart.setXLabelDistance(tXLabelDistance);
-    CO2Chart.setGridOrLabelXPixelSpacing(tXPixelSpacing);
+    CO2Chart.setXGridOrLabelPixelSpacing(tXPixelSpacing);
     CO2Chart.setXLabelScaleFactor(tXLabelScaleFactor);
     CO2Chart.setXDataScaleFactor(tDataFactor);
     drawCO2Chart(); // this sets XLabelAndGridOffset

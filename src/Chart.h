@@ -74,8 +74,8 @@ class Chart {
 public:
     Chart();
     uint8_t initChart(const uint16_t aPositionX, const uint16_t aPositionY, const uint16_t aWidthX, const uint16_t aHeightY,
-            const uint8_t aAxesSize, const uint8_t aLabelTextSize, const bool aHasGrid, const uint16_t aGridOrLabelXPixelSpacing,
-            const uint16_t aGridOrLabelYPixelSpacing);
+            const uint8_t aAxesSize, const uint8_t aLabelTextSize, const bool aHasGrid, const uint16_t aXGridOrLabelPixelSpacing,
+            const uint16_t aYGridOrLabelPixelSpacing);
 
     void initChartColors(const color16_t aDataColor, const color16_t aAxesColor, const color16_t aGridColor,
             const color16_t aXLabelColor, const color16_t aYLabelColor, const color16_t aBackgroundColor);
@@ -89,7 +89,7 @@ public:
     void setHeightY(const uint16_t heightY);
     void setPositionX(const uint16_t positionX);
     void setPositionY(const uint16_t positionY);
-    void setGridOrLabelPixelSpacing(uint8_t aGridOrLabelXPixelSpacing, uint8_t aGridOrLabelYPixelSpacing);
+    void setGridOrLabelPixelSpacing(uint8_t aXGridOrLabelPixelSpacing, uint8_t aYGridOrLabelPixelSpacing);
 
     uint16_t getWidthX(void) const;
     uint16_t getHeightY(void) const;
@@ -117,8 +117,10 @@ public:
     void setXBigLabelDistance(uint8_t aXBigLabelDistance);
     void setXRegularAndBigLabelDistance(uint8_t aXLabelDistance);
 
-    void setGridOrLabelXPixelSpacing(uint8_t aGridOrLabelXPixelSpacing);
-    uint8_t getGridOrLabelXPixelSpacing(void) const;
+    void setGridOrLabelXPixelSpacing(uint8_t aXGridOrLabelPixelSpacing) __attribute__ ((deprecated ("Renamed to setXGridOrLabelPixelSpacing()")));
+    uint8_t getGridOrLabelXPixelSpacing(void) const __attribute__ ((deprecated ("Renamed to getXGridOrLabelPixelSpacing()")));
+    void setXGridOrLabelPixelSpacing(uint8_t aXGridOrLabelPixelSpacing);
+    uint8_t getXGridOrLabelPixelSpacing(void) const;
 
     /*
      * X Label
@@ -132,7 +134,7 @@ public:
 
     // Label string generation
     void setLabelStringFunction(int (*aXLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue));
-    static int convertMinutesToString(char *aLabelStringBuffer, time_float_union aXvalue);
+    static int convertMinutesToString(char *aLabelStringBuffer, time_float_union aXValueMinutes);
 
     // Start value
     void setXLabelStartValue(float xLabelStartValue);
@@ -174,8 +176,11 @@ public:
      */
     void drawYAxisAndLabels();
 
-    void setGridOrLabelYPixelSpacing(uint8_t aYGridOrLabelPixelSpacing);
-    uint8_t getGridOrLabelYPixelSpacing(void) const;
+    void setGridOrLabelYPixelSpacing(uint8_t aXGridOrLabelPixelSpacing) __attribute__ ((deprecated ("Renamed to setYGridOrLabelPixelSpacing()")));
+    uint8_t getGridOrLabelYPixelSpacing(void) const __attribute__ ((deprecated ("Renamed to getYGridOrLabelPixelSpacing()")));
+
+    void setYGridOrLabelPixelSpacing(uint8_t aYGridOrLabelPixelSpacing);
+    uint8_t getYGridOrLabelPixelSpacing(void) const;
     void setXLabelAndGridOffset(float aXLabelAndGridOffset);
 
     // Y Label
@@ -239,7 +244,7 @@ public:
      * Value difference between 2 grid labels - the effective IncrementValue is mXLabelScaleFactor * mXLabelBaseIncrementValue
      */
     float mXLabelBaseIncrementValue; // The base increment value for one grid. Seconds of 1 year are 0x01E1 3380 and use 25 bit but resolution reduction does not matter here.
-    uint8_t mGridOrLabelXPixelSpacing; // Difference in pixel between two X grid lines
+    uint8_t mXGridOrLabelPixelSpacing; // Difference in pixel between two X grid lines
 
     /*
      * Scale factor is CHART_WIDTH / lengthOfDataToShow if this is > 1
@@ -288,7 +293,7 @@ public:
     float mYLabelStartOffset;
     float mYLabelIncrementValue; // Value difference between 2 grid labels - serves as Y scale factor
     float mYDataFactor; // Factor for input (raw (int16_t) or float) to chart (not display!!!) value - e.g. (3.0 / 4096) for adc reading of 4096 for 3 (Volt) or 0.2 for 1000 display at 5000 input value
-    uint8_t mGridOrLabelYPixelSpacing; // difference in pixel between 2 Y grid lines
+    uint8_t mYGridOrLabelPixelSpacing; // difference in pixel between 2 Y grid lines
 
     // label formatting
     uint8_t mYNumVarsAfterDecimal;

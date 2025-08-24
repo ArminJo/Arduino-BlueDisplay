@@ -255,7 +255,7 @@ public:
     void speakSetVoice(const char *aVoiceString); // One of the Voice strings printed in log at level Info at BD application startup
     void speakString(const char *aString);
     void speakStringAddToQueue(const char *aString);
-    void speakStringBlockingWait(const char *aString, boolean aAddToQueue = false);
+    void speakStringBlockingWait(const char *aString, bool aAddToQueue = false);
     void speakSetLocale(const __FlashStringHelper *aLocaleString);
     void speakSetVoice(const __FlashStringHelper *aVoiceString);
     void speakString(const __FlashStringHelper *aPGMString);
@@ -467,6 +467,9 @@ float getCPUTemperature(void);
 //#endif
 
 /*
+ * Version 5.1.0
+ * - Renamed function names and variables from GridOrLabelX to XGridOrLabel and GridOrLabelY to YGridOrLabel.
+ * - Improved computeXLabelAndXDataScaleFactor() to support scaling factor 1 and -1.
  *
  * Version 5.0.0
  * - Speak functions added.

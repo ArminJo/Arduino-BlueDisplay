@@ -118,9 +118,10 @@ uint8_t getReceiveBufferByte(void);
 void serialEvent(void); // Is called by Arduino runtime in main loop, if (Serial0_available && serialEvent && Serial0_available()) serialEvent();
 #endif
 
+size_t getReceiveBytesAvailable(void);
+
 #if defined(ARDUINO)
 bool isReceivingActive();
-size_t getReceiveBytesAvailable(void);
 
 /*
  * Functions which depends on using simple or standard serial on AVR

@@ -49,7 +49,7 @@ uint16_t getTextHeight(uint16_t aTextSize) {
 
 /*
  * Formula for Monospace Font on Android
- * TextSize * 0.6
+ * TextSize * 0.6 e.g. 16->10
  * Integer Formula (rounded): (TextSize *6)+4 / 10
  */
 uint16_t getTextWidth(uint16_t aTextSize) {
