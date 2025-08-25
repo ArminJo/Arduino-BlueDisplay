@@ -40,10 +40,10 @@
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
-#define VERSION_BLUE_DISPLAY "5.0.0"
+#define VERSION_BLUE_DISPLAY "5.0.1"
 #define VERSION_BLUE_DISPLAY_MAJOR 5
 #define VERSION_BLUE_DISPLAY_MINOR 0
-#define VERSION_BLUE_DISPLAY_PATCH 0
+#define VERSION_BLUE_DISPLAY_PATCH 1
 // The change log is at the bottom of the file
 
 /*
@@ -467,7 +467,7 @@ float getCPUTemperature(void);
 //#endif
 
 /*
- * Version 5.1.0
+ * Version 5.0.1
  * - Renamed function names and variables from GridOrLabelX to XGridOrLabel and GridOrLabelY to YGridOrLabel.
  * - Improved computeXLabelAndXDataScaleFactor() to support scaling factor 1 and -1.
  *

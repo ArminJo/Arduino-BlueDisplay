@@ -1,6 +1,6 @@
 {
   "name": "BlueDisplay",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "This library enables an Android smartphone or tablet to act as a graphical display for your Arduino.",
   "keywords": "Bluetooth, display, remote, graphics, GUI",
   "homepage": "https://github.com/ArminJo/Arduino-BlueDisplay",

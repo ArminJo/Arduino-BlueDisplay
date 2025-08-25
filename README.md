@@ -376,6 +376,10 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
 
 # Revision History
+### Version 5.0.1
+- Renamed function names and variables from `GridOrLabelX` to `XGridOrLabel` and `GridOrLabelY` to `YGridOrLabel`.
+- Improved `computeXLabelAndXDataScaleFactor()` to support scaling factor 1 and -1.
+
 ### Version 5.0.0
 - Voice output with Android TextToSpeech for Android > 5.0 (Lollipop).
 - Text Y and X position is upper left corner of character.
