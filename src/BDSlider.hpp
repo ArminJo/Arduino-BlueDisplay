@@ -65,7 +65,7 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
         int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,
         void (*aOnChangeHandler)(BDSlider*, uint16_t)) {
 
-    // This will give a warning "cast between incompatible function types" but it is kept to support deprecated function calls
+    // This will give a warning "cast between incompatible function types" but this function signature is kept to support deprecated function calls
     init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags,
             (void (*)(BDSlider*, int16_t))(aOnChangeHandler));
 }
