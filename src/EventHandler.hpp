@@ -120,7 +120,7 @@ void registerRedrawCallback(void (*aRedrawCallback)()) {
     sRedrawCallback = aRedrawCallback;
 }
 
-// !!! Must be without comment and closed by @formatter:on
+// !!! Must be without trailing comment and closed by @formatter:on
 // @formatter:off
 void (* getRedrawCallback())() {
     return sRedrawCallback;

@@ -56,6 +56,13 @@
 //#define BD_USE_USB_SERIAL                   // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection to your smartphone / tablet.
 #include "BlueDisplay.hpp"
 
+// This requires 1640 bytes program memory and even more in Arduino IDE, because the "-mrelax" linker option is not set there.
+#define ENABLE_DISPLAY_OF_DATE_AND_TIME
+#if defined ENABLE_DISPLAY_OF_DATE_AND_TIME
+#include "BDTimeHelper.hpp"
+unsigned long sLastMilisOfTimePrinted;
+#endif
+
 #define DELAY_START_VALUE 600
 #define DELAY_CHANGE_VALUE 10
 
@@ -108,26 +115,6 @@ void initDisplay(void);
 void drawGui(void);
 
 #define DEBUG
-
-/*
- * Time handling
- */
-#if defined(ESP32) || defined(ESP8266)
-#define USE_C_TIME
-#define WAIT_FOR_TIME_SYNC_MAX_MILLIS   150
-#endif
-
-#if defined(USE_C_TIME)
-#include "time.h"
-struct tm *sTimeInfo;
-bool sTimeInfoWasJustUpdated = false;
-uint16_t waitUntilTimeWasUpdated(uint16_t aMaxWaitMillis);
-#else
-#include "TimeLib.h"
-time_t requestHostUnixTimestamp();
-#endif
-void printTime();
-void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo);
 
 // PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
 const char StartMessage[] PROGMEM = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
@@ -185,8 +172,6 @@ void setup() {
 }
 
 void loop() {
-    static unsigned long sLastMilisOfTimePrinted;
-
     if (!BlueDisplay1.isConnectionEstablished()) {
         /*
          * Not connected here, so send serial output, which is readable at the Arduino serial monitor
@@ -246,14 +231,18 @@ void loop() {
             BlueDisplay1.speakString(tStringBuffer);
             sMillisOfLastDelayChange = 0;
         }
+
+#if defined ENABLE_DISPLAY_OF_DATE_AND_TIME
         /*
          * print time every second
          */
         unsigned long tMillis = millis();
         if (tMillis - sLastMilisOfTimePrinted > 1000) {
             sLastMilisOfTimePrinted = tMillis;
-            printTime();
+            printTimeAtOneLine(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, 11, COLOR16_BLACK,
+            COLOR_DEMO_BACKGROUND);
         }
+#endif
     }
 
     checkAndHandleEvents();
@@ -263,12 +252,13 @@ void initDisplay(void) {
 
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, LOCAL_DISPLAY_WIDTH, LOCAL_DISPLAY_HEIGHT);
 
-    TouchButtonPlus.init(270, 80, 40, 40, COLOR16_YELLOW, F("+"), 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
+    TouchButtonPlus.init(270, 80, 40, 40, COLOR16_YELLOW, F("+"), 33,
+    FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
     DELAY_CHANGE_VALUE, &doPlusMinus);
     TouchButtonPlus.setButtonAutorepeatTiming(600, 100, 10, 30);
 
-    TouchButtonMinus.init(10, 80, 40, 40, COLOR16_YELLOW, F("-"), 33, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
-            -DELAY_CHANGE_VALUE, &doPlusMinus);
+    TouchButtonMinus.init(10, 80, 40, 40, COLOR16_YELLOW, F("-"), 33,
+    FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT, -DELAY_CHANGE_VALUE, &doPlusMinus);
     TouchButtonMinus.setButtonAutorepeatTiming(600, 100, 10, 30);
 
 //    TouchButtonBDExampleBlinkStartStop.init(&ButtonStartStopInit, F("Start"), doBlink);
@@ -296,14 +286,8 @@ void initDisplay(void) {
     TouchSliderDelay.setPrintValueProperties(TEXT_SIZE_22, FLAG_SLIDER_VALUE_CAPTION_ALIGN_LEFT, 4, COLOR16_WHITE,
     COLOR_DEMO_BACKGROUND);
 
-    // here we have received a new local timestamp
-#if defined(USE_C_TIME)
-// initialize sTimeInfo
-    sTimeInfo = localtime((const time_t*) &BlueDisplay1.mHostUnixTimestamp); // getHostUnixTimestamp() does not work here!
-#else
-    // Set function to call when time sync required (default: after 300 seconds)
-    setSyncProvider(requestHostUnixTimestamp); // calls getInfo() immediately
-    setTime(BlueDisplay1.getHostUnixTimestamp());
+#if defined ENABLE_DISPLAY_OF_DATE_AND_TIME
+    initLocalTimeHandling();
 #endif
 
     BlueDisplay1.debug(reinterpret_cast<const __FlashStringHelper*>(StartMessage));
@@ -335,72 +319,6 @@ void doBDExampleBlinkStartStop(BDButton *aTheTouchedButton __attribute__((unused
         BlueDisplay1.speakString(F("Stopped"));
     }
 }
-
-/*
- * Is called every 5 minutes from TimeLib by default
- * Is called on request (every second) if we use Unix time.h functions
- */
-time_t requestHostUnixTimestamp() {
-    BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &getTimeEventCallback);
-    return 0; // the time will be sent later in response to getInfo
-}
-
-#if defined(USE_C_TIME)
-/*
- * @return 0 if time was not updated in aMaxWaitMillis milliseconds, else millis used for update
- */
-uint16_t waitUntilTimeWasUpdated(uint16_t aMaxWaitMillis) {
-    unsigned long tStartMillis = millis();
-    while (millis() - tStartMillis < aMaxWaitMillis) {
-        checkAndHandleEvents(); // BlueDisplay function, which may call getTimeEventCallback() if SUBFUNCTION_GET_INFO_LOCAL_TIME event received
-        if (sTimeInfoWasJustUpdated) {
-            return millis() - tStartMillis;
-        }
-    }
-    return 0;
-}
-
-void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
-    if (aSubcommand == SUBFUNCTION_GET_INFO_LOCAL_TIME) {
-        BlueDisplay1.setHostUnixTimestamp(aLongInfo.uint32Value);
-        sTimeInfoWasJustUpdated = true;
-        sTimeInfo = localtime((const time_t*) &aLongInfo.uint32Value); // Compute minutes, hours, day, month etc. for later use in printTime
-    }
-}
-
-void printTime() {
-    BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, &getTimeEventCallback);
-#if defined(DEBUG)
-    uint16_t tElapsedTime = waitUntilTimeWasUpdated(WAIT_FOR_TIME_SYNC_MAX_MILLIS); // 150 ms
-    BlueDisplay1.debug("Time sync lasts ", tElapsedTime, " ms"); // timeout if 0
-#else
-    waitUntilTimeWasUpdated(WAIT_FOR_TIME_SYNC_MAX_MILLIS); // 150 ms
-#endif
-    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), sTimeInfo->tm_mday, sTimeInfo->tm_mon,
-            sTimeInfo->tm_year + 1900, sTimeInfo->tm_hour, sTimeInfo->tm_min, sTimeInfo->tm_sec);
-    BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer,
-            11, COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
-}
-
-#else
-void getTimeEventCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
-    (void) aByteInfo;
-    (void) aShortInfo;
-    if (aSubcommand == SUBFUNCTION_GET_INFO_LOCAL_TIME) {
-        setTime(aLongInfo.uint32Value);
-        // to prove that it is called every 5 minutes by default
-        // tone(TONE_PIN, 1000, 200);
-    }
-}
-
-void printTime() {
-    // 1600 byte code size for time handling plus print
-    snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(),
-            second());
-    BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, sStringBuffer,
-            11, COLOR16_BLACK, COLOR_DEMO_BACKGROUND);
-}
-#endif
 
 /*
  * Is called by touch of both plus and minus buttons.

@@ -1452,7 +1452,6 @@ void Chart::getIntegerScaleFactorAsString(char *tStringBuffer, int aIntegerScale
     } else {
         snprintf(tStringBuffer, 5, "%-3ld", reduceLongWithIntegerScaleFactor(1, aIntegerScaleFactor));
     }
-
 }
 
 /*

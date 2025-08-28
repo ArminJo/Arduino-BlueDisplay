@@ -102,7 +102,7 @@
 //#define LOCAL_DEBUG // To debug/understand the writeBigNumber() function - only for development
 #endif
 
-// !!! Must be without comment and closed by @formatter:on
+// !!! Must be without trailing comment and closed by @formatter:on
 // @formatter:off
 
 // http://www.picbasic.co.uk/forum/showthread.php?t=13376
