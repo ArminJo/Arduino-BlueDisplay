@@ -1,5 +1,6 @@
 /*
  *  CO2LoggerAndChart.hpp
+ *
  *  Stores CO2 values in an array and show them on a Android mobile or tablet running the BlueFisplay app.
  *
  *  Values are stored as 8 bits with 0 = 400 ppm, 1=405, 2=410, 20=500, 60=700, 80=800, 100=900, 120=1000, 200=1400,
@@ -9,6 +10,13 @@
  *  Copyright (C) 2024-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
+ *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *
+ *  BlueDisplay is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -16,7 +24,6 @@
 
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
- *
  */
 
 #ifndef _CO2_LOGGER_AND_CHART_HPP
@@ -55,6 +62,7 @@ void getTimeEventCallbackForLogger(uint8_t aSubcommand, uint8_t aByteInfo, uint1
 #define CHART_START_Y   (BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE_1_5)
 #define CHART_AXES_SIZE (BASE_TEXT_SIZE / 8)            // 10,5
 #define BUTTONS_START_X ((BASE_TEXT_SIZE * 4) + CHART_WIDTH)
+#define TIME_MARKER_START_Y (BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE)
 #define CHART_Y_LABEL_INCREMENT 200L
 
 #define CHART_BACKGROUND_COLOR  COLOR16_WHITE
@@ -514,8 +522,8 @@ void doShowTimeAtTouchPosition(struct TouchEvent *const aTouchPosition) {
 
         char tTimeString[6];
         convertUnixTimestampToHourAndMinuteString(tTimeString, tTimeOfTouchPosition);
-        BlueDisplay1.drawText(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE, tTimeString,
-        BASE_TEXT_SIZE, CHART_DATA_COLOR, sBackgroundColor);
+        BlueDisplay1.drawText(BUTTONS_START_X, TIME_MARKER_START_Y, tTimeString, BASE_TEXT_SIZE, CHART_DATA_COLOR,
+                sBackgroundColor);
         // Clear last indicator
         if (sLastPosition.PositionX != 0) {
             BlueDisplay1.drawLineRel(sLastPosition.PositionX, sLastPosition.PositionY - 48, 0, 32, sBackgroundColor);
@@ -584,9 +592,8 @@ void drawCO2Chart() {
     printTimeAtTwoLines(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - (4 * BASE_TEXT_SIZE), BASE_TEXT_SIZE,
             sTextColor, sBackgroundColor); // gets now()
     printCO2Value();
-    // Clear time of marker area
-    BlueDisplay1.clearTextArea(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE_HALF, 5, BASE_TEXT_SIZE,
-            sBackgroundColor);
+    // Clear time marker area see doShowTimeAtTouchPosition()
+    BlueDisplay1.clearTextArea(BUTTONS_START_X, TIME_MARKER_START_Y, 5, BASE_TEXT_SIZE, sBackgroundColor);
     CO2Chart.clear();
 
     /*

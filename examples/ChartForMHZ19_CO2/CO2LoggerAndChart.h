@@ -2,8 +2,15 @@
  *  CO2LoggerAndChart.h
  *
  *
- *  Copyright (C) 2024  Armin Joachimsmeyer
+ *  Copyright (C) 2024-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
+ *
+ *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *
+ *  BlueDisplay is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of

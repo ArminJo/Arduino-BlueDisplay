@@ -16,18 +16,23 @@
  *  After Reset an initial value of 500 ppm is displayed for 1 minute.
  *
  *
- *
  *  Copyright (C) 2022-2025  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
+ *
+ *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *
+ *  BlueDisplay is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
-
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
- *
  */
 
 /*
@@ -43,6 +48,8 @@
 
 #include <Arduino.h>
 
+//#define SUPPORT_BLUEDISPLAY_CHART // Show chart of historical data on a tablet running the BlueDisplay app
+
 /*
  * !!!!!!!!!!!!!!!!!
  * Compile time symbol _SS_MAX_RX_BUFF must be set to 32 (with -D_SS_MAX_RX_BUFF=32)
@@ -50,12 +57,12 @@
  * Otherwise stacks overwrite CO2Array at GUI initialization time
  * !!!!!!!!!!!!!!!!!
  */
+#if defined(SUPPORT_BLUEDISPLAY_CHART)
 // To save RAM, we also require the stripped down version of the MHZ19 library.
 #define MHZ19_USE_MINIMAL_RAM   // removes all field from the class, which are not required for just reading CO2 value
+#endif
 // For available commands, see https://revspace.nl/MH-Z19B
 #include "MHZ19.hpp"
-
-#define SUPPORT_BLUEDISPLAY_CHART // Show chart of historical data on a tablet running the BlueDisplay app
 
 #define VERSION_EXAMPLE                     "2.0"
 #define DISPLAY_PERIOD_MILLIS               2000    // The sensor makes a measurement every 2 seconds
@@ -93,7 +100,7 @@ uint32_t sMillisOfLastRequestedCO2Data;
 #include "AVRUtils.h" // include sources for initStackFreeMeasurement() and printRAMInfo()
 #  endif
 //#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC-05 module for 115200
-#define BD_USE_SIMPLE_SERIAL
+#define BD_USE_SIMPLE_SERIAL            // To save the RAM used for Serial object and buffers
 #if !defined(BLUETOOTH_BAUD_RATE)
 #define BLUETOOTH_BAUD_RATE     9600    // Default baud rate of my HC-05 modules, which is not very reactive
 #endif
@@ -107,7 +114,7 @@ uint32_t sMillisOfLastRequestedCO2Data;
 #define ENABLE_3_LINE_DIGITS_PIN    12 // Connecting these pin to ground enables 3 line digits instead of the 4 line ones. Has precedence over DEBUG_PIN.
 bool sShow3LineDigits = false;
 bool sDebugModeActive = false; // sDebugModeActive has precedence over sShow3LineDigits. Precedence is implemented by checkDebugPin().
-void checkDebugPin();
+void checkDebugPin(bool aInSetup);
 
 MHZ19 myMHZ19;                         // Constructor for library
 #if defined(ESP32)
@@ -117,11 +124,13 @@ HardwareSerial MHZ19Serial(2);            // On ESP32 we do not require the Soft
 SoftwareSerial MHZ19Serial(MHZ19_RX_PIN, MHZ19_TX_PIN);    // Software Serial to MH-Z19 serial
 #endif
 
-#if !defined(USE_PARALLEL_2004_LCD) && !defined(USE_PARALLEL_1602_LCD) && !defined(USE_SERIAL_2004_LCD) && !defined(USE_SERIAL_1602_LCD)
-#define USE_PARALLEL_2004_LCD    // Use parallel 2004 LCD as default
-#endif
+//#define USE_PARALLEL_2004_LCD // Is default
+//#define USE_PARALLEL_1602_LCD
+//#define USE_SERIAL_2004_LCD
+//#define USE_SERIAL_1602_LCD
+#include "LCDPrintUtils.hpp" // sets USE_PARALLEL_LCD or USE_SERIAL_LCD
 
-#if defined(USE_PARALLEL_2004_LCD)
+#if defined(USE_PARALLEL_LCD)
 #include <LiquidCrystal.h>
 LiquidCrystal myLCD(7, 8, 3, 4, 5, 6);
 //LiquidCrystal myLCD(2, 3, 4, 5, 6, 7);
@@ -141,8 +150,8 @@ LCDBigNumbers BigNumbersLCD(&myLCD, BIG_NUMBERS_FONT_3_COLUMN_4_ROWS_VARIANT_1);
 void printErrorCode();
 void printData();
 void printCO2DataOnLCD();
-void checkDebugAndSmallDigitsPin(bool aDoInit);
-void checkSmallDigitsPin(bool aDoInit);
+void checkDebugAndSmallDigitsPin(bool aInSetup);
+void checkSmallDigitsPin(bool aInSetup);
 
 //#define PRINT_PERIODIC_DATA_ALWAYS_ON_SERIAL
 /*
@@ -211,14 +220,29 @@ void setup() {
     checkDebugAndSmallDigitsPin(true);  // This initializes BigNumbers, clears LCD and sets cursor to 0.0
     myLCD.print(F("CO2 Sensor")); // Show this before waiting for BlueDisplay connection
 
+#if defined(DISPLAY_MHZ19_TEMPERATURE)
+    myLCD.print(F(" +Temp"));
+#else
+    myLCD.print(F(" -Temp"));
+#endif
+
     /*
      * Try to connect to BlueDisplay host, this may introduce a delay of 1.5 seconds :-(
      */
 #if defined(SUPPORT_BLUEDISPLAY_CHART)
+    myLCD.setCursor(0, 1);
+    myLCD.print(F("BD - try to connect")); // Show this before waiting for BlueDisplay connection
     InitCo2LoggerAndChart(); // introduces a delay of up to 1.5 second :-(
+    myLCD.setCursor(5, 1);
+    if (!BlueDisplay1.isConnectionEstablished()) {
+        myLCD.print(F("not "));
+    }
+    myLCD.print(F("connected     "));
 #  if defined(ENABLE_STACK_ANALYSIS)
     printRAMInfo(&Serial); // 1.12.24 - 90 bytes unused here
 #  endif
+#else
+    myLCD.print(F(" -BD"));
 #endif
 
 #if !defined(BD_USE_SIMPLE_SERIAL)
@@ -235,12 +259,6 @@ void setup() {
        Serial.println(F("No display of MHZ19 temperature value"));
 #  endif
     }
-#endif
-
-#if defined(DISPLAY_MHZ19_TEMPERATURE)
-    myLCD.print(F(" - temp."));
-#else
-    myLCD.print(F(" - no temp"));
 #endif
 
     myLCD.setCursor(0, 1);
@@ -265,12 +283,12 @@ void setup() {
     }
 
 #if defined(DISPLAY_MHZ19_TEMPERATURE)
-#if !defined(BD_USE_SIMPLE_SERIAL)
+#  if !defined(BD_USE_SIMPLE_SERIAL)
     if (!BlueDisplay1.isConnectionEstablished()) {
         Serial.println(F("Temperature correction + pin=" STR(TEMPERATURE_CORRECTION_PLUS_PIN)));
         Serial.println(F("Temperature correction - pin=" STR(TEMPERATURE_CORRECTION_MINUS_PIN)));
     }
-#endif
+#  endif
 
     myLCD.setCursor(0, 2);
     myLCD.print(F("Temp. corr. + pin=" STR(TEMPERATURE_CORRECTION_PLUS_PIN)));
@@ -286,13 +304,13 @@ void setup() {
         sTemperatureCorrectionFloat = -2.00; // initial value
         eeprom_write_float(&sTemperatureCorrectionFloatEeprom, sTemperatureCorrectionFloat);
     }
-#if !defined(BD_USE_SIMPLE_SERIAL)
+#  if !defined(BD_USE_SIMPLE_SERIAL)
     if (!BlueDisplay1.isConnectionEstablished()) {
         Serial.print(F("TEMPERATURE_FLOAT_CORRECTION="));
         Serial.print(sTemperatureCorrectionFloat, 2);
         Serial.println(F(" degree Celsius"));
     }
-#endif
+#  endif
 
     myLCD.setCursor(0, 3);
     // 13 characters
@@ -320,7 +338,7 @@ void setup() {
 #endif
     } else {
 #if !defined(BD_USE_SIMPLE_SERIAL)
-       Serial.print(F("Auto calibration status="));
+        Serial.print(F("Auto calibration status="));
 #endif
         // Clear line
         myLCD.setCursor(0, 2);
@@ -347,7 +365,7 @@ void setup() {
         }
     }
 
-    delay(1000);
+    delay(2000);
 
 #if !defined(MHZ19_USE_MINIMAL_RAM)
     myMHZ19.readRange();
@@ -437,23 +455,23 @@ void printErrorCode() {
 #if !defined(BD_USE_SIMPLE_SERIAL)
     myMHZ19.printErrorMessage(&Serial);
 #endif
-    clearLine(&myLCD, 3);
+    LCDClearLine(&myLCD, 3);
     myLCD.print(F("MHZ error: "));
     myMHZ19.printErrorCode(&myLCD);
     delay(1000);
 }
 
-void checkDebugAndSmallDigitsPin(bool aDoInit) {
-    checkDebugPin();
+void checkDebugAndSmallDigitsPin(bool aInSetup) {
+    checkDebugPin(aInSetup);
     /*
      * sDebugModeActive has precedence over sShow3LineDigits
      */
 #if defined(MHZ19_USE_MINIMAL_RAM)
     // No debug mode for !sShow3LineDigits so precendence is not required
-    checkSmallDigitsPin(aDoInit);
+    checkSmallDigitsPin(aInSetup);
 #else
     if (!sDebugModeActive) {
-        checkSmallDigitsPin(aDoInit);
+        checkSmallDigitsPin(aInSetup);
     }
 #endif
 }
@@ -461,18 +479,18 @@ void checkDebugAndSmallDigitsPin(bool aDoInit) {
 /*
  * Set sDebugModeActive and en/dis-able myMHZ19 debug and clear screen on changing mode
  */
-void checkDebugPin() {
+void checkDebugPin(bool aInSetup) {
     bool tDebugModeActive = !digitalRead(DEBUG_PIN);
     if (sDebugModeActive != tDebugModeActive) {
         sDebugModeActive = tDebugModeActive;
 // Debug mode changed
 
 #if defined(MHZ19_USE_MINIMAL_RAM)
-        if (tDebugModeActive && !sShow3LineDigits) {
+        if (tDebugModeActive && !sShow3LineDigits) { // 3 LineDigits has precedence over debug
             myLCD.setCursor(0, 3);
-            myLCD.print(F("No debug possible!  "));
+            myLCD.print(F("No debug data!  ")); // ... because of RAM shortage
 #if !defined(BD_USE_SIMPLE_SERIAL)
-            Serial.print(F("No debug possible for minimal RAM setting and 4 line digits"));
+            Serial.print(F("No debug data available for minimal RAM setting"));
 #endif
             delay(2000);
         }
@@ -487,13 +505,15 @@ void checkDebugPin() {
         Serial.println(F("abled debug mode"));
 #endif
         myLCD.clear(); // clear content of former page
-        printCO2DataOnLCD();
+        if (!aInSetup) {
+            printCO2DataOnLCD();
+        }
     }
 }
 
-void checkSmallDigitsPin(bool aDoInit) {
+void checkSmallDigitsPin(bool aInSetup) {
     bool tShow3LineDigits = !digitalRead(ENABLE_3_LINE_DIGITS_PIN);
-    if (sShow3LineDigits != tShow3LineDigits || aDoInit) {
+    if (sShow3LineDigits != tShow3LineDigits || aInSetup) {
         sShow3LineDigits = tShow3LineDigits;
 #if !defined(BD_USE_SIMPLE_SERIAL)
         Serial.print(F("Changed digit size to "));
@@ -512,7 +532,7 @@ void checkSmallDigitsPin(bool aDoInit) {
         }
         BigNumbersLCD.begin(); // Generate font symbols in LCD controller
         myLCD.clear(); // clear content of former page
-        if (!aDoInit) {
+        if (!aInSetup) {
             printCO2DataOnLCD();
         }
     }
@@ -584,6 +604,18 @@ void printData() {
 #endif
 }
 
+/*
+ * Show 4 line PPM digits and short temperature (22.2) on lower right
+ * If sShow3LineDigits, show 3 line PPM digits and long temperature (22.14°C) on lower right
+ * If sDebugModeActive and sShow3LineDigits and MHZ19_USE_MINIMAL_RAM show temperature correction value on lower left
+ *
+ * If sDebugModeActive and NOT MHZ19_USE_MINIMAL_RAM show debug page:
+ *
+ * xxxx PPM   510|510  | CO2Unmasked, CO2|CO2Alternate
+ * 38770 - 32000 = 6770| CO2RawTemperatureCompensatedBaseADC - CO2RawADC = CO2RawADCDelta or CO2RawADC - CO2RawTemperatureCompensatedBaseADC = CO2RawADCDelta
+ * 557 0x9BB        144| MinimumLightADC, Unknown2, (144 - ABCCounter)
+ * -2.00° 22.31°C   26°| sTemperatureCorrectionFloat, TemperatureFloat + sTemperatureCorrectionFloat, Temperature
+ */
 void printCO2DataOnLCD() {
     /*
      * CO2 as big numbers
@@ -659,7 +691,7 @@ void printCO2DataOnLCD() {
 #if !defined(MHZ19_USE_MINIMAL_RAM)
             && !sDebugModeActive
 #endif
-    ) {
+            ) {
 #if defined(DISPLAY_MHZ19_TEMPERATURE)
         /*
          * Big numbers
@@ -669,23 +701,26 @@ void printCO2DataOnLCD() {
         myLCD.print(myMHZ19.TemperatureFloat + sTemperatureCorrectionFloat, 1);
 #endif
     } else {
+        /*
+         * 3 line digits or debug here
+         */
 #if defined(DISPLAY_MHZ19_TEMPERATURE)
         /*
-         * Print additional info for 3 line digits and debug
          * Float temperature in line 4
          */
-        myLCD.setCursor(13, 3);
+        myLCD.setCursor(7, 3);
         myLCD.print(myMHZ19.TemperatureFloat + sTemperatureCorrectionFloat, 2);
         myLCD.print(F("\xDF" "C "));
 
         if (sDebugModeActive) {
             myLCD.setCursor(0, 3);
             /*
-             * Temperature correction and integer temperature in line 4
+             * Temperature correction (and integer temperature) in line 4
              */
             myLCD.print(sTemperatureCorrectionFloat, 2);
             myLCD.print(F("\xDF "));
 #  if !defined(MHZ19_USE_MINIMAL_RAM)
+            myLCD.setCursor(17, 3);
             myLCD.print(myMHZ19.Temperature);
             myLCD.print(F("\xDF"));
 #  endif
@@ -693,7 +728,6 @@ void printCO2DataOnLCD() {
         }
 #endif // if defined(DISPLAY_MHZ19_TEMPERATURE)
 #if !defined(MHZ19_USE_MINIMAL_RAM)
-
         /*
          * ABC counter in line 4 (3 for debug)
          */
