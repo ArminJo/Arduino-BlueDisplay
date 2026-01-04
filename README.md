@@ -132,7 +132,7 @@ You must use the *WithAliasing() function variant if you have a diagonal line or
 
 # Using the new *.hpp files
 In order to support [compile options](#compile-options--macros-for-this-library) more easily,
-the line `#include <BlueDisplay.h>` must be changed to  `#include <BlueDisplay.hpp>`
+the line `#include <BlueDisplay.h>` **must** be changed to  `#include <BlueDisplay.hpp>`
 in your main program (aka *.ino file with setup() and loop()).
 
 In **all other files** you must use `#include <BlueDisplay.h>`, to **prevent `multiple definitions` linker errors**:

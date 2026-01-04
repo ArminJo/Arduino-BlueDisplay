@@ -85,6 +85,7 @@ public:
 
     void clear(void);
 
+    // set individual attributes
     void setWidthX(const uint16_t widthX);
     void setHeightY(const uint16_t heightY);
     void setPositionX(const uint16_t positionX);
@@ -203,6 +204,7 @@ public:
     void setYTitleText(const char *aLabelText);
     void setYTitleTextAndSize(const char *aTitleText, const uint8_t aTitleTextSize); // Sets chart X + Y title text size
     void drawYAxisTitle(const int aYOffset) const;
+    void drawYAxisTitle(const int aYOffset, const int aXOffset) const;
 
     // layout all values are in pixels
     uint16_t mPositionX;    // Position in display coordinates of x - origin is on x axis

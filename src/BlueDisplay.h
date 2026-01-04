@@ -235,8 +235,13 @@ public:
     uint_fast16_t initCommunication(void (*aConnectCallback)(), void (*aRedrawCallback)() = nullptr,
             void (*aReorientationCallback)() = nullptr);
 #if defined(ARDUINO)
+#  if defined(__AVR__)
     void initCommunication(Print *aSerial, void (*aConnectCallback)(), void (*aRedrawCallback)() = nullptr,
             void (*aReorientationCallback)() = nullptr);
+#  else
+    void initCommunication(Stream *aSerial, void (*aConnectCallback)(), void (*aRedrawCallback)() = nullptr,
+            void (*aReorientationCallback)() = nullptr);
+#  endif
 #endif
     // The result of initCommunication
     bool isConnectionEstablished();

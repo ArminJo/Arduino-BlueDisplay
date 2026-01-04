@@ -171,13 +171,21 @@ uint_fast16_t BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*
  * Call with BlueDisplay1.initCommunication(&Serial, &initDisplay, ...);
  */
 #if defined(ARDUINO)
+#  if defined(__AVR__)
 void BlueDisplay::initCommunication(Print *aSerial, void (*aConnectCallback)(), void (*aRedrawCallback)(),
-        void (*aReorientationCallback)()) {
+        void (*aReorientationCallback)()) // Print instead of Stream saves 95 bytes flash
+#  else
+void BlueDisplay::initCommunication(Stream *aSerial, void (*aConnectCallback)(), void (*aRedrawCallback)(),
+        void (*aReorientationCallback)()) // Print has no flush()
+#  endif
+        {
 #  if defined(BD_USE_SIMPLE_SERIAL)
     (void) aSerial;
     // No printing here, in order not to avoid vector collisions by linking the Serial object
     BlueDisplay1.initCommunication(aConnectCallback, aRedrawCallback, aReorientationCallback);
 #  else
+    aSerial->flush(); // Empty serial buffer before using it for BD
+
     uint_fast16_t tConnectDurationMillis = BlueDisplay1.initCommunication(aConnectCallback, aRedrawCallback,
             aReorientationCallback);
     if (tConnectDurationMillis > 0) {
@@ -1265,7 +1273,7 @@ void BlueDisplay::debug(double aDouble) {
 }
 
 /**
- * if aClearBeforeColor != 0 then previous line is cleared before
+ * if aClearBeforeColor != 0x01 (COLOR16_NO_DELETE) then previous line is cleared before
  */
 void BlueDisplay::drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
         uint8_t *aByteBuffer, size_t aByteBufferLength) {
@@ -1274,7 +1282,7 @@ void BlueDisplay::drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, colo
 }
 
 /**
- * if aClearBeforeColor != 0 then previous line is cleared before
+ * if aClearBeforeColor != 0x01 (COLOR16_NO_DELETE) then previous line is cleared before
  * chart index is coded in the upper 4 bits of aYOffset
  */
 void BlueDisplay::drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
@@ -1290,7 +1298,7 @@ void BlueDisplay::drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, colo
 }
 
 /**
- * if aClearBeforeColor != 0 then previous line is cleared before
+ * if aClearBeforeColor != 0x01 (COLOR16_NO_DELETE) then previous line is cleared before
  * chart index is coded in the upper 4 bits of aYOffset
  *
  * aIntegerScaleFactor > 1 : expansion by factor aIntegerScaleFactor

@@ -694,7 +694,6 @@ float Chart::stepXLabelStartValue(const bool aDoIncrement) {
  * draw y title starting at the Y axis
  * Use data color, because it is the legend for the data
  * @param aYOffset the offset in pixel below the top of the Y line
- *
  */
 void Chart::drawYAxisTitle(const int aYOffset) const {
     if (mYTitleText != nullptr) {
@@ -702,6 +701,21 @@ void Chart::drawYAxisTitle(const int aYOffset) const {
          * draw axis title - use data color
          */
         DisplayForChart.drawText(mPositionX + mAxesSize + 1, mPositionY - mHeightY + aYOffset, mYTitleText, mTitleTextSize,
+                mYLabelColor, mBackgroundColor);
+    }
+}
+/**
+ * draw y title starting at the Y axis
+ * Use data color, because it is the legend for the data
+ * @param aYOffset the offset in pixel below the top of the Y line
+ * @param aXOffset the offset in pixel left of the Y line
+ */
+void Chart::drawYAxisTitle(const int aYOffset, const int aXOffset) const {
+    if (mYTitleText != nullptr) {
+        /**
+         * draw axis title - use data color
+         */
+        DisplayForChart.drawText(mPositionX + mAxesSize + 1 - aXOffset, mPositionY - mHeightY + aYOffset, mYTitleText, mTitleTextSize,
                 mYLabelColor, mBackgroundColor);
     }
 }
@@ -1028,12 +1042,12 @@ void Chart::drawChartData(int16_t *aDataPointer, const uint16_t aLengthOfValidDa
 }
 
 /*
- * Draw 8 bit unsigned (compressed) data with Y offset, i.e. value 0 is on X axis independent of mYLabelStartValue.
+ * Draw 8 bit unsigned (compressed) data with Y offset, i.e. 8 bit value 0 is on X axis independent of mYLabelStartValue.
  * Uses the BDFunction drawChartByteBufferScaled() which sends the buffer to the host, where it is scaled and rendered
  * Data is uncompressed on the display with mYDataFactor to get chart value and then with the factor from chart value to chart pixel
  * @param aMode - One of CHART_MODE_PIXEL, CHART_MODE_LINE or CHART_MODE_AREA
  */
-void Chart::drawChartDataWithYOffset(uint8_t *aDataPointer, uint16_t aLengthOfValidData, const uint8_t aMode) {
+void Chart::drawChartDataWithYOffset(uint8_t *aDataPointer, const uint16_t aLengthOfValidData, const uint8_t aMode) {
 
 // Factor for Input -> Display value
     float tYDisplayFactor;
@@ -1051,11 +1065,12 @@ void Chart::drawChartDataWithYOffset(uint8_t *aDataPointer, uint16_t aLengthOfVa
      * If we have scale factor 2 for expansion we require half as much data
      */
     uint16_t tMaximumRequiredData = reduceLongWithIntegerScaleFactor(mWidthX, mXDataScaleFactor);
+    auto tLengthOfValidData = aLengthOfValidData;
     if (aLengthOfValidData > tMaximumRequiredData) {
-        aLengthOfValidData = tMaximumRequiredData;
+        tLengthOfValidData = tMaximumRequiredData;
     }
-    BlueDisplay1.drawChartByteBufferScaled(mPositionX, mPositionY, mXDataScaleFactor, -tYDisplayFactor, mAxesSize, aMode,
-            mDataColor, COLOR16_NO_DELETE, 0, true, aDataPointer, aLengthOfValidData);
+    DisplayForChart.drawChartByteBufferScaled(mPositionX, mPositionY, mXDataScaleFactor, -tYDisplayFactor, mAxesSize, aMode,
+            mDataColor, COLOR16_NO_DELETE, 0, true, aDataPointer, tLengthOfValidData);
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
         uint16_t tXpos = mPositionX;
