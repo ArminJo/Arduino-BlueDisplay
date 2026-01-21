@@ -59,7 +59,8 @@ void getTimeEventCallbackForLogger(uint8_t aSubcommand, uint8_t aByteInfo, uint1
 #define BASE_TEXT_SIZE_2  (CO2_ARRAY_SIZE / 20)         // 1152 / 20 = 57.6
 #define BASE_TEXT_SIZE_1_5  ((CO2_ARRAY_SIZE * 3) / 80) // 43.2
 #define BASE_TEXT_SIZE_HALF  ((CO2_ARRAY_SIZE) / 80)    // 14.4
-#define BUTTON_WIDTH    ((CO2_ARRAY_SIZE * 4) / 20)     // 230,4
+#define SMALL_BUTTON_WIDTH  (BASE_TEXT_SIZE * 4)        // 57
+#define BUTTON_WIDTH    ((SMALL_BUTTON_WIDTH * 2) + BASE_TEXT_SIZE_HALF)     // 236
 #define CHART_START_X   (3 * BASE_TEXT_SIZE)            // 84 Origin of chart
 #define CHART_START_Y   (BlueDisplay1.getRequestedDisplayHeight() - BASE_TEXT_SIZE_1_5)
 #define CHART_AXES_SIZE (BASE_TEXT_SIZE / 8)            // 3
@@ -73,6 +74,7 @@ void getTimeEventCallbackForLogger(uint8_t aSubcommand, uint8_t aByteInfo, uint1
 #define CHART_GRID_COLOR        COLOR16_GREEN
 #define CHART_DATA_COLOR        COLOR16_RED
 #define CHART_TEXT_COLOR        COLOR16_BLACK
+#define DAY_BUTTONS_COLOR       COLOR16_GREEN
 
 Chart CO2Chart;
 BDButton TouchButton4days;
@@ -384,6 +386,9 @@ void initDisplay(void) {
 #endif
 
     uint16_t tDisplayHeight = (DISPLAY_WIDTH * BlueDisplay1.getHostDisplayHeight()) / BlueDisplay1.getHostDisplayWidth();
+    if (tDisplayHeight < ((float) DISPLAY_WIDTH / 1.75)) {
+        tDisplayHeight = (float) DISPLAY_WIDTH / 1.75;
+    }
     BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH, tDisplayHeight);
 
 // set layout variables;
@@ -395,7 +400,7 @@ void initDisplay(void) {
     BDButton::BDButtonPGMTextParameterStruct tBDButtonPGMParameterStruct; // Saves 480 Bytes for all 5 buttons
 
     BDButton::setInitParameters(&tBDButtonPGMParameterStruct, BUTTONS_START_X, BASE_TEXT_SIZE, (BASE_TEXT_SIZE * 4),
-            tDisplayHeightEighth, COLOR16_GREEN, F("4"), BASE_TEXT_SIZE_2, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 4 * HOURS_IN_ONE_DAY,
+            tDisplayHeightEighth, DAY_BUTTONS_COLOR, F("4"), BASE_TEXT_SIZE_2, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 4 * HOURS_IN_ONE_DAY,
             &doDays);
     TouchButton4days.init(&tBDButtonPGMParameterStruct);
 
@@ -462,7 +467,7 @@ void drawDisplay() {
     TouchButton1day.drawButton();
     TouchButton12Hour.drawButton();
     BlueDisplay1.drawText(BUTTONS_START_X + BASE_TEXT_SIZE_2, (BlueDisplay1.getRequestedDisplayHeight() / 4) - BASE_TEXT_SIZE,
-            F("Day(s)"), BASE_TEXT_SIZE_1_5, COLOR16_GREEN, sBackgroundColor);
+            F("Day(s)"), BASE_TEXT_SIZE_1_5, DAY_BUTTONS_COLOR, sBackgroundColor);
 
 #if defined(E2END)
     TouchButtonStoreToEEPROM.drawButton();
@@ -572,7 +577,7 @@ void initCO2Chart() {
      * 8 (12 for 1/2 day) grid lines per chart is set by doDays()
      */
     sCO2ArrayDisplayStart = sCO2Array;
-    CO2Chart.initXLabelTimestamp(0, SECONDS_IN_ONE_DAY / 2, CHART_X_AXIS_SCALE_FACTOR_1, 5); // Increment is 1/2 day at X label scale factor 1
+    CO2Chart.initXLabelTimestampForLabelScaleIdentity(0, SECONDS_IN_ONE_DAY / 2, 5); // Increment is 1/2 day at X label scale factor 1
     // PowerChart.setXLabelDistance(2); // Draw label at every 2. grid line except for 1/2 day => Actual label distance is set by doDays()
     CO2Chart.setXBigLabelDistance(2);   // Show day date label bigger
     CO2Chart.setLabelStringFunction(convertUnixTimestampToHourString);
@@ -597,10 +602,8 @@ void initCO2Chart() {
     registerTouchMoveCallback(doShowTimeAtTouchPosition);
 }
 
-
-
 void drawCO2Chart() {
-    printTimeAtTwoLines(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - (4 * BASE_TEXT_SIZE), BASE_TEXT_SIZE,
+    printTimeAtTwoLines(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - ((7 * BASE_TEXT_SIZE) / 2), BASE_TEXT_SIZE,
             sTextColor, sBackgroundColor); // gets now()
     printCO2Value();
     /*
@@ -613,18 +616,24 @@ void drawCO2Chart() {
      * Offset to origin for first main label (midnight) in seconds
      */
 #if defined(USE_C_TIME)
-    long tDifferenceToLastMidnightInSeconds = (sTimeInfo->tm_min + (MINUTES_IN_ONE_HOUR * sTimeInfo->tm_hour)) * SECONDS_IN_ONE_MINUTE;
+    long tDifferenceToLastMidnightInSeconds = sTimeInfo->tm_sec + ((sTimeInfo->tm_min + (MINUTES_IN_ONE_HOUR * sTimeInfo->tm_hour)) * (long)SECONDS_IN_ONE_MINUTE);
 #else
-    long tDifferenceToLastMidnightInSeconds = (minute() + (MINUTES_IN_ONE_HOUR * hour())) * SECONDS_IN_ONE_MINUTE;
+    long tDifferenceToLastMidnightInSeconds = second() + ((minute() + (MINUTES_IN_ONE_HOUR * hour())) * (long) SECONDS_IN_ONE_MINUTE);
 #endif
     /*
      * We must always start with a midnight value to mark the start of the big labels
+     * (+ SECONDS_PER_STORAGE) if we have midnight, the offset of the first label must be -1,
+     * such that the midnight label is drawn at rightmost X axis position.
+     * Because for data compression 2 one chart step is 2 SECONDS_PER_STORAGE,
+     * we must expand it to 2 * SECONDS_PER_STORAGE for the effect.
      */
+    long tCorrectedSecondsForStorage = CO2Chart.reduceLongWithIntegerScaleFactor(SECONDS_PER_STORAGE, CO2Chart.mXDataScaleFactor);
     if (sChartHoursToDisplay == (HOURS_IN_ONE_DAY / 2)) {
         // We want to see the labels of the last half day here, so midnight grid line is shifted left by 12 hours
-        CO2Chart.setXLabelAndGridOffset(tDifferenceToLastMidnightInSeconds + (sChartHoursToDisplay * SECONDS_IN_ONE_HOUR));
+        CO2Chart.setXLabelAndGridOffset(
+                tDifferenceToLastMidnightInSeconds + (sChartHoursToDisplay * SECONDS_IN_ONE_HOUR) + tCorrectedSecondsForStorage);
     } else {
-        CO2Chart.setXLabelAndGridOffset(tDifferenceToLastMidnightInSeconds);
+        CO2Chart.setXLabelAndGridOffset(tDifferenceToLastMidnightInSeconds + tCorrectedSecondsForStorage);
     }
 
     // Use 1,2, or 4 days back as start value
@@ -730,7 +739,7 @@ void doShowTimeToNextStorage(BDButton *aTheTouchedButton, int16_t aValue) {
     now(); // update sysTime and prevMillis to current time
 #endif
     printTimeToNextStorage();
-    printTimeAtTwoLines(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - (4 * BASE_TEXT_SIZE), BASE_TEXT_SIZE,
+    printTimeAtTwoLines(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - ((7 * BASE_TEXT_SIZE) / 2), BASE_TEXT_SIZE,
             sTextColor, sBackgroundColor);
 }
 
@@ -829,7 +838,7 @@ void getTimeEventCallbackForLogger(uint8_t aSubcommand, uint8_t aByteInfo, uint1
      */
 #  if defined(STANDALONE_TEST) || defined(TEST)
         // start at 20, 40 seconds
-        sNextStorageMillis = millis() + ((20 - (second(tTimestamp) % 20)) * MILLIS_IN_ONE_SECOND);
+    sNextStorageSeconds = tTimestamp + (20 - (second(tTimestamp) % 20));
 #  else
     // tweak sNextStorageMillis, so that our next storage is at the next full 5 minute
     uint16_t tSecondsUntilNextFull5Minutes = (STORAGE_INTERVAL_SECONDS

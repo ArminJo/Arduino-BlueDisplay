@@ -78,11 +78,11 @@ void checkTemperatureCorrectionPins();
 //#define TEST // like production, but every 30 seconds
 //#define STANDALONE_TEST // runs fast without Serial input
 #if defined(STANDALONE_TEST)
-#define ONE_MEASUREMENT_PERIOD_SECOND       10L
+#define SECONDS_PER_STORAGE       10L
 #elif defined(TEST)
-#define ONE_MEASUREMENT_PERIOD_SECOND       30L
+#define SECONDS_PER_STORAGE       30L
 #else
-#define ONE_MEASUREMENT_PERIOD_SECOND       (5L * SECS_PER_MIN) // store dataset every 5 minutes
+#define SECONDS_PER_STORAGE       (5L * SECS_PER_MIN) // store dataset every 5 minutes
 #endif
 uint32_t sMillisOfLastRequestedCO2Data;
 
@@ -416,7 +416,7 @@ void loop() {
         myMHZ19.CO2Unmasked = 400; // It maybe 0 after power up
     }
 
-    if (storeCO2ValuePeriodically(myMHZ19.CO2Unmasked, ONE_MEASUREMENT_PERIOD_SECOND)) {
+    if (storeCO2ValuePeriodically(myMHZ19.CO2Unmasked, SECONDS_PER_STORAGE)) {
 #if defined(ENABLE_STACK_ANALYSIS)
         printRAMInfo(&Serial); // 33 unused 1.12.24
 #endif

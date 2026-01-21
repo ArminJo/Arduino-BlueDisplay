@@ -53,7 +53,7 @@
 #define CHART_ERROR_GRID_X_SPACING  -32
 
 // Masks for mFlags
-#define CHART_HAS_GRID      0x01 // no marks for label are rendered
+#define CHART_HAS_GRID      0x01 // if we have the grid, we do not need the small marks for label
 #define CHART_X_LABEL_USED  0x02
 #define CHART_X_LABEL_TIME  0x04 // else label is float
 #define CHART_Y_LABEL_USED  0x08
@@ -130,7 +130,8 @@ public:
     void initXLabel(const float aXLabelStartValue, const float aXLabelIncrementValue, const uint8_t aXLabelScaleFactor,
             uint8_t aXMinStringWidthIncDecimalPoint, uint8_t aXNumVarsAfterDecimal);
     void initXLabelTimestamp(const int aXLabelStartValue, const long aXLabelIncrementValue, const uint8_t aXLabelScaleFactor,
-            const uint8_t aXMinStringWidth);
+            const uint8_t aXMinStringWidth) __attribute__ ((deprecated ("Better use initXLabelTimestampForLabelScaleIdentity() and setXLabelScaleFactor() if aXLabelScaleFactor != CHART_X_AXIS_SCALE_FACTOR_1")));
+    void initXLabelTimestampForLabelScaleIdentity(const int aXLabelStartValue, const long aXLabelIncrementValue, const uint8_t aXMinStringWidth);
     void disableXLabel(void);
 
     // Label string generation
@@ -207,11 +208,11 @@ public:
     void drawYAxisTitle(const int aYOffset, const int aXOffset) const;
 
     // layout all values are in pixels
-    uint16_t mPositionX;    // Position in display coordinates of x - origin is on x axis
-    uint16_t mPositionY;    // Position in display coordinates of y - origin is on y axis
-    uint16_t mWidthX;       // length of x axes in pixels
-    uint16_t mHeightY;      // height of y axes in pixel
-    uint8_t mAxesSize;      // thickness of x and y axes - origin is on innermost line of axes
+    uint16_t mPositionX;    // Position in display coordinates of X - origin is on rightmost point of X axis
+    uint16_t mPositionY;    // Position in display coordinates of Y - origin is on uppermost point of X axis
+    uint16_t mWidthX;       // length of X axes in pixels
+    uint16_t mHeightY;      // height of X axes in pixel
+    uint8_t mAxesSize;      // thickness of X and Y axes - origin is on innermost line of axes
     uint8_t mLabelTextSize;
     uint8_t mTitleTextSize;
     uint8_t mFlags;

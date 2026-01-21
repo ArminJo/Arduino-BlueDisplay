@@ -30,7 +30,7 @@
 /*
  * Main switches for program
  */
-//#define TEST // enable development tests, requires AVRUtils from https://github.com/ArminJo/Arduino-Utils
+//#define FAST_CLOCK // enable development tests, requires AVRUtils from https://github.com/ArminJo/Arduino-Utils
 //#define DEBUG // enable debug button and debug output
 //#define RTC_EXISTS  //if a DS1307 is connected to the I2C bus
 #include <Arduino.h>
