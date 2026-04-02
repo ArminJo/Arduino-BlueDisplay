@@ -43,7 +43,7 @@ void getTimeEventCallbackForLogger(uint8_t aSubcommand, uint8_t aByteInfo, uint1
 //#define LOCAL_DEBUG
 //#define ENABLE_STACK_ANALYSIS
 #if defined(ENABLE_STACK_ANALYSIS)
-#include "AVRUtils.h" // include for initStackFreeMeasurement() and printRAMInfo()
+#include "AVRUtils.h" // include for initStackFreeMeasurement() and printRAMAndStackInfo()
 #include "AVRTracing.h"
 #endif
 
@@ -334,7 +334,7 @@ void initializeCO2Array() {
         }
 #endif
 #if defined(ENABLE_STACK_ANALYSIS)
-        printRAMInfo(&Serial);
+        printRAMAndStackInfo(&Serial);
 #  if !defined(BD_USE_SIMPLE_SERIAL)
         Serial.flush();
 #  endif

@@ -256,8 +256,8 @@ void checkForMovesAndSwipes(void) {
                  * Do not accept pseudo or micro moves as an event.
                  * In the BlueDisplay app the threshold is set to mCurrentViewWidth / 100, which is 3 pixel here.
                  */
-                if (abs(TouchPanel.mLastTouchPosition.PositionX - TouchPanel.mCurrentTouchPosition.PositionX) >= 3
-                        || abs(TouchPanel.mLastTouchPosition.PositionY - TouchPanel.mCurrentTouchPosition.PositionY) >= 3) {
+                if (uintDifferenceAbs(TouchPanel.mLastTouchPosition.PositionX, TouchPanel.mCurrentTouchPosition.PositionX) >= 3
+                        || uintDifferenceAbs(TouchPanel.mLastTouchPosition.PositionY, TouchPanel.mCurrentTouchPosition.PositionY) >= 3) {
                     TouchPanel.mLastTouchPosition = TouchPanel.mCurrentTouchPosition;
 
                     // Significant move here
@@ -312,8 +312,8 @@ void callbackHandlerForLongTouchDownTimeout() {
      * If not, call long touch callback
      */
     if(sTouchObjectTouched != SLIDER_TOUCHED){
-        if (abs(TouchPanel.mTouchDownPosition.PositionX - TouchPanel.mCurrentTouchPosition.PositionX) < TOUCH_SWIPE_THRESHOLD
-                && abs(TouchPanel.mTouchDownPosition.PositionY - TouchPanel.mCurrentTouchPosition.PositionY) < TOUCH_SWIPE_THRESHOLD) {
+        if (uintDifferenceAbs(TouchPanel.mTouchDownPosition.PositionX, TouchPanel.mCurrentTouchPosition.PositionX) < TOUCH_SWIPE_THRESHOLD
+                && uintDifferenceAbs(TouchPanel.mTouchDownPosition.PositionY, TouchPanel.mCurrentTouchPosition.PositionY) < TOUCH_SWIPE_THRESHOLD) {
             // fill up event
             localTouchEvent.EventData.TouchEventInfo.TouchPosition = TouchPanel.mLastTouchPosition;
             localTouchEvent.EventType = EVENT_LONG_TOUCH_DOWN_CALLBACK;

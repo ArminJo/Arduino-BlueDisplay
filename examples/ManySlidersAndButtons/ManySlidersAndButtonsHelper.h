@@ -155,9 +155,4 @@ uint8_t copyPGMStringStoredInPGMVariable(char *aStringBuffer, void *aPGMStringPt
 void storeSliderValuesToEEPROM();
 void loadSliderValuesFromEEPROM();
 
-#if !defined(STR)
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-#endif
-
 #endif // _MANY_SLIDER_AND_BUTTONS_HELPER_H

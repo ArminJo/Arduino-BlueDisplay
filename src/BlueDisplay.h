@@ -40,10 +40,10 @@
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
-#define VERSION_BLUE_DISPLAY "5.0.1"
+#define VERSION_BLUE_DISPLAY "5.1.0"
 #define VERSION_BLUE_DISPLAY_MAJOR 5
-#define VERSION_BLUE_DISPLAY_MINOR 0
-#define VERSION_BLUE_DISPLAY_PATCH 1
+#define VERSION_BLUE_DISPLAY_MINOR 1
+#define VERSION_BLUE_DISPLAY_PATCH 0
 // The change log is at the bottom of the file
 
 /*
@@ -58,9 +58,13 @@
 #define HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_BT_CONNECTION   200 // without, the BT connection to my Nexus 7 breaks after a few seconds :-(
 
 // Helper macro for getting a macro definition as string
-#if !defined(STR)
+#if !defined(STR_HELPER) && !defined(STR)
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
+#endif
+// Get absolute value of difference of two unsigned values
+#if !defined(uintDifferenceAbs)
+#define uintDifferenceAbs(a, b) ((a >= b) ? a - b : b - a)
 #endif
 
 /*
@@ -472,9 +476,12 @@ float getCPUTemperature(void);
 //#endif
 
 /*
- * Version 5.0.1
+ * Version 5.1.1
+ *
+ * Version 5.1.0
  * - Renamed function names and variables from GridOrLabelX to XGridOrLabel and GridOrLabelY to YGridOrLabel.
  * - Improved computeXLabelAndXDataScaleFactor() to support scaling factor 1 and -1.
+ * - Added drawYAxisTitle(const int aYOffset, const int aXOffset).
  *
  * Version 5.0.0
  * - Speak functions added.

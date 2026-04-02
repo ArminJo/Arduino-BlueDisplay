@@ -5,7 +5,7 @@ This library enables an Android smartphone / tablet to act as a graphical displa
 
 [![Badge License: GPLv3](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0)
  &nbsp; &nbsp;
-[![Badge Version](https://img.shields.io/github/v/release/ArminJo/Arduino-BlueDisplay?include_prereleases&color=yellow&logo=DocuSign&logoColor=white)](https://github.com/ArminJo/Arduino-BlueDisplay/releases/latest)
+[![Badge Version](https://img.shields.io/github/v/release/ArminJo/Arduino-BlueDisplay?color=yellow&logo=DocuSign&logoColor=white)](https://github.com/ArminJo/Arduino-BlueDisplay/releases/latest)
  &nbsp; &nbsp;
 [![Badge Commits since latest](https://img.shields.io/github/commits-since/ArminJo/Arduino-BlueDisplay/latest?color=yellow)](https://github.com/ArminJo/Arduino-BlueDisplay/commits/master)
  &nbsp; &nbsp;
@@ -376,9 +376,11 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 ```
 
 # Revision History
-### Version 5.0.1
+
+### Version 5.1.0
 - Renamed function names and variables from `GridOrLabelX` to `XGridOrLabel` and `GridOrLabelY` to `YGridOrLabel`.
 - Improved `computeXLabelAndXDataScaleFactor()` to support scaling factor 1 and -1.
+- Added `drawYAxisTitle(const int aYOffset, const int aXOffset)`.
 
 ### Version 5.0.0
 - Voice output with Android TextToSpeech for Android > 5.0 (Lollipop).

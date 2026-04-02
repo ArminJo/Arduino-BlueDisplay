@@ -336,16 +336,11 @@ void computeAutoTrigger(void) {
         uint16_t tNewRawTriggerValue = MeasurementControl.RawValueMin + tPeakToPeakHalf;
 
         //set effective hysteresis to quarter peak to peak
-        int tTriggerHysteresis = tPeakToPeakHalf / 2;
+        uint16_t tTriggerHysteresis = tPeakToPeakHalf / 2;
 
-        // keep reasonable value - avoid jitter - abs does not work, it may give negative values
-        // int tTriggerDelta = abs(tNewTriggerValue - MeasurementControl.RawTriggerLevel);
-        int tTriggerDelta = tNewRawTriggerValue - MeasurementControl.RawTriggerLevel;
-        if (tTriggerDelta < 0) {
-            tTriggerDelta = -tTriggerDelta;
-        }
-        int tOldHysteresis3Quarter = (MeasurementControl.RawHysteresis / 4) * 3;
-        if (tTriggerDelta > (tTriggerHysteresis / 4) || tTriggerHysteresis <= tOldHysteresis3Quarter) {
+        // keep reasonable value - avoid jitter
+        if (uintDifferenceAbs(tNewRawTriggerValue, MeasurementControl.RawTriggerLevel) > (tTriggerHysteresis / 4)
+                || tTriggerHysteresis <= ((MeasurementControl.RawHysteresis / 4) * 3)) {
             /*
              * (Old - new trigger value) > tPeakToPeak  / 16 - condition for value getting bigger
              * or new hysteresis <= 3/4 old hysteresis       - condition for value getting smaller

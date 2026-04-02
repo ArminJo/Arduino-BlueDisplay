@@ -112,11 +112,11 @@ void doProgramModules();
 bool setupHC_05();
 bool setupJDY_31();
 
-/*
- * Helper macro for getting a macro definition as string
- */
+// Helper macro for getting a macro definition as string
+#if !defined(STR_HELPER) && !defined(STR)
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
+#endif
 
 void setup() {
     // initialize the digital pin as an output.

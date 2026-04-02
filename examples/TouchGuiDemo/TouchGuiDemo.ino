@@ -36,7 +36,7 @@
 #include <Arduino.h>
 
 #if defined(TEST)
-#include "AVRUtils.h"       // For initStackFreeMeasurement(), printRAMInfo()
+#include "AVRUtils.h"       // For initStackFreeMeasurement(), getCurrentAvailableStackSize()
 #endif
 
 /*
@@ -188,7 +188,7 @@ void setup() {
     Button::playFeedbackTone();
 
 #if defined(TEST)
-    printRAMInfo(&Serial); // Stack used is 126 bytes
+    getCurrentAvailableStackSize(&Serial); // Stack used is 126 bytes
 #endif
 }
 

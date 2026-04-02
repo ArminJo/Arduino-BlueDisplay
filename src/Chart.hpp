@@ -64,7 +64,7 @@
 
 //#define LOCAL_TEST
 #if defined(LOCAL_TEST)
-#include "AVRUtils.h"       // For initStackFreeMeasurement(), printRAMInfo()
+#include "AVRUtils.h"       // For initStackFreeMeasurement(), printRAMAndStackInfo()
 #endif
 
 #if defined(SUPPORT_LOCAL_DISPLAY) && defined(DISABLE_REMOTE_DISPLAY)
@@ -1530,7 +1530,7 @@ void showChartDemo(void) {
         DisplayForChart.drawText(0, 2 * TEXT_SIZE_11, "malloc of 360 byte buffer failed", TEXT_SIZE_11, COLOR16_RED,
         COLOR16_WHITE);
 #  if defined(LOCAL_TEST)
-        printRAMInfo(&Serial); // Stack used is 126 bytes
+        printRAMAndStackInfo(&Serial); // Stack used is 126 bytes
 #  endif
 
 #endif

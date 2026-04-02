@@ -572,7 +572,7 @@ void drawGrid();
 void drawDataBuffer(uint8_t *aDataBufferPointer, color16_t aColor, color16_t aClearBeforeColor);
 void DrawOneDataBufferValue();
 
-void printInfo();
+void printStartupInfo();
 #if defined(DEBUG)
 void printTPData(bool aGuiTouched);
 void printDebugData();
@@ -763,7 +763,7 @@ void __attribute__((noreturn)) loop() {
                     drawDataBuffer(&DataBufferControl.DisplayBuffer[0], DisplayControl.EraseColor, 0);
                     drawGrid();
                     DisplayControl.showInfoMode = true;
-                    printInfo();
+                    printStartupInfo();
                     MeasurementControl.IsRunning = false;
                     drawDataBuffer(&DataBufferControl.DataBuffer[0], COLOR_DATA_HOLD, 0);
                 } else {
@@ -846,7 +846,7 @@ void __attribute__((noreturn)) loop() {
             drawGridLinesWithHorizLabelsAndTriggerLine();
             if (DisplayControl.showInfoMode) {
                 computeMicrosPerPeriod();
-                printInfo();
+                printStartupInfo();
             }
         }
         MeasurementControl.TimebaseJustDelayed = false;
@@ -866,7 +866,7 @@ void redrawDisplay() {
         // refresh grid
         drawGridLinesWithHorizLabelsAndTriggerLine();
         if (DisplayControl.showInfoMode) {
-            printInfo();
+            printStartupInfo();
         }
     } else {
         /*
@@ -878,7 +878,7 @@ void redrawDisplay() {
             drawGrid();
             drawDataBuffer(&DataBufferControl.DataBuffer[0], COLOR_DATA_HOLD, 0);
             if (DisplayControl.showInfoMode) {
-                printInfo();
+                printStartupInfo();
             }
         } else {
             drawSettingsGui();
@@ -1658,7 +1658,7 @@ void doTimeBaseDisplayScroll(LocalTouchButton *const aTheTouchedButton __attribu
             }
             MeasurementControl.TriggerTimeoutSampleCount = tTriggerTimeoutSampleCount;
 
-            printInfo();
+            printStartupInfo();
             if (tStartNewAcquisition) {
                 startAcquisition();
             }
@@ -1797,7 +1797,7 @@ void doDisplayMode(LocalTouchButton *const aTheTouchedButton __attribute__((unus
         // Toggle show info mode
         DisplayControl.showInfoMode = !DisplayControl.showInfoMode;
         if (DisplayControl.showInfoMode) {
-            printInfo();
+            printStartupInfo();
         } else {
             // Erase former info line
             LocalDisplay.fillRectRel(INFO_LEFT_MARGIN, INFO_UPPER_MARGIN, LOCAL_DISPLAY_WIDTH - INFO_LEFT_MARGIN,
@@ -1825,7 +1825,7 @@ void doDisplayMode(LocalTouchButton *const aTheTouchedButton __attribute__((unus
         } else if (!DisplayControl.showInfoMode) {
             // from only chart to chart + info
             DisplayControl.showInfoMode = true;
-            printInfo();
+            printStartupInfo();
         } else {
             // clear screen and show only gui
             DisplayControl.DisplayMode = DISPLAY_MODE_SHOW_MAIN_GUI;
@@ -1863,7 +1863,7 @@ void doTriggerSingleshot(LocalTouchButton *const aTheTouchedButton __attribute__
             LocalDisplay.clearDisplay(COLOR_BACKGROUND_DSO);
             drawGrid();
             if (DisplayControl.showInfoMode) {
-                printInfo();
+                printStartupInfo();
             }
             activatePartOfGui();
         } else {
@@ -2209,7 +2209,7 @@ void DrawOneDataBufferValue() {
  * Output info line
  * for documentation see line 33 of this file
  */
-void printInfo() {
+void printStartupInfo() {
     char tSlopeChar;
     char tTimebaseUnitChar;
     char tReferenceChar;

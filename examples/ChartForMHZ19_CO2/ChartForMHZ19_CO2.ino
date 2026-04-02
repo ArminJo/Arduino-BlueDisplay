@@ -89,7 +89,7 @@ uint32_t sMillisOfLastRequestedCO2Data;
 #if defined(SUPPORT_BLUEDISPLAY_CHART)
 //#define ENABLE_STACK_ANALYSIS
 #  if defined(ENABLE_STACK_ANALYSIS)
-#include "AVRUtils.h" // include sources for initStackFreeMeasurement() and printRAMInfo()
+#include "AVRUtils.h" // include sources for initStackFreeMeasurement() and printRAMAndStackInfo()
 #  endif
 //#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC-05 module for 115200
 #define BD_USE_SIMPLE_SERIAL
@@ -152,12 +152,6 @@ void checkSmallDigitsPin();
  * ExcelData=2508;557;28;25.23;657;32000;38973;6973;6316
  */
 
-/*
- * Helper macro for getting a macro definition as string
- */
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-
 void setup() {
 // initialize the digital pin as an output.
     pinMode(LED_BUILTIN, OUTPUT);
@@ -218,7 +212,7 @@ void setup() {
 #if defined(SUPPORT_BLUEDISPLAY_CHART)
     InitCo2LoggerAndChart(); // introduces a delay of 1 second :-(
 #  if defined(ENABLE_STACK_ANALYSIS)
-    printRAMInfo(&Serial); // 1.12.24 - 90 bytes unused here
+    printRAMAndStackInfo(&Serial); // 1.12.24 - 90 bytes unused here
 #  endif
 #endif
 
@@ -418,7 +412,7 @@ void loop() {
 
     if (storeCO2ValuePeriodically(myMHZ19.CO2Unmasked, SECONDS_PER_STORAGE)) {
 #if defined(ENABLE_STACK_ANALYSIS)
-        printRAMInfo(&Serial); // 33 unused 1.12.24
+        printRAMAndStackInfo(&Serial); // 33 unused 1.12.24
 #endif
 #if defined(STANDALONE_TEST)
         /*

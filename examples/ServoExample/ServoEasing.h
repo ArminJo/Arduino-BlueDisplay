@@ -18,15 +18,14 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
- *
  */
 
 #ifndef _SERVO_EASING_H
 #define _SERVO_EASING_H
 
-#define VERSION_SERVO_EASING "3.5.0"
+#define VERSION_SERVO_EASING "3.6.0"
 #define VERSION_SERVO_EASING_MAJOR 3
-#define VERSION_SERVO_EASING_MINOR 5
+#define VERSION_SERVO_EASING_MINOR 6
 #define VERSION_SERVO_EASING_PATCH 0
 // The change log is at the bottom of the file
 
@@ -88,13 +87,16 @@
 #endif
 
 /*
- * If defined, the void handleServoTimerInterrupt() function must be provided by an external program.
+ * If defined, the void handleServoTimerInterrupt() function must be provided by the user program.
  * This enables the reuse of the Servo timer interrupt e.g. for synchronizing with NeoPixel updates,
  * which otherwise leads to servo twitching. See QuadrupedNeoPixel.cpp of QuadrupedControl example.
+ * This interrupt routine is called in an ISR context and (at least on Uno, Nano etc.) 100 microseconds
+ * before a new servo period starts to leave the first servo signals undisturbed.
+ * See also setTimer1InterruptMarginMicros()
  */
 //#define ENABLE_EXTERNAL_SERVO_TIMER_HANDLER
 #if defined(ENABLE_EXTERNAL_SERVO_TIMER_HANDLER)
-__attribute__((weak)) extern void handleServoTimerInterrupt();
+extern void handleServoTimerInterrupt();
 #endif
 
 #if !( defined(__AVR__) || defined(ESP8266) || defined(ESP32) || defined(STM32F1xx) || defined(__STM32F1__) || defined(__SAM3X8E__) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_APOLLO3) || defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_RP2040) || defined(TEENSYDUINO))
@@ -658,7 +660,7 @@ public:
 #  endif
 #endif
 
-    volatile bool mServoMoves;
+    volatile bool mServoMoves; // Servo is moving on next call to update()
 
 #if defined(USE_PCA9685_SERVO_EXPANDER)
 #  if defined(USE_SERVO_LIB)
@@ -748,7 +750,7 @@ bool setEaseToForAllServos(uint_fast16_t aDegreesPerSecond);
 bool setEaseToDForAllServos(uint_fast16_t aMillisForMove);
 void setEaseToForAllServosSynchronizeAndStartInterrupt();
 void setEaseToForAllServosSynchronizeAndStartInterrupt(uint_fast16_t aDegreesPerSecond);
-void synchronizeAllServosAndStartInterrupt(bool aStartUpdateByInterrupt = START_UPDATE_BY_INTERRUPT);
+void synchronizeAllServosAndStartInterrupt(bool aStartUpdateByInterrupt = START_UPDATE_BY_INTERRUPT, bool aSynchronizeToMinimumDuration = false);
 
 #if !defined(PROVIDE_ONLY_LINEAR_MOVEMENT)
 void setEasingTypeForAllServos(uint_fast8_t aEasingType);
@@ -796,9 +798,10 @@ bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial); // Print class ha
 
 /*
  *
- * Version 3.5.1 - 12/2025
+ * Version 3.6.0 - 02/2026
  * - Renamed macro REFRESH_INTERVAL_MILLIS to SERVO_REFRESH_INTERVAL_MICROS.
  * - Added new functions PCA9685Init(uint32_t aActualPCA9685ClockFrequencyHertz) and PCA9685InitWithExternalClock(uint32_t aExternalClockFrequencyHertz).
+ * - Added parameter bool aSynchronizeToMinimumDuration to synchronizeAllServosAndStartInterrupt().
  *
  * Version 3.5.0 - 9/2025
  * - Fixed serious bug in reattach();

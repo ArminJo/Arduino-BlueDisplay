@@ -5,7 +5,7 @@ This DSO needs only a standard Arduino-Uno or Arduino-Nano, a HC-05 Bluetooth mo
 
 [![Badge License: GPLv3](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0)
  &nbsp; &nbsp;
-[![Badge Version](https://img.shields.io/github/v/release/ArminJo/Arduino-Simple-DSO?include_prereleases&color=yellow&logo=DocuSign&logoColor=white)](https://github.com/ArminJo/Arduino-Simple-DSO/releases/latest)
+[![Badge Version](https://img.shields.io/github/v/release/ArminJo/Arduino-Simple-DSO?color=yellow&logo=DocuSign&logoColor=white)](https://github.com/ArminJo/Arduino-Simple-DSO/releases/latest)
  &nbsp; &nbsp;
 [![Badge Commits since latest](https://img.shields.io/github/commits-since/ArminJo/Arduino-Simple-DSO/latest?color=yellow)](https://github.com/ArminJo/Arduino-Simple-DSO/commits/master)
  &nbsp; &nbsp;

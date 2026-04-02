@@ -141,12 +141,6 @@ char sStringBuffer[20];
 // PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
 const char StartMessage[] PROGMEM = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
 
-// Helper macro for getting a macro definition as string
-#if !defined(STR)
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-#endif
-
 /*******************************************************************************************
  * Program code starts here
  *******************************************************************************************/
