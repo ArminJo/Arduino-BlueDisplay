@@ -4,7 +4,6 @@
  *  Demo of using the BlueDisplay library for HC-05 on Arduino
  *
  *  Copyright (C) 2014-2023  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *

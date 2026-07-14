@@ -8,9 +8,9 @@
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
  *  Copyright (C) 2014-2025  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
- *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
+ *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
  *
  *  BlueDisplay is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -273,8 +273,9 @@ public:
 
     void setLongTouchDownTimeout(uint16_t aLongTouchDownTimeoutMillis);
 
-    void clearDisplay(color16_t aColor = COLOR16_WHITE);
-    void clearDisplayOptional(color16_t aColor = COLOR16_WHITE);
+    void clearDisplay(color16_t aColor = COLOR16_WHITE); // New 5.2: Disables also buttons and sliders
+    void clearDisplayArea(color16_t aColor = COLOR16_WHITE);
+    void clearDisplayAndSkipCommandsBeforeOnHostBufferOverflow(color16_t aColor = COLOR16_WHITE);
     void drawDisplayDirect();
     void setScreenOrientationLock(uint8_t aLockMode);
     void setScreenBrightness(uint8_t aScreenBrightness);
@@ -441,8 +442,6 @@ uint8_t _clipAndCopyPGMString(char *aStringBuffer, const __FlashStringHelper *aP
 
 // The instance provided by the class itself
 extern BlueDisplay BlueDisplay1;
-void clearDisplayAndDisableButtonsAndSliders();
-void clearDisplayAndDisableButtonsAndSliders(color16_t aColor);
 
 #endif // __cplusplus
 

@@ -1,13 +1,13 @@
-/**
+/*
  * SSD1289.hpp
  *
  * Firmware to control a HY32D 320 x 240, 3.2" Display with a SSD1289 controller
  *
 
  *  Copyright (C) 2012-2023  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
- *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
+ *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
  *
  *  BlueDisplay is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -104,11 +104,10 @@ void SSD1289::setCursor(uint16_t aPositionX, uint16_t aPositionY) {
 }
 
 void SSD1289::clearDisplay(uint16_t aColor) {
-    unsigned int size;
     setArea(0, 0, LOCAL_DISPLAY_WIDTH - 1, LOCAL_DISPLAY_HEIGHT - 1);
 
     drawStart();
-    for (size = (LOCAL_DISPLAY_HEIGHT * LOCAL_DISPLAY_WIDTH); size != 0; size--) {
+    for (uint16_t size = (LOCAL_DISPLAY_HEIGHT * LOCAL_DISPLAY_WIDTH); size != 0; size--) {
         HY32D_DATA_GPIO_PORT->ODR = aColor;
         // Latch data write
         HY32D_WR_GPIO_PORT->BSRR = (uint32_t) HY32D_WR_PIN << 16;

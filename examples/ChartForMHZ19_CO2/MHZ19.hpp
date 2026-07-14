@@ -8,7 +8,6 @@
  *
  *
  *  Copyright (C) 2022-2024  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of MHZ19 https://github.com/ArminJo/MH-Z19.
  *

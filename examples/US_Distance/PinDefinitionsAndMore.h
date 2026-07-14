@@ -4,7 +4,6 @@
  *  Contains pin definitions for BlueDisplay examples for various platforms
  *
  *  Copyright (C) 2020-2022  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/BlueDisplay.
  *

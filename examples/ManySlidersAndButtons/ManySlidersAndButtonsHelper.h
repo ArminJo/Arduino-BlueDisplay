@@ -4,7 +4,6 @@
  * Definitions for helper code for ManySlidersAndButtons example.
  *
  *  Copyright (C) 2025  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *

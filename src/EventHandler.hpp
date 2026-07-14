@@ -3,10 +3,10 @@
  *
  * Implements the methods to receive events from the Android BlueDisplay app.
  *
- *  Copyright (C) 2014-2025  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
+ *  Copyright (C) 2014-2026  Armin Joachimsmeyer
  *
- *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
+ *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
  *
  *  BlueDisplay is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -563,6 +563,9 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 #endif
 
     case EVENT_INFO_CALLBACK:
+        /*
+         * Here the callback address of the handling function is part of the event
+         */
 //    } else if (tEventType == EVENT_INFO_CALLBACK) {
         ((void (*)(uint8_t, uint8_t, uint16_t, ByteShortLongFloatUnion)) tEvent.EventData.IntegerInfoCallbackData.CallbackFunctionAddress)(
                 tEvent.EventData.IntegerInfoCallbackData.SubFunction, tEvent.EventData.IntegerInfoCallbackData.ByteInfo,

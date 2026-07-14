@@ -4,7 +4,6 @@
  * Declarations for AVR and ARM common section
  *
  *  Copyright (C) 2017-2023  Armin Joachimsmeyer
- *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
  *

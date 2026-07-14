@@ -11,10 +11,10 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014-2025  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
+ *  Copyright (C) 2014-2026  Armin Joachimsmeyer
  *
- *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
+ *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
  *
  *  BlueDisplay is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -80,6 +80,12 @@
 #else
 //#define LOCAL_TRACE // This enables debug output only for this file
 #endif
+
+// One instance of BlueDisplay called BlueDisplay1
+BlueDisplay BlueDisplay1;
+
+bool isLocalDisplayAvailable = false;
+
 //-------------------- Constructor --------------------
 
 BlueDisplay::BlueDisplay() { // @suppress("Class members should be properly initialized")
@@ -87,11 +93,6 @@ BlueDisplay::BlueDisplay() { // @suppress("Class members should be properly init
 //    mRequestedDisplaySize.YHeight = DISPLAY_DEFAULT_HEIGHT;
     mBlueDisplayConnectionEstablished = false;
 }
-
-// One instance of BlueDisplay called BlueDisplay1
-BlueDisplay BlueDisplay1;
-
-bool isLocalDisplayAvailable = false;
 
 void BlueDisplay::resetLocal() {
     // reset local buttons to be synchronized
@@ -435,9 +436,31 @@ void BlueDisplay::speakStringBlockingWait(const __FlashStringHelper *aPGMString,
 #endif
 }
 
+void BlueDisplay::clearDisplayArea(color16_t aColor) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    LocalDisplay.clearDisplay(aColor);
+#endif
+    // saves 8 bytes for DSO, requires 8 bytes for RobotCar
+//        sendUSART(SYNC_TOKEN);
+//        sendUSART(FUNCTION_CLEAR_DISPLAY);
+//        sendUSART('\0');
+//        sendUSART('\0');
+//        sendUSART(aColor);
+//        sendUSART(aColor >> 8);
+    // requires 16 bytes for DSO, saves 26 bytes for RobotCar
+//        uint16_t tParamBuffer[3];
+//        tParamBuffer[0] = FUNCTION_CLEAR_DISPLAY << 8 | SYNC_TOKEN;
+//        tParamBuffer[1] = 1;
+//        tParamBuffer[2] = aColor;
+//        sendUSARTBufferNoSizeCheck((uint8_t*) &tParamBuffer[0], 1 * 2 + 4, nullptr, 0);
+    sendUSARTArgs(FUNCTION_CLEAR_DISPLAY_AREA, 1, aColor);
+}
+
 void BlueDisplay::clearDisplay(color16_t aColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalDisplay.clearDisplay(aColor);
+    LocalTouchButton::deactivateAll();
+    LocalTouchSlider::deactivateAll();
 #endif
     // saves 8 bytes for DSO, requires 8 bytes for RobotCar
 //        sendUSART(SYNC_TOKEN);
@@ -456,11 +479,11 @@ void BlueDisplay::clearDisplay(color16_t aColor) {
 }
 
 /*
- * If the buffer of the display device is full, commands up to this command may be skipped and display cleared.
- * Useful if we send commands faster than the display may able to handle, to avoid increasing delay between sending and rendering.
+ * Display is cleared and commands up to this command are skipped if host buffer (of 40960 bytes) has overflow
+ * because the host app is paused and did not consume the sent commands.
  */
-void BlueDisplay::clearDisplayOptional(color16_t aColor) {
-    sendUSARTArgs(FUNCTION_CLEAR_DISPLAY_OPTIONAL, 1, aColor);
+void BlueDisplay::clearDisplayAndSkipCommandsBeforeOnHostBufferOverflow(color16_t aColor) {
+    sendUSARTArgs(FUNCTION_CLEAR_DISPLAY_AND_SKIP_OPTIONAL, 1, aColor);
 }
 
 // forces an rendering of the drawn bitmap
@@ -1649,18 +1672,6 @@ uint8_t _clipAndCopyPGMString(char *aStringBuffer, const __FlashStringHelper *aP
     return tLength;
 }
 #endif
-
-void clearDisplayAndDisableButtonsAndSliders() {
-    BlueDisplay1.clearDisplay();
-    BDButton::deactivateAll();
-    BDSlider::deactivateAll();
-}
-
-void clearDisplayAndDisableButtonsAndSliders(color16_t aColor) {
-    BlueDisplay1.clearDisplay(aColor);
-    BDButton::deactivateAll();
-    BDSlider::deactivateAll();
-}
 
 /*****************************************************************************
  * Display and drawing tests

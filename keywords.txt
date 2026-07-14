@@ -30,7 +30,8 @@ playFeedbackTone	KEYWORD2
 setLongTouchDownTimeout	KEYWORD2
 
 clearDisplay	KEYWORD2
-clearDisplayOptional	KEYWORD2
+clearDisplayArea	KEYWORD2
+clearDisplayAndSkipCommandsBeforeOnHostBufferOverflow	KEYWORD2
 drawDisplayDirect	KEYWORD2
 
 drawPixel	KEYWORD2

@@ -4,7 +4,6 @@
  * Implements the common (GUI) parts of AVR and ARM development
  *
  *  Copyright (C) 2017-2025  Armin Joachimsmeyer
- *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
  *
@@ -372,7 +371,7 @@ void setACMode(bool aNewACMode) {
 #if defined(__AVR__)
     if (MeasurementControl.isRunning) {
         //clear old grid, since it will be changed
-        BlueDisplay1.clearDisplay();
+        BlueDisplay1.clearDisplayArea();
     }
 #endif
     MeasurementControl.isACMode = aNewACMode;
@@ -807,7 +806,7 @@ void activateChartGui(void) {
  ************************************************************************/
 
 void redrawDisplay() {
-    clearDisplayAndDisableButtonsAndSliders();
+    BlueDisplay1.clearDisplay();
 
     if (MeasurementControl.isRunning) {
         /*
@@ -977,7 +976,7 @@ void drawDSOMoreSettingsPage(void) {
 }
 
 void startDSOMoreSettingsPage(void) {
-    BlueDisplay1.clearDisplay();
+    BlueDisplay1.clearDisplay(); // Also deactivate all buttons and slider here
     drawDSOMoreSettingsPage();
 }
 #endif
@@ -1278,7 +1277,7 @@ void setReferenceButtonText(void) {
 #endif
 
 void startDSOSettingsPage(void) {
-    BlueDisplay1.clearDisplay();
+    BlueDisplay1.clearDisplay(); // Also deactivate all buttons and slider here
     drawDSOSettingsPage();
 }
 
@@ -1580,7 +1579,7 @@ void doStartSingleshot(BDButton *aTheTouchedButton, int16_t aValue) {
     MeasurementControl.RawValueMin = 0;
 
 #if defined(__AVR__)
-    BlueDisplay1.clearDisplay();
+    BlueDisplay1.clearDisplayArea();
     drawGridLinesWithHorizLabelsAndTriggerLine();
     printSingleshotMarker();
 // Start a new single shot

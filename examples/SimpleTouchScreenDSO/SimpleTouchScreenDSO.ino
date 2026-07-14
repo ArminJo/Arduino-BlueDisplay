@@ -4,7 +4,6 @@
  * This program converts your Arduino Uno with a mSD-Shield and a MI0283QT-2 adapter to a simple DSO
  *
  *  Copyright (C) 2012-2023  Armin Joachimsmeyer
- *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of SimpleTouchScreenDSO https://github.com/ArminJo/SimpleTouchScreenDSO.
  *

@@ -1,13 +1,12 @@
-/**
+/*
  * thickLine.hpp
  *
  *  @brief Draw a solid line with thickness using a modified Bresenhams algorithm.
  *
  *  Copyright (C) 2013-2022  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
- *  This file is part of STMF3-Discovery-Demos https://github.com/ArminJo/STMF3-Discovery-Demos/blob/master/lib/graphics/src/thickLine.cpp.
- *                                             https://gist.github.com/ArminJo/8dc4e61847a693e99bdde919cc7005cc
+ *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
  *
  *  STMF3-Discovery-Demos is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

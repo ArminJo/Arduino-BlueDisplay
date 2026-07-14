@@ -7,7 +7,6 @@
  * Includes the implementation of a 4 value slider (PATTERN_SLIDER) with user provided text value.
  *
  *  Copyright (C) 2025  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *
@@ -428,17 +427,17 @@ void TestNewSliderAndButton() {
     tSlider->drawSlider();
 
     /*
-     * Wait 10 seconds until deleting button and slider
+     * Wait 6 seconds until deleting button and slider
      */
     delayMillisWithCheckAndHandleEvents(6000);
 
     tButton->removeButton(DISPLAY_BACKGROUND_COLOR);
     tButton->deinit();
-    delete (tButton);
+//    delete (tButton);
 
     tSlider->removeSlider(DISPLAY_BACKGROUND_COLOR);
     tSlider->deinit();
-    delete (tSlider);
+//    delete (tSlider);
 }
 
 void doTestSlider(BDSlider *aTheTouchedSlider __attribute__((unused)), int16_t aSliderValue) {

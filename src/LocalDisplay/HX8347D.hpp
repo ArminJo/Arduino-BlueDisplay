@@ -1,4 +1,4 @@
-/**
+/*
  * HX8347D.hpp
  *
  * Firmware to control a MI0283QT 320 x 240, 2.8" Display with a HX8347D controller
@@ -8,9 +8,9 @@
  *
  *
  *  Copyright (C) 2012-2023  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
- *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
+ *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
  *
  *  BlueDisplay is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -294,20 +294,12 @@ void HX8347D::setCursor(uint16_t x, uint16_t y) {
 }
 
 void HX8347D::clearDisplay(color16_t aColor) {
-    uint16_t size;
-
     setArea(0, 0, LOCAL_DISPLAY_WIDTH - 1, LOCAL_DISPLAY_HEIGHT - 1);
 
     drawStart();
-    for (size = (320UL * 240UL / 8UL); size != 0; size--) {
+    for (uint16_t size = (320UL * 240UL / 2UL); size != 0; size--) {
         draw(aColor); //1
         draw(aColor); //2
-        draw(aColor); //3
-        draw(aColor); //4
-        draw(aColor); //5
-        draw(aColor); //6
-        draw(aColor); //7
-        draw(aColor); //8
     }
     drawStop();
 

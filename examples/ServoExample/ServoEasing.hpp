@@ -10,7 +10,6 @@
  *  The AVR Servo library supports only one timer, which means not more than 12 servos are supported using this library.
  *
  *  Copyright (C) 2019-2026  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of ServoEasing https://github.com/ArminJo/ServoEasing.
  *

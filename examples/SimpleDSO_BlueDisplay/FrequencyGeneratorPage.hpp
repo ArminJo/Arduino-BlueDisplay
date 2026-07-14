@@ -17,7 +17,6 @@
  *
  *
  *  Copyright (C) 2015-2025  Armin Joachimsmeyer
- *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
  *
@@ -167,7 +166,7 @@ void initFrequencyGeneratorPage(void) {
 }
 
 void startFrequencyGeneratorPage(void) {
-    BlueDisplay1.clearDisplay();
+    BlueDisplay1.clearDisplay(); // Also deactivate all buttons and slider here
 
 #if defined(SUPPORT_LOCAL_DISPLAY)
     // do it here to enable freeing of button resources in stopFrequencyGeneratorPage()
@@ -293,8 +292,6 @@ void initFrequencyGeneratorPageGui() {
 
 void drawFrequencyGeneratorPage(void) {
     // do not clear screen here since it is called periodically for GUI refresh while DSO is running
-    BDButton::deactivateAll();
-    BDSlider::deactivateAll();
 #if !defined(ARDUINO)
     TouchButtonMainHome.drawButton();
 #else

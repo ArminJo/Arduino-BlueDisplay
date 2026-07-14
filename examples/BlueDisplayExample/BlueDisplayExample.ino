@@ -16,7 +16,6 @@
  *  of 8 * printDemoString(), which requires 8*24 ms -> 192 ms
  *
  *  Copyright (C) 2014-2025  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *
@@ -298,7 +297,7 @@ void initDisplay(void) {
 }
 
 void drawGui(void) {
-    BlueDisplay1.clearDisplay(COLOR_DEMO_BACKGROUND);
+    BlueDisplay1.clearDisplayAndSkipCommandsBeforeOnHostBufferOverflow(COLOR_DEMO_BACKGROUND);
     TouchButtonBDExampleBlinkStartStop.drawButton();
     TouchButtonPlus.drawButton();
     TouchButtonMinus.drawButton();

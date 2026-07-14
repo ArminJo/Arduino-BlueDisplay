@@ -4,10 +4,10 @@
  * Defines all the protocol related constants and structures required for the client stubs.
  * The constants here must correspond to the values used in the BlueDisplay App
  *
- *  Copyright (C) 2015-2025  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
+ *  Copyright (C) 2015-2026  Armin Joachimsmeyer
  *
- *  This file is part of BlueDisplay https://github.com/ArminJo/android-blue-display.
+ *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
  *
  *  BlueDisplay is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
  *
  *
  * SEND PROTOCOL USED:
- * Message:
+ * Message: At least 6 bytes long
  * 1. Sync byte A5
  * 2. byte function token
  * 3. Short length (in bytes units -> always multiple of 2) of parameters
@@ -235,10 +235,11 @@ struct BluetoothEvent {
 //#define DATAFIELD_TAG_DOUBLE          0x06
 #define LAST_DATAFIELD_TAG              DATAFIELD_TAG_BYTE
 
+#define INDEX_LAST_FUNCTION_WITHOUT_DATA                0x5F
+#define INDEX_FIRST_FUNCTION_WITH_DATA                  0x60
 /**********************
  * Internal functions
  *********************/
-#define INDEX_FIRST_FUNCTION_WITH_DATA  0x60
 
 #define FUNCTION_GLOBAL_SETTINGS                        0x08
 // Sub functions for GLOBAL_SETTINGS
@@ -269,22 +270,17 @@ struct BluetoothEvent {
 
 #define FUNCTION_PLAY_TONE                          0x0F
 
-// Function with variable data size
-// used for Sync
-#define FUNCTION_NOP                                0x7F
 
 /**********************
  * Display functions
  *********************/
-#define FUNCTION_CLEAR_DISPLAY                      0x10
+#define FUNCTION_CLEAR_DISPLAY                      0x10 // Also deactivate all buttons and slider here
+#define FUNCTION_CLEAR_DISPLAY_AREA                 0x13
 #define FUNCTION_DRAW_DISPLAY                       0x11
-#define FUNCTION_CLEAR_DISPLAY_OPTIONAL             0x12
-// 3 parameter
-#define FUNCTION_DRAW_PIXEL                         0x14
-// 6 parameter
-#define FUNCTION_DRAW_CHAR                          0x16
-// 5 parameter
-#define FUNCTION_DRAW_LINE_REL                      0x20
+#define FUNCTION_CLEAR_DISPLAY_AND_SKIP_OPTIONAL    0x12 // Skip buffer before if host buffer has overflow (>40960 bytes) because of not running
+#define FUNCTION_DRAW_PIXEL                         0x14 // 3 parameter
+#define FUNCTION_DRAW_CHAR                          0x16 // 6 parameter
+#define FUNCTION_DRAW_LINE_REL                      0x20 // 5 parameter
 #define FUNCTION_DRAW_LINE                          0x21
 #define FUNCTION_DRAW_RECT_REL                      0x24
 #define FUNCTION_FILL_RECT_REL                      0x25
@@ -306,12 +302,9 @@ struct BluetoothEvent {
 #define FLAG_WRITE_SETTINGS_SET_POSITION            0x01
 #define FLAG_WRITE_SETTINGS_SET_LINE_COLUMN         0x02
 
-//******************************************************
-#define INDEX_LAST_FUNCTION_WITHOUT_DATA            0x5F
-//******************************************************
-/*
+/*************************************
  * Functions with variable data size
- */
+ *************************************/
 #define FUNCTION_DRAW_STRING                        0x60
 
 #define STRING_ALIGN_RIGHT_XPOS                     0xFFFF // left is 0 :-)
@@ -418,7 +411,11 @@ struct BluetoothEvent {
 #define FUNCTION_SLIDER_SET_VALUE_UNIT_STRING       0x7A
 #define FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING     0x7B
 
-// Talk functions are only implemented in Android > 5.0 (Lollipop)
+#define FUNCTION_NOP                                0x7F // used for Sync
+
+/******************************************************************
+ * Talk functions are only implemented in Android > 5.0 (Lollipop)
+ ******************************************************************/
 #define FUNCTION_SPEAK_SET_LOCALE                   0x80
 #define FUNCTION_SPEAK_SET_VOICE                    0x81 // One of the Voice strings printed in log at level Info at BD application startup
 #define FUNCTION_SPEAK_STRING_FLUSH                 0x88

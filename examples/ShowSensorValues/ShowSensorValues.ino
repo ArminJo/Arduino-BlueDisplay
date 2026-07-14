@@ -36,7 +36,6 @@
  *
  *
  *  Copyright (C) 2014-2025  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *
@@ -395,7 +394,7 @@ void initDisplay(void) {
  */
 void drawGui(void) {
 #if !(defined(SHOW_ACCELEROMETER_VALUES_ON_PLOTTER) || defined(SHOW_GYROSCOPE_VALUES_ON_PLOTTER))
-    BlueDisplay1.clearDisplay(COLOR16_WHITE);
+    BlueDisplay1.clearDisplayAndSkipCommandsBeforeOnHostBufferOverflow(COLOR16_WHITE);
     SliderAccelerationForward.drawSlider();
     SliderAccelerationBackward.drawSlider();
     SliderAccelerationRight.drawSlider();

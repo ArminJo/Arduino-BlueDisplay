@@ -9,7 +9,6 @@
  *  DISPLAY_WIDTH is defined as 3.3/2 of CHART_WIDTH and CHART_WIDTH is POWER_ARRAY_SIZE / 2.
  *
  *  Copyright (C) 2024-2026  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *
@@ -153,6 +152,7 @@ void doSignalChangeBrightness(BDButton *aTheTouchedButton, int16_t aValue);
 void doShowTimeToNextStorage(BDButton *aTheTouchedButton, int16_t aValue);
 
 bool handleEventAndFlags();
+bool delayMillisWithCheckForEventAndFlags(unsigned long aDelayMillis);
 void checkAndHandleCO2LoggerEventFlags();
 
 void printCO2Value();
@@ -459,7 +459,7 @@ void initDisplay(void) {
 }
 
 void drawDisplay() {
-    BlueDisplay1.clearDisplay(sBackgroundColor);
+    BlueDisplay1.clearDisplayAndSkipCommandsBeforeOnHostBufferOverflow(sBackgroundColor); // discard all previous requests if required
     CO2Chart.drawYAxisTitle(-(int) BASE_TEXT_SIZE_2, CHART_START_X);
     drawCO2Chart();
     TouchButton4days.drawButton();
@@ -603,8 +603,18 @@ void initCO2Chart() {
 }
 
 void drawCO2Chart() {
+    /*
+     * If we have not yet synchronized time (because of buffer overflow at host etc.) try it now
+     */
+    if(timeStatus() == timeNeedsSync) {
+        requestHostUnixTimestamp();
+//        BlueDisplay1.debug(F("Time not synced"));
+        // wait for requested time event to be received. The event handler sets timeStatus by calling setTime()
+        delayMillisWithCheckForEventAndFlags(300); // less than 150 ms is expected here
+    }
     printTimeAtTwoLines(BUTTONS_START_X, BlueDisplay1.getRequestedDisplayHeight() - ((7 * BASE_TEXT_SIZE) / 2), BASE_TEXT_SIZE,
             sTextColor, sBackgroundColor); // gets now()
+
     printCO2Value();
     /*
      * Print time and clear time marker area see doShowTimeAtTouchPosition()

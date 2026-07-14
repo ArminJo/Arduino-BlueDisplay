@@ -2,7 +2,6 @@
  * SimpleDSO_BlueDisplay.h
  *
  *  Copyright (C) 2015-2024  Armin Joachimsmeyer
- *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
  *

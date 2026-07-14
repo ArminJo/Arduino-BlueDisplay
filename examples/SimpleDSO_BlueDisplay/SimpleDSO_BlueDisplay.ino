@@ -66,10 +66,9 @@
  *
  *
  *  Copyright (C) 2015-2025  Armin Joachimsmeyer
- *  Email: armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
- *  This file is also part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *
  *  Arduino-Simple-DSO is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -581,7 +580,7 @@ void __attribute__((noreturn)) loop(void) {
                         if (DisplayControl.DisplayPage == DSO_PAGE_CHART) {
                             if (!DisplayControl.showHistory) {
                                 // This enables slow display devices to skip frames
-                                BlueDisplay1.clearDisplayOptional(COLOR_BACKGROUND_DSO);
+                                BlueDisplay1.clearDisplayAndSkipCommandsBeforeOnHostBufferOverflow(COLOR_BACKGROUND_DSO);
                             }
                             drawGridLinesWithHorizLabelsAndTriggerLine();
                             if (DisplayControl.showInfoMode != INFO_MODE_NO_INFO) {
@@ -1405,7 +1404,7 @@ void setInputRange(uint8_t aShiftValue, uint8_t aActiveAttenuatorValue) {
 
     if (MeasurementControl.isRunning && DisplayControl.DisplayPage == DSO_PAGE_CHART) {
         //clear old grid, since it will be changed
-        BlueDisplay1.clearDisplay();
+        BlueDisplay1.clearDisplayArea();
     }
     float tNewGridVoltage;
     uint16_t tHorizontalGridSizeShift8;
@@ -1585,7 +1584,7 @@ void computeAutoOffset(void) {
     }
     if (abs(MeasurementControl.OffsetGridCount - tNumberOfGridLinesToSkip) > 1) {
         // avoid jitter by not changing number if its delta is only 1
-        BlueDisplay1.clearDisplay();
+        BlueDisplay1.clearDisplayArea();
         MeasurementControl.OffsetValue = tNumberOfGridLinesToSkip * tRawValuePerGrid;
         MeasurementControl.OffsetGridCount = tNumberOfGridLinesToSkip;
         drawGridLinesWithHorizLabelsAndTriggerLine();
@@ -1733,7 +1732,7 @@ void doStartStopDSO(BDButton *aTheTouchedButton __attribute__((unused)), int16_t
         /*
          * Start here
          */
-        BlueDisplay1.clearDisplay();
+        BlueDisplay1.clearDisplay(); // Also deactivate all buttons and slider here
         DisplayControl.DisplayPage = DSO_PAGE_CHART;
         //DisplayControl.showInfoMode = true;
         activateChartGui();

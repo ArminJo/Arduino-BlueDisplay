@@ -27,7 +27,6 @@
  *
  *
  *  Copyright (C) 2014-2022  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay.
  *  BlueDisplay is free software: you can redistribute it and/or modify

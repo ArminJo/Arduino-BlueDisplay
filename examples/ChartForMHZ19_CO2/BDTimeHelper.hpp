@@ -6,7 +6,6 @@
  *  Requires up to 1640 bytes program memory and even more in Arduino IDE, because the "-mrelax" linker option is not set there.
  *
  *  Copyright (C) 2025  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *
@@ -37,6 +36,9 @@
 #endif
 #if !defined(SECONDS_IN_ONE_MINUTE)
 #define SECONDS_IN_ONE_MINUTE   60U
+#endif
+#if !defined(MILLIS_IN_ONE_MINUTE)
+#define MILLIS_IN_ONE_MINUTE    60000U
 #endif
 #if !defined(SECONDS_IN_ONE_HOUR)
 #define SECONDS_IN_ONE_HOUR     3600U
@@ -179,15 +181,17 @@ uint16_t waitUntilTimeWasUpdated(uint16_t aMaxWaitMillis) {
 }
 #  else
 /*
- * Is set as SyncProvider by initLocalTimeHandling() and then cyclically called from TimeLib
+ * Is set as SyncProvider by initLocalTimeHandling() and then cyclically called every BD_TIME_SYNCHRONISATION_INTERVAL_SECONDS from TimeLib
+ * BUT: if host app is not active (in background), the request might be skipped, because of buffer overflow, which in turn skips the buffer content received so far.
  */
 time_t requestHostUnixTimestamp() {
     BlueDisplay1.getInfo(SUBFUNCTION_GET_INFO_LOCAL_TIME, TIME_EVENTCALLBACK_FUNCTION);
-    return 0; // the time will be sent later in response to getInfo and must be copied manually
+    return 0; // the time will be sent later in response to getInfo and must be copied manually. now() will set Status to timeNeedsSync
 }
 #  endif // #if defined(USE_C_TIME)
 
 /*
+ * Minimal version of a Time Event callback function
  * Is called at startup and every time the actual time is required
  */
 void getTimeEventMinimalCallback(uint8_t aSubcommand, uint8_t aByteInfo, uint16_t aShortInfo, ByteShortLongFloatUnion aLongInfo) {
