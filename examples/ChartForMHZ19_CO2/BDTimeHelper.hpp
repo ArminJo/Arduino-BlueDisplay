@@ -129,6 +129,7 @@ void printTimeAtOneLine(uint16_t const aPositionX, uint16_t const aPositionY, ui
     time_t tTimestamp = now(); // use this timestamp for all prints below
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-overflow"
+#pragma GCC diagnostic ignored "-Wformat-truncation"
     // We can ignore warning: '%02d' directive writing between 2 and 11 bytes into a region of size between 0 and 1 [-Wformat-overflow=]
     snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("%02d.%02d.%4d %02d:%02d:%02d"), day(tTimestamp), month(tTimestamp),
             year(tTimestamp), hour(tTimestamp), minute(tTimestamp), second(tTimestamp));
@@ -156,8 +157,10 @@ void printTimeAtTwoLines(uint16_t const aPositionX, uint16_t const aPositionY, u
 #  else
     time_t tTimestamp = now(); // use this timestamp for all prints below
 // We can ignore warning: '%02d' directive writing between 2 and 11 bytes into a region of size between 0 and 1 [-Wformat-overflow=]
+//                         directive output may be truncated writing 1 byte into a region of size between 0 and 4 [-Wformat-truncation=]
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-overflow"
+#pragma GCC diagnostic ignored "-Wformat-truncation"
     snprintf_P(tStringBuffer, sizeof(tStringBuffer), PSTR("%02d.%02d.%4d\n%02d:%02d:%02d"), day(tTimestamp), month(tTimestamp),
             year(tTimestamp), hour(tTimestamp), minute(tTimestamp), second(tTimestamp));
 #pragma GCC diagnostic pop

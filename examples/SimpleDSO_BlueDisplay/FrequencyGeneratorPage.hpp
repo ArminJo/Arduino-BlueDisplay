@@ -254,6 +254,7 @@ void initFrequencyGeneratorPageGui() {
         tFrequencyTextPtr++;
 #endif
     }
+
 #if !defined(SUPPORT_LOCAL_DISPLAY)
     TouchButtonFirstFixedFrequency.mButtonIndex -= NUMBER_OF_FIXED_FREQUENCY_BUTTONS - 1;
 #endif
@@ -262,9 +263,9 @@ void initFrequencyGeneratorPageGui() {
     tXPos = 0;
     int tYPos = DISPLAY_HEIGHT - BUTTON_HEIGHT_4 - BUTTON_HEIGHT_5 - BUTTON_DEFAULT_SPACING;
     for (int i = 0; i < NUMBER_OF_FREQUENCY_RANGE_BUTTONS; ++i) {
-        uint16_t tButtonColor = BUTTON_AUTO_RED_GREEN_FALSE_COLOR;
+        uint16_t tButtonColor = BUTTON_AUTO_TOGGLE_FALSE_COLOR;
         if (i == BUTTON_INDEX_SELECTED_INITIAL) {
-            tButtonColor = BUTTON_AUTO_RED_GREEN_TRUE_COLOR;
+            tButtonColor = BUTTON_AUTO_TOGGLE_TRUE_COLOR;
         }
         TouchButtonFrequencyRanges[i].init(tXPos, tYPos, BUTTON_WIDTH_5 + BUTTON_DEFAULT_SPACING_HALF, BUTTON_HEIGHT_5,
                 tButtonColor, reinterpret_cast<const __FlashStringHelper*>(RangeButtonStrings[i]), TEXT_SIZE_22,
@@ -276,7 +277,7 @@ void initFrequencyGeneratorPageGui() {
     ActiveTouchButtonFrequencyRange = TouchButtonFrequencyRanges[BUTTON_INDEX_SELECTED_INITIAL];
 
     TouchButtonFrequencyStartStop.init(0, DISPLAY_HEIGHT - BUTTON_HEIGHT_4, BUTTON_WIDTH_3, BUTTON_HEIGHT_4, 0, F("Start"),
-            TEXT_SIZE_26, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sFrequencyInfo.isOutputEnabled,
+            TEXT_SIZE_26, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE, sFrequencyInfo.isOutputEnabled,
             &doFrequencyGeneratorStartStop);
     TouchButtonFrequencyStartStop.setTextForValueTrue(F("Stop"));
 
@@ -302,7 +303,7 @@ void drawFrequencyGeneratorPage(void) {
     BlueDisplay1.drawText(TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE, F("1"), TEXT_SIZE_11,
     COLOR16_BLUE, COLOR_BACKGROUND_FREQ);
 #if defined(__AVR__)
-    BlueDisplay1.drawText(DISPLAY_WIDTH - 5 * TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE, F("1000"), TEXT_SIZE_11,
+    BlueDisplay1.drawText(REMOTE_DISPLAY_WIDTH - 5 * TEXT_SIZE_11_WIDTH, FREQ_SLIDER_Y + 3 * FREQ_SLIDER_SIZE, F("1000"), TEXT_SIZE_11,
     COLOR16_BLUE, COLOR_BACKGROUND_FREQ);
 #else
     BlueDisplay1.drawText(BlueDisplay1.getRequestedDisplayWidth() - 5 * TEXT_SIZE_11_WIDTH,
@@ -412,9 +413,9 @@ void doSetFrequencyRange(BDButton *aTheTouchedButton, int16_t aInputRangeIndex) 
         if (aInputRangeIndex != FREQUENCY_RANGE_INDEX_MEGA_HERTZ || sFrequencyInfo.Waveform == WAVEFORM_SQUARE) {
 
             // Set color for old and new button
-            ActiveTouchButtonFrequencyRange.setButtonColorAndDraw( BUTTON_AUTO_RED_GREEN_FALSE_COLOR);
+            ActiveTouchButtonFrequencyRange.setButtonColorAndDraw( BUTTON_AUTO_TOGGLE_FALSE_COLOR);
             ActiveTouchButtonFrequencyRange = *aTheTouchedButton;
-            aTheTouchedButton->setButtonColorAndDraw( BUTTON_AUTO_RED_GREEN_TRUE_COLOR);
+            aTheTouchedButton->setButtonColorAndDraw( BUTTON_AUTO_TOGGLE_TRUE_COLOR);
 
             setNormalizedFrequencyFactorFromRangeIndex(tOutputRangeIndex);
             setWaveformFrequencyAndPrintValues();

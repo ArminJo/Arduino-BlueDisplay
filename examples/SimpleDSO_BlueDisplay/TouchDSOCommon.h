@@ -27,15 +27,13 @@
 
 #if defined(__AVR__)
 // Data buffer size (must be small enough to leave appr. 7 % (144 Byte) for stack
-#define DATABUFFER_SIZE (3*DISPLAY_WIDTH) //960
+#define DISPLAY_PAGES_STORED 3 // number of display pages for horizontal scrolling
 #else
-#if defined(STM32F303xC)
-#define DATABUFFER_SIZE_FACTOR 9
-#else
-#define DATABUFFER_SIZE_FACTOR 7
+#define DISPLAY_PAGES_STORED 4
 #endif
-#endif
+#define DATABUFFER_SIZE (DISPLAY_PAGES_STORED * REMOTE_DISPLAY_WIDTH)
 
+#define DISPLAY_VALUE_MAX 0
 #define DISPLAY_VALUE_FOR_ZERO (DISPLAY_HEIGHT - 1)
 //#define DISPLAY_VALUE_FOR_ZERO (DISPLAY_HEIGHT - 2) // Zero line is not exactly at bottom of display to improve readability
 
@@ -152,7 +150,7 @@ extern const char *const ChannelDivByButtonStrings[];
 #endif
 
 extern const float TimebaseExactDivValuesMicros[] PROGMEM;
-#define HORIZONTAL_LINE_LABELS_CAPION_X (DISPLAY_WIDTH - TEXT_SIZE_11_WIDTH * 4)
+#define HORIZONTAL_LINE_LABELS_CAPION_X (REMOTE_DISPLAY_WIDTH - TEXT_SIZE_11_WIDTH * 4)
 /*
  * OFFSET
  */
@@ -217,7 +215,7 @@ extern const float TimebaseExactDivValuesMicros[] PROGMEM;
 #define START_PAGE_ROW_INCREMENT    BUTTON_HEIGHT_4_256_LINE_2
 #define START_PAGE_BUTTON_HEIGHT    BUTTON_HEIGHT_4_256
 
-#define SINGLESHOT_PPRINT_VALUE_X   (DISPLAY_WIDTH - TEXT_SIZE_11_WIDTH)
+#define SINGLESHOT_PPRINT_VALUE_X   (REMOTE_DISPLAY_WIDTH - TEXT_SIZE_11_WIDTH)
 #define SETTINGS_PAGE_INFO_Y        (BUTTON_HEIGHT_5_256_LINE_5 - TEXT_SIZE_11)
 #else
 #if defined(SUPPORT_LOCAL_DISPLAY)
@@ -358,11 +356,11 @@ void drawRunningOnlyPartOfGui(void);
 void activateChartGui(void);
 #if defined(__AVR__)
 bool scrollChart(int aValue);
-uint8_t getDisplayFromRawInputValue(uint16_t aRawValue);
+uint8_t getDisplayFromRawInputValue(uint16_t aRawAdcValue);
 void drawDataBuffer(uint8_t *aByteBuffer, uint16_t aColor, uint16_t aClearBeforeColor);
 #else
 int scrollChart(int aValue);
-int getDisplayFromRawInputValue(int aAdcValue);
+uint8_t getDisplayFromRawInputValue(uint16_t aRawAdcValue);
 void drawDataBuffer(uint16_t *aDataBufferPointer, int aLength, color16_t aColor, color16_t aClearBeforeColor, int aDrawMode,
         bool aDrawAlsoMin);
 void startSystemInfoPage(void);
@@ -396,7 +394,9 @@ void doDrawModeTriggerLine(BDButton * aTheTouchedButton, int16_t aValue);
 #endif
 void doStartStopDSO(BDButton *aTheTouchedButton, int16_t aValue);
 void doDefaultBackButton(BDButton *aTheTouchedButton, int16_t aValue);
+#if !defined(NO_FREQUENCY_GENERATOR_PAGE)
 void doShowFrequencyPage(BDButton *aTheTouchedButton, int16_t aValue);
+#endif
 void doShowSettingsPage(BDButton *aTheTouchedButton, int16_t aValue);
 void doTriggerSlope(BDButton *aTheTouchedButton, int16_t aValue);
 void doStartSingleshot(BDButton *aTheTouchedButton, int16_t aValue);

@@ -3,7 +3,7 @@
  *
  * Definitions for helper code for ManySlidersAndButtons example.
  *
- *  Copyright (C) 2025  Armin Joachimsmeyer
+ *  Copyright (C) 2025-2026  Armin Joachimsmeyer
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *
@@ -25,9 +25,19 @@
 #ifndef _MANY_SLIDER_AND_BUTTONS_HELPER_H
 #define _MANY_SLIDER_AND_BUTTONS_HELPER_H
 
+/*************************************
+ *   COMMON FOR SLIDERS AND BUTTONS
+ ************************************/
+#if !defined(SLIDER_AND_BUTTON_DELTA_Y)
+#define SLIDER_AND_BUTTON_DELTA_Y   (2 * SLIDER_BAR_WIDTH)
+#endif
+
 /********************
  *      SLIDERS
  ********************/
+# if !defined(SLIDER_START_Y)
+#define SLIDER_START_Y   BUTTON_HEIGHT_6
+#endif
 #if !defined(SLIDER_BAR_WIDTH)
 #define SLIDER_BAR_WIDTH        12
 #endif
@@ -106,22 +116,72 @@ struct SliderStaticInfoStruct {
 /********************
  *     BUTTONS
  ********************/
-#define BUTTON_WIDTH            BUTTON_WIDTH_4
-#if NUMBER_OF_RIGHT_SLIDERS > 0
-#define BUTTONS_START_X         ((DISPLAY_WIDTH - BUTTON_WIDTH) / 2)
-#else
-#define BUTTONS_START_X         (SLIDER_BAR_LENGTH + BUTTON_DEFAULT_SPACING)
+#if !defined(BUTTON_WIDTH)
+#define BUTTON_WIDTH                BUTTON_WIDTH_4
 #endif
-#define BUTTON_HEIGHT           (SLIDER_BAR_WIDTH + SLIDER_CAPTION_SIZE)
-#define BUTTON_TEXT_SIZE        7
+#if !defined(LOAD_STORE_BUTTON_WIDTH)
+#define LOAD_STORE_BUTTON_WIDTH     BUTTON_WIDTH_8
+#endif
+#if !defined(LOAD_STORE_BUTTON_COLOR)
+#define LOAD_STORE_BUTTON_COLOR     COLOR16_GREEN
+#endif
+
+/*
+ * Set start Y position for setup and regular buttons
+ */
+#if defined(LOAD_STORE_BUTTONS_POSITION_TOP)
+// Y position at top of left sliders
+#  if !defined(BUTTON_START_Y)
+#define LOAD_STORE_BUTTON_START_Y   SLIDER_START_Y
+#    if NUMBER_OF_SETUPS > 1
+#define BUTTON_START_Y   SLIDER_START_Y + (NUMBER_OF_SETUPS * SLIDER_AND_BUTTON_DELTA_Y)
+#    elif NUMBER_OF_SETUPS == 1
+#define BUTTON_START_Y   SLIDER_START_Y + (2 * SLIDER_AND_BUTTON_DELTA_Y)
+#    else
+#define BUTTON_START_Y              SLIDER_START_Y
+#    endif
+#  endif // !defined(BUTTON_START_Y)
+
+#else // defined(LOAD_STORE_BUTTONS_POSITION_TOP)
+// Y position at bottom of left sliders
+#define BUTTON_START_Y              SLIDER_START_Y
+#  if !defined(LOAD_STORE_BUTTON_START_Y)
+#    if NUMBER_OF_SETUPS > 1 && (NUMBER_OF_LEFT_SLIDERS >= NUMBER_OF_SETUPS)
+#define LOAD_STORE_BUTTON_START_Y   SLIDER_START_Y + ((NUMBER_OF_LEFT_SLIDERS - NUMBER_OF_SETUPS) * SLIDER_AND_BUTTON_DELTA_Y)
+#    elif NUMBER_OF_SETUPS == 1 && (NUMBER_OF_LEFT_SLIDERS >= 2)
+#define LOAD_STORE_BUTTON_START_Y   SLIDER_START_Y + ((NUMBER_OF_LEFT_SLIDERS - 2) * SLIDER_AND_BUTTON_DELTA_Y)
+#    else
+#define LOAD_STORE_BUTTON_START_Y   SLIDER_START_Y
+#    endif
+#  endif // !defined(LOAD_STORE_BUTTON_START_Y)
+#endif // defined(LOAD_STORE_BUTTONS_POSITION_TOP)
+
+/*
+ * Set start X position for buttons right of left sliders
+ */
+#if NUMBER_OF_RIGHT_SLIDERS > 0
+#define BUTTONS_START_X             ((DISPLAY_WIDTH - BUTTON_WIDTH) / 2)
+#else
+#define BUTTONS_START_X             (SLIDER_BAR_LENGTH + BUTTON_DEFAULT_SPACING)
+#endif
+#define BUTTON_HEIGHT               (SLIDER_BAR_WIDTH + SLIDER_CAPTION_SIZE)
+#if !defined(BUTTON_TEXT_SIZE)
+#define BUTTON_TEXT_SIZE            7
+#endif
 
 // PROGMEM text strings for buttons
-const char sString_Load[] PROGMEM = "Load\nvalues";
-const char sString_Store[] PROGMEM = "Store\nvalues";
+const char sString_LoadValues[] PROGMEM = "Load\nvalues";
+const char sString_StoreValues[] PROGMEM = "Store\nvalues";
+const char sString_Load[] PROGMEM = "Load";
+const char sString_Store[] PROGMEM = "Store";
 const char sString_LedOn[] PROGMEM = "LED On";
 const char sString_LedOff[] PROGMEM = "LED Off";
 const char sString_On[] PROGMEM = "On";
 const char sString_Off[] PROGMEM = "Off";
+const char sString_ButtonAutorepeat[] PROGMEM = "Auto\nrepeat"; // 2 line text
+const char sString_ButtonResetValues[] PROGMEM = "Reset EEPROM\nvalues";
+const char sString_ButtonSetToneState[] PROGMEM = "Set tone\nstate";
+const char sString_ButtonSpeak[] PROGMEM = "Speak\nvalues";
 const char sString_Button1[] PROGMEM = "Button_1";
 const char sString_Button2[] PROGMEM = "Button_2";
 const char sString_Button3[] PROGMEM = "Button_3";
@@ -137,21 +197,19 @@ struct ButtonStaticInfoStruct {
     const char *ButtonTextForValueTrue; // if not 0 | NULL | nullptr a Red/Green toggle button is created
 };
 
-/********************
- *     COMMON
- ********************/
-#if !defined(SLIDER_AND_BUTTON_START_Y)
-#define SLIDER_AND_BUTTON_START_Y   BUTTON_HEIGHT_6
-#endif
-#if !defined(SLIDER_AND_BUTTON_DELTA_Y)
-#define SLIDER_AND_BUTTON_DELTA_Y   (2 * SLIDER_BAR_WIDTH)
-#endif
-
 void initSlidersAndButtons(const SliderStaticInfoStruct *aLeftSliderStaticPGMInfoPtr,
         const SliderStaticInfoStruct *aRightSliderStaticPGMInfoPtr);
 void drawSlidersAndButtons(void);
 uint8_t copyPGMStringStoredInPGMVariable(char *aStringBuffer, void *aPGMStringPtrStoredInPGMVariable);
+#if defined(EEMEM)
+void initLoadAndStoreButtons();
+void displayCurrentEEPROMSetupNumber();
 void storeSliderValuesToEEPROM();
-void loadSliderValuesFromEEPROM();
+void loadSliderValuesFromEEPROMAndDisplay();
+#else
+// Dummy for CPU without EEprom
+void storeSliderValuesToEEPROM(){};
+void loadSliderValuesFromEEPROM(){};
+#endif
 
 #endif // _MANY_SLIDER_AND_BUTTONS_HELPER_H

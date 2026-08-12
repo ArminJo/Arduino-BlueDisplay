@@ -106,6 +106,7 @@ void BlueDisplay::resetLocal() {
  * This event sets mCurrentDisplaySize and mHostUnixTimestamp and in turn calls the ConnectCallback as well as the RedrawCallback.
  *
  * Wait CONNECTIOM_TIMEOUT_MILLIS (1500) ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
+ * !!! => Introduces up to 1.5 seconds delay (BD_CONNECTION_TIMEOUT_MILLIS) !!!
  *
  * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth is just enabled here,
  * but the android app (host) is not manually (re)connected to us, so we are most likely not connected here.
@@ -125,8 +126,7 @@ void BlueDisplay::resetLocal() {
  * since connect and reorientation event also calls the redraw callback.
  *
  * Usage:
- *  uint16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &drawGui);
- *  Introduces up to 1.5 seconds delay (CONNECTIOM_TIMEOUT_MILLIS)
+ *  uint_fast16_t tConnectDurationMillis = BlueDisplay1.initCommunication(&initDisplay, &drawGui);
  *
  * @return The milliseconds used to connect including the time the user provided connect handler requires, 0 if no connection was made
  */
@@ -147,11 +147,11 @@ uint_fast16_t BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*
     clearSerialInputBuffer();
 #endif
 
-//    return requestMaxCanvasSizeBlockingWait(CONNECTIOM_TIMEOUT_MILLIS); // this call costs 14 bytes
+//    return requestMaxCanvasSizeBlockingWait(BD_CONNECTION_TIMEOUT_MILLIS); // this call costs 14 bytes
 // This results in a data event, which sends size and timestamp
     requestMaxCanvasSize();
 
-    for (uint_fast16_t i = 0; i < CONNECTIOM_TIMEOUT_MILLIS; i += 10) {
+    for (uint_fast16_t i = 0; i < BD_CONNECTION_TIMEOUT_MILLIS; i += 10) {
         /*
          * Wait CONNECTIOM_TIMEOUT_MILLIS ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
          * Time measured is between 50 and 150 ms (or mostly between 80 and 120) for Bluetooth.
@@ -170,6 +170,7 @@ uint_fast16_t BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*
 
 /*
  * Call with BlueDisplay1.initCommunication(&Serial, &initDisplay, ...);
+ * !!! => Introduces up to 1.5 seconds delay (BD_CONNECTION_TIMEOUT_MILLIS) !!!
  */
 #if defined(ARDUINO)
 #  if defined(__AVR__)

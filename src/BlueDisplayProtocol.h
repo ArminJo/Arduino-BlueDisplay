@@ -270,7 +270,6 @@ struct BluetoothEvent {
 
 #define FUNCTION_PLAY_TONE                          0x0F
 
-
 /**********************
  * Display functions
  *********************/
@@ -352,6 +351,18 @@ struct BluetoothEvent {
 #define FUNCTION_BUTTON_DEACTIVATE_ALL              0x49
 #define FUNCTION_BUTTON_GLOBAL_SETTINGS             0x4A
 #define FUNCTION_BUTTON_DISABLE_AUTOREPEAT_UNTIL_END_OF_TOUCH 0x4B  // 2/2023 not yet implemented
+
+// Flags for BUTTON_GLOBAL_SETTINGS
+#define FLAG_BUTTON_GLOBAL_USE_DOWN_EVENTS_FOR_BUTTONS  0x00 // Default
+#define FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS    0x01 // If swipe can start on a button, you require this.
+#define FLAG_BUTTON_GLOBAL_SET_TOUCH_TONE               0x02 // Beep on button touch, TONE_CDMA_KEYPAD_VOLUME_KEY_LITE (89) is default tone
+#define FLAG_BUTTON_GLOBAL_SET_TOUCH_TONE_STATE         0x03
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_DISABLED         0
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_INDIVIDUAL       1
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_FORCE_ENABLED    2
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_DEFAULT          BUTTON_GLOBAL_TOUCH_TONE_STATE_INDIVIDUAL
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_MIN              BUTTON_GLOBAL_TOUCH_TONE_STATE_DISABLED
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_MAX              BUTTON_GLOBAL_TOUCH_TONE_STATE_FORCE_ENABLED
 
 /*
  * Functions with variable data size for button

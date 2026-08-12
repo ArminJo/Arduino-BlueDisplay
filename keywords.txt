@@ -111,7 +111,7 @@ getTextAscendMinusDescend	KEYWORD2
 getFontScaleFactorFromTextSize	KEYWORD2
 
 # Button and slider stuff from BlueDisplay.h
-clearDisplayAndDisableButtonsAndSliders	KEYWORD2
+clearDisplayArea	KEYWORD2
 
 # from BDButton.h
 resetAllButtons	KEYWORD2

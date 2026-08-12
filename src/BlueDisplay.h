@@ -40,10 +40,10 @@
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
-#define VERSION_BLUE_DISPLAY "5.1.1"
+#define VERSION_BLUE_DISPLAY "5.2.0"
 #define VERSION_BLUE_DISPLAY_MAJOR 5
-#define VERSION_BLUE_DISPLAY_MINOR 1
-#define VERSION_BLUE_DISPLAY_PATCH 1
+#define VERSION_BLUE_DISPLAY_MINOR 2
+#define VERSION_BLUE_DISPLAY_PATCH 0
 // The change log is at the bottom of the file
 
 /*
@@ -53,7 +53,7 @@
 #define VERSION_HEX_VALUE(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
 #define VERSION_BLUE_DISPLAY_HEX  VERSION_HEX_VALUE(VERSION_BLUE_DISPLAY_MAJOR, VERSION_BLUE_DISPLAY_MINOR, VERSION_BLUE_DISPLAY_PATCH)
 
-#define CONNECTIOM_TIMEOUT_MILLIS   1500    // Timeout for initCommunication() attempts to connect to BD host
+#define BD_CONNECTION_TIMEOUT_MILLIS   1500    // Timeout for initCommunication() attempts to connect to BD host
 #define HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_USB_CONNECTION   50 // without, the USB connection to my Samsung SM-T560 skips some bytes :-(
 #define HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_BT_CONNECTION   200 // without, the BT connection to my Nexus 7 breaks after a few seconds :-(
 
@@ -474,7 +474,9 @@ float getCPUTemperature(void);
 //#endif
 
 /*
- * Version 5.1.1
+ * Version 5.2.0
+ * - New function setButtonsGlobalTouchToneState().
+ * - Removed clearDisplayAndDisableButtonsAndSliders(), is now included in .clearDisplay(). Added clearDisplayArea().
  *
  * Version 5.1.0
  * - Renamed function names and variables from GridOrLabelX to XGridOrLabel and GridOrLabelY to YGridOrLabel.

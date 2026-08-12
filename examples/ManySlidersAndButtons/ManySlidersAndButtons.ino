@@ -1,12 +1,12 @@
 /*
  * ManySlidersAndButtons.cpp
  *
- * Example for 8 / 16 sliders and 8 buttons
+ * Example for 8 / 16 sliders and 6 user and 4 setup load / store buttons
  * to control 8 / 16 Parameter values and 6 functions of an arduino application.
  * Buttons can be Red/Green toggle buttons like the 3. one.
  * Includes the implementation of a 4 value slider (PATTERN_SLIDER) with user provided text value.
  *
- *  Copyright (C) 2025  Armin Joachimsmeyer
+ *  Copyright (C) 2025-2026  Armin Joachimsmeyer
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *
@@ -29,8 +29,11 @@
 
 #define NUMBER_OF_LEFT_SLIDERS      8
 #define NUMBER_OF_RIGHT_SLIDERS     6
-#define NUMBER_OF_BUTTONS           7
-#define DISPLAY_BACKGROUND_COLOR COLOR16_WHITE
+#define NUMBER_OF_BUTTONS           6
+#if defined(EEMEM) && !defined(NUMBER_OF_SETUPS)
+#define NUMBER_OF_SETUPS            2 // 1 requires 140 bytes less than 2 regular buttons for load and store
+#endif
+#define DISPLAY_BACKGROUND_COLOR    COLOR16_WHITE
 
 #define  CAPTION_TEXT_SIZE          16
 
@@ -52,8 +55,15 @@
 #define ONLY_CONNECT_EVENT_REQUIRED       // Disables reorientation, redraw and SensorChange events
 //#define BD_USE_SIMPLE_SERIAL              // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 //#define BD_USE_USB_SERIAL                 // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
+#define OMIT_BD_DEPRECATED_FUNCTIONS
 #include "BlueDisplay.hpp"
 
+/*
+ * Settings for slider size and setup button position
+ * Must be before #include "ManySlidersAndButtonsHelper.h"
+ */
+//#define SLIDER_BAR_LENGTH           100
+//#define LOAD_STORE_BUTTONS_POSITION_TOP
 #include "ManySlidersAndButtonsHelper.h"
 
 /********************
@@ -150,17 +160,15 @@ static const SliderStaticInfoStruct sRightSliderStaticInfoArray[NUMBER_OF_RIGHT_
 // PROGMEM text strings for Test button
 const char sString_Test[] PROGMEM = "Test";
 
+uint8_t tGlobalButtonTouchToneState = BUTTON_GLOBAL_TOUCH_TONE_STATE_DEFAULT;
+
 /**
  * An enum consisting of indexes of all buttons, used in doButton() to determine the individual function for each button.
  * !!!Must be the same order as used in sButtonsTextArray!!!
  */
 typedef enum {
-    LOAD_BUTTON = 0, STORE_BUTTON, LED_BUTTON, TEST_BUTTON, BUTTON_AUTOREPEAT, BUTTON_SPEAK, BUTTON_7, BUTTON_8
+    LED_BUTTON = 0, TEST_BUTTON, BUTTON_AUTOREPEAT, BUTTON_SPEAK, BUTTON_TONE, BUTTON_RESET
 } button_Index_t;
-
-// Button text must be declared as PROGMEM separately for AVR, and cannot be used directly in initialization below
-const char sString_ButtonAutorepeat[] PROGMEM = "Auto\nrepeat"; // 2 line text
-const char sString_ButtonSpeak[] PROGMEM = "Speak"; // 2 line text
 
 /*
  * PROGMEM array of PROGMEM structures for buttons
@@ -170,38 +178,42 @@ static const ButtonStaticInfoStruct sButtonStaticInfoStructArray[NUMBER_OF_BUTTO
 #else
         static const ButtonStaticInfoStruct sButtonStaticInfoStructArray[NUMBER_OF_BUTTONS] = {
 #endif
-        LOAD_BUTTON, sString_Load, nullptr, /*Load values*/
-        STORE_BUTTON, sString_Store, nullptr /*Store values*/
-#if NUMBER_OF_BUTTONS > 2
-        , 0, sString_LedOff, sString_LedOn /* This creates a Red/Green toggle button */
+
+#if NUMBER_OF_BUTTONS > 0
+        0, sString_LedOff, sString_LedOn /* This creates a Red/Green toggle button */
 #endif
-#if NUMBER_OF_BUTTONS > 3
+#if NUMBER_OF_BUTTONS > 1
         , TEST_BUTTON, sString_Test, nullptr
 #endif
-#if NUMBER_OF_BUTTONS > 4
+#if NUMBER_OF_BUTTONS > 2
         , BUTTON_AUTOREPEAT, sString_ButtonAutorepeat, nullptr /* Autorepeat timing must be set manually in initDisplay() */
 #endif
-#if NUMBER_OF_BUTTONS > 5
+#if NUMBER_OF_BUTTONS > 3
         , BUTTON_SPEAK, sString_ButtonSpeak, nullptr
 #endif
-#if NUMBER_OF_BUTTONS > 6
-        , BUTTON_7, sString_Button7, nullptr
+#if NUMBER_OF_BUTTONS > 4
+        , BUTTON_TONE, sString_ButtonSetToneState, nullptr
 #endif
-#if NUMBER_OF_BUTTONS > 7
-        , BUTTON_8, sString_Button8, nullptr
+#if NUMBER_OF_BUTTONS > 5
+#if defined(EEMEM)
+        , BUTTON_RESET, sString_ButtonResetValues, nullptr
+#else
+        , BUTTON_RESET, sString_Button6, nullptr
+#endif
 #endif
         };
 
 /*
- * These 2 functions are required by ManySlidersAndButtonsHelper.hpp
+ * These 3 functions are required by ManySlidersAndButtonsHelper.hpp
  */
 void doSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue);
-void doPatternSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue);
-void doButton(BDButton *aTheTouchedButton, int16_t aValue);
+void doButton(BDButton *aTheTouchedButton, int16_t aValue); // handler for all buttons except load and store buttons
+void SliderValueChangeCallback();
 #include "ManySlidersAndButtonsHelper.hpp"
 
 void initDisplay(void);
 void drawDisplay(void);
+void doPatternSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue);
 void handleAutoRepeat();
 void TestNewSliderAndButton();
 void doTestSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue);
@@ -247,7 +259,8 @@ void loop() {
  */
 void initDisplay(void) {
 // Initialize display size and flags
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE,
+    DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
     initSlidersAndButtons(sLeftSliderStaticInfoArray, sRightSliderStaticInfoArray, sButtonStaticInfoStructArray);
     // Here slider values are loaded from EEPROM
@@ -326,6 +339,11 @@ void doSlider(BDSlider *aTheTouchedSlider, int16_t aSliderValue) {
 #endif
 }
 
+void SliderValueChangeCallback() {
+    doPatternSlider(&sLeftSliderArray[PATTERN_SLIDER], sLeftSliderValues[PATTERN_SLIDER]); // Print value string after drawing slider
+    BlueDisplay1.setScreenBrightness(sLeftSliderValues[BRIGHTNESS_SLIDER]);
+}
+
 /*
  * Here we do not handle the pattern slider in the default callback,
  * but use a special callback for it to make code more readable
@@ -375,15 +393,22 @@ void handleSpeak() {
     sSliderIndex++;
 }
 
+void handleButtonToneState() {
+    tGlobalButtonTouchToneState++;
+    if(tGlobalButtonTouchToneState > BUTTON_GLOBAL_TOUCH_TONE_STATE_MAX) {
+        tGlobalButtonTouchToneState = BUTTON_GLOBAL_TOUCH_TONE_STATE_MIN; // 0
+    }
+    BDButton::setButtonsGlobalTouchToneState(tGlobalButtonTouchToneState);
+}
+
+#if defined(EEMEM)
+void handleResetEEPROMValues() {
+    eeprom_update_byte(&EEPROMSetupIndex, 0xFF);
+}
+#endif
+
 void doButton(BDButton *aTheTouchedButton, int16_t aValue) {
     switch (aTheTouchedButton->mButtonIndex) {
-    case LOAD_BUTTON:
-        loadSliderValuesFromEEPROM();
-        doPatternSlider(&sLeftSliderArray[PATTERN_SLIDER], sLeftSliderValues[PATTERN_SLIDER]); // Print value string after drawing slider
-        break;
-    case STORE_BUTTON:
-        storeSliderValuesToEEPROM();
-        break;
     case LED_BUTTON:
         digitalWrite(LED_BUILTIN, aValue); // Toggle LED
         break;
@@ -396,6 +421,14 @@ void doButton(BDButton *aTheTouchedButton, int16_t aValue) {
     case BUTTON_SPEAK:
         handleSpeak();
         break;
+    case BUTTON_TONE:
+        handleButtonToneState();
+        break;
+#if defined(EEMEM)
+    case BUTTON_RESET:
+        handleResetEEPROMValues();
+        break;
+#endif
     default:
         BlueDisplay1.debug("Pressed button ", (uint8_t) (aTheTouchedButton->mButtonIndex + 1)); // Start with button number 1
         break;

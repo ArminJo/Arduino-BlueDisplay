@@ -3,7 +3,7 @@
  *
  * Implementation of the button client stub for the Android BlueDisplay app.
  *
- *  Copyright (C) 2015-2025  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -479,14 +479,21 @@ void BDButton::setGlobalFlags(uint16_t aFlags) {
 }
 
 /*
- * aToneVolume: value in percent
+ * @param aTouchToneGlobalState one of BUTTON_GLOBAL_TOUCH_TONE_STATE_DISABLED, BUTTON_GLOBAL_TOUCH_TONE_STATE_INDIVIDUAL, BUTTON_GLOBAL_TOUCH_TONE_STATE_FORCE_ENABLED
  */
-void BDButton::setButtonsTouchTone(uint8_t aToneIndex, uint16_t aToneDuration) {
-    sendUSARTArgs(FUNCTION_BUTTON_GLOBAL_SETTINGS, 3, FLAG_BUTTON_GLOBAL_SET_BEEP_TONE, aToneIndex, aToneDuration);
+void BDButton::setButtonsGlobalTouchToneState(uint8_t aGlobalTouchToneState) {
+    sendUSARTArgs(FUNCTION_BUTTON_GLOBAL_SETTINGS, 2, FLAG_BUTTON_GLOBAL_SET_TOUCH_TONE_STATE, aGlobalTouchToneState);
 }
 
-void BDButton::setButtonsTouchTone(uint8_t aToneIndex, uint16_t aToneDuration, uint8_t aToneVolume) {
-    sendUSARTArgs(FUNCTION_BUTTON_GLOBAL_SETTINGS, 4, FLAG_BUTTON_GLOBAL_SET_BEEP_TONE, aToneIndex, aToneDuration, aToneVolume);
+/*
+ * aToneVolume: value in percent
+ */
+void BDButton::setButtonsGlobalTouchTone(uint8_t aToneIndex, uint16_t aToneDuration) {
+    sendUSARTArgs(FUNCTION_BUTTON_GLOBAL_SETTINGS, 3, FLAG_BUTTON_GLOBAL_SET_TOUCH_TONE, aToneIndex, aToneDuration);
+}
+
+void BDButton::setButtonsGlobalTouchTone(uint8_t aToneIndex, uint16_t aToneDuration, uint8_t aToneVolume) {
+    sendUSARTArgs(FUNCTION_BUTTON_GLOBAL_SETTINGS, 4, FLAG_BUTTON_GLOBAL_SET_TOUCH_TONE, aToneIndex, aToneDuration, aToneVolume);
 }
 
 void BDButton::playFeedbackTone() {

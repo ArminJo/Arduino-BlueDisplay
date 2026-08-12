@@ -6,7 +6,7 @@
  *  Values are stored as 8 bits with 0 = 400 ppm, 1=405, 2=410, 20=500, 60=700, 80=800, 100=900, 120=1000, 200=1400,
  *  Each 5 minutes the minimum of the snooped values is stored. I.e. 1 hour has 12 values, 72-> 6 hours, 288->1 day, 1152->4 days, 1440->5 days
  *
- *  DISPLAY_WIDTH is defined as 3.3/2 of CHART_WIDTH and CHART_WIDTH is POWER_ARRAY_SIZE / 2.
+ *  REMOTE_DISPLAY_WIDTH is defined as 3.3/2 of CHART_WIDTH and CHART_WIDTH is POWER_ARRAY_SIZE / 2.
  *
  *  Copyright (C) 2024-2026  Armin Joachimsmeyer
  *
@@ -47,13 +47,13 @@ void getTimeEventCallbackForLogger(uint8_t aSubcommand, uint8_t aByteInfo, uint1
 #endif
 
 /*
- * DISPLAY_WIDTH is defined as 3.3/2 of CHART_WIDTH
+ * REMOTE_DISPLAY_WIDTH is defined as 3.3/2 of CHART_WIDTH
  * Scale the screen such, that this fit horizontally.
  * Border - YLabels - Chart with CO2_ARRAY_SIZE / 2 - Border - Buttons for 6 big characters - Border
  * Values for CO2_ARRAY_SIZE = 1152
  */
 #define CHART_WIDTH     (CO2_ARRAY_SIZE / 2)            // 576
-#define DISPLAY_WIDTH   ((CO2_ARRAY_SIZE * 33) / 40)    // 950,4
+#define REMOTE_DISPLAY_WIDTH   ((CO2_ARRAY_SIZE * 33) / 40)    // 950,4
 #define BASE_TEXT_SIZE  (CO2_ARRAY_SIZE / 40)           // 1152 / 40 = 28.8
 #define BASE_TEXT_SIZE_2  (CO2_ARRAY_SIZE / 20)         // 1152 / 20 = 57.6
 #define BASE_TEXT_SIZE_1_5  ((CO2_ARRAY_SIZE * 3) / 80) // 43.2
@@ -385,11 +385,11 @@ void initDisplay(void) {
     Serial.println(F("InitDisplay"));
 #endif
 
-    uint16_t tDisplayHeight = (DISPLAY_WIDTH * BlueDisplay1.getHostDisplayHeight()) / BlueDisplay1.getHostDisplayWidth();
-    if (tDisplayHeight < ((float) DISPLAY_WIDTH / 1.75)) {
-        tDisplayHeight = (float) DISPLAY_WIDTH / 1.75;
+    uint16_t tDisplayHeight = (REMOTE_DISPLAY_WIDTH * BlueDisplay1.getHostDisplayHeight()) / BlueDisplay1.getHostDisplayWidth();
+    if (tDisplayHeight < ((float) REMOTE_DISPLAY_WIDTH / 1.75)) {
+        tDisplayHeight = (float) REMOTE_DISPLAY_WIDTH / 1.75;
     }
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH, tDisplayHeight);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, REMOTE_DISPLAY_WIDTH, tDisplayHeight);
 
 // set layout variables;
     int tDisplayHeightEighth = tDisplayHeight / 8;

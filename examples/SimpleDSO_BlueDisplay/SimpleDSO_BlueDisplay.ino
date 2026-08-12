@@ -65,7 +65,7 @@
  *      "DC / AC" Button is only visible for these channels having a AC/DC switch/input at configurations ATTENUATOR_TYPE_FIXED_ATTENUATOR + ATTENUATOR_TYPE_ACTIVE_ATTENUATOR
  *
  *
- *  Copyright (C) 2015-2025  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-Simple-DSO https://github.com/ArminJo/Arduino-Simple-DSO.
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
@@ -164,21 +164,27 @@
  * Settings to configure the BlueDisplay library and to reduce its size
  */
 #define DISPLAY_HEIGHT   256 // We use 8 bit resolution and have 256 different analog values
-#define DISPLAY_WIDTH    320 // Use the size of the local LCD screens available
+#define REMOTE_DISPLAY_WIDTH    320 // Use the size of the local LCD screen available
 //#define BLUETOOTH_BAUD_RATE BAUD_115200  // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
 //#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 //#define DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events.
 #define DO_NOT_NEED_SPEAK_EVENTS            // Disables SpeakingDone event handling. Saves up to 54 bytes program memory and 18 bytes RAM.
 //#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
+#define OMIT_BD_DEPRECATED_FUNCTIONS
 #define BD_USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 #if !defined(BD_USE_SIMPLE_SERIAL)
 #error SimpleDSO works only with BD_USE_SIMPLE_SERIAL activated, since the serial interrupts kill the DSO timing!
 #endif
 #include "BlueDisplay.hpp"
 
+#if !(defined(AVR) || defined(STM32F10X) || defined(STM32F30X))
+#define NO_FREQUENCY_GENERATOR_PAGE
+#endif
 #include "SimpleDSO_BlueDisplay.h"
 #include "LocalDisplay/digitalWriteFast.h"
+#if !defined(NO_FREQUENCY_GENERATOR_PAGE)
 #include "FrequencyGeneratorPage.hpp" // include sources
+#endif
 #include "TouchDSOGui.hpp" // include sources
 #include "ADCUtils.hpp" // for getVCCVoltage()
 
@@ -366,7 +372,7 @@ void initTimer2(void);
 void initDisplay(void) {
     BlueDisplay1.setFlagsAndSize(
             BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE | BD_FLAG_LONG_TOUCH_ENABLE | BD_FLAG_ONLY_TOUCH_MOVE_DISABLE
-                    | BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+                    | BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE, REMOTE_DISPLAY_WIDTH, DISPLAY_HEIGHT);
     BlueDisplay1.setCharacterMapping(0xD1, 0x21D1); // Ascending in UTF16 - for printInfo()
     BlueDisplay1.setCharacterMapping(0xD2, 0x21D3); // Descending in UTF16 - for printInfo()
     BlueDisplay1.setCharacterMapping(0xD4, 0x2227); // UP (logical AND) in UTF16
@@ -376,7 +382,9 @@ void initDisplay(void) {
     initDSOGUI();
 #if !defined(__AVR_ATmega32U4__)
     // no frequency page in order to save space for leonardo
+#  if !defined(NO_FREQUENCY_GENERATOR_PAGE)
     initFrequencyGeneratorPage();
+#  endif
 #endif
 }
 
@@ -589,9 +597,11 @@ void __attribute__((noreturn)) loop(void) {
                         } else if (DisplayControl.DisplayPage == DSO_PAGE_SETTINGS) {
                             // refresh buttons
                             drawDSOSettingsPage();
+#if !defined(NO_FREQUENCY_GENERATOR_PAGE)
                         } else if (DisplayControl.DisplayPage == DSO_PAGE_FREQUENCY) {
                             // refresh buttons
                             drawFrequencyGeneratorPage();
+#endif
 #if !defined(__AVR__)
                         } else if (DisplayControl.DisplayPage == DSO_PAGE_MORE_SETTINGS) {
                             // refresh buttons
@@ -733,6 +743,7 @@ void __attribute__((noreturn)) loop(void) {
                     DisplayControl.DisplayPage = DSO_PAGE_CHART;
                     redrawDisplay();
                 }
+#if !defined(NO_FREQUENCY_GENERATOR_PAGE)
             } else if (DisplayControl.DisplayPage == DSO_PAGE_FREQUENCY) {
                 if (sBackButtonPressed) {
                     sBackButtonPressed = false;
@@ -743,6 +754,7 @@ void __attribute__((noreturn)) loop(void) {
                     //not required here, because is contains only checkAndHandleEvents()
                     // loopFrequencyGeneratorPage();
                 }
+#endif
             }
         } // BlueDisplay1.mBlueDisplayConnectionEstablished
 
@@ -760,8 +772,8 @@ void __attribute__((noreturn)) loop(void) {
  */
 void startAcquisition(void) {
     ADMUX = MeasurementControl.ADMUXChannel | MeasurementControl.ADCReferenceShifted; // it may be overwritten by getVoltage()
-    DataBufferControl.AcquisitionSize = DISPLAY_WIDTH;
-    DataBufferControl.DataBufferEndPointer = &DataBufferControl.DataBuffer[DISPLAY_WIDTH - 1];
+    DataBufferControl.AcquisitionSize = REMOTE_DISPLAY_WIDTH;
+    DataBufferControl.DataBufferEndPointer = &DataBufferControl.DataBuffer[REMOTE_DISPLAY_WIDTH - 1];
     if (MeasurementControl.StopRequested) {
         DataBufferControl.AcquisitionSize = DATABUFFER_SIZE;
         DataBufferControl.DataBufferEndPointer = &DataBufferControl.DataBuffer[DATABUFFER_SIZE - 1];
@@ -992,14 +1004,14 @@ void acquireDataFast(void) {
          * 10-50us range. Data is stored directly as 16 bit value and not processed.
          * => we have only half number of samples (tLoopCount)
          */
-        if (DATABUFFER_SIZE < DISPLAY_WIDTH * 2) {
+        if (DATABUFFER_SIZE < REMOTE_DISPLAY_WIDTH * 2) {
             // In this configuration (for testing etc.) we have not enough space
-            // for DISPLAY_WIDTH 16 bit-values which need (DISPLAY_WIDTH * 2) bytes.
+            // for REMOTE_DISPLAY_WIDTH 16 bit-values which need (REMOTE_DISPLAY_WIDTH * 2) bytes.
             // The compiler will remove the code if the configuration does not hold ;-)
             tLoopCount = DATABUFFER_SIZE / 2;
-        } else if (tLoopCount > DISPLAY_WIDTH) {
+        } else if (tLoopCount > REMOTE_DISPLAY_WIDTH) {
             // Last measurement before stop, fill the whole buffer with 16 bit values
-            // During running measurements we know here (see if above) that we can get DISPLAY_WIDTH 16 bit values
+            // During running measurements we know here (see if above) that we can get REMOTE_DISPLAY_WIDTH 16 bit values
             tLoopCount = tLoopCount / 2;
         }
         *DataPointerFast++ = tUValue.byte.LowByte;
@@ -1094,7 +1106,7 @@ void acquireDataFast(void) {
     ADCSRA &= ~_BV(ADATE); // Disable auto-triggering
     MeasurementControl.RawValueMax = tValueMax;
     MeasurementControl.RawValueMin = tValueMin;
-    if (tIndex <= TIMEBASE_INDEX_ULTRAFAST_MODES && tLoopCount > DISPLAY_WIDTH) {
+    if (tIndex <= TIMEBASE_INDEX_ULTRAFAST_MODES && tLoopCount > REMOTE_DISPLAY_WIDTH) {
         // compensate for half sample count in last measurement in ultra fast mode
         tIntegrateValue *= 2;
         // set remaining of buffer to zero
@@ -1768,7 +1780,7 @@ bool scrollChart(int aScrollAmount) {
             // Only half of data buffer is filled
             tMaxAddress = &DataBufferControl.DataBuffer[DATABUFFER_SIZE / 2];
         }
-        tMaxAddress = tMaxAddress - (DISPLAY_WIDTH / DisplayControl.XScale);
+        tMaxAddress = tMaxAddress - (REMOTE_DISPLAY_WIDTH / DisplayControl.XScale);
         if (DataBufferControl.DataBufferDisplayStart > tMaxAddress) {
             DataBufferControl.DataBufferDisplayStart = tMaxAddress;
             isError = true;
@@ -1818,11 +1830,12 @@ void drawRemainingDataBufferValues(void) {
     uint8_t tValueByte;
     uint16_t tBufferIndex = DataBufferControl.DataBufferNextDrawIndex;
 
-    while (DataBufferControl.DataBufferNextDrawPointer < DataBufferControl.DataBufferNextInPointer && tBufferIndex < DISPLAY_WIDTH) {
+    while (DataBufferControl.DataBufferNextDrawPointer < DataBufferControl.DataBufferNextInPointer
+            && tBufferIndex < REMOTE_DISPLAY_WIDTH) {
         /*
          * clear old line
          */
-        if (tBufferIndex < DISPLAY_WIDTH - 1) {
+        if (tBufferIndex < REMOTE_DISPLAY_WIDTH - 1) {
             // fetch next value and clear line in advance
             tValueByte = DataBufferControl.DisplayBuffer[tBufferIndex];
             tNextValueByte = DataBufferControl.DisplayBuffer[tBufferIndex + 1];
@@ -1835,7 +1848,7 @@ void drawRemainingDataBufferValues(void) {
         tValueByte = *DataBufferControl.DataBufferNextDrawPointer++;
         DataBufferControl.DisplayBuffer[tBufferIndex] = tValueByte;
 
-        if (tBufferIndex != 0 && tBufferIndex <= DISPLAY_WIDTH - 1) {
+        if (tBufferIndex != 0 && tBufferIndex <= REMOTE_DISPLAY_WIDTH - 1) {
             // get last value and draw line
             tLastValueByte = DataBufferControl.DisplayBuffer[tBufferIndex - 1];
             BlueDisplay1.drawLineFastOneX(tBufferIndex - 1, tLastValueByte, tValueByte, COLOR_DATA_RUN);
@@ -2118,7 +2131,7 @@ void printVCCAndTemperature(void) {
 
         snprintf_P(sStringBuffer, sizeof(sStringBuffer), PSTR("%s volt %s\xB0" "C"), &sStringBuffer[30], &sStringBuffer[40]); // \xB0 is degree character
         BlueDisplay1.drawText(BUTTON_WIDTH_3_POS_2, SETTINGS_PAGE_INFO_Y, sStringBuffer, TEXT_SIZE_11, COLOR16_BLACK,
-                COLOR_BACKGROUND_DSO);
+        COLOR_BACKGROUND_DSO);
     }
 }
 
@@ -2278,13 +2291,21 @@ uint8_t changeTimeBaseValue(int8_t aChangeIndexValue) {
     return IsError;
 }
 
-uint8_t getDisplayFromRawInputValue(uint16_t aRawValue) {
-    aRawValue -= MeasurementControl.OffsetValue;
-    aRawValue >>= MeasurementControl.ShiftValue;
-    if (DISPLAY_VALUE_FOR_ZERO > aRawValue) {
-        return (DISPLAY_VALUE_FOR_ZERO - aRawValue);
+uint8_t getDisplayFromRawInputValue(uint16_t aAdcRawValue) {
+// Adjust with display range offset
+    if (aAdcRawValue < MeasurementControl.OffsetValue) {
+        return DISPLAY_VALUE_FOR_ZERO;
+    }
+    aAdcRawValue -= MeasurementControl.OffsetValue;
+
+// Convert raw to display value
+    aAdcRawValue >>= MeasurementControl.ShiftValue;
+
+// Invert raw value to display value and clip value
+    if (DISPLAY_VALUE_FOR_ZERO > aAdcRawValue) {
+        return (DISPLAY_VALUE_FOR_ZERO - aAdcRawValue);
     } else {
-        return 0;
+        return DISPLAY_VALUE_MAX;
     }
 }
 

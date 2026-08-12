@@ -377,7 +377,8 @@ On Arduino MEGA 2560, TX1 is used, so no diode is needed.
 
 # Revision History
 ### Version 5.2.0
-- Removed `clearDisplayAndDisableButtonsAndSliders()`, is now included in `clearDisplay()`. Added `clearDisplayArea()`.
+- New function `setButtonsGlobalTouchToneState()`.
+- Removed `clearDisplayAndDisableButtonsAndSliders()`, is now included in `.clearDisplay()`. Added `clearDisplayArea()`.
 
 ### Version 5.1.0
 - Renamed function names and variables from `GridOrLabelX` to `XGridOrLabel` and `GridOrLabelY` to `YGridOrLabel`.

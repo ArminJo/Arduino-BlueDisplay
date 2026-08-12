@@ -405,7 +405,7 @@ void createGameOfLifeGUI() {
             COLOR16_BLUE, COLOR_DEMO_BACKGROUND);
 
     TouchButtonGameOfLifeDying.init(0, BUTTON_HEIGHT_4_LINE_4, BUTTON_WIDTH_2, BUTTON_HEIGHT_4, 0, F("Show\ndying"), TEXT_SIZE_22,
-            FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, GameOfLifeShowDying, &doGameOfLifeDying);
+            FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE, GameOfLifeShowDying, &doGameOfLifeDying);
 }
 
 void showGameOfLifeSettings(void) {

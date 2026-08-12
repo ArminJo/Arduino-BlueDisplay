@@ -59,7 +59,7 @@ bool BDSlider::operator!=(const BDSlider &aSlider) {
 
 #if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
 /*
- * Deprecated function because of "uint16_t" parameter of aOnChangeHandler function pointer. The parameter is now "int16_t".
+ * Deprecated function because of "uint16_t" parameter of aOnChangeHandler function pointer. The parameter for aOnChangeHandler() is now "int16_t".
  */
 void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth, int16_t aBarLength, int16_t aThresholdValue,
         int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags,

@@ -53,6 +53,7 @@
 //#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
 //#define BD_USE_SIMPLE_SERIAL                // Only for AVR! Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise.
 //#define BD_USE_USB_SERIAL                   // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection to your smartphone / tablet.
+#define OMIT_BD_DEPRECATED_FUNCTIONS
 #include "BlueDisplay.hpp"
 
 // This requires 1640 bytes program memory and even more in Arduino IDE, because the "-mrelax" linker option is not set there.

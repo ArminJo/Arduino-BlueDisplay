@@ -59,13 +59,13 @@
 #define FONT_8X12               // Font size used here
 #include "LocalHX8347DDisplay.hpp" // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
 #define DISPLAY_HEIGHT LOCAL_DISPLAY_HEIGHT // Use local size for whole application
-#define DISPLAY_WIDTH  LOCAL_DISPLAY_WIDTH
+#define REMOTE_DISPLAY_WIDTH  LOCAL_DISPLAY_WIDTH
 #include "GUIHelper.hpp"        // Must be included before LocalGUI. For TEXT_SIZE_11, getLocalTextSize() etc.
 #include "LocalGUI.hpp"         // Includes the sources for LocalTouchButton etc.
 #else
 #include "BlueDisplay.hpp"         // Includes the sources for LocalTouchButton etc.
 #define DISPLAY_HEIGHT 240 // Use same size as local display
-#define DISPLAY_WIDTH  320
+#define REMOTE_DISPLAY_WIDTH  320
 void initDisplay(void);
 #endif
 
@@ -208,7 +208,7 @@ void loop() {
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
 void initDisplay(void) {
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, REMOTE_DISPLAY_WIDTH, DISPLAY_HEIGHT);
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalTouchButton::createAllLocalButtonsAtRemote(); // Local buttons already exists, so recreate the remote ones
 #else

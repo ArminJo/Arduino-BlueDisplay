@@ -115,25 +115,23 @@ HardwareSerial MHZ19Serial(2);            // On ESP32 we do not require the Soft
 SoftwareSerial MHZ19Serial(MHZ19_RX_PIN, MHZ19_TX_PIN);    // Software Serial to MH-Z19 serial
 #endif
 
-#if !defined(USE_PARALLEL_2004_LCD) && !defined(USE_PARALLEL_1602_LCD) && !defined(USE_SERIAL_2004_LCD) && !defined(USE_SERIAL_1602_LCD)
-#define USE_PARALLEL_2004_LCD    // Use parallel 2004 LCD as default
-#endif
-
-#if defined(USE_PARALLEL_2004_LCD)
-#include <LiquidCrystal.h>
-LiquidCrystal myLCD(7, 8, 3, 4, 5, 6);
-//LiquidCrystal myLCD(2, 3, 4, 5, 6, 7);
-//LiquidCrystal myLCD(4, 5, 6, 7, 8, 9);
+/*
+ * Choose your display
+ */
+//#define USE_PARALLEL_2004_LCD // one of USE_PARALLEL_2004_LCD (default) and USE_SERIAL_2004_LCD
+//#define USE_SERIAL_2004_LCD
+#include "LCDBigNumbers.hpp" // Include sources for LCD big number generation
+#if defined(USE_PARALLEL_LCD)
+LiquidCrystal myLCD(7, 8, 3, 4, 5, 6); // Depends on your actual connections
+//LiquidCrystal myLCD(4, 5, 6, 7, 8, 9); // Sample connections starting at pin 4
 #else
 #define LCD_I2C_ADDRESS 0x27    // Default LCD address is 0x27 for a 20 chars and 4 line / 2004 display
-#define USE_SOFT_I2C_MASTER // Requires SoftI2CMaster.h + SoftI2CMasterConfig.h. Saves 2110 bytes program memory and 200 bytes RAM compared with Arduino Wire
-#include "LiquidCrystal_I2C.hpp"  // This defines USE_SOFT_I2C_MASTER, if SoftI2CMasterConfig.h is available. Use only the modified version delivered with this program!
-LiquidCrystal_I2C myLCD(LCD_I2C_ADDRESS, 20, 4);
+LiquidCrystal_I2C myLCD(LCD_I2C_ADDRESS, LCD_COLUMNS, LCD_ROWS); // LCD_COLUMNS and LCD_ROWS are set by LCDBigNumbers.hpp depending on the defined display
 #endif
+
 #define LCD_STRING_BUFFER_SIZE 6
 char sLCDStringBuffer[LCD_STRING_BUFFER_SIZE];
 
-#include "LCDBigNumbers.hpp" // Include sources for LCD big number generation
 LCDBigNumbers BigNumbersLCD(&myLCD, BIG_NUMBERS_FONT_3_COLUMN_4_ROWS_VARIANT_1); // Use 3x4 numbers, 1. variant
 
 void printErrorCode();

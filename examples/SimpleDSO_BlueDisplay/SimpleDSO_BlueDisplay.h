@@ -223,7 +223,7 @@ extern DisplayControlStruct DisplayControl;
  * Data buffer
  */
 struct DataBufferStruct {
-    uint8_t DisplayBuffer[DISPLAY_WIDTH];
+    uint8_t DisplayBuffer[REMOTE_DISPLAY_WIDTH];
     uint8_t *DataBufferNextInPointer;
     uint8_t *DataBufferNextDrawPointer; // pointer to DataBuffer - for draw-while-acquire mode
     uint16_t DataBufferNextDrawIndex; // index in DisplayBuffer - for draw-while-acquire mode
@@ -231,7 +231,7 @@ struct DataBufferStruct {
     uint8_t *DataBufferEndPointer;
     // Used to synchronize ISR with main loop
     bool DataBufferFull;
-    // AcqusitionSize is DISPLAY_WIDTH except on last acquisition before stop then it is DATABUFFER_SIZE
+    // AcqusitionSize is REMOTE_DISPLAY_WIDTH except on last acquisition before stop then it is DATABUFFER_SIZE
     uint16_t AcquisitionSize;
     // Pointer for horizontal scrolling
     uint8_t *DataBufferDisplayStart;
