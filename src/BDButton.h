@@ -37,8 +37,7 @@
 #include <stdint.h>
 
 #if defined(ARDUINO)
-#  if ! defined(ESP32)
-// For not AVR platforms this contains mapping defines (at least for STM32)
+#  if defined(AVR)
 #include <avr/pgmspace.h>
 #  endif
 #include "WString.h"    // for __FlashStringHelper
