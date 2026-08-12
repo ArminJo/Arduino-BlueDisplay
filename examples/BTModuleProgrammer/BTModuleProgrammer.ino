@@ -26,7 +26,7 @@
  * it may help to disconnect the Arduino RX from the HC-05 module TX pin temporarily.
  *
  *
- *  Copyright (C) 2014-2022  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2026  Armin Joachimsmeyer
  *
  *  This file is part of BlueDisplay.
  *  BlueDisplay is free software: you can redistribute it and/or modify
@@ -49,7 +49,7 @@
 
 SoftwareSerial BTModuleSerial(2, 3); // RX, TX - RX data is not reliable at 115200 baud if millis interrupt is not disabled
 
-#define VERSION_EXAMPLE "3.1"
+#define VERSION_EXAMPLE "3.2"
 
 // To enable JDY-31 programming, connect pin D4 to ground (or to pin D5)
 #define JDY_31_SELECT_PIN   4
@@ -314,15 +314,15 @@ bool setupHC_05() {
         sendWaitAndReceive("AT+ROLE");
 
         Serial.println();
-        Serial.println(F("Get current Cmode (0->connect to fixed bind address, 1->connect to all)"));
+        Serial.println(F("Get current master connection mode (0->connect to fixed / last MAC address, 1->connect to all)"));
         sendWaitAndReceive("AT+CMODE");
 
         Serial.println();
-        Serial.println(F("Get Bind address"));
+        Serial.println(F("Get master fixed MAC connection address"));
         sendWaitAndReceive("AT+BIND");
 
         Serial.println();
-        Serial.println(F("Get own Address"));
+        Serial.println(F("Get own MAC Address (98:d3:31:30:09:4f -> 98d3:31:30094f)"));
         sendWaitAndReceive("AT+ADDR");
         Serial.println();
 
@@ -399,6 +399,7 @@ bool setupJDY_31() {
     Serial.println(F("Setup JDY module."));
 // must start with sending "AT", sending "AT+BAUD" at start gives no response.
     sendWaitAndReceive("AT");
+    Serial.println(F("Get current baud (4->9600, 5->19200, 6->38400, 7->57600, 8->115200, 9->128000)"));
     int tReturnedBytes = sendWaitAndReceive("AT+BAUD");
     if (tReturnedBytes != 9) {
         /*

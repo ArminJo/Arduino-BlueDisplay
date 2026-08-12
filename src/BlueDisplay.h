@@ -40,10 +40,10 @@
 #ifndef _BLUEDISPLAY_H
 #define _BLUEDISPLAY_H
 
-#define VERSION_BLUE_DISPLAY "5.1.0"
+#define VERSION_BLUE_DISPLAY "5.1.1"
 #define VERSION_BLUE_DISPLAY_MAJOR 5
 #define VERSION_BLUE_DISPLAY_MINOR 1
-#define VERSION_BLUE_DISPLAY_PATCH 0
+#define VERSION_BLUE_DISPLAY_PATCH 1
 // The change log is at the bottom of the file
 
 /*
@@ -89,8 +89,7 @@
 #endif
 
 #if defined(ARDUINO)
-#  if !defined(ESP32)
-// For not AVR platforms this contains mapping defines (at least for STM32)
+#  if defined(AVR)
 #include <avr/pgmspace.h>
 #  endif
 #  if defined(strcpy_P) // check if we have mapping defines

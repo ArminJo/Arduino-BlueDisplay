@@ -1,5 +1,5 @@
 START ../src/BTModuleProgrammer.cpp
-Version 3.1 from Mar 21 2022
+Version 3.2 from Aug 11 2026
 HC-05 programming mode detected. Switch to JDY-31 mode by connecting pin 4 to ground or to pin 5.
 
 Now you have 5 seconds for releasing HC-05 module key, which should be pressed at power up to enter program mode.
@@ -34,15 +34,15 @@ Get current Role (0->Slave, 1->Master, 2->Slave-Loop)
 Sent: "AT+ROLE\r\n"
 Received: "+ROLE:1\r\nOK\r\n"
 
-Get current Cmode (0->connect to fixed bind address, 1->connect to all)
+Get current master connection mode (0->connect to fixed / last MAC address, 1->connect to all)
 Sent: "AT+CMODE\r\n"
 Received: "+CMOD:1\r\nOK\r\n"
 
-Get Bind address
+Get master fixed MAC connection address
 Sent: "AT+BIND\r\n"
 Received: "+BIND:98d3:31:fb2f4f\r\nOK\r\n"
 
-Get own Address
+Get own MAC Address (98:d3:31:30:09:4f -> 98d3:31:30094f)
 Sent: "AT+ADDR\r\n"
 Received: "+ADDR:98d3:31:fb2c82\r\nOK\r\n"
 
