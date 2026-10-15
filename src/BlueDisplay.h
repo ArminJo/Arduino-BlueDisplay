@@ -442,6 +442,8 @@ uint8_t _clipAndCopyPGMString(char *aStringBuffer, const __FlashStringHelper *aP
 // The instance provided by the class itself
 extern BlueDisplay BlueDisplay1;
 
+
+
 #endif // __cplusplus
 
 extern bool isLocalDisplayAvailable;

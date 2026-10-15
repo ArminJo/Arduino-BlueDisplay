@@ -70,6 +70,217 @@
 #define SYNC_TOKEN 0xA5
 
 /**********************
+ * Data field types
+ *********************/
+#define DATAFIELD_TAG_BYTE              0x01
+// for future ? use
+//#define DATAFIELD_TAG_SHORT           0x02 // 16 bit
+//#define DATAFIELD_TAG_INT             0x03 // 32 bit
+//#define DATAFIELD_TAG_LONG            0x04 // 64 bit
+//#define DATAFIE TAG_FLOAT             0x05
+//#define DATAFIELD_TAG_DOUBLE          0x06
+#define LAST_DATAFIELD_TAG              DATAFIELD_TAG_BYTE
+
+#define INDEX_LAST_FUNCTION_WITHOUT_DATA                0x5F
+#define INDEX_FIRST_FUNCTION_WITH_DATA                  0x60
+
+/***************************************
+ * Function token (2. byte of protocol)
+ **************************************/
+#define FUNCTION_GLOBAL_SETTINGS                        0x08
+// Sub functions for GLOBAL_SETTINGS
+#define SUBFUNCTION_GLOBAL_SET_FLAGS_AND_SIZE           0x00
+#define SUBFUNCTION_GLOBAL_SET_CODEPAGE                 0x01
+#define SUBFUNCTION_GLOBAL_SET_CHARACTER_CODE_MAPPING   0x02
+#define SUBFUNCTION_GLOBAL_SET_LONG_TOUCH_DOWN_TIMEOUT  0x08
+#define SUBFUNCTION_GLOBAL_SET_SCREEN_ORIENTATION_LOCK  0x0C
+#define SUBFUNCTION_GLOBAL_SET_SCREEN_BRIGHTNESS        0x0D
+
+// results in a reorientation (+redraw) callback
+#define FUNCTION_REQUEST_MAX_CANVAS_SIZE            0x09
+
+/**********************
+ * Sensors
+ *********************/
+#define FUNCTION_SENSOR_SETTINGS                    0x0A
+
+/**********************
+ * Miscellaneous functions
+ *********************/
+#define FUNCTION_GET_NUMBER                         0x0C
+#define FUNCTION_GET_TEXT                           0x0D
+#define FUNCTION_GET_INFO                           0x0E
+// Sub functions for FUNCTION_GET_INFO
+#define SUBFUNCTION_GET_INFO_LOCAL_TIME             0x00
+#define SUBFUNCTION_GET_INFO_GMT_TIME               0x01
+
+#define FUNCTION_PLAY_TONE                          0x0F
+
+/**********************
+ * Display functions
+ *********************/
+#define FUNCTION_CLEAR_DISPLAY                      0x10 // Also deactivate all buttons and slider here
+#define FUNCTION_CLEAR_DISPLAY_AREA                 0x13
+#define FUNCTION_DRAW_DISPLAY                       0x11
+#define FUNCTION_CLEAR_DISPLAY_AND_SKIP_OPTIONAL    0x12 // Skip buffer before if host buffer has overflow (>40960 bytes) because of not running
+#define FUNCTION_DRAW_PIXEL                         0x14 // 3 parameter
+#define FUNCTION_DRAW_CHAR                          0x16 // 6 parameter
+#define FUNCTION_DRAW_LINE_REL                      0x20 // 5 parameter
+#define FUNCTION_DRAW_LINE                          0x21
+#define FUNCTION_DRAW_RECT_REL                      0x24
+#define FUNCTION_FILL_RECT_REL                      0x25
+#define FUNCTION_DRAW_RECT                          0x26
+#define FUNCTION_FILL_RECT                          0x27
+
+#define FUNCTION_DRAW_CIRCLE                        0x28
+#define FUNCTION_FILL_CIRCLE                        0x29
+
+#define FUNCTION_DRAW_VECTOR_DEGREE                 0x2C
+#define FUNCTION_DRAW_VECTOR_RADIAN                 0x2D
+
+#define NUMBER_OF_SUPPORTED_LINES  16
+#define FUNCTION_LINE_SETTINGS                      0x30 // Sets the Stroke and Color of one of the 16 available Lines
+
+#define FUNCTION_WRITE_SETTINGS                     0x34
+// Flags for WRITE_SETTINGS
+#define FLAG_WRITE_SETTINGS_SET_SIZE_AND_COLORS_AND_FLAGS 0x00
+#define FLAG_WRITE_SETTINGS_SET_POSITION            0x01
+#define FLAG_WRITE_SETTINGS_SET_LINE_COLUMN         0x02
+
+/*************************************
+ * Functions with variable data size
+ *************************************/
+#define FUNCTION_DRAW_STRING                        0x60
+
+#define STRING_ALIGN_RIGHT_XPOS                     0xFFFF // left is 0 :-)
+#define STRING_ALIGN_MIDDLE_XPOS                    0xFFFE
+#define FUNCTION_DEBUG_STRING                       0x61
+#define FUNCTION_WRITE_STRING                       0x62
+
+#define FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT       0x64
+#define FUNCTION_GET_TEXT_WITH_SHORT_PROMPT         0x65
+
+#define FUNCTION_DRAW_PATH                          0x68 // Not yet implemented in Arduino library
+#define FUNCTION_FILL_PATH                          0x69 // Not yet implemented in Arduino library
+#define FUNCTION_DRAW_CHART                                 0x6A // Chart index is coded in the upper 4 bits of Y start position
+#define FUNCTION_DRAW_CHART_WITHOUT_DIRECT_RENDERING        0x6B // To draw multiple charts (16 available) before rendering them
+#define FUNCTION_DRAW_SCALED_CHART                          0x6C // For chart implementation
+#define FUNCTION_DRAW_SCALED_CHART_WITHOUT_DIRECT_RENDERING 0x6D //
+
+/**********************
+ * Button functions
+ *********************/
+#define FUNCTION_BUTTON_DRAW                        0x40
+//#define FUNCTION_BUTTON_DRAW_CAPTION              0x41
+
+#define FUNCTION_BUTTON_SETTINGS                    0x42
+// Flags for BUTTON_SETTINGS
+#define SUBFUNCTION_BUTTON_SET_BUTTON_COLOR         0x00
+#define SUBFUNCTION_BUTTON_SET_BUTTON_COLOR_AND_DRAW 0x01
+#define SUBFUNCTION_BUTTON_SET_TEXT_COLOR           0x02
+#define SUBFUNCTION_BUTTON_SET_TEXT_COLOR_AND_DRAW  0x03
+#define SUBFUNCTION_BUTTON_SET_VALUE                0x04
+#define SUBFUNCTION_BUTTON_SET_VALUE_AND_DRAW       0x05
+#define SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE      0x06
+#define SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE_AND_DRAW 0x07
+#define SUBFUNCTION_BUTTON_SET_POSITION             0x08
+#define SUBFUNCTION_BUTTON_SET_POSITION_AND_DRAW    0x09
+#define SUBFUNCTION_BUTTON_SET_ACTIVE               0x10
+#define SUBFUNCTION_BUTTON_RESET_ACTIVE             0x11
+#define SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING    0x12
+#define SUBFUNCTION_BUTTON_SET_CALLBACK             0x20
+#define SUBFUNCTION_BUTTON_SET_FLAGS                0x30
+
+#define FUNCTION_BUTTON_REMOVE                      0x43
+
+// static functions
+#define FUNCTION_BUTTON_ACTIVATE_ALL                0x48
+#define FUNCTION_BUTTON_DEACTIVATE_ALL              0x49
+#define FUNCTION_BUTTON_GLOBAL_SETTINGS             0x4A
+#define FUNCTION_BUTTON_DISABLE_AUTOREPEAT_UNTIL_END_OF_TOUCH 0x4B  // 2/2023 not yet implemented
+
+// Flags for BUTTON_GLOBAL_SETTINGS
+#define FLAG_BUTTON_GLOBAL_USE_DOWN_EVENTS_FOR_BUTTONS  0x00 // Default
+#define FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS    0x01 // If swipe can start on a button, you require this.
+#define FLAG_BUTTON_GLOBAL_SET_TOUCH_TONE               0x02 // Beep on button touch, TONE_CDMA_KEYPAD_VOLUME_KEY_LITE (89) is default tone
+#define FLAG_BUTTON_GLOBAL_SET_TOUCH_TONE_STATE         0x03
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_DISABLED         0
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_INDIVIDUAL       1
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_FORCE_ENABLED    2
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_DEFAULT          BUTTON_GLOBAL_TOUCH_TONE_STATE_INDIVIDUAL
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_MIN              BUTTON_GLOBAL_TOUCH_TONE_STATE_DISABLED
+#define BUTTON_GLOBAL_TOUCH_TONE_STATE_MAX              BUTTON_GLOBAL_TOUCH_TONE_STATE_FORCE_ENABLED
+
+/*
+ * Functions with variable data size for button
+ */
+#define FUNCTION_BUTTON_CREATE                      0x70
+#define FUNCTION_BUTTON_INIT                        FUNCTION_BUTTON_CREATE
+#define FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE     0x71 // This implicitly changes button to Red/Green toggle type
+#define FUNCTION_BUTTON_SET_TEXT                    0x72
+#define FUNCTION_BUTTON_SET_TEXT_AND_DRAW_BUTTON    0x73
+#define FUNCTION_BUTTON_SET_CAPTION_FOR_VALUE_TRUE  FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE  // Deprecated
+#define FUNCTION_BUTTON_SET_CAPTION                 FUNCTION_BUTTON_SET_TEXT                 // Deprecated
+#define FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON FUNCTION_BUTTON_SET_TEXT_AND_DRAW_BUTTON // Deprecated
+
+/**********************
+ * Slider functions
+ *********************/
+#define FUNCTION_SLIDER_CREATE                      0x50
+#define FUNCTION_SLIDER_INIT                        FUNCTION_SLIDER_CREATE
+#define FUNCTION_SLIDER_DRAW                        0x51
+
+#define FUNCTION_SLIDER_SETTINGS                    0x52
+// Flags for SLIDER_SETTINGS
+#define SUBFUNCTION_SLIDER_SET_COLOR_THRESHOLD      0x00
+#define SUBFUNCTION_SLIDER_SET_COLOR_BAR_BACKGROUND 0x01
+#define SUBFUNCTION_SLIDER_SET_COLOR_BAR            0x02
+#define SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR   0x03
+#define SUBFUNCTION_SLIDER_SET_POSITION             0x04
+#define SUBFUNCTION_SLIDER_SET_ACTIVE               0x05
+#define SUBFUNCTION_SLIDER_RESET_ACTIVE             0x06
+#define SUBFUNCTION_SLIDER_SET_SCALE_FACTOR         0x07
+
+#define SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES   0x08
+#define SUBFUNCTION_SLIDER_SET_VALUE_STRING_PROPERTIES 0x09
+#define SUBFUNCTION_SLIDER_SET_MIN_MAX              0x0A
+#define SUBFUNCTION_SLIDER_SET_BORDER_SIZES_AND_COLOR 0x0B
+
+#define SUBFUNCTION_SLIDER_SET_VALUE                0x0C
+
+#define SUBFUNCTION_SLIDER_SET_CALLBACK             0x20
+#define SUBFUNCTION_SLIDER_SET_FLAGS                0x30
+
+#define FUNCTION_SLIDER_REMOVE                      0x53
+#define FUNCTION_SLIDER_DRAW_BORDER                 0x54
+
+// static slider functions
+#define FUNCTION_SLIDER_ACTIVATE_ALL                0x58
+#define FUNCTION_SLIDER_DEACTIVATE_ALL              0x59
+#define FUNCTION_SLIDER_GLOBAL_SETTINGS             0x5A
+
+// Flags for SLIDER_BLOBAL_SETTINGS
+#define SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD 0x01
+
+/*
+ * Functions with variable data size for slider
+ */
+#define FUNCTION_SLIDER_SET_CAPTION                 0x78
+#define FUNCTION_SLIDER_PRINT_VALUE                 0x79
+#define FUNCTION_SLIDER_SET_VALUE_UNIT_STRING       0x7A
+#define FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING     0x7B
+
+#define FUNCTION_NOP                                0x7F // used for Sync
+
+/******************************************************************
+ * Talk functions are only implemented in Android > 5.0 (Lollipop)
+ ******************************************************************/
+#define FUNCTION_SPEAK_SET_LOCALE                   0x80
+#define FUNCTION_SPEAK_SET_VOICE                    0x81 // One of the Voice strings printed in log at level Info at BD application startup
+#define FUNCTION_SPEAK_STRING_FLUSH                 0x88
+#define FUNCTION_SPEAK_STRING_ADD                   0x89
+
+/**********************
  * Event codes
  *********************/
 // eventType can be one of the following:
@@ -222,214 +433,5 @@ struct BluetoothEvent {
         struct IntegerInfoCallback IntegerInfoCallbackData;
     } EventData;
 };
-
-/**********************
- * Data field types
- *********************/
-#define DATAFIELD_TAG_BYTE              0x01
-// for future ? use
-//#define DATAFIELD_TAG_SHORT           0x02 // 16 bit
-//#define DATAFIELD_TAG_INT             0x03 // 32 bit
-//#define DATAFIELD_TAG_LONG            0x04 // 64 bit
-//#define DATAFIE TAG_FLOAT             0x05
-//#define DATAFIELD_TAG_DOUBLE          0x06
-#define LAST_DATAFIELD_TAG              DATAFIELD_TAG_BYTE
-
-#define INDEX_LAST_FUNCTION_WITHOUT_DATA                0x5F
-#define INDEX_FIRST_FUNCTION_WITH_DATA                  0x60
-/**********************
- * Internal functions
- *********************/
-
-#define FUNCTION_GLOBAL_SETTINGS                        0x08
-// Sub functions for GLOBAL_SETTINGS
-#define SUBFUNCTION_GLOBAL_SET_FLAGS_AND_SIZE           0x00
-#define SUBFUNCTION_GLOBAL_SET_CODEPAGE                 0x01
-#define SUBFUNCTION_GLOBAL_SET_CHARACTER_CODE_MAPPING   0x02
-#define SUBFUNCTION_GLOBAL_SET_LONG_TOUCH_DOWN_TIMEOUT  0x08
-#define SUBFUNCTION_GLOBAL_SET_SCREEN_ORIENTATION_LOCK  0x0C
-#define SUBFUNCTION_GLOBAL_SET_SCREEN_BRIGHTNESS        0x0D
-
-// results in a reorientation (+redraw) callback
-#define FUNCTION_REQUEST_MAX_CANVAS_SIZE            0x09
-
-/**********************
- * Sensors
- *********************/
-#define FUNCTION_SENSOR_SETTINGS                    0x0A
-
-/**********************
- * Miscellaneous functions
- *********************/
-#define FUNCTION_GET_NUMBER                         0x0C
-#define FUNCTION_GET_TEXT                           0x0D
-#define FUNCTION_GET_INFO                           0x0E
-// Sub functions for FUNCTION_GET_INFO
-#define SUBFUNCTION_GET_INFO_LOCAL_TIME             0x00
-#define SUBFUNCTION_GET_INFO_GMT_TIME               0x01
-
-#define FUNCTION_PLAY_TONE                          0x0F
-
-/**********************
- * Display functions
- *********************/
-#define FUNCTION_CLEAR_DISPLAY                      0x10 // Also deactivate all buttons and slider here
-#define FUNCTION_CLEAR_DISPLAY_AREA                 0x13
-#define FUNCTION_DRAW_DISPLAY                       0x11
-#define FUNCTION_CLEAR_DISPLAY_AND_SKIP_OPTIONAL    0x12 // Skip buffer before if host buffer has overflow (>40960 bytes) because of not running
-#define FUNCTION_DRAW_PIXEL                         0x14 // 3 parameter
-#define FUNCTION_DRAW_CHAR                          0x16 // 6 parameter
-#define FUNCTION_DRAW_LINE_REL                      0x20 // 5 parameter
-#define FUNCTION_DRAW_LINE                          0x21
-#define FUNCTION_DRAW_RECT_REL                      0x24
-#define FUNCTION_FILL_RECT_REL                      0x25
-#define FUNCTION_DRAW_RECT                          0x26
-#define FUNCTION_FILL_RECT                          0x27
-
-#define FUNCTION_DRAW_CIRCLE                        0x28
-#define FUNCTION_FILL_CIRCLE                        0x29
-
-#define FUNCTION_DRAW_VECTOR_DEGREE                 0x2C
-#define FUNCTION_DRAW_VECTOR_RADIAN                 0x2D
-
-#define NUMBER_OF_SUPPORTED_LINES  16
-#define FUNCTION_LINE_SETTINGS                      0x30 // Sets the Stroke and Color of one of the 16 available Lines
-
-#define FUNCTION_WRITE_SETTINGS                     0x34
-// Flags for WRITE_SETTINGS
-#define FLAG_WRITE_SETTINGS_SET_SIZE_AND_COLORS_AND_FLAGS 0x00
-#define FLAG_WRITE_SETTINGS_SET_POSITION            0x01
-#define FLAG_WRITE_SETTINGS_SET_LINE_COLUMN         0x02
-
-/*************************************
- * Functions with variable data size
- *************************************/
-#define FUNCTION_DRAW_STRING                        0x60
-
-#define STRING_ALIGN_RIGHT_XPOS                     0xFFFF // left is 0 :-)
-#define STRING_ALIGN_MIDDLE_XPOS                    0xFFFE
-#define FUNCTION_DEBUG_STRING                       0x61
-#define FUNCTION_WRITE_STRING                       0x62
-
-#define FUNCTION_GET_NUMBER_WITH_SHORT_PROMPT       0x64
-#define FUNCTION_GET_TEXT_WITH_SHORT_PROMPT         0x65
-
-#define FUNCTION_DRAW_PATH                          0x68 // Not yet implemented in Arduino library
-#define FUNCTION_FILL_PATH                          0x69 // Not yet implemented in Arduino library
-#define FUNCTION_DRAW_CHART                                 0x6A // Chart index is coded in the upper 4 bits of Y start position
-#define FUNCTION_DRAW_CHART_WITHOUT_DIRECT_RENDERING        0x6B // To draw multiple charts (16 available) before rendering them
-#define FUNCTION_DRAW_SCALED_CHART                          0x6C // For chart implementation
-#define FUNCTION_DRAW_SCALED_CHART_WITHOUT_DIRECT_RENDERING 0x6D //
-
-/**********************
- * Button functions
- *********************/
-#define FUNCTION_BUTTON_DRAW                        0x40
-//#define FUNCTION_BUTTON_DRAW_CAPTION              0x41
-#define FUNCTION_BUTTON_SETTINGS                    0x42
-// Flags for BUTTON_SETTINGS
-#define SUBFUNCTION_BUTTON_SET_BUTTON_COLOR         0x00
-#define SUBFUNCTION_BUTTON_SET_BUTTON_COLOR_AND_DRAW 0x01
-#define SUBFUNCTION_BUTTON_SET_TEXT_COLOR           0x02
-#define SUBFUNCTION_BUTTON_SET_TEXT_COLOR_AND_DRAW  0x03
-#define SUBFUNCTION_BUTTON_SET_VALUE                0x04
-#define SUBFUNCTION_BUTTON_SET_VALUE_AND_DRAW       0x05
-#define SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE      0x06
-#define SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE_AND_DRAW 0x07
-#define SUBFUNCTION_BUTTON_SET_POSITION             0x08
-#define SUBFUNCTION_BUTTON_SET_POSITION_AND_DRAW    0x09
-#define SUBFUNCTION_BUTTON_SET_ACTIVE               0x10
-#define SUBFUNCTION_BUTTON_RESET_ACTIVE             0x11
-#define SUBFUNCTION_BUTTON_SET_AUTOREPEAT_TIMING    0x12
-#define SUBFUNCTION_BUTTON_SET_CALLBACK             0x20
-#define SUBFUNCTION_BUTTON_SET_FLAGS                0x30
-
-#define FUNCTION_BUTTON_REMOVE                      0x43
-
-// static functions
-#define FUNCTION_BUTTON_ACTIVATE_ALL                0x48
-#define FUNCTION_BUTTON_DEACTIVATE_ALL              0x49
-#define FUNCTION_BUTTON_GLOBAL_SETTINGS             0x4A
-#define FUNCTION_BUTTON_DISABLE_AUTOREPEAT_UNTIL_END_OF_TOUCH 0x4B  // 2/2023 not yet implemented
-
-// Flags for BUTTON_GLOBAL_SETTINGS
-#define FLAG_BUTTON_GLOBAL_USE_DOWN_EVENTS_FOR_BUTTONS  0x00 // Default
-#define FLAG_BUTTON_GLOBAL_USE_UP_EVENTS_FOR_BUTTONS    0x01 // If swipe can start on a button, you require this.
-#define FLAG_BUTTON_GLOBAL_SET_TOUCH_TONE               0x02 // Beep on button touch, TONE_CDMA_KEYPAD_VOLUME_KEY_LITE (89) is default tone
-#define FLAG_BUTTON_GLOBAL_SET_TOUCH_TONE_STATE         0x03
-#define BUTTON_GLOBAL_TOUCH_TONE_STATE_DISABLED         0
-#define BUTTON_GLOBAL_TOUCH_TONE_STATE_INDIVIDUAL       1
-#define BUTTON_GLOBAL_TOUCH_TONE_STATE_FORCE_ENABLED    2
-#define BUTTON_GLOBAL_TOUCH_TONE_STATE_DEFAULT          BUTTON_GLOBAL_TOUCH_TONE_STATE_INDIVIDUAL
-#define BUTTON_GLOBAL_TOUCH_TONE_STATE_MIN              BUTTON_GLOBAL_TOUCH_TONE_STATE_DISABLED
-#define BUTTON_GLOBAL_TOUCH_TONE_STATE_MAX              BUTTON_GLOBAL_TOUCH_TONE_STATE_FORCE_ENABLED
-
-/*
- * Functions with variable data size for button
- */
-#define FUNCTION_BUTTON_CREATE                      0x70
-#define FUNCTION_BUTTON_INIT                        FUNCTION_BUTTON_CREATE
-#define FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE     0x71 // This implicitly changes button to Red/Green toggle type
-#define FUNCTION_BUTTON_SET_TEXT                    0x72
-#define FUNCTION_BUTTON_SET_TEXT_AND_DRAW_BUTTON    0x73
-#define FUNCTION_BUTTON_SET_CAPTION_FOR_VALUE_TRUE  FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE  // Deprecated
-#define FUNCTION_BUTTON_SET_CAPTION                 FUNCTION_BUTTON_SET_TEXT                 // Deprecated
-#define FUNCTION_BUTTON_SET_CAPTION_AND_DRAW_BUTTON FUNCTION_BUTTON_SET_TEXT_AND_DRAW_BUTTON // Deprecated
-
-/**********************
- * Slider functions
- *********************/
-#define FUNCTION_SLIDER_CREATE                      0x50
-#define FUNCTION_SLIDER_INIT                        FUNCTION_SLIDER_CREATE
-#define FUNCTION_SLIDER_DRAW                        0x51
-#define FUNCTION_SLIDER_SETTINGS                    0x52
-#define FUNCTION_SLIDER_REMOVE                      0x53
-#define FUNCTION_SLIDER_DRAW_BORDER                 0x54
-
-// Flags for SLIDER_SETTINGS
-#define SUBFUNCTION_SLIDER_SET_COLOR_THRESHOLD      0x00
-#define SUBFUNCTION_SLIDER_SET_COLOR_BAR_BACKGROUND 0x01
-#define SUBFUNCTION_SLIDER_SET_COLOR_BAR            0x02
-#define SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR   0x03
-#define SUBFUNCTION_SLIDER_SET_POSITION             0x04
-#define SUBFUNCTION_SLIDER_SET_ACTIVE               0x05
-#define SUBFUNCTION_SLIDER_RESET_ACTIVE             0x06
-#define SUBFUNCTION_SLIDER_SET_SCALE_FACTOR         0x07
-
-#define SUBFUNCTION_SLIDER_SET_CAPTION_PROPERTIES   0x08
-#define SUBFUNCTION_SLIDER_SET_VALUE_STRING_PROPERTIES 0x09
-#define SUBFUNCTION_SLIDER_SET_MIN_MAX              0x0A
-#define SUBFUNCTION_SLIDER_SET_BORDER_SIZES_AND_COLOR 0x0B
-
-#define SUBFUNCTION_SLIDER_SET_VALUE                0x0C
-
-#define SUBFUNCTION_SLIDER_SET_CALLBACK             0x20
-#define SUBFUNCTION_SLIDER_SET_FLAGS                0x30
-
-// static slider functions
-#define FUNCTION_SLIDER_ACTIVATE_ALL                0x58
-#define FUNCTION_SLIDER_DEACTIVATE_ALL              0x59
-#define FUNCTION_SLIDER_GLOBAL_SETTINGS             0x5A
-
-// Flags for SLIDER_BLOBAL_SETTINGS
-#define SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD 0x01
-
-/*
- * Functions with variable data size for slider
- */
-#define FUNCTION_SLIDER_SET_CAPTION                 0x78
-#define FUNCTION_SLIDER_PRINT_VALUE                 0x79
-#define FUNCTION_SLIDER_SET_VALUE_UNIT_STRING       0x7A
-#define FUNCTION_SLIDER_SET_VALUE_FORMAT_STRING     0x7B
-
-#define FUNCTION_NOP                                0x7F // used for Sync
-
-/******************************************************************
- * Talk functions are only implemented in Android > 5.0 (Lollipop)
- ******************************************************************/
-#define FUNCTION_SPEAK_SET_LOCALE                   0x80
-#define FUNCTION_SPEAK_SET_VOICE                    0x81 // One of the Voice strings printed in log at level Info at BD application startup
-#define FUNCTION_SPEAK_STRING_FLUSH                 0x88
-#define FUNCTION_SPEAK_STRING_ADD                   0x89
 
 #endif // _BLUEDISPLAYPROTOCOL_H

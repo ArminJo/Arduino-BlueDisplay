@@ -44,16 +44,19 @@
 #define IS_STOP_REQUESTED               isStopRequested()
 #endif
 #if !defined(RETURN_IF_STOP)
-#define RETURN_IF_STOP                  if (isStopRequested()) return
+#define RETURN_IF_STOP                  if (isStopRequested()) return // requires around 10 byte
 #endif
 #if !defined(BREAK_IF_STOP)
 #define BREAK_IF_STOP                   if (isStopRequested()) break
 #endif
+#if !defined(RETURN_IF_BUTTON_FALSE)
+#define RETURN_IF_BUTTON_FALSE                      if (sButtonCalledWithFalse) return // requires around 10 byte
+#endif
 #if !defined(DELAY_AND_RETURN_IF_STOP)
-#define DELAY_AND_RETURN_IF_STOP(aDurationMillis)   if (delayMillisAndCheckForStop(aDurationMillis)) return
+#define DELAY_AND_RETURN_IF_STOP(aDurationMillis)   if (delayMillisHandleEventsAndBreakIfStopButtonPressed(aDurationMillis)) return
 #endif
 #if !defined(DELAY_UNTIL_EVENT)
-#define DELAY_UNTIL_EVENT(aDurationMillis)          delayMillisAndCheckForEvent(aDurationMillis)
+#define DELAY_UNTIL_EVENT(aDurationMillis)          delayMillisHandleEventsAndBreakIfEventJustReceived(aDurationMillis)
 #endif
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
@@ -96,10 +99,15 @@ void printEventTouchPositionData(int x, int y, color16_t aColor, color16_t aBack
 #endif
 
 bool isStopRequested(void);
-void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis);
-void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis);
-bool delayMillisAndCheckForEvent(unsigned long aDelayMillis);
-bool delayMillisAndCheckForStop(uint16_t aDelayMillis);
+void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) __attribute__ ((deprecated ("Renamed to delayMillisAndHandleEvents()")));
+void delayMillisAndHandleEvents(unsigned long aDelayMillis);
+bool delayMillisAndOptionallyCheckForFlag(unsigned int aDelayMillis, bool *aAddressOfFlagToCheckForTrue = nullptr);
+void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis)__attribute__ ((deprecated ("Renamed to delayMillisHandleEventsAndWaitIfReceiving()")));
+void delayMillisHandleEventsAndWaitIfReceiving(unsigned long aDelayMillis);
+bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) __attribute__ ((deprecated ("Renamed to delayMillisHandleEventsAndBreakIfEventJustReceived()")));
+bool delayMillisHandleEventsAndBreakIfEventJustReceived(unsigned long aDelayMillis);
+bool delayMillisAndCheckForStop(unsigned int aDelayMillis) __attribute__ ((deprecated ("Renamed to delayMillisHandleEventsAndBreakIfStopButtonPressed()")));
+bool delayMillisHandleEventsAndBreakIfStopButtonPressed(unsigned int aDelayMillis);
 
 void checkAndHandleEvents(void);
 

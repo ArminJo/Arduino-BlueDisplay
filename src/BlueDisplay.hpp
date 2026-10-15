@@ -158,7 +158,7 @@ uint_fast16_t BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*
          * But I have seen 990 ms too :-(( , which corresponds to a communication lag of 500 ms in each direction,
          * even if we have a 1 second delay before initCommunication();
          */
-        delayMillisWithCheckAndHandleEvents(10);
+        delayMillisAndHandleEvents(10);
         if (mBlueDisplayConnectionEstablished) { // is set by delay(WithCheckAndHandleEvents()
             // Handler are called by the received canvas size event, if mBlueDisplayConnectionEstablished was not set before
             return i;
@@ -1561,7 +1561,7 @@ uint_fast16_t BlueDisplay::requestMaxCanvasSizeBlockingWait(uint_fast16_t aTimeo
          * But I have seen 990 ms too :-(( , which corresponds to a communication lag of 500 ms in each direction,
          * even if we have a 1 second delay before initCommunication();
          */
-        delayMillisWithCheckAndHandleEvents(10);
+        delayMillisAndHandleEvents(10);
         if (sBDEventJustReceived) { // is set by delay(WithCheckAndHandleEvents()
             // Handler are called by the received canvas size event, if mBlueDisplayConnectionEstablished was not set before
             return i;
@@ -1905,7 +1905,7 @@ void BlueDisplay::testDisplay(BDButton *aBackButton, bool *stillInTestPage) {
         for (uint8_t j = 0; j < sizeof(tColorArray) / sizeof(tColorArray[0]); ++j) {
             tColorArray[j] = COLOR16_WHITE;
         }
-        delayMillisAndCheckForEvent(10000); // wait 10 seconds and then clear items, to see residual
+        DELAY_UNTIL_EVENT(10000); // wait 10 seconds and then clear items, to see residual
         if (stillInTestPage != nullptr) {
             if (stillInTestPage) {
                 return;

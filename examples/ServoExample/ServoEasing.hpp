@@ -2934,13 +2934,13 @@ bool ServoEasing::initializeAndCheckI2CConnection(Stream *aSerial) // Print has 
     // Initialize wire before checkI2CConnection()
     I2CInit();
 #endif
-    return checkI2CConnection(mPCA9685I2CAddress, aSerial);
+    return checkI2CConnection(aSerial, mPCA9685I2CAddress);
 }
 
 #if defined(__AVR__)
-bool checkI2CConnection(uint8_t aI2CAddress, Print *aSerial) // Print instead of Stream saves 95 bytes flash
+bool checkI2CConnection(Print *aSerial, uint8_t aI2CAddress) // Print instead of Stream saves 95 bytes flash
 #else
-bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial) // Print has no flush(), so we must take Stream
+bool checkI2CConnection(Stream *aSerial, uint8_t aI2CAddress) // Print has no flush(), so we must take Stream
 #endif
         {
 

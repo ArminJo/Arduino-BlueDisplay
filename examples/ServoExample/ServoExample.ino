@@ -534,7 +534,7 @@ void doSetBias(BDButton *aTheTouchedButton, int16_t aValue) {
     // show message in order to see the effect
     BlueDisplay1.clearDisplay();
     BlueDisplay1.drawText(0, sTextSize / 4, "old position is taken \rfor horizontal input\r", sTextSize, COLOR16_BLACK, COLOR16_GREEN);
-    delayMillisWithCheckAndHandleEvents(2500);
+    delayMillisAndHandleEvents(2500);
     drawGui();
 }
 

@@ -182,9 +182,9 @@ void loop() {
 
         digitalWrite(LED_BUILTIN, HIGH);
         // Delay and check for connection
-        delayMillisWithCheckAndHandleEvents(tBlinkDuration / 2);
+        delayMillisAndHandleEvents(tBlinkDuration / 2);
         digitalWrite(LED_BUILTIN, LOW);
-        delayMillisWithCheckAndHandleEvents(tBlinkDuration / 2);
+        delayMillisAndHandleEvents(tBlinkDuration / 2);
 
     } else if (!sInTestPage) {
         /*
@@ -201,7 +201,7 @@ void loop() {
              *  Check touch events 8 times while waiting.
              */
             for (uint8_t i = 0; i < 8; ++i) {
-                delayMillisWithCheckAndHandleEvents(sDelay / 8); // This can trigger the display of the test page
+                delayMillisAndHandleEvents(sDelay / 8); // This can trigger the display of the test page
                 if (sInTestPage) {
                     return; // leave inner and outer loop immediately
                 }
@@ -213,7 +213,7 @@ void loop() {
             digitalWrite(LED_BUILTIN, LOW);
             BlueDisplay1.fillCircle(LOCAL_DISPLAY_WIDTH / 2, LOCAL_DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
             for (uint8_t i = 0; i < 8; ++i) {
-                delayMillisWithCheckAndHandleEvents(sDelay / 8); // This can trigger the display of the test page
+                delayMillisAndHandleEvents(sDelay / 8); // This can trigger the display of the test page
                 if (sInTestPage) {
                     return; // leave inner and outer loop immediately
                 }

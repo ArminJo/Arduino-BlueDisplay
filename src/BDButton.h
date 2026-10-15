@@ -190,6 +190,8 @@ public:
     // Color
     void setButtonColor(color16_t aButtonColor);
     void setButtonColorAndDraw(color16_t aButtonColor);
+    void setButtonColorAndValue(color16_t aButtonColor, int16_t aValue);
+    void setButtonColorAndValueAndDraw(color16_t aButtonColor, int16_t aValue);
 
     // Text
     void setButtonTextColor(color16_t aButtonTextColor);

@@ -113,14 +113,14 @@ void loop() {
         // LED on
         digitalWrite(LED_BUILTIN, HIGH);
         BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR16_RED);
-        delayMillisWithCheckAndHandleEvents(300);
+        delayMillisAndHandleEvents(300);
     }
 
     if (doBlink) {
         // LED off
         digitalWrite(LED_BUILTIN, LOW);
         BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR16_BLUE);
-        delayMillisWithCheckAndHandleEvents(300);
+        delayMillisAndHandleEvents(300);
     }
 
     // To get blink enable event

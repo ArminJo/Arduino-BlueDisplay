@@ -678,7 +678,7 @@ void delayMillisWithHandleEventAndFlags(unsigned long aDelayMillis) {
  * End prematurely, if event received
  */
 bool delayMillisWithCheckForEventAndFlags(unsigned long aDelayMillis) {
-    if (delayMillisAndCheckForEvent(aDelayMillis)) {
+    if (delayMillisHandleEventsAndBreakIfEventJustReceived(aDelayMillis)) {
         checkAndHandleCO2LoggerEventFlags();
         return true;
     }

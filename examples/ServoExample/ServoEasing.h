@@ -785,9 +785,9 @@ int clipDegreeSpecial(uint_fast8_t aDegreeToClip);
 
 // Static convenience function
 #if defined(__AVR__)
-bool checkI2CConnection(uint8_t aI2CAddress, Print *aSerial); // Using Print class saves 95 bytes flash
+bool checkI2CConnection(Print *aSerial, uint8_t aI2CAddress); // Using Print class saves 95 bytes flash
 #else
-bool checkI2CConnection(uint8_t aI2CAddress, Stream *aSerial); // Print class has no flush() here
+bool checkI2CConnection(Stream *aSerial, uint8_t aI2CAddress); // Print class has no flush() here
 #endif
 
 #if !defined(STR_HELPER) && !defined(STR)

@@ -540,7 +540,7 @@ void setup() {
  ************************************************************************/
 // noreturn saves 56 byte program memory! but no stack
 void __attribute__((noreturn)) loop(void) {
-    uint32_t sMillisOfLastInfoOutput;
+    uint32_t sMillisOfLastInfoOutput = 0;
 
     bool sDoInfoOutput = true; // Output info at least every second for settings page, single shot or trigger not found
 
@@ -653,7 +653,7 @@ void __attribute__((noreturn)) loop(void) {
                              * Otherwise we see to much errors: RPCView Read delay > 1000ms for missing bytes. ...
                              */
                             if (sSlowBluetoothMode) {
-                                delayMillisAndCheckForEvent(HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_BT_CONNECTION);
+                                delayMillisAndHandleEvents(HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_BT_CONNECTION);
                             }
                             drawDataBuffer(&DataBufferControl.DataBuffer[0], COLOR_DATA_RUN, DisplayControl.EraseColor);
                         }
