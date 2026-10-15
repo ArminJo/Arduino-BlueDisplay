@@ -242,33 +242,17 @@ void setSwipeEndCallbackEnabled(bool aSwipeEndCallbackEnabled) {
 }
 #endif // #if !defined(DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS)
 
-/*
- * Delay, which also checks for events
- * AVR - Is not affected by overflow of millis()!
- */
-void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) {
-    unsigned long tStartMillis = millis();
-    while (millis() - tStartMillis < aDelayMillis) {
-        checkAndHandleEvents();
-#if defined(ESP8266)
-        yield(); // required for ESP8266
-#endif
+bool delayMillisAndOptionallyCheckForFlag(unsigned int aDelayMillis, bool *aAddressOfFlagToCheckForTrue) {
+    if (aAddressOfFlagToCheckForTrue != nullptr) {
+        *aAddressOfFlagToCheckForTrue = false;
     }
-}
-
-/*
- * Special delay function for BlueDisplay. Returns prematurely if Event is received.
- * To be used in blocking functions as delay
- * @return  true - as soon as event received
- */
-bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) {
-    sBDEventJustReceived = false;
-
     unsigned long tStartMillis = millis();
     while (millis() - tStartMillis < aDelayMillis) {
         checkAndHandleEvents();
-        if (sBDEventJustReceived) {
-            return true;
+        if (aAddressOfFlagToCheckForTrue != nullptr) {
+            if (*aAddressOfFlagToCheckForTrue) {
+                return true;
+            }
         }
 #if defined(ESP8266)
             yield(); // required for ESP8266
@@ -276,6 +260,43 @@ bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) {
     }
     return false;
 }
+
+/*
+ * Delay, which also checks for events
+ * AVR - Is not affected by overflow of millis()!
+ */
+void delayMillisAndHandleEvents(unsigned long aDelayMillis) {
+    delayMillisAndOptionallyCheckForFlag(aDelayMillis, nullptr);
+}
+void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) { // Deprecated
+    delayMillisAndOptionallyCheckForFlag(aDelayMillis, nullptr);
+}
+
+/*
+ * Special delay function for BlueDisplay. Returns prematurely if Event is received.
+ * To be used in blocking functions as delay
+ * @return  true - as soon as event received
+ */
+bool delayMillisHandleEventsAndBreakIfEventJustReceived(unsigned long aDelayMillis) {
+    return delayMillisAndOptionallyCheckForFlag(aDelayMillis, &sBDEventJustReceived);
+}
+bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) { // Deprecated
+    return delayMillisAndOptionallyCheckForFlag(aDelayMillis, &sBDEventJustReceived);
+}
+
+/*
+ * Special delay function for the Red/Green toggle buttons. Returns prematurely if a button turns to red.
+ * To be used in blocking functions as delay
+ * Expands a one parameter function call to a two parameter call and thus saves space if used multiple times.
+ * @return  true - as soon as a button turn to red is received
+ */
+bool delayMillisHandleEventsAndBreakIfStopButtonPressed(unsigned int aDelayMillis) {
+    return delayMillisAndOptionallyCheckForFlag(aDelayMillis, &sButtonCalledWithFalse);
+}
+bool delayMillisAndCheckForStop(unsigned int aDelayMillis) { // Deprecated
+    return delayMillisAndOptionallyCheckForFlag(aDelayMillis, &sButtonCalledWithFalse);
+}
+
 
 /*
  * Assume that stop is requested, if a button is called with value 0/false, i.e. a Red/Green toggle button is set to red.
@@ -285,29 +306,11 @@ bool isStopRequested() {
     return sButtonCalledWithFalse;
 }
 
-/*
- * Special delay function for the Red/Green toggle buttons. Returns prematurely if a button turns to red.
- * To be used in blocking functions as delay
- * @return  true - as soon as a turn to red is received
- */
-bool delayMillisAndCheckForStop(uint16_t aDelayMillis) {
-    unsigned long tStartMillis = millis();
-    while (millis() - tStartMillis < aDelayMillis) {
-        if (isStopRequested()) {
-            return true;
-        }
-#if defined(ESP8266)
-            yield(); // required for ESP8266
-#endif
-    }
-    return false;
-}
-
 #if defined(ARDUINO)
 /*
- * Like delayMillisWithCheckAndHandleEvents, but extends wait, if receiving is active
+ * Like delayMillisAndHandleEvents, but extends wait, if receiving is active
  */
-void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis) {
+void delayMillisHandleEventsAndWaitIfReceiving(unsigned long aDelayMillis) {
     unsigned long tStartMillis = millis();
     while (millis() - tStartMillis < aDelayMillis || isReceivingActive()) {
         checkAndHandleEvents();
@@ -317,6 +320,9 @@ void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelay
     }
 }
 
+void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis) { // Deprecated
+    delayMillisHandleEventsAndWaitIfReceiving(aDelayMillis);
+}
 /*
  * If receiving was started, wait until event was completely received and processed, but timeout after 40 ms
  */

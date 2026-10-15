@@ -7,7 +7,7 @@
  *  It also implements basic GUI elements as buttons and sliders.
  *  GUI callback, touch and sensor events are sent back to Arduino.
  *
- *  Copyright (C) 2014-2025  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -62,8 +62,8 @@
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 #endif
-// Get absolute value of difference of two unsigned values
-#if !defined(uintDifferenceAbs)
+// Get absolute value of difference or delta of two unsigned values
+#if !defined(uintDifferenceAbs) // could also be named uintDeltaAbs
 #define uintDifferenceAbs(a, b) ((a >= b) ? a - b : b - a)
 #endif
 
@@ -120,80 +120,6 @@ class __FlashStringHelper;
 #include "BDButton.h" // for BDButtonIndex_t
 #include "BDSlider.h" // for BDSliderIndex_t
 #endif
-
-/*****************************
- * Constants used in protocol
- *****************************/
-//#define COLOR16_NO_BACKGROUND   ((color16_t)0XFFFE)
-static const float NUMBER_INITIAL_VALUE_DO_NOT_SHOW = 1e-40f;
-
-/**********************
- * Basic
- *********************/
-// Sub functions for SET_FLAGS_AND_SIZE / setFlagsAndSize()
-// Reset buttons, sliders, sensors, orientation locking, flags (see next lines) and character mappings
-static const int BD_FLAG_FIRST_RESET_ALL = 0x01;
-//
-static const int BD_FLAG_TOUCH_BASIC_DISABLE = 0x02; // Do not send plain touch events (UP, DOWN, MOVE) if no button or slider was touched, send only button and slider events. -> Disables also touch moves.
-static const int BD_FLAG_ONLY_TOUCH_MOVE_DISABLE = 0x04; // Do not send MOVE, only UP and DOWN.
-static const int BD_FLAG_LONG_TOUCH_ENABLE = 0x08; // If long touch detection is required. This delays the sending of plain DOWN Events.
-static const int BD_FLAG_USE_MAX_SIZE = 0x10;      // Use maximum display size for given geometry. -> Scale automatically to screen.
-// Here we use the same values as below, but shifted by 8 bytes
-/*********************************************
- * Flags for setScreenOrientationLock()
- * We have almost same values as used in Android
- * LANDSCAPE is 0 on Android, but we abuse the value 3 of SCREEN_ORIENTATION_BEHIND for it to have 0 as unlock
- *********************************************/
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x0000; // Unlock is -1 on Android, Landscape is 0 on Android,
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x0300; // Landscape is 0 on Android, 3 is SCREEN_ORIENTATION_BEHIND in Android
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT = 0x0100;
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_USER = 0x0200; // User preferred rotation
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR = 0x0400; // force usage of sensor
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_NOSENSOR = 0x0500; // ignore sensor
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE = 0x0600; // both landscapes are allowed
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_PORTRAIT = 0x0700;
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_LANDSCAPE = 0x0800;
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_PORTRAIT = 0x0900;
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_FULLSENSOR = 0x0A00; // enable also 180 degree rotation by sensor
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x0E00; // lock to current orientation
-
-/*********************************************
- * Flags for setScreenOrientationLock()
- * We have almost same values as used in Android
- *********************************************/
-static const int FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x00;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x03;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT = 0x01;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_USER = 0x02;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_SENSOR = 0x04;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_NOSENSOR = 0x0500; // ignore sensor
-static const int FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE = 0x06; // both landscapes are allowed
-static const int FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_PORTRAIT = 0x07;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_LANDSCAPE = 0x08;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_PORTRAIT = 0x09;
-static const int FLAG_SCREEN_ORIENTATION_LOCK_FULLSENSOR = 0x0A; // enable also 180 degree rotation by sensor
-static const int FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x0E;
-
-/**********************
- * Tone
- *********************/
-// Android system tones
-// Codes start with 0 - 15 for DTMF tones and ends with code TONE_CDMA_SIGNAL_OFF=98 for silent tone (which does not work on lollipop)
-#define TONE_CDMA_KEYPAD_VOLUME_KEY_LITE 89
-#define TONE_PROP_BEEP_OK TONE_CDMA_KEYPAD_VOLUME_KEY_LITE // 120 ms 941 + 1477 Hz - normal tone for OK Feedback
-#define TONE_PROP_BEEP_ERROR 28      // 2* 35/200 ms 400 + 1200 Hz - normal tone for ERROR Feedback
-#define TONE_PROP_BEEP_ERROR_HIGH 25 // 2* 100/100 ms 1200 Hz - high tone for ERROR Feedback
-#define TONE_PROP_BEEP_ERROR_LONG 26 // 2* 35/200 ms 400 + 1200 Hz - normal tone for ERROR Feedback
-#define TONE_SILENCE 50              // Since 98 does not work on Android Lollipop
-#define TONE_CDMA_ONE_MIN_BEEP 88
-#define TONE_DEFAULT TONE_CDMA_KEYPAD_VOLUME_KEY_LITE
-#define TONE_LAST_VALID_TONE_INDEX 98
-
-#define FEEDBACK_TONE_OK 0
-#define FEEDBACK_TONE_ERROR 1
-#define FEEDBACK_TONE_LONG_ERROR TONE_PROP_BEEP_ERROR_LONG
-#define FEEDBACK_TONE_HIGH_ERROR TONE_PROP_BEEP_ERROR_HIGH
-#define FEEDBACK_TONE_NO_TONE TONE_SILENCE
 
 /**********************
  * Sensors
@@ -255,9 +181,10 @@ public:
 
     void playTone();
     void playTone(uint8_t aToneIndex);
-    void playTone(uint8_t aToneIndex, int16_t aToneDuration);
-    void playTone(uint8_t aToneIndex, int16_t aToneDuration, uint8_t aToneVolume);
-    void playFeedbackTone(uint8_t aFeedbackToneType);
+    void playTone(uint8_t aToneIndex, uint16_t aToneDurationMaximumMillis);
+    void playTone(uint8_t aToneIndex, uint16_t aToneDurationMaximumMillis, uint8_t aToneVolume);
+    void playFeedbackTone();
+    void playFeedbackTone(bool aPlayErrorTone);
 
     void speakSetLocale(const char *aLocaleString);
     void speakSetVoice(const char *aVoiceString); // One of the Voice strings printed in log at level Info at BD application startup
@@ -442,6 +369,8 @@ uint8_t _clipAndCopyPGMString(char *aStringBuffer, const __FlashStringHelper *aP
 // The instance provided by the class itself
 extern BlueDisplay BlueDisplay1;
 
+
+
 #endif // __cplusplus
 
 extern bool isLocalDisplayAvailable;
@@ -477,6 +406,7 @@ float getCPUTemperature(void);
  * Version 5.2.0
  * - New function setButtonsGlobalTouchToneState().
  * - Removed clearDisplayAndDisableButtonsAndSliders(), is now included in .clearDisplay(). Added clearDisplayArea().
+ * - Changed Tone forever duration parameter value from -1 to 0.
  *
  * Version 5.1.0
  * - Renamed function names and variables from GridOrLabelX to XGridOrLabel and GridOrLabelY to YGridOrLabel.

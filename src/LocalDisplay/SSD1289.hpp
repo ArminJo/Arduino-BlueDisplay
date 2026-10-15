@@ -107,7 +107,7 @@ void SSD1289::clearDisplay(uint16_t aColor) {
     setArea(0, 0, LOCAL_DISPLAY_WIDTH - 1, LOCAL_DISPLAY_HEIGHT - 1);
 
     drawStart();
-    for (uint16_t size = (LOCAL_DISPLAY_HEIGHT * LOCAL_DISPLAY_WIDTH); size != 0; size--) {
+    for (uint32_t size = (LOCAL_DISPLAY_HEIGHT * LOCAL_DISPLAY_WIDTH); size != 0; size--) {
         HY32D_DATA_GPIO_PORT->ODR = aColor;
         // Latch data write
         HY32D_WR_GPIO_PORT->BSRR = (uint32_t) HY32D_WR_PIN << 16;

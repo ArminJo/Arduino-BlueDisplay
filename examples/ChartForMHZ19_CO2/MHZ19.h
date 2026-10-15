@@ -8,7 +8,6 @@
  *
  *
  *  Copyright (C) 2022-2024  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of MHZ19 https://github.com/ArminJo/MH-Z19.
  *
@@ -26,12 +25,12 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  *
  */
-#ifndef MHZ19_H
-#define MHZ19_H
+#ifndef _MHZ19_H
+#define _MHZ19_H
 
 #include <Arduino.h>
 
-//#define MHZ19_USE_MINIMAL_RAM                   // removes all field from the class, which are not required for just reading CO2 value
+//#define MHZ19_USE_MINIMAL_RAM // Enables only class members, which are required for reading CO2 value and disables usage of Serial to save RAM
 
 #define MHZ19_BAUDRATE                  9600    // Device to MH-Z19 Serial baudrate (should not be changed) -> around 1000 bytes per second
 #define MHZ19_DATA_LEN                     9    // Data protocol length
@@ -79,7 +78,6 @@ public:
     char VersionString[5]; // 0512,
 
 
-#define ABC_COUNTER_MAX 143
     /*
      * Results of command 0x85 CO2_AND_TEMPERATURE
      */
@@ -89,12 +87,16 @@ public:
     uint16_t MinimumLightADC;
 #endif
 
+#define ABC_COUNTER_MAX 143
     bool AutoBaselineCorrectionEnabled;
 
-#if !defined(MHZ19_USE_MINIMAL_RAM)
+#if !defined(MHZ19_USE_MINIMAL_RAM) // disables also usage of Serial object, which otherwise uses a lot of RAM for its buffers
+    bool SerialDebugOutputIsEnabled = false; // if true, SerialForDebug must be set (by enableDebug())
+
     uint16_t Version;
     uint8_t VersionMajor;
     uint8_t VersionMinor;
+
     /*
      * Results of command 0x84 CO2RAW
      */
@@ -106,8 +108,8 @@ public:
     /*
      * Results of command 0x86 CO2MASKED_AND_TEMP
      */
-    uint16_t CO2; // == CO2Unmasked, except that it is displayed / masked as 500 for the first minute. Values are clipped between 405 and 5000.
-    int8_t Temperature;
+    uint16_t CO2; // == CO2Unmasked (5.12 == CO2Alternate), except that it is displayed / masked as 500 for the first minute. Values are clipped between 405 and 5000.
+    int8_t Temperature; // 5.12 integer and e.g. 1.7 degree higher, maybe CPU temperature?
     uint8_t ABCCounter; // Is incremented by MHZ19 every 10 minutes. Range is from 0 to 143
 
 
@@ -117,8 +119,6 @@ public:
     uint16_t SensorRange; // 5.12 is 5000
     uint16_t CO2Alternate; // 5.12 Values are clipped at 400.
     uint16_t Period; // 5.12 is 0
-
-    bool SerialDebugOutputIsEnabled = false; // if true, SerialForDebug must be set (by enableDebug())
 #endif
 
     /*
@@ -160,7 +160,7 @@ public:
     void printErrorCode(Print *aSerial);
     void printErrorMessage(Print *aSerial);
 
-    void printCommand(MHZ19_command_t aCommand, Print *aSerial);
+    void printCommand(Print *aSerial, MHZ19_command_t aCommand);
 
 };
-#endif
+#endif // _MHZ19_H

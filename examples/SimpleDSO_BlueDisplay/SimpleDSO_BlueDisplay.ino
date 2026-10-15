@@ -540,7 +540,7 @@ void setup() {
  ************************************************************************/
 // noreturn saves 56 byte program memory! but no stack
 void __attribute__((noreturn)) loop(void) {
-    uint32_t sMillisOfLastInfoOutput;
+    uint32_t sMillisOfLastInfoOutput = 0;
 
     bool sDoInfoOutput = true; // Output info at least every second for settings page, single shot or trigger not found
 
@@ -653,7 +653,7 @@ void __attribute__((noreturn)) loop(void) {
                              * Otherwise we see to much errors: RPCView Read delay > 1000ms for missing bytes. ...
                              */
                             if (sSlowBluetoothMode) {
-                                delayMillisAndCheckForEvent(HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_BT_CONNECTION);
+                                delayMillisAndHandleEvents(HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_BT_CONNECTION);
                             }
                             drawDataBuffer(&DataBufferControl.DataBuffer[0], COLOR_DATA_RUN, DisplayControl.EraseColor);
                         }
@@ -1458,8 +1458,8 @@ void setInputRange(uint8_t aShiftValue, uint8_t aActiveAttenuatorValue) {
  * used by swipe handler
  * input Range is ShiftValue + 3 * AttenuatorValue
  */
-uint8_t changeRange(int8_t aChangeAmount) {
-    uint8_t tFeedbackType = FEEDBACK_TONE_OK;
+bool changeRange(int8_t aChangeAmount) {
+    bool tIsError = false;
     int8_t tNewValue = 0;
     if (MeasurementControl.AttenuatorType >= ATTENUATOR_TYPE_ACTIVE_ATTENUATOR) {
         tNewValue = MeasurementControl.AttenuatorValue * 3;
@@ -1467,21 +1467,21 @@ uint8_t changeRange(int8_t aChangeAmount) {
     tNewValue += MeasurementControl.ShiftValue + aChangeAmount;
     if (tNewValue < 0) {
         tNewValue = 0;
-        tFeedbackType = FEEDBACK_TONE_ERROR;
+        tIsError = true;
     }
     if (MeasurementControl.ChannelHasActiveAttenuator) {
         if (tNewValue > 8) {
             tNewValue = 8;
-            tFeedbackType = FEEDBACK_TONE_ERROR;
+            tIsError = true;
         }
     } else {
         if (tNewValue > 2) {
             tNewValue = 2;
-            tFeedbackType = FEEDBACK_TONE_ERROR;
+            tIsError = true;
         }
     }
     setInputRange(tNewValue % 3, tNewValue / 3);
-    return tFeedbackType;
+    return tIsError;
 }
 
 /*
@@ -1661,21 +1661,19 @@ void doAcDcMode(BDButton *aTheTouchedButton __attribute__((unused)), int16_t aVa
  */
 void doSetTriggerDelay(float aValue) {
     uint8_t tTriggerDelayMode = TRIGGER_DELAY_NONE;
-    if (aValue != NUMBER_INITIAL_VALUE_DO_NOT_SHOW) {
-        uint32_t tTriggerDelay = aValue;
-        if (tTriggerDelay != 0) {
-            if (tTriggerDelay > UINT16_MAX) {
-                tTriggerDelayMode = TRIGGER_DELAY_MILLIS;
-                MeasurementControl.TriggerDelayMillisOrMicros = tTriggerDelay / 1000;
+    uint32_t tTriggerDelay = aValue;
+    if (tTriggerDelay != 0) {
+        if (tTriggerDelay > UINT16_MAX) {
+            tTriggerDelayMode = TRIGGER_DELAY_MILLIS;
+            MeasurementControl.TriggerDelayMillisOrMicros = tTriggerDelay / 1000;
+        } else {
+            tTriggerDelayMode = TRIGGER_DELAY_MICROS;
+            uint16_t tTriggerDelayMicros = tTriggerDelay;
+            if (tTriggerDelayMicros > TRIGGER_DELAY_MICROS_ISR_ADJUST_COUNT) {
+                MeasurementControl.TriggerDelayMillisOrMicros = tTriggerDelayMicros;
             } else {
-                tTriggerDelayMode = TRIGGER_DELAY_MICROS;
-                uint16_t tTriggerDelayMicros = tTriggerDelay;
-                if (tTriggerDelayMicros > TRIGGER_DELAY_MICROS_ISR_ADJUST_COUNT) {
-                    MeasurementControl.TriggerDelayMillisOrMicros = tTriggerDelayMicros;
-                } else {
-                    // delay to small -> disable delay
-                    tTriggerDelayMode = TRIGGER_DELAY_NONE;
-                }
+                // delay to small -> disable delay
+                tTriggerDelayMode = TRIGGER_DELAY_NONE;
             }
         }
     }

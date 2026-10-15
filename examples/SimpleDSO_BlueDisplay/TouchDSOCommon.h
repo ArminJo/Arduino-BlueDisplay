@@ -330,7 +330,7 @@ void setACMode(bool aNewACMode);
 int changeOffsetGridCount(int aValue);
 
 #if defined(__AVR__)
-uint8_t changeRange(int8_t aChangeAmount);
+bool changeRange(int8_t aChangeAmount);
 uint8_t changeTimeBaseValue(int8_t aChangeValue);
 #else
 int changeDisplayRange(int aValue);

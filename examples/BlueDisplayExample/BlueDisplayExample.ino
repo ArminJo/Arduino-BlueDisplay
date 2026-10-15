@@ -15,7 +15,7 @@
  *  With 9600 baud, the minimal blink delay we observe is 200 ms because of the communication delay
  *  of 8 * printDemoString(), which requires 8*24 ms -> 192 ms
  *
- *  Copyright (C) 2014-2025  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2026  Armin Joachimsmeyer
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *
@@ -129,7 +129,6 @@ void setup() {
 
 #if defined(ESP32)
     Serial.begin(115200);
-    Serial.println(StartMessage);
     initSerial("ESP-BD_Example");
     Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
 #else
@@ -182,9 +181,9 @@ void loop() {
 
         digitalWrite(LED_BUILTIN, HIGH);
         // Delay and check for connection
-        delayMillisWithCheckAndHandleEvents(tBlinkDuration / 2);
+        delayMillisAndHandleEvents(tBlinkDuration / 2);
         digitalWrite(LED_BUILTIN, LOW);
-        delayMillisWithCheckAndHandleEvents(tBlinkDuration / 2);
+        delayMillisAndHandleEvents(tBlinkDuration / 2);
 
     } else if (!sInTestPage) {
         /*
@@ -201,7 +200,7 @@ void loop() {
              *  Check touch events 8 times while waiting.
              */
             for (uint8_t i = 0; i < 8; ++i) {
-                delayMillisWithCheckAndHandleEvents(sDelay / 8); // This can trigger the display of the test page
+                delayMillisAndHandleEvents(sDelay / 8); // This can trigger the display of the test page
                 if (sInTestPage) {
                     return; // leave inner and outer loop immediately
                 }
@@ -213,7 +212,7 @@ void loop() {
             digitalWrite(LED_BUILTIN, LOW);
             BlueDisplay1.fillCircle(LOCAL_DISPLAY_WIDTH / 2, LOCAL_DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
             for (uint8_t i = 0; i < 8; ++i) {
-                delayMillisWithCheckAndHandleEvents(sDelay / 8); // This can trigger the display of the test page
+                delayMillisAndHandleEvents(sDelay / 8); // This can trigger the display of the test page
                 if (sInTestPage) {
                     return; // leave inner and outer loop immediately
                 }

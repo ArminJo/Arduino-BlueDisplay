@@ -251,7 +251,7 @@ void loop() {
      * Your code here
      */
 
-    delayMillisWithCheckAndHandleEvents(sLeftSliderValues[DELAY_SLIDER]); // Using value of DELAY_SLIDER and check for new data
+    delayMillisAndHandleEvents(sLeftSliderValues[DELAY_SLIDER]); // Using value of DELAY_SLIDER and check for new data
 }
 
 /*
@@ -462,7 +462,7 @@ void TestNewSliderAndButton() {
     /*
      * Wait 6 seconds until deleting button and slider
      */
-    delayMillisWithCheckAndHandleEvents(6000);
+    delayMillisAndHandleEvents(6000);
 
     tButton->removeButton(DISPLAY_BACKGROUND_COLOR);
     tButton->deinit();

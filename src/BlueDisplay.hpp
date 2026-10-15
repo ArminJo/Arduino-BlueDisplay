@@ -105,8 +105,8 @@ void BlueDisplay::resetLocal() {
  * If host is still Bluetooth connected, this results in a EVENT_REQUESTED_DATA_CANVAS_SIZE event.
  * This event sets mCurrentDisplaySize and mHostUnixTimestamp and in turn calls the ConnectCallback as well as the RedrawCallback.
  *
- * Wait CONNECTIOM_TIMEOUT_MILLIS (1500) ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
- * !!! => Introduces up to 1.5 seconds delay (BD_CONNECTION_TIMEOUT_MILLIS) !!!
+ * Wait BD_CONNECTION_TIMEOUT_MILLIS (1500) ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
+ * !!! => Introduces 50 to 150 ms (still connected) up to 1.5 seconds delay !!!
  *
  * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth is just enabled here,
  * but the android app (host) is not manually (re)connected to us, so we are most likely not connected here.
@@ -153,12 +153,12 @@ uint_fast16_t BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*
 
     for (uint_fast16_t i = 0; i < BD_CONNECTION_TIMEOUT_MILLIS; i += 10) {
         /*
-         * Wait CONNECTIOM_TIMEOUT_MILLIS ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
+         * Wait BD_CONNECTION_TIMEOUT_MILLIS ms for receiving the EVENT_REQUESTED_DATA_CANVAS_SIZE event.
          * Time measured is between 50 and 150 ms (or mostly between 80 and 120) for Bluetooth.
          * But I have seen 990 ms too :-(( , which corresponds to a communication lag of 500 ms in each direction,
          * even if we have a 1 second delay before initCommunication();
          */
-        delayMillisWithCheckAndHandleEvents(10);
+        delayMillisAndHandleEvents(10);
         if (mBlueDisplayConnectionEstablished) { // is set by delay(WithCheckAndHandleEvents()
             // Handler are called by the received canvas size event, if mBlueDisplayConnectionEstablished was not set before
             return i;
@@ -170,7 +170,7 @@ uint_fast16_t BlueDisplay::initCommunication(void (*aConnectCallback)(), void (*
 
 /*
  * Call with BlueDisplay1.initCommunication(&Serial, &initDisplay, ...);
- * !!! => Introduces up to 1.5 seconds delay (BD_CONNECTION_TIMEOUT_MILLIS) !!!
+ * !!! => Introduces 50 to 150 ms (still connected) up to 1.5 seconds delay (BD_CONNECTION_TIMEOUT_MILLIS) !!!
  */
 #if defined(ARDUINO)
 #  if defined(__AVR__)
@@ -195,7 +195,7 @@ void BlueDisplay::initCommunication(Stream *aSerial, void (*aConnectCallback)(),
         aSerial->print(tConnectDurationMillis);
         aSerial->println(" ms");
     } else {
-        aSerial->println(F("No BD connection after " STR(CONNECTIOM_TIMEOUT_MILLIS) " ms"));
+        aSerial->println(F("No BD connection after " STR(BD_CONNECTION_TIMEOUT_MILLIS) " ms"));
     }
 #  endif
 }
@@ -281,46 +281,45 @@ void BlueDisplay::setScreenBrightness(uint8_t aScreenBrightness) {
 }
 
 void BlueDisplay::playTone() {
-    sendUSARTArgs(FUNCTION_PLAY_TONE, 1, TONE_DEFAULT);
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 1, TONE_PROP_BEEP_OK);
 }
 
-/*
- * index is from android.media.ToneGenerator see also
+/**
+ * aToneIndex is from android.media.ToneGenerator see also
  * http://developer.android.com/reference/android/media/ToneGenerator.html
- * Tone index 0 is DTMF tone for key 0: 1336Hz, 941Hz, continuous
- * defaults are:
- * ToneDuration = as long as the tone on android lasts (100ms?)
+ * @param aToneIndex  0 -> app default TONE_CDMA_KEYPAD_VOLUME_KEY_LITE else system tone index e.g. TONE_PROP_BEEP_ERROR_LONG
  */
 void BlueDisplay::playTone(uint8_t aToneIndex) {
     sendUSARTArgs(FUNCTION_PLAY_TONE, 1, aToneIndex);
 }
 
-/*
- * aToneDuration -1 means forever
- * but except the value -1 aToneDuration is taken as unsigned so -2 will give 65534 micros
+/**
+ * @param aToneIndex  0 -> app default TONE_CDMA_KEYPAD_VOLUME_KEY_LITE else system tone index e.g. TONE_PROP_BEEP_ERROR_LONG
+ * @param aToneDurationMaximumMillis 0 (TONE_DURATION_FOREVER) -> forever, maximum duration of system tone to play
  */
-void BlueDisplay::playTone(uint8_t aToneIndex, int16_t aToneDuration) {
-    sendUSARTArgs(FUNCTION_PLAY_TONE, 2, aToneIndex, aToneDuration);
+void BlueDisplay::playTone(uint8_t aToneIndex, uint16_t aToneDurationMaximumMillis) {
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 2, aToneIndex, aToneDurationMaximumMillis);
 }
 
-/*
- * aToneDuration -1 means forever
- * but except the value -1 aToneDuration is taken as unsigned so -2 will give 65534 micros
+/**
+ * @param aToneIndex  0 -> app default TONE_CDMA_KEYPAD_VOLUME_KEY_LITE else system tone index e.g. TONE_PROP_BEEP_ERROR_LONG
+ * @param aToneDurationMaximumMillis 0 (TONE_DURATION_FOREVER) -> forever, maximum duration of system tone to play
  */
-void BlueDisplay::playTone(uint8_t aToneIndex, int16_t aToneDuration, uint8_t aToneVolume) {
-    sendUSARTArgs(FUNCTION_PLAY_TONE, 3, aToneIndex, aToneDuration, aToneVolume);
+void BlueDisplay::playTone(uint8_t aToneIndex, uint16_t aToneDurationMaximumMillis, uint8_t aToneVolume) {
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 3, aToneIndex, aToneDurationMaximumMillis, aToneVolume);
+}
+// the same as BDButton::playFeedbackTone()
+void BlueDisplay::playFeedbackTone() {
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 1, TONE_PROP_BEEP_OK);
 }
 
-void BlueDisplay::playFeedbackTone(uint8_t aFeedbackToneType) {
-    if (aFeedbackToneType == FEEDBACK_TONE_OK) {
-        playTone(TONE_PROP_BEEP_OK);
-    } else if (aFeedbackToneType == FEEDBACK_TONE_ERROR) {
-        playTone(TONE_PROP_BEEP_ERROR);
-    } else if (aFeedbackToneType == FEEDBACK_TONE_NO_TONE) {
-        return;
-    } else {
-        playTone(aFeedbackToneType);
+// the same as BDButton::playFeedbackTone(bool aPlayErrorTone)
+void BlueDisplay::playFeedbackTone(bool aPlayErrorTone) {
+    uint8_t tAndroidToneIndex = TONE_PROP_BEEP_OK;
+    if (aPlayErrorTone) {
+        tAndroidToneIndex = TONE_PROP_BEEP_ERROR;
     }
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 1, tAndroidToneIndex);
 }
 
 /*
@@ -1498,9 +1497,11 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
 #endif
 }
 
-/*
- * Message size is 3 (__AVR__) or 4 shorts
- * If cancelled on the Host, nothing is sent back
+/**
+ * Message size is 3 (__AVR__) or 4 shorts If cancelled on the Host, nothing is sent back
+ * @param aNumberHandler    callback handler for EVENT_NUMBER_CALLBACK event
+ * @param aShortPromptString
+ * @param aInitialValue if NUMBER_INITIAL_VALUE_DO_NOT_SHOW, value is not rendered in text on host
  */
 void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const char *aShortPromptString, float aInitialValue) {
     if (USART_isBluetoothPaired()) {
@@ -1561,7 +1562,7 @@ uint_fast16_t BlueDisplay::requestMaxCanvasSizeBlockingWait(uint_fast16_t aTimeo
          * But I have seen 990 ms too :-(( , which corresponds to a communication lag of 500 ms in each direction,
          * even if we have a 1 second delay before initCommunication();
          */
-        delayMillisWithCheckAndHandleEvents(10);
+        delayMillisAndHandleEvents(10);
         if (sBDEventJustReceived) { // is set by delay(WithCheckAndHandleEvents()
             // Handler are called by the received canvas size event, if mBlueDisplayConnectionEstablished was not set before
             return i;
@@ -1612,6 +1613,12 @@ void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const 
     }
 }
 
+/**
+ * Message size is 3 (__AVR__) or 4 shorts If cancelled on the Host, nothing is sent back
+ * @param aNumberHandler    callback handler for EVENT_NUMBER_CALLBACK event
+ * @param aShortPromptString
+ * @param aInitialValue if NUMBER_INITIAL_VALUE_DO_NOT_SHOW, value is not rendered in text on host
+ */
 void BlueDisplay::getNumberWithShortPrompt(void (*aNumberHandler)(float), const __FlashStringHelper *aPGMShortPromptString,
         float aInitialValue) {
     if (USART_isBluetoothPaired()) {
@@ -1905,7 +1912,7 @@ void BlueDisplay::testDisplay(BDButton *aBackButton, bool *stillInTestPage) {
         for (uint8_t j = 0; j < sizeof(tColorArray) / sizeof(tColorArray[0]); ++j) {
             tColorArray[j] = COLOR16_WHITE;
         }
-        delayMillisAndCheckForEvent(10000); // wait 10 seconds and then clear items, to see residual
+        DELAY_UNTIL_EVENT(10000); // wait 10 seconds and then clear items, to see residual
         if (stillInTestPage != nullptr) {
             if (stillInTestPage) {
                 return;

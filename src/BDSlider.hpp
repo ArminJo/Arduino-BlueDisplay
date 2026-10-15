@@ -200,6 +200,17 @@ void BDSlider::setValueAndDrawBar(int16_t aCurrentValue) {
     sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_BAR, aCurrentValue);
 }
 
+void BDSlider::setValueAndDrawSlider(int16_t aCurrentValue) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalSliderPointer->setValue(aCurrentValue);
+    mLocalSliderPointer->drawSlider();
+#endif
+    // TODO enable it after app 5.3.0 is released
+//    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_VALUE_AND_DRAW_SLIDER, aCurrentValue);
+    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
+    sendUSARTArgs(FUNCTION_SLIDER_DRAW, 1, mSliderIndex);
+}
+
 /*
  * Draw bar and set and print current value
  */

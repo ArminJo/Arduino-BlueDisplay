@@ -157,8 +157,8 @@ Modify them by enabling / disabling them, or change the values if applicable.
 | `DISABLE_REMOTE_DISPLAY` | disabled | Suppress drawing to Bluetooth connected display. Allow only drawing on the locally attached display. Not (yet) implemented for all commands! |
 | `LOCAL_GUI_FEEDBACK_TONE_PIN` | disabled | If defined, local GUI library calls `tone(LOCAL_GUI_FEEDBACK_TONE_PIN, 3000, 50)` on flags like FLAG_BUTTON_DO_BEEP_ON_TOUCH. |
 | `SUPPORT_ONLY_TEXT_SIZE_11_AND_22` | disabled | If defined, saves program memory especially for local GUI. |
-| `LOCAL_DISPLAY_HEIGHT` | 240 | The height of the local diplay used by the LocalGUI library. |
-| `LOCAL_DISPLAY_WIDTH` | 320 | The width of the local diplay used by the LocalGUI library. |
+| `LOCAL_DISPLAY_HEIGHT` | 240 | The height of the local display used by the LocalGUI library. |
+| `LOCAL_DISPLAY_WIDTH` | 320 | The width of the local display used by the LocalGUI library. |
 
 <br/>
 

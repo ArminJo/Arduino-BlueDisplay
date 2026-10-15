@@ -101,7 +101,7 @@ uint8_t sHCSR04Mode = HCSR04_MODE_UNITITIALIZED;
 unsigned long sLastUSDistanceMeasurementMillis; // Only written by getUSDistanceAsCentimeterWithCentimeterTimeoutPeriodicallyAndPrintIfChanged()
 unsigned int sLastUSDistanceCentimeter; // Only written by getUSDistanceAsCentimeterWithCentimeterTimeoutPeriodicallyAndPrintIfChanged()
 unsigned int sUSDistanceMicroseconds;
-unsigned int sUSDistanceCentimeter;
+unsigned int sUSDistanceCentimeter; // On timeout it contains DISTANCE_TIMEOUT_RESULT (0)
 uint8_t sUsedMillisForUSDistanceMeasurement;
 
 /*
@@ -235,14 +235,18 @@ unsigned int getUSDistanceAsCentimeterWithCentimeterTimeout(unsigned int aTimeou
 }
 
 /**
- * @return  HCSR04_DISTANCE_NO_MEASUREMENT, HCSR04_MEASUREMENT_AND_DISTANCE_HAS_CHANGED or HCSR04_MEASUREMENT_AND_DISTANCE_HAS_NOT_CHANGED
+ * Uses sLastUSDistanceMeasurementMillis and sLastUSDistanceCentimeter.
+ * @return  HCSR04_DISTANCE_NO_MEASUREMENT if periodically timeout not reached
+ *          HCSR04_MEASUREMENT_AND_DISTANCE_HAS_CHANGED or HCSR04_MEASUREMENT_AND_DISTANCE_HAS_NOT_CHANGED
+ *          if measurement was taken
+ *          Distance is "returned" in sUSDistanceCentimeter
  */
 uint8_t getUSDistanceAsCentimeterWithCentimeterTimeoutPeriodicallyAndPrintIfChanged(unsigned int aTimeoutCentimeter,
         unsigned int aMillisBetweenMeasurements, Print *aSerial) {
     if ((millis() - sLastUSDistanceMeasurementMillis) >= aMillisBetweenMeasurements) {
         sLastUSDistanceMeasurementMillis = millis();
 
-        getUSDistanceAsCentimeterWithCentimeterTimeout(aTimeoutCentimeter);
+        getUSDistanceAsCentimeterWithCentimeterTimeout(aTimeoutCentimeter); // sets sUSDistanceCentimeter
         unsigned int tDeltaDistance;
         if (sLastUSDistanceCentimeter > sUSDistanceCentimeter) {
             tDeltaDistance = sLastUSDistanceCentimeter - sUSDistanceCentimeter;

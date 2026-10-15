@@ -436,7 +436,7 @@ uint8_t getRandomValue(ServoControlStruct *aServoControlStruct, ServoEasing *aSe
     uint8_t tNewTargetAngle;
     do {
         tNewTargetAngle = random(aServoControlStruct->minDegree, aServoControlStruct->maxDegree);
-    } while (tNewTargetAngle == aServoEasing->MicrosecondsOrUnitsToDegree(aServoEasing->mCurrentMicrosecondsOrUnits)); // do not accept current angle as new value
+    } while (tNewTargetAngle == aServoEasing->MicrosecondsToDegree(aServoEasing->mCurrentMicroseconds)); // do not accept current angle as new value
     return tNewTargetAngle;
 }
 
@@ -534,7 +534,7 @@ void doSetBias(BDButton *aTheTouchedButton, int16_t aValue) {
     // show message in order to see the effect
     BlueDisplay1.clearDisplay();
     BlueDisplay1.drawText(0, sTextSize / 4, "old position is taken \rfor horizontal input\r", sTextSize, COLOR16_BLACK, COLOR16_GREEN);
-    delayMillisWithCheckAndHandleEvents(2500);
+    delayMillisAndHandleEvents(2500);
     drawGui();
 }
 

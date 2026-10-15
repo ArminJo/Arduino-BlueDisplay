@@ -1,5 +1,5 @@
 /*
- *  MHZ19.cpp
+ *  MHZ19.hpp
  *
  *  Arduino library to control a MH-Z19C CO2 sensor. Tested with firmware version 5.2
  *  Based on - https://github.com/WifWaf/MH-Z19
@@ -7,7 +7,7 @@
  *           - 4 Winsen Datasheets
  *
  *
- *  Copyright (C) 2022-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2022-2026  Armin Joachimsmeyer
  *
  *  This file is part of MHZ19 https://github.com/ArminJo/MH-Z19.
  *
@@ -140,7 +140,7 @@ bool MHZ19::readResponse() {
         SerialForDebug->print(F(" Received cmd=0x"));
         SerialForDebug->print(ReceivedResponse[COMMAND_RECEIVE_INDEX], HEX);
         SerialForDebug->print(F("|"));
-        printCommand((MHZ19_command_t) ReceivedResponse[COMMAND_RECEIVE_INDEX], &Serial);
+        printCommand(&Serial, (MHZ19_command_t) ReceivedResponse[COMMAND_RECEIVE_INDEX]);
 
         for (uint_fast8_t i = 2; i < 8; i += 2) {
             SerialForDebug->print(F("   0x"));
@@ -203,7 +203,7 @@ void MHZ19::printErrorMessage(Print *aSerial) {
 /*
  * Used for debugging
  */
-void MHZ19::printCommand(MHZ19_command_t aCommand, Print *aSerial) {
+void MHZ19::printCommand(Print *aSerial, MHZ19_command_t aCommand) {
     switch (aCommand) {
     case GETABC:
         aSerial->print(F("getABC   "));

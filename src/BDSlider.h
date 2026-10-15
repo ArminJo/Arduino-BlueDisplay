@@ -166,6 +166,7 @@ public:
     // Value
     void setValue(int16_t aCurrentValue);
     void setValueAndDrawBar(int16_t aCurrentValue);
+    void setValueAndDrawSlider(int16_t aCurrentValue);
     void setValue(int16_t aCurrentValue, bool doDrawBar);
 
     void printValue(const char *aValueString);

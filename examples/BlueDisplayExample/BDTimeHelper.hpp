@@ -106,7 +106,7 @@ void initLocalTimeHandling() {
     setSyncProvider(requestHostUnixTimestamp); // This always calls requestHostUnixTimestamp() -> getInfo() immediately, which will set time again.
     setSyncInterval(BD_TIME_SYNCHRONISATION_INTERVAL_SECONDS); // Sync time with BD host. Checked at every call to now().
 #  endif
-    delayMillisAndCheckForEvent(WAIT_FOR_TIME_SYNC_MAX_MILLIS); // Wait for requested time event but terminate at least after 150 ms
+    delayMillisAndHandleEvents(WAIT_FOR_TIME_SYNC_MAX_MILLIS); // Wait for requested time event but terminate at least after 150 ms
 }
 
 void printTimeAtOneLine(uint16_t const aPositionX, uint16_t const aPositionY, uint16_t const aFontSize, color16_t const aTextColor,

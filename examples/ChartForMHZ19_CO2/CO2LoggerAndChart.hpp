@@ -106,12 +106,12 @@ color16_t sTextColor = CHART_TEXT_COLOR;
 /*
  * CO2 storage in RAM
  */
-#define CO2_BASE_VALUE          400L
-#define CO2_COMPRESSION_FACTOR    5L // value 1 -> 405, 2 -> 410 etc.
+#define CO2_BASE_VALUE          400
+#define CO2_COMPRESSION_FACTOR    5 // value 1 -> 405, 2 -> 410 etc.
 /*
  * Layout values for fullscreen GUI
  */
-uint8_t sChartMaxValue = ((1400L - CO2_BASE_VALUE) / CO2_COMPRESSION_FACTOR); // For clipping, and initialized, if BT is not available at startup
+uint8_t sChartMaxValue = ((1400 - CO2_BASE_VALUE) / CO2_COMPRESSION_FACTOR); // For clipping, and initialized, if BT is not available at startup
 
 /*
  * Even with initDisplay() called from main loop we only have 1140 bytes available for application
@@ -123,7 +123,7 @@ uint16_t sCO2ArrayValuesChecksum __attribute__((section(".noinit")));  // must b
 uint8_t sCO2Array[CO2_ARRAY_SIZE] __attribute__((section(".noinit"))); // values are (CO2[ppm] - 400) / 5
 uint16_t sChartHoursToDisplay __attribute__((section(".noinit")));  // is initialized to 96 if checksum is wrong
 uint8_t *sCO2ArrayDisplayStart = sCO2Array; // Start of displayed values determined by doDays()
-uint16_t sCO2MinimumOfCurrentReadings; // the minimum of all values received during one period
+uint16_t sCO2MinimumOfCurrentReadings; // the minimum of all values received during one period to use as value to store
 
 /*
  * CO2 storage in EEPROM
@@ -144,7 +144,7 @@ void doStoreInEEPROM(BDButton *aTheTouchedButton, int16_t aValue);
 #endif
 
 void initializeCO2Array();
-void writeToCO2Array(uint8_t aCO2Value);
+void writeToCO2Array(uint16_t aCO2Value);
 
 void signalInitDisplay(void);
 void doDays(BDButton *aTheTouchedButton, int16_t aChartHoursToDisplay);
@@ -243,14 +243,9 @@ bool storeCO2ValuePeriodically(uint16_t aCO2Value, const uint32_t aStoragePeriod
         Serial.println(sCO2MinimumOfCurrentReadings);
 #endif
         /*
-         * convert to compressed 8 bit value and clip it at chart top
+         * Write to array, compressing and wrap around is done there
          */
-        uint16_t tCO2Value = (sCO2MinimumOfCurrentReadings - CO2_BASE_VALUE) / CO2_COMPRESSION_FACTOR;
-
-        /*
-         * Write to array, clipping is done there
-         */
-        writeToCO2Array(tCO2Value);
+        writeToCO2Array(sCO2MinimumOfCurrentReadings);
 
         if (BlueDisplay1.isConnectionEstablished()) {
             handleEventAndFlags(); // Is required, if we are called first time after boot and handleEventAndFlags() was not called before
@@ -344,24 +339,25 @@ void initializeCO2Array() {
 }
 
 /*
+ * Do compressing and wrap around
  * aCO2Value is (CO2[ppm] - 400) / 5
  */
-void writeToCO2Array(uint8_t aCO2Value) {
+void writeToCO2Array(uint16_t aCO2Value) {
+    uint16_t tCompressedCO2Value = (aCO2Value - CO2_BASE_VALUE) / CO2_COMPRESSION_FACTOR;
 
-    // Clip at chart top
-    if (aCO2Value > sChartMaxValue) {
-        aCO2Value = sChartMaxValue;
-    }
+    // Wrap around at chart top
+    tCompressedCO2Value %= sChartMaxValue;
+
     sCO2ArrayValuesChecksum -= sCO2Array[0];  // adjust checksum with removed element
 // Shift array to front
     for (uint16_t i = 0; i < CO2_ARRAY_SIZE - 1; ++i) {
         sCO2Array[i] = sCO2Array[i + 1];
     }
-    sCO2Array[CO2_ARRAY_SIZE - 1] = aCO2Value;
-    sCO2ArrayValuesChecksum += aCO2Value; // adjust checksum with new element
+    sCO2Array[CO2_ARRAY_SIZE - 1] = tCompressedCO2Value;
+    sCO2ArrayValuesChecksum += tCompressedCO2Value; // adjust checksum with new element
 #if defined(LOCAL_DEBUG)
     Serial.print(F("Write "));
-    Serial.print(aCO2Value);
+    Serial.print(tCompressedCO2Value);
 #  if defined(LOCAL_TRACE)
     Serial.print(F(" Checksum="));
     Serial.print(sCO2ArrayValuesChecksum);
@@ -606,7 +602,7 @@ void drawCO2Chart() {
     /*
      * If we have not yet synchronized time (because of buffer overflow at host etc.) try it now
      */
-    if(timeStatus() == timeNeedsSync) {
+    if (timeStatus() == timeNeedsSync) {
         requestHostUnixTimestamp();
 //        BlueDisplay1.debug(F("Time not synced"));
         // wait for requested time event to be received. The event handler sets timeStatus by calling setTime()
@@ -628,7 +624,8 @@ void drawCO2Chart() {
 #if defined(USE_C_TIME)
     long tDifferenceToLastMidnightInSeconds = sTimeInfo->tm_sec + ((sTimeInfo->tm_min + (MINUTES_IN_ONE_HOUR * sTimeInfo->tm_hour)) * (long)SECONDS_IN_ONE_MINUTE);
 #else
-    long tDifferenceToLastMidnightInSeconds = second() + ((minute() + (MINUTES_IN_ONE_HOUR * hour())) * (long) SECONDS_IN_ONE_MINUTE);
+    long tDifferenceToLastMidnightInSeconds = second()
+            + ((minute() + (MINUTES_IN_ONE_HOUR * hour())) * (long) SECONDS_IN_ONE_MINUTE);
 #endif
     /*
      * We must always start with a midnight value to mark the start of the big labels
@@ -678,7 +675,7 @@ void delayMillisWithHandleEventAndFlags(unsigned long aDelayMillis) {
  * End prematurely, if event received
  */
 bool delayMillisWithCheckForEventAndFlags(unsigned long aDelayMillis) {
-    if (delayMillisAndCheckForEvent(aDelayMillis)) {
+    if (delayMillisHandleEventsAndBreakIfEventJustReceived(aDelayMillis)) {
         checkAndHandleCO2LoggerEventFlags();
         return true;
     }

@@ -39,7 +39,7 @@
 
 #include "LocalGUI/LocalTouchButton.h"
 #include "BDButton.h"
-#include "BlueDisplay.h" // for FEEDBACK_TONE_OK
+#include "BlueDisplay.h"
 #if !defined(DISABLE_REMOTE_DISPLAY)
 #include "LocalGUI/LocalTouchButtonAutorepeat.h"
 #endif

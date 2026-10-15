@@ -406,6 +406,22 @@ void BDButton::setButtonColorAndDraw(color16_t aButtonColor) {
     sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_BUTTON_COLOR_AND_DRAW, aButtonColor);
 }
 
+void BDButton::setButtonColorAndValue(color16_t aButtonColor, int16_t aValue) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalButtonPtr->setButtonColor(aButtonColor);
+    mLocalButtonPtr->drawButton();
+#endif
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 4, mButtonIndex, SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE, aButtonColor, aValue);
+}
+
+void BDButton::setButtonColorAndValueAndDraw(color16_t aButtonColor, int16_t aValue) {
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalButtonPtr->setButtonColor(aButtonColor);
+    mLocalButtonPtr->drawButton();
+#endif
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 4, mButtonIndex, SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE_AND_DRAW, aButtonColor, aValue);
+}
+
 void BDButton::setButtonTextColor(color16_t aButtonTextColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->setTextColor(aButtonTextColor);
@@ -500,9 +516,10 @@ void BDButton::playFeedbackTone() {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalTouchButton::playFeedbackTone();
 #endif
-    sendUSARTArgs(FUNCTION_PLAY_TONE, 1, FEEDBACK_TONE_OK);
+    sendUSARTArgs(FUNCTION_PLAY_TONE, 1, TONE_PROP_BEEP_OK);
 }
 
+// the same as BlueDisplay::playFeedbackTone(aPlayErrorTone)
 void BDButton::playFeedbackTone(bool aPlayErrorTone) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalTouchButton::playFeedbackTone(aPlayErrorTone);
