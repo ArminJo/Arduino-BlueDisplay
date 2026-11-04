@@ -1,0 +1,119 @@
+/*
+ * ChartDemo.cpp
+ *
+ *  Demo of using the BlueDisplay chart library for HC-05 on Arduino
+ *
+ *  Copyright (C) 2026  Armin Joachimsmeyer
+ *
+ *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
+ *
+ *  BlueDisplay is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *
+ */
+
+#include <Arduino.h>
+
+#define DISPLAY_WIDTH  DISPLAY_HALF_VGA_WIDTH  // 320
+#define DISPLAY_HEIGHT DISPLAY_HALF_VGA_HEIGHT // 240
+
+/*
+ * Settings to configure the BlueDisplay library and to reduce its size
+ */
+//#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves 170 bytes program memory and 14 bytes RAM
+#define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events.
+//#define DO_NOT_NEED_SPEAK_EVENTS            // Disables SpeakingDone event handling. Saves up to 54 bytes program memory and 18 bytes RAM.
+//#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
+//#define BD_USE_SIMPLE_SERIAL                // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
+//#define BD_USE_USB_SERIAL                   // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
+#include "BlueDisplay.hpp"
+
+// Callback handler for (re)connect and resize
+void initDisplay(void);
+void drawGui(void);
+
+// PROGMEM messages sent by BlueDisplay1.debug() are truncated to 32 characters :-(, so must use RAM here
+const char StartMessage[] PROGMEM = "START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_BLUE_DISPLAY;
+
+/*******************************************************************************************
+ * Program code starts here
+ *******************************************************************************************/
+
+void setup() {
+    // Initialize the LED pin as output.
+    pinMode(LED_BUILTIN, OUTPUT);
+
+#if defined(ESP32)
+    Serial.begin(115200);
+    Serial.println(StartMessage);
+    initSerial("ESP-BD_Example");
+    Serial.println("Start ESP32 BT-client with name \"ESP-BD_Example\"");
+#else
+    initSerial();
+#endif
+
+    /*
+     * Register callback handler and wait for 300 ms if Bluetooth connection is still active.
+     * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth connection is most likely not active here.
+     *
+     * If active, mHostDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
+     * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
+     */
+    BlueDisplay1.initCommunication(&Serial, &initDisplay, &drawGui); // introduces up to 1.5 seconds delay
+
+#if defined(BD_USE_SERIAL1) || defined(ESP32) // BD_USE_SERIAL1 may be defined in BlueSerial.h
+// Serial(0) is available for Serial.print output.
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
+    || defined(SERIALUSB_PID)  || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_attiny3217)
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
+#  endif
+// Just to know which program is running on my Arduino
+    Serial.println(reinterpret_cast<const __FlashStringHelper *>(StartMessage));
+#elif !defined(BD_USE_SIMPLE_SERIAL)
+    // If using simple serial on first USART we cannot use Serial.print, since this uses the same interrupt vector as simple serial.
+    if (!BlueDisplay1.isConnectionEstablished()) {
+#  if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/ \
+    || defined(SERIALUSB_PID)  || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_attiny3217)
+        delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
+#  endif
+        // If connection is enabled, this message was already sent as BlueDisplay1.debug() by initDisplay()
+        Serial.println(reinterpret_cast<const __FlashStringHelper*>(StartMessage));
+    }
+#endif
+}
+
+void loop() {
+    checkAndHandleEvents();
+    while (BlueDisplay1.mBlueDisplayConnectionEstablished) {
+        BlueDisplay1.clearDisplay(COLOR16_WHITE);
+        showChartDemo(); // different chart style every second call and the values are random
+        delayMillisAndHandleEvents(20000); // wait 20 seconds
+    }
+}
+
+/*
+ * Function used as callback handler for connect too
+ */
+void initDisplay(void) {
+    // Initialize display size and flags
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+}
+
+/*
+ * Function is called for resize + connect too
+ */
+void drawGui(void) {
+
+}
+

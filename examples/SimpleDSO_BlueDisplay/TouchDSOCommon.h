@@ -327,15 +327,15 @@ void setTriggerLevelAndHysteresis(int aRawTriggerValue, int aRawTriggerHysteresi
 void resetOffset(void);
 void setOffsetAutomatic(bool aNewState);
 void setACMode(bool aNewACMode);
-int changeOffsetGridCount(int aValue);
+bool changeOffsetGridCount(int aValue);
 
 #if defined(__AVR__)
 bool changeRange(int8_t aChangeAmount);
 uint8_t changeTimeBaseValue(int8_t aChangeValue);
 #else
-int changeDisplayRange(int aValue);
+bool changeDisplayRange(int aValue);
 int changeDisplayRangeAndAdjustOffsetGridCount(int aValue);
-int changeTimeBaseValue(int aChangeValue);
+bool changeTimeBaseValue(int aChangeValue);
 bool changeXScale(int aValue);
 #endif
 
@@ -359,7 +359,7 @@ bool scrollChart(int aValue);
 uint8_t getDisplayFromRawInputValue(uint16_t aRawAdcValue);
 void drawDataBuffer(uint8_t *aByteBuffer, uint16_t aColor, uint16_t aClearBeforeColor);
 #else
-int scrollChart(int aValue);
+bool scrollChart(int aValue);
 uint8_t getDisplayFromRawInputValue(uint16_t aRawAdcValue);
 void drawDataBuffer(uint16_t *aDataBufferPointer, int aLength, color16_t aColor, color16_t aClearBeforeColor, int aDrawMode,
         bool aDrawAlsoMin);

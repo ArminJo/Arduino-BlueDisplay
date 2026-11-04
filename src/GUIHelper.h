@@ -4,7 +4,7 @@
  * Definitions for GUI layouts and text sizes
  *
  *
- *  Copyright (C) 2014-2025  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -50,10 +50,12 @@
 /*
  * Some useful text sizes constants
  */
-#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22)
+#if defined(SUPPORT_ONLY_TEXT_SIZE_11_AND_22) // Only for development for local displays to see at compile time where other text sizes are used
 #define TEXT_SIZE_11 11
 #define TEXT_SIZE_22 22
 #else
+#define TEXT_SIZE_6   6
+#define TEXT_SIZE_7   7
 #define TEXT_SIZE_8   8
 #define TEXT_SIZE_9   9
 #define TEXT_SIZE_10 10
@@ -65,7 +67,11 @@
 #define TEXT_SIZE_18 18
 #define TEXT_SIZE_20 20
 #define TEXT_SIZE_22 22
+#define TEXT_SIZE_24 24
 #define TEXT_SIZE_26 26
+#define TEXT_SIZE_28 28
+#define TEXT_SIZE_30 30
+#define TEXT_SIZE_32 32
 // for factor 3 of 8*12 font
 #define TEXT_SIZE_33 33
 // for factor 4 of 8*12 font
@@ -119,7 +125,6 @@
 // TextSize * 0.24
 // TextSize * 0.27 to have ASCEND + DECEND = HEIGHT
 #define TEXT_SIZE_11_DECEND 3
-#define TEXT_SIZE_11_DECEND 3
 // 6 instead of 5 to have ASCEND + DECEND = HEIGHT
 #define TEXT_SIZE_22_DECEND 6
 #define TEXT_SIZE_33_DECEND 8
@@ -128,6 +133,7 @@
 uint16_t getTextHeight(uint16_t aTextSize);
 uint16_t getTextWidth(uint16_t aTextSize);
 uint16_t getTextAscend(uint16_t aTextSize);
+uint16_t getTextDecend(uint16_t aTextSize);
 uint16_t getTextAscendMinusDescend(uint16_t aTextSize);
 //uint16_t getTextMiddleCorrection(uint16_t aTextSize);
 

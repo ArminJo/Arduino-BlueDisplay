@@ -3,7 +3,7 @@
  *
  * Implementation of the slider client stub for the Android BlueDisplay app.
  *
- *  Copyright (C) 2015-2025  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -67,14 +67,14 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
 
     // This will give a warning "cast between incompatible function types" but this function signature is kept to support deprecated function calls
     init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags,
-            (void (*)(BDSlider*, int16_t))(aOnChangeHandler));
+            (void (*)(BDSlider*, int16_t)) (aOnChangeHandler));
 }
 #endif
 
 void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth, int16_t aBarLength, int16_t aThresholdValue,
         int16_t aInitalValue, color16_t aSliderColor, color16_t aBarColor, uint8_t aFlags) {
     init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags,
-            reinterpret_cast<void (*)(BDSlider*, int16_t)>(NULL));
+            static_cast<void (*)(BDSlider*, int16_t)>(nullptr)); // cast required, otherwise nullptr is ambiguous if deprecated init() exists
 }
 /**
  * @brief initialization with all parameters (except BarBackgroundColor)
@@ -84,7 +84,7 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
  * @param aBarWidth - Width of bar (and border) in pixel - no scaling!
  * @param aBarLength - Size of slider bar in pixel = maximum slider value if no scaling applied!
  *                     Negative means slider bar is top down an is equivalent to positive with FLAG_SLIDER_IS_INVERSE.
- * @param aThresholdValue - Scaling applied! If selected or sent value is bigger, then color of bar changes from BarColor to BarBackgroundColor
+ * @param aThresholdValue - Scaling applied! If selected or sent value is bigger, then color of bar changes from BarColor to BarThresholdColor
  * @param aInitalValue - Scaling applied!
  * @param aSliderColor - Color of slider border. If no border specified, then bar background color.
  * @param aBarColor
@@ -114,7 +114,7 @@ void BDSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aBarWidth
 #  else
     mLocalSliderPointer = new LocalTouchSlider(this);
 #  endif
-    // Cast required here. At runtime the right pointer is returned because of FLAG_USE_INDEX_FOR_CALLBACK
+    // Cast required here. At runtime the right pointer is returned because of LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK
     mLocalSliderPointer->init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue,
             aSliderColor, aBarColor, aFlags | LOCAL_SLIDER_FLAG_USE_BDSLIDER_FOR_CALLBACK,
             reinterpret_cast<void (*)(LocalTouchSlider *, int16_t)>(aOnChangeHandler));
@@ -132,7 +132,7 @@ void BDSlider::setFlags(int16_t aFlags) {
 void BDSlider::setCallback(void (*aOnChangeHandler)(BDSlider*, int16_t)) {
 #if __SIZEOF_POINTER__ == 4
     sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mSliderIndex, SUBFUNCTION_SLIDER_SET_CALLBACK, aOnChangeHandler,
-                (reinterpret_cast<uint32_t>(aOnChangeHandler) >> 16));
+            (reinterpret_cast<uint32_t>(aOnChangeHandler) >> 16));
 #else
     sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_CALLBACK, aOnChangeHandler);
 #endif
@@ -150,6 +150,7 @@ void BDSlider::deinit() {
 
 /*
  * Overwrites and deactivate slider, caption and value
+ * No support for local display
  */
 void BDSlider::removeSlider(color16_t aBackgroundColor) {
     sendUSARTArgs(FUNCTION_SLIDER_REMOVE, 2, mSliderIndex, aBackgroundColor);
@@ -185,7 +186,7 @@ void BDSlider::drawBorder() {
 
 void BDSlider::setValue(int16_t aCurrentValue) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
+    mLocalSliderPointer->setValue(aCurrentValue);
 #endif
     sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_VALUE, aCurrentValue);
 }
@@ -216,7 +217,10 @@ void BDSlider::setValueAndDrawSlider(int16_t aCurrentValue) {
  */
 void BDSlider::setValue(int16_t aCurrentValue, bool doDrawBar) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalSliderPointer->setValueAndDrawBar(aCurrentValue);
+    mLocalSliderPointer->setValue(aCurrentValue);
+    if(doDrawBar){
+        mLocalSliderPointer->drawBar();
+    }
 #endif
     if (USART_isBluetoothPaired()) {
         uint8_t tSubFunctionCode = SUBFUNCTION_SLIDER_SET_VALUE;
@@ -229,7 +233,7 @@ void BDSlider::setValue(int16_t aCurrentValue, bool doDrawBar) {
 
 void BDSlider::setBarColor(color16_t aBarColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalSliderPointer->setBarThresholdColor(aBarColor);
+    mLocalSliderPointer->setBarColor(aBarColor);
 #endif
     sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 3, mSliderIndex, SUBFUNCTION_SLIDER_SET_COLOR_BAR, aBarColor);
 }
@@ -251,7 +255,7 @@ void BDSlider::setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor) 
 #endif
 void BDSlider::setDefaultBarThresholdColor(color16_t aDefaultBarThresholdColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    setDefaultBarThresholdColor(aDefaultBarThresholdColor);
+    LocalTouchSlider::setDefaultBarThresholdColor(aDefaultBarThresholdColor);
 #endif
     sendUSARTArgs(FUNCTION_SLIDER_GLOBAL_SETTINGS, 2, SUBFUNCTION_SLIDER_SET_DEFAULT_COLOR_THRESHOLD, aDefaultBarThresholdColor);
 }
@@ -264,10 +268,10 @@ void BDSlider::setBarBackgroundColor(color16_t aBarBackgroundColor) {
 }
 
 /*
- * @param aCaptionSize - default is (mRPCView.mRequestedCanvasHeight/20) or (BlueDisplay1.mCurrentDisplaySize.YHeight/20) - for 240 we get 12
+ * @param aCaptionSize - default is (mRPCView.mRequestedCanvasHeight/20) or (BlueDisplay1.mHostDisplaySize.YHeight/20) - for 240 we get 12
  * @param aCaptionPositionFlags - default is FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_VALUE_CAPTION_BELOW
  *                                 see BDSlider.h Flags for slider caption position
- * @param aCaptionMargin - default is (mRPCView.mRequestedCanvasHeight/60) or (BlueDisplay1.mCurrentDisplaySize.YHeight/60) - for 240 we get 4
+ * @param aCaptionMargin - default is mBarWidth / 6
  * @param aCaptionColor - default is COLOR16_BLACK
  * @param aCaptionBackgroundColor - default is COLOR16_WHITE
  */
@@ -292,10 +296,13 @@ void BDSlider::setCaption(const __FlashStringHelper *aPGMCaption) {
     char tStringBuffer[STRING_BUFFER_STACK_SIZE];
     uint8_t tCaptionLength = _clipAndCopyPGMString(tStringBuffer, aPGMCaption);
 #  if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalSliderPointer->setCaption(tStringBuffer);
+//    mLocalSliderPointer->setCaption(aPGMCaption); // not supported yet
 #  endif
     sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderIndex, tCaptionLength, tStringBuffer);
 #else
+#  if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalSliderPointer->setCaption(reinterpret_cast<const char*>(aPGMCaption));
+#  endif
     uint8_t tCaptionLength = strlen(reinterpret_cast<const char*>(aPGMCaption));
     sendUSARTArgsAndByteBuffer(FUNCTION_SLIDER_SET_CAPTION, 1, mSliderIndex, tCaptionLength, (uint8_t*) aPGMCaption);
 #endif
@@ -319,11 +326,11 @@ void BDSlider::setValueFormatString(const char *aValueFormatString) {
 }
 
 /*
- * @param aPrintValueTextSize - default is (mRPCView.mRequestedCanvasHeight/20) or (BlueDisplay1.mCurrentDisplaySize.YHeight/20) - for 240 we get 12
+ * @param aPrintValueTextSize - default is (mRPCView.mRequestedCanvasHeight/20) or (BlueDisplay1.mHostDisplaySize.YHeight/20) - for 240 we get 12
  * @param aPrintValuePositionFlags - default is FLAG_SLIDER_VALUE_CAPTION_ALIGN_MIDDLE | FLAG_SLIDER_VALUE_CAPTION_BELOW
  *                                 see BDSlider.h Flags for slider caption position
- * @param aPrintValueMargin - default is (mRPCView.mRequestedCanvasHeight/60) or (BlueDisplay1.mCurrentDisplaySize.YHeight/60) - for 240 we get 4
- *                            If caption is defined, then BlueDisplay1.mCurrentDisplaySize.YHeight/120 below caption
+ * @param aPrintValueMargin - default is mBarWidth / 6
+ *                            If caption is defined, then BlueDisplay1.mHostDisplaySize.YHeight/120 below caption
  * @param aPrintValueColor - default is COLOR16_BLACK
  * @param aPrintValueBackgroundColor - default is COLOR16_WHITE
  */
@@ -453,25 +460,31 @@ void BDSlider::deactivateAllSliders() {
  * Utility functions
  */
 
+/*
+ * Initialize positive negative slider
+ * Assume two sliders with initial value of 0 so value of lastSliderValueWasPositive is irrelevant
+ */
 void initPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, BDSlider *aPositiveSliderPtr,
         BDSlider *aNegativeSliderPtr) {
     aSliderStructPtr->positiveSliderPtr = aPositiveSliderPtr;
     aSliderStructPtr->negativeSliderPtr = aNegativeSliderPtr;
+    aSliderStructPtr->lastSliderValue = 0;
 }
 
 /*
+ * Show a signed value on two sliders positioned back to back (one of it is inverse or has a negative length value)
  * @param aValue positive for bar in *positiveSliderPtr
  * @return aValue with aSliderDeadBand applied, i.e. subtract dead band from value but clip at zero
  *                              for negative values, add dead band to value and clip at zero
  */
 int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, int aValue, uint8_t aSliderDeadBand) {
-    BDSlider *tValueSlider = aSliderStructPtr->positiveSliderPtr;
-    BDSlider *tZeroSlider = aSliderStructPtr->negativeSliderPtr;
+    BDSlider *tSliderWithValue = aSliderStructPtr->positiveSliderPtr;
+    BDSlider *tSliderToClear = aSliderStructPtr->negativeSliderPtr;
     bool tSliderValueIsPositive = true;
     if (aValue < 0) {
         aValue = -aValue;
-        tValueSlider = tZeroSlider;
-        tZeroSlider = aSliderStructPtr->positiveSliderPtr;
+        tSliderWithValue = tSliderToClear;
+        tSliderToClear = aSliderStructPtr->positiveSliderPtr;
         tSliderValueIsPositive = false;
     }
 
@@ -484,32 +497,42 @@ int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, 
     } else {
         aValue = 0;
     }
+    /*
+     * Clear other slider if sign has changed
+     */
+    if (tSliderValueIsPositive != aSliderStructPtr->lastSliderValueWasPositive) {
+        aSliderStructPtr->lastSliderValueWasPositive = tSliderValueIsPositive;
+        // the sign has changed, clear old value
+        tSliderToClear->setValueAndDrawBar(0);
+        aSliderStructPtr->lastSliderValue = 0; // other slider is still cleared here
+    }
 
     /*
      * Draw slider value if values changed
      */
     if (aSliderStructPtr->lastSliderValue != (unsigned int) aValue) {
         aSliderStructPtr->lastSliderValue = aValue;
-        tValueSlider->setValueAndDrawBar(aValue);
-
-        if (tSliderValueIsPositive != aSliderStructPtr->lastSliderValueWasPositive) {
-            aSliderStructPtr->lastSliderValueWasPositive = tSliderValueIsPositive;
-            // the sign has changed, clear old value
-            tZeroSlider->setValueAndDrawBar(0);
-        }
+        tSliderWithValue->setValueAndDrawBar(aValue);
     }
 
     /*
-     * Restore sign for aValue with dead band applied
+     * Restore sign for aValue with dead band now applied
      */
-    if (tZeroSlider == aSliderStructPtr->positiveSliderPtr) {
+    if (!tSliderValueIsPositive) {
         aValue = -aValue;
     }
     return aValue;
 }
 
-unsigned int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, unsigned int aValue, bool aPositiveSider,
-        uint8_t aSliderDeadBand) {
+/*
+ * Show a unsigned value on two sliders positioned back to back (one of it is inverse or has a negative length value)
+ * @param aValue positive value to be applied to slider specified by aUsePositiveSider
+ * @param aUsePositiveSider apply value to positive slider
+ * @return aValue with aSliderDeadBand applied, i.e. subtract dead band from value but clip at zero
+ *                              for negative values, add dead band to value and clip at zero
+ */
+unsigned int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, unsigned int aValue,
+bool aUsePositiveSider, uint8_t aSliderDeadBand) {
 
     /*
      * We have a positive value for dead band and slider length
@@ -523,12 +546,12 @@ unsigned int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderSt
 
     BDSlider *tValueSlider = aSliderStructPtr->positiveSliderPtr; // the slider which shows the value
     BDSlider *tZeroSlider = aSliderStructPtr->negativeSliderPtr;  // The slider which is cleared
-    if (!aPositiveSider) {
+    if (!aUsePositiveSider) {
         tValueSlider = aSliderStructPtr->negativeSliderPtr;
         tZeroSlider = aSliderStructPtr->positiveSliderPtr;
     }
 
-    if (aPositiveSider == aSliderStructPtr->lastSliderValueWasPositive) {
+    if (aUsePositiveSider == aSliderStructPtr->lastSliderValueWasPositive) {
         // No direction change, only value change possible here
         if (aSliderStructPtr->lastSliderValue != aValue) {
             // value changed here
@@ -540,7 +563,7 @@ unsigned int setPositiveNegativeSliders(struct positiveNegativeSlider *aSliderSt
         tValueSlider->setValueAndDrawBar(aValue);
     }
 
-    aSliderStructPtr->lastSliderValueWasPositive = aPositiveSider;
+    aSliderStructPtr->lastSliderValueWasPositive = aUsePositiveSider;
     aSliderStructPtr->lastSliderValue = aValue;
 
     return aValue;

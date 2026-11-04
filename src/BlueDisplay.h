@@ -50,8 +50,12 @@
  * Macro to convert 3 version parts into an integer
  * To be used in preprocessor comparisons, such as #if VERSION_BLUE_DISPLAY_HEX >= VERSION_HEX_VALUE(3, 7, 0)
  */
-#define VERSION_HEX_VALUE(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
+#define VERSION_HEX_VALUE(major, minor, patch) (((major) << 16) | ((minor) << 8) | (patch))
 #define VERSION_BLUE_DISPLAY_HEX  VERSION_HEX_VALUE(VERSION_BLUE_DISPLAY_MAJOR, VERSION_BLUE_DISPLAY_MINOR, VERSION_BLUE_DISPLAY_PATCH)
+
+#if !defined(ALLOW_BD_DEPRECATED_FUNCTIONS)
+#define OMIT_BD_DEPRECATED_FUNCTIONS // Activated Since 5.2.0
+#endif
 
 #define BD_CONNECTION_TIMEOUT_MILLIS   1500    // Timeout for initCommunication() attempts to connect to BD host
 #define HELPFUL_DELAY_BETWEEN_DRAWING_CHART_LINES_TO_STABILIZE_USB_CONNECTION   50 // without, the USB connection to my Samsung SM-T560 skips some bytes :-(
@@ -64,7 +68,7 @@
 #endif
 // Get absolute value of difference or delta of two unsigned values
 #if !defined(uintDifferenceAbs) // could also be named uintDeltaAbs
-#define uintDifferenceAbs(a, b) ((a >= b) ? a - b : b - a)
+#define uintDifferenceAbs(a, b) (((a) >= (b)) ? (a) - (b) : (b) - (a))
 #endif
 
 /*
@@ -113,7 +117,9 @@ class __FlashStringHelper;
 #include "GUIHelper.h"
 
 #include "BlueDisplayProtocol.h"
+#if !defined(DISABLE_REMOTE_DISPLAY)
 #include "BlueSerial.h"
+#endif
 #include "EventHandler.h"
 
 #ifdef __cplusplus
@@ -175,7 +181,7 @@ public:
     // The result of initCommunication
     bool isConnectionEstablished();
     void sendSync();
-    void setFlagsAndSize(uint16_t aFlags, uint16_t aWidth, uint16_t aHeight);
+    void setFlagsAndSize(uint16_t aFlags, uint16_t aXWidth, uint16_t aYHeight);
     void setCodePage(uint16_t aCodePageNumber);
     void setCharacterMapping(uint8_t aChar, uint16_t aUnicodeChar); // aChar must be bigger than 0x80
 
@@ -202,6 +208,7 @@ public:
     void clearDisplay(color16_t aColor = COLOR16_WHITE); // New 5.2: Disables also buttons and sliders
     void clearDisplayArea(color16_t aColor = COLOR16_WHITE);
     void clearDisplayAndSkipCommandsBeforeOnHostBufferOverflow(color16_t aColor = COLOR16_WHITE);
+    void clearDisplayAreaAndSkipCommandsBeforeOnHostBufferOverflow(color16_t aColor = COLOR16_WHITE); // since 5.2
     void drawDisplayDirect();
     void setScreenOrientationLock(uint8_t aLockMode);
     void setScreenBrightness(uint8_t aScreenBrightness);
@@ -211,39 +218,39 @@ public:
     void drawPixel(uint16_t aXPos, uint16_t aYPos, color16_t aColor);
     void drawCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor, uint16_t aStrokeWidth = 1);
     void fillCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor);
-    void drawRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor, uint16_t aStrokeWidth);
-    void drawRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth, int16_t aHeight, color16_t aColor, uint16_t aStrokeWidth);
-    void fillRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
-    void fillRectRel(uint16_t aStartX, uint16_t aStartY, int16_t aWidth, int16_t aHeight, color16_t aColor);
-    uint16_t drawChar(uint16_t aPositionX, uint16_t aPositionY, char aChar, uint16_t aCharSize, color16_t aCharacterColor,
+    void drawRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor, uint16_t aStrokeWidth);
+    void drawRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor, uint16_t aStrokeWidth);
+    void fillRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
+    void fillRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
+    uint16_t drawChar(uint16_t aXPosition, uint16_t aYPosition, char aChar, uint16_t aCharSize, color16_t aCharacterColor,
             color16_t aBackgroundColor);
-    void drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aString);
-    void drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString);
-    uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const char *aString, uint16_t aFontSize, color16_t aTextColor,
+    void drawText(uint16_t aXPosition, uint16_t aYPosition, const char *aString);
+    void drawText(uint16_t aXPosition, uint16_t aYPosition, const __FlashStringHelper *aPGMString);
+    uint16_t drawText(uint16_t aXPosition, uint16_t aYPosition, const char *aString, uint16_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor);
-    uint16_t drawText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
+    uint16_t drawText(uint16_t aXPosition, uint16_t aYPosition, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
             color16_t aTextColor, color16_t aBackgroundColor);
-    void clearTextArea(uint16_t aPositionX, uint16_t aPositionY, uint8_t aStringLength, uint16_t aFontSize, color16_t aClearColor);
-    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const char *aString, uint16_t aFontSize, color16_t aTextColor,
+    void clearTextArea(uint16_t aXPosition, uint16_t aYPosition, uint8_t aStringLength, uint16_t aFontSize, color16_t aClearColor);
+    void drawMLText(uint16_t aXPosition, uint16_t aYPosition, const char *aString, uint16_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor);
-    void drawMLText(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
+    void drawMLText(uint16_t aXPosition, uint16_t aYPosition, const __FlashStringHelper *aPGMString, uint16_t aFontSize,
             color16_t aTextColor, color16_t aBackgroundColor);
 
-    uint16_t drawByte(uint16_t aPositionX, uint16_t aPositionY, int8_t aByte, uint16_t aFontSize = TEXT_SIZE_11,
+    uint16_t drawByte(uint16_t aXPosition, uint16_t aYPosition, int8_t aByte, uint16_t aFontSize = TEXT_SIZE_11,
             color16_t aFGColor =
             COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
-    uint16_t drawUnsignedByte(uint16_t aPositionX, uint16_t aPositionY, uint8_t aUnsignedByte, uint16_t aFontSize = TEXT_SIZE_11,
+    uint16_t drawUnsignedByte(uint16_t aXPosition, uint16_t aYPosition, uint8_t aUnsignedByte, uint16_t aFontSize = TEXT_SIZE_11,
             color16_t aFGColor = COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
-    uint16_t drawShort(uint16_t aPositionX, uint16_t aPositionY, int16_t aShort, uint16_t aFontSize = TEXT_SIZE_11,
+    uint16_t drawShort(uint16_t aXPosition, uint16_t aYPosition, int16_t aShort, uint16_t aFontSize = TEXT_SIZE_11,
             color16_t aFGColor =
             COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
-    uint16_t drawLong(uint16_t aPositionX, uint16_t aPositionY, int32_t aLong, uint16_t aFontSize = TEXT_SIZE_11,
+    uint16_t drawLong(uint16_t aXPosition, uint16_t aYPosition, int32_t aLong, uint16_t aFontSize = TEXT_SIZE_11,
             color16_t aFGColor =
             COLOR16_BLACK, color16_t aBackgroundColor = COLOR16_WHITE);
 
     void setWriteStringSizeAndColorAndFlag(uint16_t aPrintSize, color16_t aPrintColor, color16_t aPrintBackgroundColor,
             bool aClearOnNewScreen);
-    void setWriteStringPosition(uint16_t aPositionX, uint16_t aPositionY);
+    void setWriteStringPosition(uint16_t aXPosition, uint16_t aYPosition);
     void setWriteStringPositionColumnLine(uint16_t aColumnNumber, uint16_t aLineNumber);
     void writeString(const char *aString);
     void writeString(const __FlashStringHelper *aPGMString);
@@ -254,6 +261,8 @@ public:
 #if defined(F)
     void debug(const __FlashStringHelper *aPGMString);
 #endif
+    void debug(bool aBool) { debug((uint8_t)aBool); }
+    void debug(const char *aMessage, bool aBool) { debug(aMessage, (uint8_t)aBool); }
     void debug(uint8_t aByte);
     void debug(const char *aMessage, uint8_t aByte);
     void debug(const char *aMessageStart, uint8_t aByte, const char *aMessageEnd);
@@ -273,24 +282,24 @@ public:
     void debug(const char *aMessage, float aDouble);
     void debug(double aDouble);
 
-    void drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
-    void drawLineWithAliasing(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
-    void drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
-    void drawLineRelWithAliasing(uint16_t aStartX, uint16_t aStartY, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
-    void drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aEndY, color16_t aColor);
-    void drawVectorDegree(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, int aDegree, color16_t aColor, int16_t aThickness =
+    void drawLine(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
+    void drawLineWithAliasing(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
+    void drawLineRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
+    void drawLineRelWithAliasing(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
+    void drawLineFastOneX(uint16_t aXStart, uint16_t aYStart, uint16_t aYEnd, color16_t aColor);
+    void drawVectorDegree(uint16_t aXStart, uint16_t aYStart, uint16_t aLength, int aDegree, color16_t aColor, int16_t aThickness =
             1);
-    void drawVectorDegreeWithAliasing(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, int aDegree, color16_t aColor,
+    void drawVectorDegreeWithAliasing(uint16_t aXStart, uint16_t aYStart, uint16_t aLength, int aDegree, color16_t aColor,
             int16_t aThickness = 1);
-    void drawVectorRadian(uint16_t aStartX, uint16_t aStartY, uint16_t aLength, float aRadian, color16_t aColor,
+    void drawVectorRadian(uint16_t aXStart, uint16_t aYStart, uint16_t aLength, float aRadian, color16_t aColor,
             int16_t aThickness = 1);
-    void drawLineWithThickness(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor,
+    void drawLineWithThickness(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor,
             int16_t aThickness);
-    void drawLineWithThicknessWithAliasing(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor,
+    void drawLineWithThicknessWithAliasing(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor,
             int16_t aThickness);
-    void drawLineRelWithThickness(uint16_t aStartX, uint16_t aStartY, int16_t aXOffset, int16_t aYOffset, color16_t aColor,
+    void drawLineRelWithThickness(uint16_t aXStart, uint16_t aYStart, int16_t aXOffset, int16_t aYOffset, color16_t aColor,
             int16_t aThickness);
-    void drawLineRelWithThicknessWithAliasing(uint16_t aStartX, uint16_t aStartY, int16_t aXOffset, int16_t aYOffset,
+    void drawLineRelWithThicknessWithAliasing(uint16_t aXStart, uint16_t aYStart, int16_t aXOffset, int16_t aYOffset,
             color16_t aColor, int16_t aThickness);
 
     void drawChartByteBuffer(uint16_t aXOffset, uint16_t aYOffset, color16_t aColor, color16_t aClearBeforeColor,
@@ -337,9 +346,9 @@ public:
 
 #if defined(__AVR__)
     // On non AVR platforms PGM functions are reduced to plain functions
-    uint16_t drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString, uint16_t aFontSize, color16_t aTextColor,
+    uint16_t drawTextPGM(uint16_t aXPosition, uint16_t aYPosition, const char *aPGMString, uint16_t aFontSize, color16_t aTextColor,
             color16_t aBackgroundColor);
-    void drawTextPGM(uint16_t aPositionX, uint16_t aPositionY, const char *aPGMString);
+    void drawTextPGM(uint16_t aXPosition, uint16_t aYPosition, const char *aPGMString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString);
     void getNumberWithShortPromptPGM(void (*aNumberHandler)(float), const char *aPGMShortPromptString, float aInitialValue);
 #endif
@@ -354,7 +363,7 @@ public:
     bool mOrientationIsLandscape;
 
     /* For tests */
-    void drawGreyscale(uint16_t aXPos, uint16_t tYPos, uint16_t aHeight);
+    void drawGreyscale(uint16_t aXPos, uint16_t tYPos, uint16_t aYHeight);
     void drawStar(int aXCenter, int aYCenter, int tOffsetCenter, int tLength, int tOffsetDiagonal, int tLengthDiagonal,
             color16_t aColor, int16_t aThickness);
     void testDisplay(BDButton *aBackButton = nullptr, bool *stillInTestPage = nullptr);
@@ -369,17 +378,16 @@ uint8_t _clipAndCopyPGMString(char *aStringBuffer, const __FlashStringHelper *aP
 // The instance provided by the class itself
 extern BlueDisplay BlueDisplay1;
 
-
-
 #endif // __cplusplus
 
+// no guard "#if defined(SUPPORT_LOCAL_DISPLAY)", because it can be used at C sources, which have no SUPPORT_LOCAL_DISPLAY defined
 extern bool isLocalDisplayAvailable;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 // For use in syscalls.c
-uint16_t drawTextC(uint16_t aPositionX, uint16_t aPositionY, const char *aString, uint16_t aFontSize, color16_t aTextColor,
+uint16_t drawTextC(uint16_t aXPosition, uint16_t aYPosition, const char *aString, uint16_t aFontSize, color16_t aTextColor,
         color16_t aBackgroundColor);
 void writeStringC(const char *aString, uint8_t aStringLength);
 #ifdef __cplusplus
@@ -391,7 +399,9 @@ void writeStringC(const char *aString, uint8_t aStringLength);
  */
 uint16_t readADCChannelWithReferenceOversample(uint8_t aChannelNumber, uint8_t aReference, uint8_t aOversampleExponent);
 float getVCCVoltage(void);
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
 float getTemperature(void) __attribute__ ((deprecated ("Renamed to getCPUTemperature()"))); // deprecated
+#endif
 float getCPUTemperature(void);
 
 // For convenience also included here
@@ -404,9 +414,13 @@ float getCPUTemperature(void);
 
 /*
  * Version 5.2.0
- * - New function setButtonsGlobalTouchToneState().
+ * - OMIT_BD_DEPRECATED_FUNCTIONS is now enabled by default and can be disabled by ALLOW_BD_DEPRECATED_FUNCTIONS.
+ * - New function setButtonsGlobalTouchToneState() and debug(bool ...).
  * - Removed clearDisplayAndDisableButtonsAndSliders(), is now included in .clearDisplay(). Added clearDisplayArea().
- * - Changed Tone forever duration parameter value from -1 to 0.
+ * - Changed tone forever duration parameter value from -1 to 0.
+ * - Added functions setValueAndDrawSlider() and clearDisplayAreaAndSkipCommandsBeforeOnHostBufferOverflow().
+ * - Renamed drawAxesAndGrid() to drawAxesAndLabelsAndGrid().
+ * - Improved Chart functions.
  *
  * Version 5.1.0
  * - Renamed function names and variables from GridOrLabelX to XGridOrLabel and GridOrLabelY to YGridOrLabel.
@@ -446,7 +460,7 @@ float getCPUTemperature(void);
  * - All *Rel*() functions now have signed delta parameters.
  * - Fixed bugs in drawLineRelWithThickness() and Button list for local display.
  * - Added debug(const __FlashStringHelper *aString).
- * - Added bool delay(AndCheckForEvent().
+ * - Added bool delayAndCheckForEvent().
  *
  * Version 3.0.2
  * - Added function setPosition() for sliders.
@@ -483,7 +497,7 @@ float getCPUTemperature(void);
  * Version 1.3.0
  * - Added `sMillisOfLastReceivedBDEvent` for user timeout detection.
  * - Fixed bug in `debug(const char *aMessage, float aFloat)`.
- * - Added `*LOCK_SENSOR_LANDSCAPE` and `*LOCK_SENSOR_LANDSCAPE` in function `setScreenOrientationLock()`. Requires BD app version 4.2.
+ * - Added `*LOCK_SENSOR_LANDSCAPE` and `*LOCK_SENSOR_PORTRAIT` in function `setScreenOrientationLock()`. Requires BD app version 4.2.
  * - Removed unused `mCurrentDisplayHeight` and `mCurrentDisplayWidth` member variables.
  * - Fixed bug in draw function from `drawByte` to `drawLong`.
  * - Added short `drawText` functions. Requires BD app version 4.2.

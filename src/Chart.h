@@ -2,7 +2,7 @@
  * Chart.h
  *
  *
- *  Copyright (C) 2012-2025  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -45,12 +45,12 @@
 #define CHART_MODE_AREA                 2
 
 // Error codes
-#define CHART_ERROR_POS_X            -1
-#define CHART_ERROR_POS_Y            -2
-#define CHART_ERROR_WIDTH            -4
-#define CHART_ERROR_HEIGHT           -8
-#define CHART_ERROR_AXES_SIZE       -16
-#define CHART_ERROR_GRID_X_SPACING  -32
+#define CHART_ERROR_POS_X               0x01
+#define CHART_ERROR_POS_Y               0x02
+#define CHART_ERROR_WIDTH               0x04
+#define CHART_ERROR_HEIGHT              0x08
+#define CHART_ERROR_AXES_SIZE           0x10
+#define CHART_ERROR_GRID_X_SPACING      0x20
 
 // Masks for mFlags
 #define CHART_HAS_GRID      0x01 // if we have the grid, we do not need the small marks for label
@@ -101,7 +101,10 @@ public:
      * Draw chart functions - non axis related
      */
     void drawAxesAndLabels();
-    void drawAxesAndGrid(void);
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
+    void drawAxesAndGrid(void) __attribute__ ((deprecated ("Renamed to drawAxesAndLabelsAndGrid()"))) { drawAxesAndLabelsAndGrid();}
+#endif
+    void drawAxesAndLabelsAndGrid(void);
     bool drawChartDataDirect(const uint8_t *aDataPointer, const uint16_t aLengthOfValidData, const uint8_t aMode);
     void drawChartDataWithYOffset(uint8_t *aDataPointer, const uint16_t aLengthOfValidData, const uint8_t aMode); // 8 Bit (compressed) data with factor and offset
     void drawChartData(int16_t *aDataPointer, const uint16_t aLengthOfValidData, const uint8_t aMode);       // 16 bit data
@@ -112,14 +115,15 @@ public:
      * X Axis
      */
     void drawXAxisAndLabels();
-    void drawXAxisAndDateLabels(time_t aStartTimestamp, int (*aXBigLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue));
+    void drawXAxisAndDateLabels(time_t aStartTimestamp);
 
     void setXLabelDistance(uint8_t aXLabelDistance);
-    void setXBigLabelDistance(uint8_t aXBigLabelDistance);
-    void setXRegularAndBigLabelDistance(uint8_t aXLabelDistance);
-
-    void setGridOrLabelXPixelSpacing(uint8_t aXGridOrLabelPixelSpacing) __attribute__ ((deprecated ("Renamed to setXGridOrLabelPixelSpacing()")));
-    uint8_t getGridOrLabelXPixelSpacing(void) const __attribute__ ((deprecated ("Renamed to getXGridOrLabelPixelSpacing()")));
+    void setXBigDateLabelDistance(uint8_t aXBigDateLabelDistance);
+    void setXRegularAndBigDateLabelDistance(uint8_t aXLabelDistance);
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
+    void setGridOrLabelXPixelSpacing(uint8_t aXGridOrLabelPixelSpacing) __attribute__ ((deprecated ("Renamed to setXGridOrLabelPixelSpacing()"))) {setXGridOrLabelPixelSpacing(aXGridOrLabelPixelSpacing);}
+    uint8_t getGridOrLabelXPixelSpacing(void) const __attribute__ ((deprecated ("Renamed to getXGridOrLabelPixelSpacing()"))) {return getXGridOrLabelPixelSpacing();}
+#endif
     void setXGridOrLabelPixelSpacing(uint8_t aXGridOrLabelPixelSpacing);
     uint8_t getXGridOrLabelPixelSpacing(void) const;
 
@@ -129,13 +133,17 @@ public:
     // Init
     void initXLabel(const float aXLabelStartValue, const float aXLabelIncrementValue, const uint8_t aXLabelScaleFactor,
             uint8_t aXMinStringWidthIncDecimalPoint, uint8_t aXNumVarsAfterDecimal);
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
     void initXLabelTimestamp(const int aXLabelStartValue, const long aXLabelIncrementValue, const uint8_t aXLabelScaleFactor,
             const uint8_t aXMinStringWidth) __attribute__ ((deprecated ("Better use initXLabelTimestampForLabelScaleIdentity() and setXLabelScaleFactor() if aXLabelScaleFactor != CHART_X_AXIS_SCALE_FACTOR_1")));
-    void initXLabelTimestampForLabelScaleIdentity(const int aXLabelStartValue, const long aXLabelIncrementValue, const uint8_t aXMinStringWidth);
+#endif
+    void initXLabelTimestampForLabelScaleIdentity(const int aXLabelStartValue, const long aXLabelIncrementValue,
+            const uint8_t aXMinStringWidth);
     void disableXLabel(void);
 
     // Label string generation
     void setLabelStringFunction(int (*aXLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue));
+    void setBigDateLabelStringFunction(int (*aBigDateXLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue));
     static int convertMinutesToString(char *aLabelStringBuffer, time_float_union aXValueMinutes);
 
     // Start value
@@ -178,8 +186,10 @@ public:
      */
     void drawYAxisAndLabels();
 
-    void setGridOrLabelYPixelSpacing(uint8_t aXGridOrLabelPixelSpacing) __attribute__ ((deprecated ("Renamed to setYGridOrLabelPixelSpacing()")));
-    uint8_t getGridOrLabelYPixelSpacing(void) const __attribute__ ((deprecated ("Renamed to getYGridOrLabelPixelSpacing()")));
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
+    void setGridOrLabelYPixelSpacing(uint8_t aYGridOrLabelPixelSpacing) __attribute__ ((deprecated ("Renamed to setYGridOrLabelPixelSpacing()"))) {setYGridOrLabelPixelSpacing(aYGridOrLabelPixelSpacing);}
+    uint8_t getGridOrLabelYPixelSpacing(void) const __attribute__ ((deprecated ("Renamed to getYGridOrLabelPixelSpacing()"))) {return getYGridOrLabelPixelSpacing();}
+#endif
 
     void setYGridOrLabelPixelSpacing(uint8_t aYGridOrLabelPixelSpacing);
     uint8_t getYGridOrLabelPixelSpacing(void) const;
@@ -208,11 +218,11 @@ public:
     void drawYAxisTitle(const int aYOffset, const int aXOffset) const;
 
     // layout all values are in pixels
-    uint16_t mPositionX;    // Position in display coordinates of X - origin is on rightmost point of X axis
-    uint16_t mPositionY;    // Position in display coordinates of Y - origin is on uppermost point of X axis
-    uint16_t mWidthX;       // length of X axes in pixels
-    uint16_t mHeightY;      // height of X axes in pixel
-    uint8_t mAxesSize;      // thickness of X and Y axes - origin is on innermost line of axes
+    uint16_t mPositionX;    // Position in display coordinates of X - data origin is on rightmost point of Y axis
+    uint16_t mPositionY;    // Position in display coordinates of Y - data origin is on uppermost point of X axis
+    uint16_t mWidthX;       // length of X axis in pixels
+    uint16_t mHeightY;      // height of Y axis in pixel
+    uint8_t mAxesSize;      // thickness of X and Y axes - data origin is on innermost line of axes
     uint8_t mLabelTextSize;
     uint8_t mTitleTextSize;
     uint8_t mFlags;
@@ -275,17 +285,18 @@ public:
     int8_t mXLabelScaleFactor; // Factor for X scale expansion(>0) or compression(<0). 2-> use half the increment per grid/label -2-> use double of increment per grid/label
 
     // label formatting, returns length of string
-    int (*XLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue); // Function, which is called with a long/float and returns a pointer to a string. Is not called if nullptr.
+    int (*XLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue); // Function, which is called with a long/float and returns length of string. Is not called if nullptr.
+    int (*XBigDateLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue); // Function, which is called with a long/float and returns length of string. Is not called if nullptr.
 
     uint8_t mXNumVarsAfterDecimal; // For float label
-    uint8_t mXMinStringWidth; // For clearing label space
+    uint8_t mXMinStringWidth; // For clearing label space and formatting with dtostrf()
     uint8_t mXLabelDistance; // Draw label at every mXLabelDistance grid line. 1 -> label at every grid position, 2 -> label at every 2. grid position etc.
     /*
-     * Draw big label at every mXBigLabelDistance enlarged (not reduced) by XLabelScaleFactor, to keep the time distance between them constant.
+     * Draw big label at every mXBigDateLabelDistance enlarged (not reduced) by XLabelScaleFactor, to keep the time distance between them constant.
      * Big labels start at grid line determined by mXLabelAndGridStartValueOffset. Currently used only for date labels.
-     * If mXLabelDistance == mXBigLabelDistance no regular label is drawn
+     * If mXLabelDistance == mXBigDateLabelDistance no regular label is drawn
      */
-    uint8_t mXBigLabelDistance; // Draw big label at every mXBigLabelDistance enlarged (not reduced) by XLabelScaleFactor
+    uint8_t mXBigDateLabelDistance; // Draw big label at every mXBigDateLabelDistance enlarged (not reduced) by XLabelScaleFactor
 
     const char *mXTitleText; // No title text if nullptr
 
@@ -295,12 +306,18 @@ public:
     float mYLabelStartValue;
     float mYLabelStartOffset;
     float mYLabelIncrementValue; // Value difference between 2 grid labels - serves as Y scale factor
-    float mYDataFactor; // Factor for input (raw (int16_t) or float) to chart (not display!!!) value - e.g. (3.0 / 4096) for adc reading of 4096 for 3 (Volt) or 0.2 for 1000 display at 5000 input value
+    /*
+     * E.g. the length of a bar for value 60 is:
+     *      60 * 0.025 (with YDataFactor as 1.5 / 60 = 0.025) = 1.5
+     *      1.5 / 0.3 (0.3 increment per grid) = 5
+     *      5 * 15 (15 pixel spacing per grid) = 75 (pixel)
+     */
+    float mYDataFactor; // Factor for input (raw (int16_t) or float) to chart (not display pixel!!!) value - e.g. (3.0 / 4096) for interpretation of an ADC reading of 4096 as 3 (Volt) or 0.2 for 1000 display at 5000 input value
     uint8_t mYGridOrLabelPixelSpacing; // difference in pixel between 2 Y grid lines
 
     // label formatting
     uint8_t mYNumVarsAfterDecimal;
-    uint8_t mYMinStringWidth;
+    uint8_t mYMinStringWidth; // To format with dtostrf() and position Y label left before the Y axis
 
     const char *mYTitleText; // No title text if nullptr
 

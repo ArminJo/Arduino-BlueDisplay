@@ -3,7 +3,7 @@
  *  Demo of using the BlueDisplay library for HC-05 on Arduino
  *  Example of controlling a RC-car by smartphone accelerometer sensor
 
- *  Copyright (C) 2015-2025  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2026  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of BlueDisplay.
@@ -28,7 +28,7 @@
 /*
  * Settings to configure the BlueDisplay library and to reduce its size
  */
-#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events down, move and up. Saves 170 bytes program memory and 14 bytes RAM
 #define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Saves up to 88 bytes program memory and 4 bytes RAM.
 //#define BD_USE_SIMPLE_SERIAL // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 #include "BlueDisplay.hpp"
@@ -269,15 +269,15 @@ void initDisplay(void) {
      * Buttons
      */
     TouchButtonRcCarStartStop.init(0, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN, COLOR16_BLUE, F("Start"),
-            sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sRCCarStarted, &doRcCarStartStop);
+            sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE, sRCCarStarted, &doRcCarStartStop);
     TouchButtonRcCarStartStop.setTextForValueTrue(F("Stop"));
 
     TouchButtonFollowerOnOff.init(BUTTON_WIDTH_4_DYN_POS_4, BUTTON_HEIGHT_4_DYN_LINE_2, BUTTON_WIDTH_4_DYN, BUTTON_HEIGHT_4_DYN,
-    COLOR16_RED, F("Follow"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, sFollowerMode,
+    COLOR16_RED, F("Follow"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE, sFollowerMode,
             &doFollowerOnOff);
 
     TouchButtonLaserOnOff.init(BUTTON_WIDTH_4_DYN_POS_4, BUTTON_HEIGHT_4_DYN_LINE_3, BUTTON_WIDTH_4_DYN, BUTTON_HEIGHT_4_DYN,
-    COLOR16_RED, F("Laser"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE_RED_GREEN, LaserOn,
+    COLOR16_RED, F("Laser"), sTextSizeVCC, FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE, LaserOn,
             &doLaserOnOff);
 
     TouchButtonSetZero.init(BUTTON_WIDTH_3_DYN_POS_3, BUTTON_HEIGHT_4_DYN_LINE_4, BUTTON_WIDTH_3_DYN, BUTTON_HEIGHT_4_DYN,

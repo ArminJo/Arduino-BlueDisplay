@@ -38,8 +38,8 @@
 
 #include "PinDefinitionsAndMore.h"
 
-#define LOCAL_DISPLAY_WIDTH     DISPLAY_HALF_VGA_WIDTH  // 320
-#define LOCAL_DISPLAY_HEIGHT    DISPLAY_HALF_VGA_HEIGHT // 240
+#define DISPLAY_WIDTH     DISPLAY_HALF_VGA_WIDTH  // 320
+#define DISPLAY_HEIGHT    DISPLAY_HALF_VGA_HEIGHT // 240
 
 /*
  * Settings to configure the BlueDisplay library and to reduce its size
@@ -47,7 +47,7 @@
  * of 8 * printDemoString(), which requires 8*24 ms -> 192 ms
  */
 //#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate.
-#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves up to 180 bytes program memory and 14 bytes RAM.
+#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves up to 170 bytes program memory and 14 bytes RAM.
 #define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events. Saves up to 88 bytes program memory and 4 bytes RAM.
 //#define DO_NOT_NEED_SPEAK_EVENTS            // Disables SpeakingDone event handling. Saves up to 54 bytes program memory and 18 bytes RAM.
 //#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
@@ -139,7 +139,7 @@ void setup() {
      * Register callback handler and wait for 300 ms if Bluetooth connection is still active.
      * For ESP32 and after power on of the Bluetooth module (HC-05) at other platforms, Bluetooth connection is most likely not active here.
      *
-     * If active, mCurrentDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
+     * If active, mHostDisplaySize and mHostUnixTimestamp are set and initDisplay() and drawGui() functions are called.
      * If not active, the periodic call of checkAndHandleEvents() in the main loop waits for the (re)connection and then performs the same actions.
      */
     BlueDisplay1.initCommunication(&Serial, &initDisplay, &drawGui); // introduces up to 1.5 seconds delay
@@ -176,8 +176,10 @@ void loop() {
          * Not connected here, so send serial output, which is readable at the Arduino serial monitor
          */
         uint16_t tBlinkDuration = analogRead(ANALOG_INPUT_PIN);
+#if !defined(BD_USE_SIMPLE_SERIAL)
         Serial.print("AnalogIn=");
         Serial.println(tBlinkDuration);
+#endif
 
         digitalWrite(LED_BUILTIN, HIGH);
         // Delay and check for connection
@@ -194,7 +196,7 @@ void loop() {
              * Blinking is enabled, switch LED on
              */
             digitalWrite(LED_BUILTIN, HIGH);
-            BlueDisplay1.fillCircle(LOCAL_DISPLAY_WIDTH / 2, LOCAL_DISPLAY_HEIGHT / 2, 20, COLOR16_RED);
+            BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR16_RED);
             /*
              *  Wait for delay time and update "Demo" string at a rate 2*8 times the blink rate.
              *  Check touch events 8 times while waiting.
@@ -210,7 +212,7 @@ void loop() {
              * LED off
              */
             digitalWrite(LED_BUILTIN, LOW);
-            BlueDisplay1.fillCircle(LOCAL_DISPLAY_WIDTH / 2, LOCAL_DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
+            BlueDisplay1.fillCircle(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2, 20, COLOR_DEMO_BACKGROUND);
             for (uint8_t i = 0; i < 8; ++i) {
                 delayMillisAndHandleEvents(sDelay / 8); // This can trigger the display of the test page
                 if (sInTestPage) {
@@ -238,7 +240,7 @@ void loop() {
         unsigned long tMillis = millis();
         if (tMillis - sLastMilisOfTimePrinted > 1000) {
             sLastMilisOfTimePrinted = tMillis;
-            printTimeAtOneLine(LOCAL_DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, LOCAL_DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, 11, COLOR16_BLACK,
+            printTimeAtOneLine(DISPLAY_WIDTH - 20 * TEXT_SIZE_11_WIDTH, DISPLAY_HEIGHT - TEXT_SIZE_11_HEIGHT, 11, COLOR16_BLACK,
             COLOR_DEMO_BACKGROUND);
         }
 #endif
@@ -249,24 +251,24 @@ void loop() {
 
 void initDisplay(void) {
 
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, LOCAL_DISPLAY_WIDTH, LOCAL_DISPLAY_HEIGHT);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
-    TouchButtonPlus.init(270, 80, 40, 40, COLOR16_YELLOW, F("+"), 33,
+    TouchButtonPlus.init(270, 80, 40, 40, COLOR16_YELLOW, F("+"), TEXT_SIZE_33,
     FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT,
     DELAY_CHANGE_VALUE, &doPlusMinus);
     TouchButtonPlus.setButtonAutorepeatTiming(600, 100, 10, 30);
 
-    TouchButtonMinus.init(10, 80, 40, 40, COLOR16_YELLOW, F("-"), 33,
+    TouchButtonMinus.init(10, 80, 40, 40, COLOR16_YELLOW, F("-"), TEXT_SIZE_33,
     FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_AUTOREPEAT, -DELAY_CHANGE_VALUE, &doPlusMinus);
     TouchButtonMinus.setButtonAutorepeatTiming(600, 100, 10, 30);
 
 //    TouchButtonBDExampleBlinkStartStop.init(&ButtonStartStopInit, F("Start"), doBlink);
-    TouchButtonBDExampleBlinkStartStop.init(30, 150, 140, 55, COLOR_DEMO_BACKGROUND, F("Start"), 44,
+    TouchButtonBDExampleBlinkStartStop.init(30, 150, 140, 55, COLOR_DEMO_BACKGROUND, F("Start"), TEXT_SIZE_44,
     FLAG_BUTTON_DO_BEEP_ON_TOUCH | FLAG_BUTTON_TYPE_TOGGLE, doBlink, &doBDExampleBlinkStartStop);
     TouchButtonBDExampleBlinkStartStop.setTextForValueTrue(F("Stop"));
 
 //    TouchButtonValueDirect.init(&ButtonValueDirectInit, F("..."));
-    TouchButtonValueDirect.init(210, 150, 90, 55, COLOR16_YELLOW, F("..."), 44, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetDelay);
+    TouchButtonValueDirect.init(210, 150, 90, 55, COLOR16_YELLOW, F("..."), TEXT_SIZE_44, FLAG_BUTTON_DO_BEEP_ON_TOUCH, 0, &doGetDelay);
 
     TouchButtonTest.init(BUTTON_WIDTH_4_POS_4, 0, BUTTON_WIDTH_4, BUTTON_HEIGHT_6, COLOR16_DARK_BLUE, "Test", TEXT_SIZE_22,
     FLAG_BUTTON_DO_BEEP_ON_TOUCH, -1, &doTest);
@@ -437,7 +439,7 @@ void printDemoString(void) {
                 + ((int16_t) (COLOR16_GET_GREEN(COLOR_CAPTION) - COLOR16_GET_GREEN(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
         uint8_t ColorBlue = COLOR16_GET_BLUE(COLOR_DEMO_BACKGROUND)
                 + ((int16_t) ( COLOR16_GET_BLUE(COLOR_CAPTION) - COLOR16_GET_BLUE(COLOR_DEMO_BACKGROUND)) * tFadingFactor);
-        BlueDisplay1.drawText(LOCAL_DISPLAY_WIDTH / 2 - 2 * getTextWidth(36), 2, "Demo", 36,
+        BlueDisplay1.drawText(DISPLAY_WIDTH / 2 - 2 * getTextWidth(36), 2, "Demo", 36,
                 COLOR16(ColorRed, ColorGreen, ColorBlue), COLOR_DEMO_BACKGROUND);
     }
 }

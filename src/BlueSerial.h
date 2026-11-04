@@ -2,7 +2,7 @@
  * BlueSerial.h
  *
  *
- *  Copyright (C) 2014-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -72,7 +72,7 @@
 #define BAUD_STRING_115200 "115200"
 #define BAUD_STRING_230400 "230400"
 #define BAUD_STRING_460800 "460800"
-#define BAUD_STRING_921600 " 921600"
+#define BAUD_STRING_921600 "921600"
 #define BAUD_STRING_1382400 "1382400"
 
 #define BAUD_4800 (4800)
@@ -128,16 +128,16 @@ bool isReceivingActive();
  */
 void initSerial();
 
-#if defined(ESP32)
+#  if defined(ESP32)
 void initSerial(String aBTClientName);
-#else
+#  else
 void initSerial(uint32_t aBaudRate);
-#endif
+#  endif
 void clearSerialInputBuffer();
 
 void sendUSART(char aChar);
 void sendUSART(const char *aString);
-#endif
+#endif // defined(ARDUINO)
 
 /*
  * Functions only valid for simple serial
@@ -151,7 +151,7 @@ void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
 /*
  * Stuff for STM
  */
-#ifdef STM32F303xC
+#  ifdef STM32F303xC
 #define UART_BD                     USART3
 #define UART_BD_TX_PIN              GPIO_PIN_10
 #define UART_BD_RX_PIN              GPIO_PIN_11
@@ -167,9 +167,9 @@ void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
 
 #define BLUETOOTH_PAIRED_DETECT_PIN     GPIO_PIN_13
 #define BLUETOOTH_PAIRED_DETECT_PORT    GPIOC
-#endif
+#  endif
 
-#ifdef STM32F103xB
+#  ifdef STM32F103xB
 #define UART_BD                     USART1
 #define UART_BD_TX_PIN              GPIO_PIN_9
 #define UART_BD_RX_PIN              GPIO_PIN_10
@@ -185,30 +185,30 @@ void initSimpleSerial(uint32_t aBaudRate, bool aUsePairedPin);
 
 #define BLUETOOTH_PAIRED_DETECT_PIN     GPIO_PIN_7
 #define BLUETOOTH_PAIRED_DETECT_PORT    GPIOA
-#endif
+#  endif
 
 // The UART used by BlueDisplay
 extern UART_HandleTypeDef UART_BD_Handle;
-#ifdef __cplusplus
+#  ifdef __cplusplus
 extern "C" {
-#endif
+#  endif
 void UART_BD_IRQHANDLER(void);
-#ifdef __cplusplus
+#  ifdef __cplusplus
 }
-#endif
+#  endif
 
 // Send functions using buffer and DMA
 int getSendBufferFreeSpace(void);
 
 void UART_BD_initialize(uint32_t aBaudRate);
-void HAL_UART_MspInit(UART_HandleTypeDef* aUARTHandle);
+void HAL_UART_MspInit(UART_HandleTypeDef *aUARTHandle);
 
 uint32_t getUSART_BD_BaudRate(void);
 void setUART_BD_BaudRate(uint32_t aBaudRate);
 
 // Simple blocking serial version without overhead
-void sendUSARTBufferSimple(uint8_t * aParameterBufferPointer, size_t aParameterBufferLength,
-        uint8_t * aDataBufferPointer, size_t aDataBufferLength);
+void sendUSARTBufferSimple(uint8_t *aParameterBufferPointer, size_t aParameterBufferLength, uint8_t *aDataBufferPointer,
+        size_t aDataBufferLength);
 
-#endif // defined(__AVR__)
+#endif //  defined(STM32F303xC) || defined(STM32F103xB)
 #endif // _BLUESERIAL_H

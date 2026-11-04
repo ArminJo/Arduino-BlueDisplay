@@ -11,7 +11,7 @@
  *      LOCAL_DISPLAY_WIDTH
  *      LOCAL_DISPLAY_HEIGHT
  *
- *  Copyright (C) 2012-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -282,9 +282,6 @@ void LocalTouchButton::removeButton(color16_t aBackgroundColor) {
  * draws the text of a button
  * @return 0 or error number #TOUCHBUTTON_ERROR_TEXT_TOO_LONG etc.
  */
-void LocalTouchButton::drawCaption() {
-    drawText();
-}
 void LocalTouchButton::drawText() {
     mFlags |= LOCAL_BUTTON_FLAG_IS_ACTIVE;
 
@@ -513,9 +510,6 @@ bool aCheckOnlyAutorepeatButtons) {
 /**
  * Static convenience method - deactivate all buttons (e.g. before switching screen)
  */
-void LocalTouchButton::deactivateAllButtons() {
-    deactivateAll();
-}
 void LocalTouchButton::deactivateAll() {
     LocalTouchButton *tObjectPointer = sButtonListStart;
 // walk through list
@@ -528,9 +522,6 @@ void LocalTouchButton::deactivateAll() {
 /**
  * Static convenience method - activate all buttons
  */
-void LocalTouchButton::activateAllButtons() {
-    activateAll();
-}
 void LocalTouchButton::activateAll() {
     LocalTouchButton *tObjectPointer = sButtonListStart;
 // walk through list
@@ -574,9 +565,6 @@ uint8_t LocalTouchButton::getTextLength(char *aTextPointer) {
 #  endif
 #endif
 
-void LocalTouchButton::setCaptionForValueTrue(const char *aText) {
-    setTextForValueTrue(aText);
-}
 void LocalTouchButton::setTextForValueTrue(const char *aText) {
 #if defined(__AVR__)
     mFlags &= ~LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE;
@@ -584,9 +572,6 @@ void LocalTouchButton::setTextForValueTrue(const char *aText) {
     mTextForTrue = aText;
 }
 
-void LocalTouchButton::setCaptionForValueTrue(const __FlashStringHelper *aPGmText) {
-    setTextForValueTrue(aPGmText);
-}
 void LocalTouchButton::setTextForValueTrue(const __FlashStringHelper *aPGmText) {
 #if defined (AVR)
     mFlags |= LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE;
@@ -599,9 +584,6 @@ void LocalTouchButton::setTextForValueTrue(const __FlashStringHelper *aPGmText) 
 /*
  * Set text
  */
-void LocalTouchButton::setCaption(const char *aText, bool doDrawButton) {
-    setText(aText, doDrawButton);
-}
 void LocalTouchButton::setText(const char *aText, bool doDrawButton) {
 #if defined(__AVR__)
     mFlags &= ~LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE;
@@ -612,9 +594,6 @@ void LocalTouchButton::setText(const char *aText, bool doDrawButton) {
     }
 }
 
-void LocalTouchButton::setCaption(const __FlashStringHelper *aPGmText, bool doDrawButton) {
-    setText(aPGmText, doDrawButton);
-}
 void LocalTouchButton::setText(const __FlashStringHelper *aPGmText, bool doDrawButton) {
 #if defined (AVR)
     mFlags |= LOCAL_BUTTON_FLAG_BUTTON_TEXT_IS_IN_PGMSPACE;
@@ -630,9 +609,6 @@ void LocalTouchButton::setText(const __FlashStringHelper *aPGmText, bool doDrawB
 /**
  * Set text and draw
  */
-void LocalTouchButton::setCaptionAndDraw(const char *aText) {
-    setTextAndDraw(aText);
-}
 void LocalTouchButton::setTextAndDraw(const char *aText) {
     mText = aText;
     drawButton();
@@ -653,21 +629,6 @@ void LocalTouchButton::setButtonColorAndDraw(color16_t aButtonColor) {
 void LocalTouchButton::setTextColor(color16_t aTextColor) {
     mTextColor = aTextColor;
 }
-
-#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
-/**
- * value 0 -> red, 1 -> green
- */
-void LocalTouchButton::setColorForRedGreenButton(bool aValue) {
-    if (mFlags & FLAG_BUTTON_TYPE_TOGGLE) {
-        if (aValue) {
-            mButtonColor = COLOR16_GREEN;
-        } else {
-            mButtonColor = COLOR16_RED;
-        }
-    }
-}
-#endif
 
 /**
  * value 0 -> red, 1 -> green
@@ -725,6 +686,45 @@ void LocalTouchButton::deactivate() {
 void LocalTouchButton::setTouchHandler(void (*aOnTouchHandler)(LocalTouchButton*, int16_t)) {
     mOnTouchHandler = aOnTouchHandler;
 }
+
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
+void LocalTouchButton::activateAllButtons() {
+    activateAll();
+}
+void LocalTouchButton::deactivateAllButtons() {
+    deactivateAll();
+}
+void LocalTouchButton::drawCaption() {
+    drawText();
+}
+void LocalTouchButton::setCaption(const char *aText, bool doDrawButton) {
+    setText(aText, doDrawButton);
+}
+void LocalTouchButton::setCaption(const __FlashStringHelper *aPGmText, bool doDrawButton) {
+    setText(aPGmText, doDrawButton);
+}
+void LocalTouchButton::setCaptionForValueTrue(const char *aText) {
+    setTextForValueTrue(aText);
+}
+void LocalTouchButton::setCaptionForValueTrue(const __FlashStringHelper *aPGmText) {
+    setTextForValueTrue(aPGmText);
+}
+void LocalTouchButton::setCaptionAndDraw(const char *aText) {
+    setTextAndDraw(aText);
+}
+/**
+ * value 0 -> red, 1 -> green
+ */
+void LocalTouchButton::setColorForRedGreenButton(bool aValue) {
+    if (mFlags & FLAG_BUTTON_TYPE_TOGGLE) {
+        if (aValue) {
+            mButtonColor = COLOR16_GREEN;
+        } else {
+            mButtonColor = COLOR16_RED;
+        }
+    }
+}
+#endif
 
 /** @} */
 /** @} */

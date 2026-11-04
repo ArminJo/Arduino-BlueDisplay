@@ -190,14 +190,12 @@ void LocalTouchSlider::createAllLocalSlidersAtRemote() {
  * @param aThresholdValue - Scaling applied! If selected or sent value is bigger, then color of bar changes from BarColor to BarBackgroundColor
  * @param aInitalValue - Scaling applied!
  * @param aSliderColor - Color of slider border. If no border specified, then this is taken as bar background color.
- * @param aBarColor
  * @param aFlags - See #FLAG_SLIDER_SHOW_BORDER etc.
  * @param aOnChangeHandler - If nullptr no update of bar is done on touch - equivalent to FLAG_SLIDER_IS_ONLY_OUTPUT
  */
 void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength,
         uint16_t aThresholdValue, int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags) {
-    init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags,
-            reinterpret_cast<void (*)(LocalTouchSlider*, int16_t)>(NULL));
+    init(aPositionX, aPositionY, aBarWidth, aBarLength, aThresholdValue, aInitalValue, aSliderColor, aBarColor, aFlags, nullptr);
 }
 void LocalTouchSlider::init(uint16_t aPositionX, uint16_t aPositionY, uint8_t aBarWidth, uint16_t aBarLength,
         uint16_t aThresholdValue, int16_t aInitalValue, uint16_t aSliderColor, uint16_t aBarColor, uint8_t aFlags,
@@ -316,9 +314,6 @@ void LocalTouchSlider::setValueColor(uint16_t aValueColor) {
 /**
  * Static convenience methods
  */
-void LocalTouchSlider::activateAllSliders() {
-    activateAll();
-}
 void LocalTouchSlider::activateAll() {
     LocalTouchSlider *tObjectPointer = sSliderListStart;
     while (tObjectPointer != nullptr) {
@@ -327,9 +322,6 @@ void LocalTouchSlider::activateAll() {
     }
 }
 
-void LocalTouchSlider::deactivateAllSliders() {
-    deactivateAll();
-}
 void LocalTouchSlider::deactivateAll() {
     LocalTouchSlider *tObjectPointer = sSliderListStart;
     while (tObjectPointer != nullptr) {
@@ -691,11 +683,6 @@ void LocalTouchSlider::setValue(int16_t aValue) {
     mValue = aValue;
 }
 
-// deprecated
-void LocalTouchSlider::setValueAndDraw(int16_t aValue) {
-    setValueAndDrawBar(aValue);
-}
-
 void LocalTouchSlider::setValueAndDrawBar(int16_t aValue) {
     mValue = aValue;
     drawBar();
@@ -759,11 +746,6 @@ void LocalTouchSlider::setBarThresholdColor(uint16_t aBarThresholdColor) {
     mBarThresholdColor = aBarThresholdColor;
 }
 
-// Deprecated
-void LocalTouchSlider::setBarThresholdDefaultColor(uint16_t aBarThresholdDefaultColor) {
-    mBarThresholdColor = aBarThresholdDefaultColor;
-}
-
 void LocalTouchSlider::setSliderColor(uint16_t sliderColor) {
     mSliderColor = sliderColor;
 }
@@ -775,6 +757,23 @@ void LocalTouchSlider::setBarColor(uint16_t aBarColor) {
 void LocalTouchSlider::setBarBackgroundColor(uint16_t aBarBackgroundColor) {
     mBarBackgroundColor = aBarBackgroundColor;
 }
+
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
+void LocalTouchSlider::activateAllSliders() {
+    activateAll();
+}
+void LocalTouchSlider::deactivateAllSliders() {
+    deactivateAll();
+}
+// Deprecated
+void LocalTouchSlider::setBarThresholdDefaultColor(uint16_t aBarThresholdDefaultColor) {
+    mBarThresholdColor = aBarThresholdDefaultColor;
+}
+// deprecated
+void LocalTouchSlider::setValueAndDraw(int16_t aValue) {
+    setValueAndDrawBar(aValue);
+}
+#endif
 
 /** @} */
 /** @} */

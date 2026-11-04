@@ -4,7 +4,7 @@
  *
  * Size of one slider is 46 bytes on Arduino
  *
- *  Copyright (C) 2012-2025  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -119,7 +119,7 @@ public:
             uint16_t aDefaultValueColor, uint16_t aDefaultValueCaptionBackgroundColor);
     static void setDefaultSliderColor(uint16_t aDefaultSliderColor);
     static void setDefaultBarColor(uint16_t aDefaultBarColor);
-    void setDefaultBarThresholdColor(uint16_t aDefaultBarThresholdColor);
+    static void setDefaultBarThresholdColor(uint16_t aDefaultBarThresholdColor);
 
     /*
      * Basic touch functions
@@ -145,7 +145,7 @@ public:
     // Draw
     void drawSlider();
     void drawBorder();
-    void drawBar(); // Used internally
+    void drawBar();
 
     // Color
     void setSliderColor(uint16_t sliderColor);
@@ -179,12 +179,14 @@ public:
     int16_t getValue() const;
     int printValue(); // Used internally
 
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
     // Deprecated
     void setBarThresholdDefaultColor(color16_t aBarThresholdDefaultColor)
             __attribute__ ((deprecated ("Renamed to setDefaultBarThresholdColor")));
     void setValueAndDraw(int16_t aValue) __attribute__ ((deprecated ("Renamed to setValueAndDrawBar")));
     static void activateAllSliders() __attribute__ ((deprecated ("Renamed to activateAll")));
     static void deactivateAllSliders() __attribute__ ((deprecated ("Renamed to deactivateAll")));
+#endif
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
     LocalTouchSlider(BDSlider *aBDSliderPtr); // Required for creating a local slider for an existing aBDSlider at aBDSlider::init

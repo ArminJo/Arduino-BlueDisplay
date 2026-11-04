@@ -128,7 +128,7 @@ void BDButton::init(BDButtonPGMTextParameterStruct *aBDButtonParameter) {
             aBDButtonParameter->aButtonColor, aBDButtonParameter->aPGMText, aBDButtonParameter->aTextSize,
             aBDButtonParameter->aFlags, aBDButtonParameter->aValue, aBDButtonParameter->aOnTouchHandler);
 }
-#endif // !defined (AVR)
+#endif // defined (AVR)
 
 /*
  * initialize a button stub
@@ -136,7 +136,7 @@ void BDButton::init(BDButtonPGMTextParameterStruct *aBDButtonParameter) {
  * Multi-line text requires \n as line separator.
  * @param aText  value for false (0) if FLAG_BUTTON_TYPE_TOGGLE is set
  *
- * Assume, that remote display is attached if called here! Use TouchButton::initButton() for only local display.
+ * Assume, that remote display is attached if called here! Use LocalTouchButton::initButton() for only local display.
  */
 void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, uint16_t aHeightY, color16_t aButtonColor,
         const char *aText, uint16_t aTextSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t)) {
@@ -229,10 +229,10 @@ void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidthX, 
 
 void BDButton::setCallback(void (*aOnTouchHandler)(BDButton*, int16_t)) {
 #if __SIZEOF_POINTER__ == 4
-    sendUSARTArgs(FUNCTION_SLIDER_SETTINGS, 4, mButtonIndex, SUBFUNCTION_SLIDER_SET_CALLBACK, aOnTouchHandler,
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 4, mButtonIndex, SUBFUNCTION_BUTTON_SET_CALLBACK, aOnTouchHandler,
                 (reinterpret_cast<uint32_t>(aOnTouchHandler) >> 16));
 #else
-    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_SLIDER_SET_CALLBACK, aOnTouchHandler);
+    sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_CALLBACK, aOnTouchHandler);
 #endif
 }
 
@@ -312,9 +312,12 @@ void BDButton::setTextForValueTrue(const char *aText) {
 }
 void BDButton::setTextForValueTrue(const __FlashStringHelper *aPGMText) {
 #if defined (AVR)
+#  if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalButtonPtr->setTextForValueTrue(aPGMText);
+#  endif
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+    uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, aPGMText);
     if (USART_isBluetoothPaired()) {
-        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, aPGMText);
         sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_SET_TEXT_FOR_VALUE_TRUE, 1, mButtonIndex, tTextLength, tStringBuffer);
     }
 #else
@@ -340,9 +343,15 @@ void BDButton::setText(const char *aText, bool doDrawButton) {
 
 void BDButton::setText(const __FlashStringHelper *aPGMText, bool doDrawButton) {
 #if defined (AVR)
+#if defined(SUPPORT_LOCAL_DISPLAY)
+    mLocalButtonPtr->setText(aPGMText);
+    if (doDrawButton) {
+        mLocalButtonPtr->drawButton();
+    }
+#endif
+    char tStringBuffer[STRING_BUFFER_STACK_SIZE];
+    uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, aPGMText);
     if (USART_isBluetoothPaired()) {
-        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-        uint8_t tTextLength = _clipAndCopyPGMString(tStringBuffer, aPGMText);
         uint8_t tFunctionCode = FUNCTION_BUTTON_SET_TEXT;
         if (doDrawButton) {
             tFunctionCode = FUNCTION_BUTTON_SET_TEXT_AND_DRAW_BUTTON;
@@ -385,8 +394,7 @@ void BDButton::setValue(int16_t aValue, bool doDrawButton) {
 
 void BDButton::setValueAndDraw(int16_t aValue) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalButtonPtr->setValue(aValue);
-    mLocalButtonPtr->drawButton();
+    mLocalButtonPtr->setValueAndDraw(aValue);
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_VALUE_AND_DRAW, aValue);
 }
@@ -400,8 +408,7 @@ void BDButton::setButtonColor(color16_t aButtonColor) {
 
 void BDButton::setButtonColorAndDraw(color16_t aButtonColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalButtonPtr->setButtonColor(aButtonColor);
-    mLocalButtonPtr->drawButton();
+    mLocalButtonPtr->setButtonColorAndDraw(aButtonColor);
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_BUTTON_COLOR_AND_DRAW, aButtonColor);
 }
@@ -409,15 +416,15 @@ void BDButton::setButtonColorAndDraw(color16_t aButtonColor) {
 void BDButton::setButtonColorAndValue(color16_t aButtonColor, int16_t aValue) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
     mLocalButtonPtr->setButtonColor(aButtonColor);
-    mLocalButtonPtr->drawButton();
+    mLocalButtonPtr->setValue(aValue);
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 4, mButtonIndex, SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE, aButtonColor, aValue);
 }
 
 void BDButton::setButtonColorAndValueAndDraw(color16_t aButtonColor, int16_t aValue) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalButtonPtr->setButtonColor(aButtonColor);
-    mLocalButtonPtr->drawButton();
+    mLocalButtonPtr->setValue(aValue);
+    mLocalButtonPtr->setButtonColorAndDraw(aButtonColor);
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 4, mButtonIndex, SUBFUNCTION_BUTTON_SET_COLOR_AND_VALUE_AND_DRAW, aButtonColor, aValue);
 }
@@ -431,7 +438,7 @@ void BDButton::setButtonTextColor(color16_t aButtonTextColor) {
 
 void BDButton::setButtonTextColorAndDraw(color16_t aButtonTextColor) {
 #if defined(SUPPORT_LOCAL_DISPLAY)
-    mLocalButtonPtr->setButtonColor(aButtonTextColor);
+    mLocalButtonPtr->setTextColor(aButtonTextColor);
     mLocalButtonPtr->drawButton();
 #endif
     sendUSARTArgs(FUNCTION_BUTTON_SETTINGS, 3, mButtonIndex, SUBFUNCTION_BUTTON_SET_TEXT_COLOR_AND_DRAW, aButtonTextColor);
@@ -545,70 +552,6 @@ void BDButton::deactivateAll() {
     sendUSARTArgs(FUNCTION_BUTTON_DEACTIVATE_ALL, 0);
 }
 
-// this uses around 160 to 200 bytes initially and saves around 20 bytes per call.
-//uint16_t sLastWidthX;
-//uint16_t sLastHeightY;
-//color16_t sLastButtonColor;
-//uint8_t sLastTextSize;
-//uint8_t sLastFlags;
-//void BDButton::init(uint16_t aPositionX, uint16_t aPositionY, const __FlashStringHelper *aPGMText, int16_t aValue,
-//        void (*aOnTouchHandler)(BDButton*, int16_t)) {
-//
-//    BDButtonIndex_t tButtonNumber = sLocalButtonIndex++;
-//    PGM_P tPGMText = reinterpret_cast<PGM_P>(aPGMText);
-//
-//    if (USART_isBluetoothPaired()) {
-//        uint8_t tTextLength = strlen_P(tPGMText);
-//        if (tTextLength > STRING_BUFFER_STACK_SIZE) {
-//            tTextLength = STRING_BUFFER_STACK_SIZE;
-//        }
-//        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-//        strncpy_P(tStringBuffer, tPGMText, tTextLength);
-//
-//#if __SIZEOF_POINTER__ == 4
-//        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 11, tButtonNumber, aPositionX, aPositionY, aWidthX, aHeightY,
-//                aButtonColor, aTextSize, aFlags, aValue, aOnTouchHandler, (reinterpret_cast<uint32_t>(aOnTouchHandler) >> 16),
-//                tTextLength, tStringBuffer);
-//#else
-//        sendUSARTArgsAndByteBuffer(FUNCTION_BUTTON_CREATE, 10, tButtonNumber, aPositionX, aPositionY, sLastWidthX, sLastHeightY,
-//                sLastButtonColor, sLastTextSize, sLastFlags, aValue, aOnTouchHandler, tTextLength, tStringBuffer);
-//#endif
-//    }
-//    mButtonIndex = tButtonNumber;
-//}
-
-// This uses around 200 bytes and saves 8 to 24 bytes per button
-//void BDButton::init(const struct ButtonInit *aButtonInfo, const __FlashStringHelper *aPGMText ) {
-//    init(aButtonInfo,aPGMText,pgm_read_word(aButtonInfo->Value));
-//}
-//
-//void BDButton::init(const struct ButtonInit *aButtonInfo, const __FlashStringHelper *aPGMText, int16_t aValue ) {
-//
-//    BDButtonIndex_t tButtonNumber = sLocalButtonIndex++;
-//    if (USART_isBluetoothPaired()) {
-//
-//        uint16_t tParamBuffer[MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS + 4];
-//        uint16_t *tBufferPointer = &tParamBuffer[0];
-//        *tBufferPointer++ = FUNCTION_BUTTON_CREATE << 8 | SYNC_TOKEN; // add sync token
-//        *tBufferPointer++ = 10 * 2;
-//        *tBufferPointer++ = tButtonNumber;
-//        memcpy_P(tBufferPointer, aButtonInfo, sizeof(ButtonInit));
-//        tParamBuffer[10] = aValue;
-//
-//        char tStringBuffer[STRING_BUFFER_STACK_SIZE];
-//        uint8_t tLength = _clipAndCopyPGMString(tStringBuffer, aPGMText);
-//
-//        // add data field header
-//        tBufferPointer += sizeof(ButtonInit) / sizeof(uint16_t);
-//        *tBufferPointer++ = DATAFIELD_TAG_BYTE << 8 | SYNC_TOKEN; // start new transmission block
-//        *tBufferPointer = tLength;
-//
-//        sendUSARTBufferNoSizeCheck(reinterpret_cast<uint8_t*>(&tParamBuffer[0]), 10 * 2 + 8,
-//                reinterpret_cast<uint8_t*>(&tStringBuffer[0]), tLength);
-//    }
-//    mButtonIndex = tButtonNumber;
-//}
-
 #if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
 #  if defined(__AVR__)
 void BDButton::setCaptionPGMForValueTrue(const char *aPGMText) {
@@ -634,4 +577,4 @@ void BDButton::setCaptionPGM(const char *aPGMText, bool doDrawButton) {
 #  endif // defined(__AVR__)
 #  endif // !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
 
-#endif //_BDBUTTON_H
+#endif //_BDBUTTON_HPP

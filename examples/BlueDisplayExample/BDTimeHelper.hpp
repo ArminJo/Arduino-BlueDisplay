@@ -5,7 +5,7 @@
  *  !!! It requires the Arduino files Time.cpp and TimeLib.h, so it is not directly part of the BD library. It is only included in some of the examples !!!
  *  Requires up to 1640 bytes program memory and even more in Arduino IDE, because the "-mrelax" linker option is not set there.
  *
- *  Copyright (C) 2025  Armin Joachimsmeyer
+ *  Copyright (C) 2025-2026  Armin Joachimsmeyer
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *

@@ -166,8 +166,8 @@
 #define DISPLAY_HEIGHT   256 // We use 8 bit resolution and have 256 different analog values
 #define REMOTE_DISPLAY_WIDTH    320 // Use the size of the local LCD screen available
 //#define BLUETOOTH_BAUD_RATE BAUD_115200  // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
-//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
-//#define DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events.
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events down, move and up. Saves 170 bytes program memory and 14 bytes RAM
+//#define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events.
 #define DO_NOT_NEED_SPEAK_EVENTS            // Disables SpeakingDone event handling. Saves up to 54 bytes program memory and 18 bytes RAM.
 //#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
 #define OMIT_BD_DEPRECATED_FUNCTIONS
@@ -194,14 +194,6 @@
 BDButton TouchButtonBack;
 // global flag for page control. Is evaluated by calling loop or page and set by buttonBack handler
 bool sBackButtonPressed;
-
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644A__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__)
-//#define INTERNAL1V1 2
-#undef INTERNAL
-#define INTERNAL 2
-#else
-#define INTERNAL 3
-#endif
 
 #if !defined(TIMSK2)
 // on ATmega32U4 we have no timer2 but one timer3
@@ -588,7 +580,7 @@ void __attribute__((noreturn)) loop(void) {
                         if (DisplayControl.DisplayPage == DSO_PAGE_CHART) {
                             if (!DisplayControl.showHistory) {
                                 // This enables slow display devices to skip frames
-                                BlueDisplay1.clearDisplayAndSkipCommandsBeforeOnHostBufferOverflow(COLOR_BACKGROUND_DSO);
+                                BlueDisplay1.clearDisplayAreaAndSkipCommandsBeforeOnHostBufferOverflow(COLOR_BACKGROUND_DSO);
                             }
                             drawGridLinesWithHorizLabelsAndTriggerLine();
                             if (DisplayControl.showInfoMode != INFO_MODE_NO_INFO) {

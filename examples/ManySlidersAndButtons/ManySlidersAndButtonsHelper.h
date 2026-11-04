@@ -194,7 +194,7 @@ const char sString_Button8[] PROGMEM = "Button_8";
 struct ButtonStaticInfoStruct {
     int16_t Value;
     const char *ButtonText; // String in PROGMEM
-    const char *ButtonTextForValueTrue; // if not 0 | NULL | nullptr a Red/Green toggle button is created
+    const char *ButtonTextForValueTrue; // if not 0 | nullptr a Red/Green toggle button is created
 };
 
 void initSlidersAndButtons(const SliderStaticInfoStruct *aLeftSliderStaticPGMInfoPtr,

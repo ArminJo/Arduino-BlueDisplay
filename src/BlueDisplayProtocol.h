@@ -25,23 +25,42 @@
  *
  *
  * SEND PROTOCOL USED:
- * Message: At least 6 bytes long
- * 1. Sync byte A5
- * 2. byte function token
- * 3. Short length (in bytes units -> always multiple of 2) of parameters
- * 4. Short n parameters
+ * Message: At least 4 bytes long
+ * 1 - Sync byte A5
+ * 2 - byte function token
+ * 3 - Short length LSB (in bytes units -> always multiple of 2) of parameters
+ * 4 - Short length MSB
+ * 5 - Parameter 1
+ * 7 - Parameter 2 - up to length/2 parameters with length currently <= 12
  *
  * Data (expected for messages with function code >= 0x60):
- * 1. Sync byte A5
- * 2. byte Data_Size_Type token (byte, short etc.) - only byte used now
- * 3. Short length of data in byte units
- * 4. (Length) items of data values
+ * 1 - Sync byte A5
+ * 2 - byte Data_Size_Type token (byte, short etc.) - only byte used now
+ * 3 - Short length LSB of data in byte units
+ * 4 - Short length MSB
+ * 5 - (Length) items of data values
  *
  *
- * RECEIVE PROTOCOL USED:
+ * RECEIVE PROTOCOL USED BY EVENTS:
  *
- * Touch/size message has 8 bytes:
- * 1 - Gross message length in bytes including sync token (8)
+ * 5 bytes event for: EVENT_SPEAKING_DONE
+ * 1 - Gross message length in bytes including sync token
+ * 2 - Function code
+ * 3 - Return status LSB // speaking return code
+ * 4 - Return status MSB // = 0
+ * 5 - Sync token
+ *
+ * 7 bytes event for: disconnect
+ * 1 - Gross message length in bytes including sync token
+ * 2 - Function code
+ * 3 - X PixelWidth LSB
+ * 4 - X PixelWidth MSB
+ * 5 - Y PixelHeight LSB
+ * 6 - Y PixelHeight MSB
+ * 7 - Sync token
+ *
+ * 8 bytes event for: Touch/move/long touch down
+ * 1 - Gross message length in bytes including sync token
  * 2 - Function code
  * 3 - X Position LSB
  * 4 - X Position MSB
@@ -50,15 +69,62 @@
  * 7 - Pointer index
  * 8 - Sync token
  *
- * Callback message has 15 bytes:
- * 1 - Gross message length in bytes
+ * 11 bytes event for: Reorientation, Redraw, Request Data Canvas size and connection build up
+ * 1 - Gross message length in bytes including sync token
  * 2 - Function code
- * 16 bit button/slider index
- * 16 bit filler for 32 bit alignment of next values
- * 32 bit callback address
- * 32 bit value
- * 13 - Sync token
+ * 3 - X PixelWidth LSB
+ * 4 - X PixelWidth MSB
+ * 5 - Y PixelHeight LSB
+ * 6 - Y PixelHeight MSB
+ * 7 - 32 bit Timestamp in seconds
+ * 11- Sync token
  *
+ * 15 bytes event for: button + slider GUI callback, NOP for synchronizing
+ * 1 - Gross message length in bytes including sync token
+ * 2 - Function code
+ * 3 - 16 bit button/slider index LSB
+ * 4 - 16 bit button/slider index MSB
+ * 5 - 16 bit filler for 32 bit alignment of next values
+ * 7 - 32 bit callback address
+ * 11- 32 bit value
+ * 15- Sync token
+ *
+ * 15 bytes event for: Swipe
+ * 1 - Gross message length in bytes including sync token
+ * 2 - Function code
+ * 3 - 16 bit IsXDirection
+ * 5 - 16 bit 0x0000
+ * 7 - 16 bit Start X
+ * 9 - 16 bit Start Y
+ * 11- 16 bit Delta X
+ * 13- 16 bit Delta Y
+ * 15- Sync token
+ *
+ * 15 bytes event for: Sensor callback
+ * 1 - Gross message length in bytes including sync token
+ * 2 - Function code
+ * 3 - 32 bit X Value
+ * 7 - 32 bit Y Value
+ * 11- 32 bit Z Value
+ * 15- Sync token
+ *
+ * 15 bytes event for: SUBFUNCTION_GET_INFO_LOCAL_TIME or GMT_TIME
+ * 1 - Gross message length in bytes including sync token
+ * 2 - Function code
+ * 3 - Sub function code
+ * 4 - UseDaylightTime
+ * 5 - 16 bit signed GMTOffset in minutes
+ * 7 - 32 bit callback address
+ * 11- 32 bit Timestamp in seconds
+ * 15- Sync token
+ *
+ * 15 bytes event for: Number callback
+ * 1 - Gross message length in bytes including sync token
+ * 2 - Function code
+ * 3 - 32 bit 0x00000000
+ * 7 - 32 bit callback address
+ * 11- 32 bit float value
+ * 15- Sync token
  */
 
 #ifndef _BLUEDISPLAYPROTOCOL_H
@@ -91,36 +157,55 @@
 // Sub functions for GLOBAL_SETTINGS
 #define SUBFUNCTION_GLOBAL_SET_FLAGS_AND_SIZE           0x00
 // Sub functions for SET_FLAGS_AND_SIZE
-static const int BD_FLAG_FIRST_RESET_ALL = 0x01;
-static const int BD_FLAG_TOUCH_BASIC_DISABLE = 0x02; // Do not send plain touch events (UP, DOWN, MOVE) if no button or slider was touched, send only button and slider events. -> Disables also touch moves.
-static const int BD_FLAG_ONLY_TOUCH_MOVE_DISABLE = 0x04; // Do not send MOVE, only UP and DOWN.
-static const int BD_FLAG_LONG_TOUCH_ENABLE = 0x08; // If long touch detection is required. This delays the sending of plain DOWN Events.
-static const int BD_FLAG_USE_MAX_SIZE = 0x10;      // Use maximum display size for given geometry. -> Scale automatically to screen.
+#define BD_FLAG_FIRST_RESET_ALL         0x01
+#define BD_FLAG_TOUCH_BASIC_DISABLE     0x02 // Do not send plain touch events (UP, DOWN, MOVE) if no button or slider was touched, send only button and slider events. -> Disables also touch moves.
+#define BD_FLAG_ONLY_TOUCH_MOVE_DISABLE 0x04 // Do not send MOVE, only UP and DOWN.
+#define BD_FLAG_LONG_TOUCH_ENABLE       0x08 // If long touch detection is required. This delays the sending of plain DOWN Events.
+#define BD_FLAG_USE_MAX_SIZE            0x10      // Use maximum display size for given geometry. -> Scale automatically to screen.
 /*********************************************
  * Screen orientation flags for SUBFUNCTION_GLOBAL_SET_FLAGS_AND_SIZE
  * We have almost same values as used in Android
  * LANDSCAPE is 0 on Android, but we abuse the value 3 of SCREEN_ORIENTATION_BEHIND for it to have 0 as unlock
+ * The BD_FLAG_SCREEN_ORIENTATION_LOCK_ values are the Android values shifted left by 8 bit
+ * and can therefore be used in SUBFUNCTION_GLOBAL_SET_FLAGS_AND_SIZE
  *********************************************/
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK = 0x0000; // Unlock is -1 on Android, Landscape is 0 on Android,
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE = 0x0300; // Landscape is 0 on Android, 3 is SCREEN_ORIENTATION_BEHIND in Android
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT = 0x0100;
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_USER = 0x0200; // User preferred rotation
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR = 0x0400; // force usage of sensor
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_NOSENSOR = 0x0500; // ignore sensor
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE = 0x0600; // both landscapes are allowed
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_PORTRAIT = 0x0700;
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_LANDSCAPE = 0x0800;
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_PORTRAIT = 0x0900;
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_FULLSENSOR = 0x0A00; // enable also 180 degree rotation by sensor
-static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x0E00; // lock to current orientation
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK      0x0000 // Unlock is -1 on Android, Landscape is 0 on Android,
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE   0x0300 // Landscape is 0 on Android, 3 is SCREEN_ORIENTATION_BEHIND in Android
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT    0x0100
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_USER        0x0200 // User preferred rotation
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR      0x0400 // force usage of sensor
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_NOSENSOR    0x0500 // ignore sensor
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE    0x0600 // both landscapes are allowed
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_PORTRAIT     0x0700
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_LANDSCAPE   0x0800
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_PORTRAIT    0x0900
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_FULLSENSOR          0x0A00 // enable also 180 degree rotation by sensor
+#define BD_FLAG_SCREEN_ORIENTATION_LOCK_CURRENT             0x0E00 // lock to current orientation
 
 #define SUBFUNCTION_GLOBAL_SET_CODEPAGE                 0x01
 #define SUBFUNCTION_GLOBAL_SET_CHARACTER_CODE_MAPPING   0x02
 #define SUBFUNCTION_GLOBAL_SET_LONG_TOUCH_DOWN_TIMEOUT  0x08
 #define SUBFUNCTION_GLOBAL_SET_SCREEN_ORIENTATION_LOCK  0x0C
+/********************************************
+ * Flags for SUBFUNCTION_GLOBAL_SET_SCREEN_ORIENTATION_LOCK
+ * Here we can use the Android 8 bit values
+ ********************************************/
+#define FLAG_SCREEN_ORIENTATION_LOCK_UNLOCK     0x00 // Unlock is -1 on Android, Landscape is 0 on Android,
+#define FLAG_SCREEN_ORIENTATION_LOCK_LANDSCAPE  0x03 // Landscape is 0 on Android, 3 is SCREEN_ORIENTATION_BEHIND in Android
+#define FLAG_SCREEN_ORIENTATION_LOCK_PORTRAIT   0x01
+#define FLAG_SCREEN_ORIENTATION_LOCK_USER       0x02 // User preferred rotation
+#define FLAG_SCREEN_ORIENTATION_LOCK_SENSOR     0x04 // force usage of sensor
+#define FLAG_SCREEN_ORIENTATION_LOCK_NOSENSOR   0x05 // ignore sensor
+#define FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_LANDSCAPE   0x06 // both landscapes are allowed
+#define FLAG_SCREEN_ORIENTATION_LOCK_SENSOR_PORTRAIT    0x07
+#define FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_LANDSCAPE  0x08
+#define FLAG_SCREEN_ORIENTATION_LOCK_REVERSE_PORTRAIT   0x09
+#define FLAG_SCREEN_ORIENTATION_LOCK_FULLSENSOR         0x0A // enable also 180 degree rotation by sensor
+#define FLAG_SCREEN_ORIENTATION_LOCK_CURRENT            0x0E // lock to current orientation
+
 #define SUBFUNCTION_GLOBAL_SET_SCREEN_BRIGHTNESS        0x0D
 
-// results in a reorientation (+redraw) callback
+// results in an EVENT_REQUESTED_DATA_CANVAS_SIZE
 #define FUNCTION_REQUEST_MAX_CANVAS_SIZE            0x09
 
 /**********************
@@ -144,9 +229,9 @@ static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x0E00; // lock to cu
 #define TONE_CDMA_KEYPAD_VOLUME_KEY_LITE 89 // 120 ms 941 + 1477 Hz - normal tone for OK Feedback
 #define TONE_DEFAULT                TONE_CDMA_KEYPAD_VOLUME_KEY_LITE
 #define TONE_PROP_BEEP_OK           TONE_CDMA_KEYPAD_VOLUME_KEY_LITE // 0 = would also work, since the 89 is played
-#define TONE_PROP_BEEP_ERROR        28 // TONE_PROP_BEEP2 - 2* 35/200 ms 400 + 1200 Hz - normal tone for ERROR Feedback
-#define TONE_PROP_BEEP_ERROR_HIGH   25 // TONE_PROP_ACK - 2* 100/100 ms 1200 Hz - high tone for ERROR Feedback
-#define TONE_PROP_BEEP_ERROR_LONG   26 // TONE_PROP_NACK - 2* 35/200 ms 400 + 1200 Hz - normal tone for ERROR Feedback
+#define TONE_PROP_BEEP_ERROR        28 // TONE_PROP_BEEP2 - 2* 35 ms signal /200 ms pause 400 + 1200 Hz - normal tone for ERROR Feedback
+#define TONE_PROP_BEEP_ERROR_HIGH   25 // TONE_PROP_ACK   - 2* 100 ms signal/100 ms pause 1200 Hz - high tone for ERROR Feedback
+#define TONE_PROP_BEEP_ERROR_LONG   26 // TONE_PROP_NACK  - 1* 400 ms signal 300 + 400 + 500 Hz - long tone for ERROR Feedback
 #define TONE_SILENCE                50 // TONE_CDMA_CALL_SIGNAL_ISDN_PAT5 - Since 98 does not work on Android Lollipop
 #define TONE_CDMA_ONE_MIN_BEEP      88 // TONE_CDMA_ONE_MIN_BEEP
 #define TONE_LAST_VALID_TONE_INDEX  98 // TONE_CDMA_SIGNAL_OFF
@@ -159,6 +244,7 @@ static const int BD_FLAG_SCREEN_ORIENTATION_LOCK_CURRENT = 0x0E00; // lock to cu
 #define FUNCTION_CLEAR_DISPLAY_AREA                 0x13
 #define FUNCTION_DRAW_DISPLAY                       0x11
 #define FUNCTION_CLEAR_DISPLAY_AND_SKIP_OPTIONAL    0x12 // Skip buffer before if host buffer has overflow (>40960 bytes) because of not running
+#define FUNCTION_CLEAR_DISPLAY_AREA_AND_SKIP_OPTIONAL    0x15 // Skip buffer before if host buffer has overflow (>40960 bytes) because of not running
 #define FUNCTION_DRAW_PIXEL                         0x14 // 3 parameter
 #define FUNCTION_DRAW_CHAR                          0x16 // 6 parameter
 #define FUNCTION_DRAW_LINE_REL                      0x20 // 5 parameter
@@ -333,7 +419,7 @@ static const float NUMBER_INITIAL_VALUE_DO_NOT_SHOW = 1e-40f; // value is not re
 #define EVENT_CONNECTION_BUILD_UP   0x10
 // redraw event if canvas size was changed manually on host
 #define EVENT_REDRAW                0x11
-// reorientation event sent if orientation changed or requestMaxCanvasSize() was called
+// reorientation event sent if orientation changed
 #define EVENT_REORIENTATION         0x12
 // disconnect event sent if manually disconnected (does not cover out of range etc.)
 #define EVENT_DISCONNECT            0x14
@@ -414,7 +500,7 @@ struct Swipe {
 union ByteShortLongFloatUnion {
     unsigned char byteValues[4];
     uint16_t uint16Values[2];
-    uint16_t int16Values[2];
+    int16_t int16Values[2];
     uint32_t uint32Value;
     float floatValue;
 };
@@ -443,7 +529,7 @@ struct SensorCallback {
 struct IntegerInfoCallback {
     uint8_t SubFunction;
     uint8_t ByteInfo;
-    uint16_t ShortInfo;
+    uint16_t ShortInfo; // may hold GMTOffset which is the difference to GMT including DST
 #if defined(__AVR__)
     void *CallbackFunctionAddress;
     void *CallbackFunctionAddress_upperWord; // not used on  <= 17 bit address cpu, since pointer to functions are address_of_function >> 1

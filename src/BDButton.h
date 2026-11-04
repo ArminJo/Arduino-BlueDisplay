@@ -158,7 +158,7 @@ public:
             uint16_t aTextSize, uint8_t aFlags, int16_t aValue, void (*aOnTouchHandler)(BDButton*, int16_t));
 #endif
 
-    void deinit(); // is defined as dummy if SUPPORT_LOCAL_DISPLAY is not active
+    void deinit();
     void removeButton(color16_t aBackgroundColor); // Deactivates the button and redraws its screen space with aBackgroundColor
     void activate();
     void deactivate();
@@ -211,21 +211,17 @@ public:
             __attribute__ ((deprecated ("Renamed to setText")));
     void setCaptionForValueTrue(const char *aText) __attribute__ ((deprecated ("Renamed to setTextForValueTrue")));
     void setCaptionForValueTrue(const __FlashStringHelper *aText) __attribute__ ((deprecated ("Renamed to setTextForValueTrue")));
-    void setCaptionFromStringArray(const char *const*aTextStringArrayPtr, uint8_t aStringIndex, bool doDrawButton = false)
-            __attribute__ ((deprecated ("Renamed to setTextFromStringArray")));
-    void setCaptionFromStringArray(const __FlashStringHelper *const*aTextStringArrayPtr, uint8_t aStringIndex, bool doDrawButton =
-            false) __attribute__ ((deprecated ("Renamed to setTextFromStringArray")));
 
-#if defined(__AVR__)
+#  if defined(__AVR__)
     // deprecated
     void setCaptionPGM(const char *aPGMText, bool doDrawButton = false)
-            __attribute__ ((deprecated ("Use setTextForValueTrue(const __FlashStringHelper *aText,...) with cast")));
+            __attribute__ ((deprecated ("Use setText(const __FlashStringHelper *aText,...) with cast")));
     void setCaptionPGMForValueTrue(const char *aText)
-            __attribute__ ((deprecated ("Use setText(const __FlashStringHelper *aText) with cast")));
+            __attribute__ ((deprecated ("Use setTextForValueTrue(const __FlashStringHelper *aText) with cast")));
     void setCaptionFromStringArrayPGM(const char *const aPGMTextStringArrayPtr[], uint8_t aStringIndex,
             bool doDrawButton = false)
                     __attribute__ ((deprecated ("Use setTextFromStringArray(const __FlashStringHelper *const *aTextStringArrayPtr,...) with cast")));
-#endif // defined(__AVR__)
+#  endif // defined(__AVR__)
 
     static void activateAllButtons() __attribute__ ((deprecated ("Renamed to activateAll")));
     static void deactivateAllButtons() __attribute__ ((deprecated ("Renamed to deactivateAll")));
