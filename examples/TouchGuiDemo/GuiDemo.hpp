@@ -1,11 +1,11 @@
 /*
- *  GuiDemo.cpp
+ *  GuiDemo.hpp
  *
  *  Demo of the GUI: LocalTouchButton, LocalTouchSlider and Chart
  *  and the programs Game of life, Draw Lines
  *  and if local display is attached, show font and ADS7846 A/D channels.
  *
- *  Copyright (C) 2012-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2026  Armin Joachimsmeyer
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of STMF3-Discovery-Demos https://github.com/ArminJo/STMF3-Discovery-Demos.

@@ -2,9 +2,10 @@
  * SSD1289.hpp
  *
  * Firmware to control a HY32D 320 x 240, 3.2" Display with a SSD1289 controller
+ * Only for STM32 architecture
  *
 
- *  Copyright (C) 2012-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -36,7 +37,6 @@
 
 #include <string.h>  // for strcat
 #include <stdlib.h>  // for malloc
-
 
 /** @addtogroup Graphic_Library
  * @{
@@ -85,22 +85,22 @@ void SSD1289::init(void) {
     }
 }
 
-void SSD1289::setArea(uint16_t aPositionX, uint16_t aPositionY, uint16_t aXEnd, uint16_t aYEnd) {
+void SSD1289::setArea(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd) {
     if ((aXEnd >= LOCAL_DISPLAY_WIDTH) || (aYEnd >= LOCAL_DISPLAY_HEIGHT)) {
         assertFailedParamMessage((uint8_t*) __FILE__, __LINE__, aXEnd, aYEnd, "");
     }
 
-    writeCommand(0x44, aPositionY + (aYEnd << 8)); //set ystart, yend
-    writeCommand(0x45, aPositionX); //set xStart
+    writeCommand(0x44, aYStart + (aYEnd << 8)); //set ystart, yend
+    writeCommand(0x45, aXStart); //set xStart
     writeCommand(0x46, aXEnd); //set xEnd
 // also set cursor to right start position
-    writeCommand(0x4E, aPositionY);
-    writeCommand(0x4F, aPositionX);
+    writeCommand(0x4E, aYStart);
+    writeCommand(0x4F, aXStart);
 }
 
-void SSD1289::setCursor(uint16_t aPositionX, uint16_t aPositionY) {
-    writeCommand(0x4E, aPositionY);
-    writeCommand(0x4F, aPositionX);
+void SSD1289::setCursor(uint16_t aXPosition, uint16_t aYPosition) {
+    writeCommand(0x4E, aYPosition);
+    writeCommand(0x4F, aXPosition);
 }
 
 void SSD1289::clearDisplay(uint16_t aColor) {
@@ -155,40 +155,60 @@ void SSD1289::drawStop() {
     HY32D_CS_GPIO_PORT->BSRR = HY32D_CS_PIN;
 }
 
-void SSD1289::drawPixel(uint16_t aPositionX, uint16_t aPositionY, uint16_t aColor) {
-    if ((aPositionX >= LOCAL_DISPLAY_WIDTH) || (aPositionY >= LOCAL_DISPLAY_HEIGHT)) {
+void SSD1289::drawPixel(uint16_t aXPosition, uint16_t aYPosition, uint16_t aColor) {
+    if ((aXPosition >= LOCAL_DISPLAY_WIDTH) || (aYPosition >= LOCAL_DISPLAY_HEIGHT)) {
         return;
     }
 
 // setCursor
-    writeCommand(0x4E, aPositionY);
-    writeCommand(0x4F, aPositionX);
+    writeCommand(0x4E, aYPosition);
+    writeCommand(0x4F, aXPosition);
 
     drawStart();
     draw(aColor);
     drawStop();
 }
 
-void SSD1289::drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor) {
-    drawLine(aStartX, aStartY, aStartX + aDeltaX, aStartY + aDeltaY, aColor);
+void SSD1289::drawLineRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor) {
+    drawLine(aXStart, aYStart, aXStart + aXDelta, aYStart + aYDelta, aColor);
 }
 
-void SSD1289::drawLine(uint16_t aPositionX, uint16_t aPositionY, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor) {
-    drawLineOverlap(aPositionX, aPositionY, aXEnd, aYEnd, LINE_OVERLAP_NONE, aColor);
+void SSD1289::drawLine(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor) {
+    drawLineOverlap(aXStart, aYStart, aXEnd, aYEnd, LINE_OVERLAP_NONE, aColor);
 }
 
-void SSD1289::fillRect(uint16_t aPositionX, uint16_t aPositionY, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor) {
+void SSD1289::fillRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor) {
+    if (aXDelta == 0 || aYDelta == 0) {
+        return;
+    }
+    /*
+     * Checks for negative, because fillRect includes the end position
+     */
+    if (aXDelta < 0) {
+        aXDelta += 2;
+    }
+    if (aYDelta < 0) {
+        aYDelta += 2;
+    }
+    LocalDisplay.fillRect(aXStart, aYStart, aXStart + aXDelta - 1, aYStart + aYDelta - 1, aColor);
+}
+
+/**
+ * Fill rectangle starting upper left with aXStart, aYStart
+ * and ending lower right at aXEnd, aYEnd including these values
+ */
+void SSD1289::fillRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor) {
     uint32_t size;
-    uint16_t tmp, i;
+    uint16_t tmp;
 
-    if (aPositionX > aXEnd) {
-        tmp = aPositionX;
-        aPositionX = aXEnd;
+    if (aXStart > aXEnd) {
+        tmp = aXStart;
+        aXStart = aXEnd;
         aXEnd = tmp;
     }
-    if (aPositionY > aYEnd) {
-        tmp = aPositionY;
-        aPositionY = aYEnd;
+    if (aYStart > aYEnd) {
+        tmp = aYStart;
+        aYStart = aYEnd;
         aYEnd = tmp;
     }
 
@@ -199,35 +219,14 @@ void SSD1289::fillRect(uint16_t aPositionX, uint16_t aPositionY, uint16_t aXEnd,
         aYEnd = LOCAL_DISPLAY_HEIGHT - 1;
     }
 
-    setArea(aPositionX, aPositionY, aXEnd, aYEnd);
+    setArea(aXStart, aYStart, aXEnd, aYEnd);
 
     drawStart();
-    size = (uint32_t) (1 + (aXEnd - aPositionX)) * (uint32_t) (1 + (aYEnd - aPositionY));
-    tmp = size / 8;
-    if (tmp != 0) {
-        for (i = tmp; i != 0; i--) {
-            draw(aColor); //1
-            draw(aColor); //2
-            draw(aColor); //3
-            draw(aColor); //4
-            draw(aColor); //5
-            draw(aColor); //6
-            draw(aColor); //7
-            draw(aColor); //8
-        }
-        for (i = size - tmp; i != 0; i--) {
-            draw(aColor);
-        }
-    } else {
-        for (i = size; i != 0; i--) {
-            draw(aColor);
-        }
+    size = (uint32_t) (1 + (aXEnd - aXStart)) * (uint32_t) (1 + (aYEnd - aYStart));
+    for (; size != 0; size--) {
+        draw(aColor);
     }
     drawStop();
-}
-
-void SSD1289::fillRectRel(uint16_t aPositionX, uint16_t aPositionY, uint16_t aWidth, uint16_t aHeight, color16_t aColor) {
-    LocalDisplay.fillRect(aPositionX, aPositionY, aPositionX + aWidth - 1, aPositionY + aHeight - 1, aColor);
 }
 
 void SSD1289::drawCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, uint16_t aColor) {
@@ -282,14 +281,14 @@ void SSD1289::fillCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius,
     }
 }
 
-uint16_t SSD1289::readPixel(uint16_t aPositionX, uint16_t aPositionY) {
-    if ((aPositionX >= LOCAL_DISPLAY_WIDTH) || (aPositionY >= LOCAL_DISPLAY_HEIGHT)) {
+uint16_t SSD1289::readPixel(uint16_t aXPosition, uint16_t aYPosition) {
+    if ((aXPosition >= LOCAL_DISPLAY_WIDTH) || (aYPosition >= LOCAL_DISPLAY_HEIGHT)) {
         return 0;
     }
 
 // setCursor
-    writeCommand(0x4E, aPositionY);
-    writeCommand(0x4F, aPositionX);
+    writeCommand(0x4E, aYPosition);
+    writeCommand(0x4F, aXPosition);
 
     drawStart();
     uint16_t tValue = 0;
@@ -309,11 +308,23 @@ uint16_t SSD1289::readPixel(uint16_t aPositionX, uint16_t aPositionY) {
     return tValue;
 }
 
-void SSD1289::drawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, color16_t color) {
-    fillRect(x0, y0, x0, y1, color);
-    fillRect(x0, y1, x1, y1, color);
-    fillRect(x1, y0, x1, y1, color);
-    fillRect(x0, y0, x1, y0, color);
+void SSD1289::drawRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor) {
+    if (aXDelta == 0 || aYDelta == 0) {
+        return;
+    }
+    if (aXDelta < 0) {
+        aXDelta += 2;
+    }
+    if (aYDelta < 0) {
+        aYDelta += 2;
+    }
+    drawRect(aXStart, aYStart, aXStart + aXDelta - 1, aYStart + aYDelta - 1, aColor);
+}
+void SSD1289::drawRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t color) {
+    fillRect(aXStart, aYStart, aXStart, aYEnd, color);
+    fillRect(aXStart, aYEnd, aXEnd, aYEnd, color);
+    fillRect(aXEnd, aYStart, aXEnd, aYEnd, color);
+    fillRect(aXStart, aYStart, aXEnd, aYStart, color);
 }
 
 /*
@@ -322,35 +333,35 @@ void SSD1289::drawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, color
  * first pixel is omitted because it is drawn by preceding line
  * uses setArea instead if drawPixel to speed up drawing
  */
-void SSD1289::drawLineFastOneX(uint16_t aPositionX, uint16_t aPositionY, uint16_t aYEnd, color16_t aColor) {
+void SSD1289::drawLineFastOneX(uint16_t aXStart, uint16_t aYStart, uint16_t aYEnd, color16_t aColor) {
     uint8_t i;
     bool up = true;
 //calculate direction
-    int16_t deltaY = aYEnd - aPositionY;
+    int16_t deltaY = aYEnd - aYStart;
     if (deltaY < 0) {
         deltaY = -deltaY;
         up = false;
     }
     if (deltaY <= 1) {
         // constant y or one pixel offset => no line needed
-        LocalDisplay.drawPixel(aPositionX + 1, aYEnd, aColor);
+        LocalDisplay.drawPixel(aXStart + 1, aYEnd, aColor);
     } else {
         // draw line here
-        // deltaY1 is == deltaYHalf for even numbers and deltaYHalf -1 for odd Numbers
-        uint8_t deltaY1 = (deltaY - 1) >> 1;
+        // deltaaYEnd is == deltaYHalf for even numbers and deltaYHalf -1 for odd Numbers
+        uint8_t deltaaYEnd = (deltaY - 1) >> 1;
         uint8_t deltaYHalf = deltaY >> 1;
         if (up) {
             // for odd numbers, first part of line is 1 pixel shorter than second
-            if (deltaY1 > 0) {
+            if (deltaaYEnd > 0) {
                 // first pixel was drawn by preceding line :-)
-                setArea(aPositionX, aPositionY + 1, aPositionX, aPositionY + deltaY1);
+                setArea(aXStart, aYStart + 1, aXStart, aYStart + deltaaYEnd);
                 drawStart();
-                for (i = deltaY1; i != 0; i--) {
+                for (i = deltaaYEnd; i != 0; i--) {
                     draw(aColor);
                 }
                 drawStop();
             }
-            setArea(aPositionX + 1, aPositionY + deltaY1 + 1, aPositionX + 1, aYEnd);
+            setArea(aXStart + 1, aYStart + deltaaYEnd + 1, aXStart + 1, aYEnd);
             drawStart();
             for (i = deltaYHalf + 1; i != 0; i--) {
                 draw(aColor);
@@ -359,16 +370,16 @@ void SSD1289::drawLineFastOneX(uint16_t aPositionX, uint16_t aPositionY, uint16_
         } else {
             // for odd numbers, second part of line is 1 pixel shorter than first
             if (deltaYHalf > 0) {
-                setArea(aPositionX, aPositionY - deltaYHalf, aPositionX, aPositionY - 1);
+                setArea(aXStart, aYStart - deltaYHalf, aXStart, aYStart - 1);
                 drawStart();
                 for (i = deltaYHalf; i != 0; i--) {
                     draw(aColor);
                 }
                 drawStop();
             }
-            setArea(aPositionX + 1, aYEnd, aPositionX + 1, (aPositionY - deltaYHalf) - 1);
+            setArea(aXStart + 1, aYEnd, aXStart + 1, (aYStart - deltaYHalf) - 1);
             drawStart();
-            for (i = deltaY1 + 1; i != 0; i--) {
+            for (i = deltaaYEnd + 1; i != 0; i--) {
                 draw(aColor);
             }
             drawStop();
@@ -378,19 +389,19 @@ void SSD1289::drawLineFastOneX(uint16_t aPositionX, uint16_t aPositionY, uint16_
 
 /**
  *
- * @param aPositionX
- * @param aPositionY
+ * @param aXPosition
+ * @param aYPosition
  * @param aString
  * @param aFontScaleFactor
  * @param aColor
  * @param aBackgroundColor
  */
-void SSD1289::drawTextVertical(uint16_t aPositionX, uint16_t aPositionY, const char *aString, uint8_t aFontScaleFactor,
+void SSD1289::drawTextVertical(uint16_t aXPosition, uint16_t aYPosition, const char *aString, uint8_t aFontScaleFactor,
         uint16_t aColor, uint16_t aBackgroundColor) {
     while (*aString != 0) {
-        LocalDisplay.drawChar(aPositionX, aPositionY, (char) *aString++, aFontScaleFactor, aColor, aBackgroundColor);
-        aPositionY += FONT_HEIGHT * aFontScaleFactor;
-        if (aPositionY > LOCAL_DISPLAY_HEIGHT) {
+        LocalDisplay.drawChar(aXPosition, aYPosition, (char) *aString++, aFontScaleFactor, aColor, aBackgroundColor);
+        aYPosition += FONT_HEIGHT * aFontScaleFactor;
+        if (aYPosition > LOCAL_DISPLAY_HEIGHT) {
             break;
         }
     }

@@ -6,7 +6,7 @@
  *
  * The constants here must correspond to the values used in the BlueDisplay App
  *
- *  Copyright (C) 2015-2025  Armin Joachimsmeyer
+ *  Copyright (C) 2015-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -35,7 +35,7 @@
 
 #include <stdint.h>
 /*
- * For more slider constants see BlueDisplay.h
+ * For more slider constants see BlueDisplayProtocol.h
  */
 // Default colors
 #define SLIDER_DEFAULT_BORDER_COLOR         COLOR16_BLUE
@@ -49,7 +49,7 @@
 
 // Default sizes
 #define SLIDER_DEFAULT_SHORT_BORDER_WIDTH         (mBarWidth / 4)
-#define getSLIDER_DEFAULT_SHORT_BORDER_WIDTH(aBarWidth)  (aBarWidth / 4)
+#define getSLIDER_DEFAULT_SHORT_BORDER_WIDTH(aBarWidth)  ((aBarWidth) / 4)
 
 #define SLIDER_DEFAULT_LONG_BORDER_WIDTH          (mBarWidth / 4)
 
@@ -208,11 +208,12 @@ private:
 
 /*
  * To show a signed value on two sliders positioned back to back (one of it is inverse or has a negative length value)
+ * Dead band is not part of the structure, because it is an optional feature implemented in the set function
  */
 struct positiveNegativeSlider {
     BDSlider *positiveSliderPtr;
     BDSlider *negativeSliderPtr;
-    unsigned int lastSliderValue;       // positive value with sensor dead band applied
+    unsigned int lastSliderValue;       // positive value applied to the "active" slider with sensor dead band applied
     bool lastSliderValueWasPositive;    // true if positive slider had a value and negative was cleared
 };
 void initPositiveNegativeSliders(struct positiveNegativeSlider *aSliderStructPtr, BDSlider *aPositiveSliderPtr,

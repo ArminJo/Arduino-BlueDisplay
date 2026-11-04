@@ -49,7 +49,7 @@
 
 #define CHART_LABEL_STRING_BUFFER_SIZE  10
 
-#if !defined(_BLUEDISPLAY_HPP)
+#if !defined(_BLUEDISPLAY_HPP) && !defined(DISABLE_REMOTE_DISPLAY)
 #include "BlueDisplay.hpp"
 #endif
 #if !defined(_GUI_HELPER_HPP)
@@ -96,9 +96,10 @@ Chart::Chart() { // @suppress("Class members should be properly initialized")
     mFlags = 0;
     mXDataScaleFactor = mXLabelScaleFactor = CHART_X_AXIS_SCALE_FACTOR_1;
     mXLabelAndGridStartValueOffset = 0.0;
-    mXBigLabelDistance = mXLabelDistance = 1;
+    mXBigDateLabelDistance = mXLabelDistance = 1;
     mYTitleText = mXTitleText = nullptr;
     XLabelStringFunction = nullptr; // required
+    XBigDateLabelStringFunction = nullptr; // required
 }
 
 void Chart::initChartColors(const color16_t aDataColor, const color16_t aAxesColor, const color16_t aGridColor,
@@ -126,6 +127,7 @@ void Chart::setLabelColor(color16_t aLabelColor) {
 
 /**
  * aPositionX and aPositionY are the 0 coordinates of the grid and part of the axes
+ * @return error codes coded in bits
  */
 uint8_t Chart::initChart(const uint16_t aPositionX, const uint16_t aPositionY, const uint16_t aWidthX, const uint16_t aHeightY,
         const uint8_t aAxesSize, const uint8_t aLabelTextSize, const bool aHasGrid, const uint16_t aXGridOrLabelPixelSpacing,
@@ -151,8 +153,8 @@ uint8_t Chart::initChart(const uint16_t aPositionX, const uint16_t aPositionY, c
 
 uint8_t Chart::checkParameterValues(void) {
     uint8_t tRetValue = 0;
-    // also check for zero :-)
-    if (mAxesSize - 1 > CHART_MAX_AXES_SIZE) {
+    // also check for zero (by underflow of 0 - 1) :-)
+    if ((uint8_t) (mAxesSize - 1) >= CHART_MAX_AXES_SIZE) {
         mAxesSize = CHART_MAX_AXES_SIZE;
         tRetValue = CHART_ERROR_AXES_SIZE;
     }
@@ -160,35 +162,35 @@ uint8_t Chart::checkParameterValues(void) {
     if (mPositionX < t2AxesSize - 1) {
         mPositionX = t2AxesSize - 1;
         mWidthX = 100;
-        tRetValue = CHART_ERROR_POS_X;
+        tRetValue |= CHART_ERROR_POS_X;
     }
     if (mPositionY > DisplayForChart.getRequestedDisplayHeight() - t2AxesSize) {
         mPositionY = DisplayForChart.getRequestedDisplayHeight() - t2AxesSize;
-        tRetValue = CHART_ERROR_POS_Y;
+        tRetValue |= CHART_ERROR_POS_Y;
     }
     if (mPositionX + mWidthX > DisplayForChart.getRequestedDisplayWidth()) {
         mPositionX = 0;
         mWidthX = 100;
-        tRetValue = CHART_ERROR_WIDTH;
+        tRetValue |= CHART_ERROR_WIDTH;
     }
 
     if (mHeightY > mPositionY + 1) {
         mHeightY = mPositionY + 1;
-        tRetValue = CHART_ERROR_HEIGHT;
+        tRetValue |= CHART_ERROR_HEIGHT;
     }
 
     if (mXGridOrLabelPixelSpacing > mWidthX) {
         mXGridOrLabelPixelSpacing = mWidthX / 2;
-        tRetValue = CHART_ERROR_GRID_X_SPACING;
+        tRetValue |= CHART_ERROR_GRID_X_SPACING;
     }
     return tRetValue;
 }
 
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
 /**
- * @param aXLabelStartValue
  * @param aXLabelIncrementValue Value relates to CHART_X_AXIS_SCALE_FACTOR_1 / identity. long is required for long time increments (1 year requires 25 bit)
- * @param aXLabelScaleFactor Current value to use for X scale
- * @param aXMinStringWidth
+ * @param aXLabelScaleFactor    Current value to use for X scale
+ * @param aXMinStringWidth      For clearing label space and formatting with dtostrf()
  */
 void Chart::initXLabelTimestamp(const int aXLabelStartValue, const long aXLabelIncrementValue, const uint8_t aXLabelScaleFactor,
         const uint8_t aXMinStringWidth) {
@@ -198,14 +200,14 @@ void Chart::initXLabelTimestamp(const int aXLabelStartValue, const long aXLabelI
     mXMinStringWidth = aXMinStringWidth;
     mFlags |= CHART_X_LABEL_TIME | CHART_X_LABEL_USED;
 }
-
+#endif
 
 /**
- * @param aXLabelStartValue
  * @param aXLabelIncrementValue Value relates to CHART_X_AXIS_SCALE_FACTOR_1 / identity. long is required for long time increments (1 year requires 25 bit)
- * @param aXMinStringWidth
+ * @param aXMinStringWidth      For clearing label space and formatting with dtostrf()
  */
-void Chart::initXLabelTimestampForLabelScaleIdentity(const int aXLabelStartValue, const long aXLabelIncrementValue, const uint8_t aXMinStringWidth) {
+void Chart::initXLabelTimestampForLabelScaleIdentity(const int aXLabelStartValue, const long aXLabelIncrementValue,
+        const uint8_t aXMinStringWidth) {
     mXLabelStartValue.TimeValue = aXLabelStartValue;
     mXLabelBaseIncrementValue = aXLabelIncrementValue;
     mXMinStringWidth = aXMinStringWidth;
@@ -213,11 +215,9 @@ void Chart::initXLabelTimestampForLabelScaleIdentity(const int aXLabelStartValue
 }
 
 /**
- * @param aXLabelStartValue
- * @param aXLabelIncrementValue
- * @param aIntegerScaleFactor
- * @param aXMinStringWidthIncDecimalPoint
- * @param aXNumVarsAfterDecimal
+ * For NON timestamp labels
+ * @param aXMinStringWidthIncDecimalPoint   For X axis label
+ * @param aXNumVarsAfterDecimal             For X axis label
  */
 void Chart::initXLabel(const float aXLabelStartValue, const float aXLabelIncrementValue, const uint8_t aXLabelScaleFactor,
         uint8_t aXMinStringWidthIncDecimalPoint, uint8_t aXNumVarsAfterDecimal) {
@@ -236,11 +236,9 @@ void Chart::initXLabel(const float aXLabelStartValue, const float aXLabelIncreme
 }
 
 /**
- * @param aYLabelStartValue
- * @param aYLabelIncrementValue
- * @param aYFactor factor for input to chart value - e.g. (3.0 / 4096) for adc reading of 4096 for 3 Volt
- * @param aYMinStringWidthIncDecimalPoint for y axis label
- * @param aYNumVarsAfterDecimal for y axis label
+ * @param aYFactor  Data interpretation factor for input to chart value - e.g. (3.0 / 4096) for ADC reading of 4096 for 3 Volt
+ * @param aYMinStringWidthIncDecimalPoint   For Y axis label
+ * @param aYNumVarsAfterDecimal             For Y axis label
  */
 void Chart::initYLabel(const float aYLabelStartValue, const float aYLabelIncrementValue, const float aYFactor,
         const uint8_t aYMinStringWidthIncDecimalPoint, const uint8_t aYNumVarsAfterDecimal) {
@@ -253,9 +251,9 @@ void Chart::initYLabel(const float aYLabelStartValue, const float aYLabelIncreme
 }
 
 /**
- * Render the chart on the lcd
+ * Render the chart on the LCD and draw grid if CHART_HAS_GRID bit is set in flags
  */
-void Chart::drawAxesAndGrid(void) {
+void Chart::drawAxesAndLabelsAndGrid(void) {
     drawAxesAndLabels();
     drawGrid();
 }
@@ -265,7 +263,11 @@ void Chart::drawAxesAndGrid(void) {
  * renders indicators if labels but no grid are specified
  */
 void Chart::drawAxesAndLabels() {
-    drawXAxisAndLabels();
+    if (mFlags & CHART_X_LABEL_TIME) {
+        drawXAxisAndDateLabels(0);
+    } else {
+        drawXAxisAndLabels();
+    }
     drawYAxisAndLabels();
 }
 
@@ -328,26 +330,26 @@ void Chart::setLabelStringFunction(int (*aXLabelStringFunction)(char *aLabelStri
     XLabelStringFunction = aXLabelStringFunction;
 }
 
+void Chart::setBigDateLabelStringFunction(int (*aBigDateXLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue)) {
+    XBigDateLabelStringFunction = aBigDateXLabelStringFunction;
+}
 /*
  * Here we take the long part of the value as minutes and return strings like "27" or "2:27"
  */
 int Chart::convertMinutesToString(char *aLabelStringBuffer, time_float_union aXValueMinutes) {
-    uint16_t tMinutes = (aXValueMinutes.FloatValue + 0.5);
-//    uint16_t tMinutes = (aXvalue.FloatValue);
+    uint16_t tMinutes = (aXValueMinutes.TimeValue);
     uint8_t tHours = tMinutes / 60;
     tMinutes = tMinutes % 60;
 #if defined(__AVR__)
     if (tHours == 0) {
         return snprintf_P(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, PSTR("%u"), tMinutes);
-    } else {
-        return snprintf_P(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, PSTR("%u:%02u"), tHours, tMinutes);
     }
+    return snprintf_P(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, PSTR("%u:%02u"), tHours, tMinutes);
 #else
     if (tHours == 0) {
         return snprintf(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, "%u", tMinutes);
-    } else {
-        return snprintf(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, "%u:%02u", tHours, tMinutes);
     }
+    return snprintf(aLabelStringBuffer, CHART_LABEL_STRING_BUFFER_SIZE, "%u:%02u", tHours, tMinutes);
 #endif
 }
 
@@ -381,20 +383,19 @@ void Chart::drawGrid(void) {
 #endif
     tXPixelOffsetOfCurrentLine += mXGridOrLabelPixelSpacing; // Do not render first line, it is on Y axis
 
-// draw 1 pixel thick vertical lines at each X label position (even if the label will not rendered later)
+// draw 1 pixel thick vertical lines at each X label position (even if the label will not be printed)
     do {
         if (tXPixelOffsetOfCurrentLine > 0) {
-            // -2 because it results in a line of length -1 and we do not start at origin, but at Y position 1 in order not to overwrite the X axis
-            DisplayForChart.drawLineRel(mPositionX + tXPixelOffsetOfCurrentLine, mPositionY - (mHeightY - 1), 0, mHeightY - 2,
-                    mGridColor);
+            // Second parameter should be theoretically (mPositionY - 1) because we do not overwrite the X axis
+            // and mPositionY is on uppermost point of X axis, but in reality we get a gap between it and the x axis
+            DisplayForChart.drawLineRel(mPositionX + tXPixelOffsetOfCurrentLine, mPositionY, 0, -mHeightY, mGridColor); // Like Y axis
         }
         tXPixelOffsetOfCurrentLine += mXGridOrLabelPixelSpacing;
     } while (tXPixelOffsetOfCurrentLine < (int16_t) mWidthX);
 
 // draw 1 pixel thick horizontal lines at each Y label position
     for (uint16_t tYOffset = mYGridOrLabelPixelSpacing; tYOffset <= mHeightY; tYOffset += mYGridOrLabelPixelSpacing) {
-        // -2 because it results in a line of length -1 and we do not start at origin, but at X position 1 in order not to overwrite the Y axis
-        DisplayForChart.drawLineRel(mPositionX + 1, mPositionY - tYOffset, mWidthX - 2, 0, mGridColor);
+        DisplayForChart.drawLineRel(mPositionX + 1, mPositionY - tYOffset, mWidthX - 2, 0, mGridColor); // Like X axis
     }
 }
 
@@ -402,6 +403,7 @@ void Chart::drawGrid(void) {
  * Draw X line with indicators and labels
  * Render indicators if labels enabled, but no grid is specified
  * Label increment value is adjusted with scale factor
+ * For timestamps use drawXAxisAndDateLabels()
  */
 void Chart::drawXAxisAndLabels() {
 
@@ -421,8 +423,8 @@ void Chart::drawXAxisAndLabels() {
          */
         uint16_t tNumberYTop = tPositionY + 2 * mAxesSize;
 #if !defined(ARDUINO)
-        assertParamMessage((tNumberYTop <= (DisplayForChart.getRequestedDisplayHeight() - mLabelTextSize)),
-                tNumberYTop, "no space for x labels");
+        assertParamMessage((tNumberYTop <= (DisplayForChart.getRequestedDisplayHeight() - mLabelTextSize)), tNumberYTop,
+                "no space for x labels");
 #endif
         uint8_t tTextWidth = getTextWidth(mLabelTextSize);
         int16_t tXStringPixelOffset = ((tTextWidth * mXMinStringWidth) / 2) + 1;
@@ -531,12 +533,12 @@ void Chart::drawXAxisAndLabels() {
  *
  * @param aStartTimestamp  Timestamp of the big label, which has the offset mXLabelAndGridStartValueOffset.
  *  It may not be rendered, depending on mXLabelAndGridStartValueOffset.
- * @param mXLabelDistance  Distance between 2 labels at scale factor 1
  */
-void Chart::drawXAxisAndDateLabels(time_t aStartTimestamp,
-        int (*aXBigLabelStringFunction)(char *aLabelStringBuffer, time_float_union aXvalue)) {
+void Chart::drawXAxisAndDateLabels(time_t aStartTimestamp) {
 
-    char tLabelStringBuffer[8]; // 12:15 are 6 characters 12/2024 are 8 character
+    // 12:15 are 6 bytes 12/2024 are 8 bytes, thus [8] would be sufficient.
+    // But this is not as transparent and well documented as using CHART_LABEL_STRING_BUFFER_SIZE
+    char tLabelStringBuffer[CHART_LABEL_STRING_BUFFER_SIZE];
 
     /*
      * Draw X axis line, take mAxesSize into account
@@ -553,16 +555,16 @@ void Chart::drawXAxisAndDateLabels(time_t aStartTimestamp,
             "no space for x labels");
 #endif
     int16_t tXStringPixelOffset = ((getTextWidth(mLabelTextSize) * mXMinStringWidth) / 2) + 1;
-    BlueDisplay1.fillRect(mPositionX - tXStringPixelOffset, mPositionY + mAxesSize + 1,
+    DisplayForChart.fillRect(mPositionX - tXStringPixelOffset, mPositionY + mAxesSize + 1,
             mPositionX + mWidthX + (tXStringPixelOffset + 1), tNumberYTop + getTextHeight(mLabelTextSize), mBackgroundColor);
 
     /*
      * Compute effective label distance, as multiple of grid lines
      * Effective distance can be greater than 1 only if distance is > 1 and we have a integer expansion of scale
      */
-    uint8_t tBigXLabelDistance = enlargeLongWithXLabelScaleFactor(mXBigLabelDistance);
-    if (tBigXLabelDistance < mXLabelDistance) {
-        tBigXLabelDistance = mXLabelDistance;
+    uint8_t tBigDateXLabelDistance = enlargeLongWithXLabelScaleFactor(mXBigDateLabelDistance);
+    if (tBigDateXLabelDistance < mXLabelDistance) {
+        tBigDateXLabelDistance = mXLabelDistance;
     }
 
     /*
@@ -592,8 +594,8 @@ void Chart::drawXAxisAndDateLabels(time_t aStartTimestamp,
     Serial.print(reduceLongWithXLabelScaleFactor(mXLabelBaseIncrementValue));
     Serial.print(F(" time increment="));
     Serial.print(mXLabelDistance * reduceLongWithXLabelScaleFactor(mXLabelBaseIncrementValue));
-    Serial.print(F(" BigXLabelDistance="));
-    Serial.print(tBigXLabelDistance);
+    Serial.print(F(" BigDateXLabelDistance="));
+    Serial.print(tBigDateXLabelDistance);
     Serial.print(F(" gridPixelSpacing="));
     Serial.print(mXGridOrLabelPixelSpacing);
     Serial.print(F(" PositionX="));
@@ -611,7 +613,7 @@ void Chart::drawXAxisAndDateLabels(time_t aStartTimestamp,
                 mXGridOrLabelPixelSpacing) {
             if (tGridOffset >= 0) {
                 // Only draw indicators at or right of origin
-                BlueDisplay1.fillRectRel(mPositionX + tGridOffset, mPositionY + mAxesSize, 1, mAxesSize, mGridColor);
+                DisplayForChart.fillRectRel(mPositionX + tGridOffset, mPositionY + mAxesSize, 1, mAxesSize, mGridColor);
             }
         }
         tNumberYTop += mAxesSize; // move labels downwards, to see indicators
@@ -628,22 +630,24 @@ void Chart::drawXAxisAndDateLabels(time_t aStartTimestamp,
     do {
         uint8_t tCurrentTextSize = mLabelTextSize;
         uint8_t tCurrentTextWidth = getTextWidth(mLabelTextSize);
-        uint8_t tStringLength;
+        uint8_t tStringLength = 0;
 
         if (tXPixelOffsetOfCurrentLabel >= 0) {
             // Only draw labels at or right of origin
-            if ((tGridIndex % tBigXLabelDistance) == 0) {
+            if ((tGridIndex % tBigDateXLabelDistance) == 0 && XBigDateLabelStringFunction != nullptr) {
                 /*
                  * Big label here
                  */
-                tStringLength = aXBigLabelStringFunction(tLabelStringBuffer, tTimeStampForLabel);
+                tStringLength = XBigDateLabelStringFunction(tLabelStringBuffer, tTimeStampForLabel);
                 tCurrentTextSize += tCurrentTextSize / CHART_DIVISOR_TO_ADD_FOR_BIG_LABEL_TEXT_SIZE;
                 tCurrentTextWidth += tCurrentTextWidth / CHART_DIVISOR_TO_ADD_FOR_BIG_LABEL_TEXT_SIZE;
             } else {
                 /*
                  * Regular label / small label here
                  */
-                tStringLength = XLabelStringFunction(tLabelStringBuffer, tTimeStampForLabel);
+                if (XLabelStringFunction != nullptr) {
+                    tStringLength = XLabelStringFunction(tLabelStringBuffer, tTimeStampForLabel);
+                }
             }
             /*
              * Compute pixel offset in order to place the label at the middle of the indicator
@@ -662,8 +666,8 @@ void Chart::drawXAxisAndDateLabels(time_t aStartTimestamp,
             /*
              * Draw label
              */
-            BlueDisplay1.drawText(mPositionX + tXPixelOffsetOfCurrentLabel - tXStringPixelOffset, tNumberYTop, tLabelStringBuffer,
-                    tCurrentTextSize, mXLabelColor, mBackgroundColor);
+            DisplayForChart.drawText(mPositionX + tXPixelOffsetOfCurrentLabel - tXStringPixelOffset, tNumberYTop,
+                    tLabelStringBuffer, tCurrentTextSize, mXLabelColor, mBackgroundColor);
         }
 #if defined(LOCAL_DEBUG)
         Serial.println();
@@ -744,7 +748,7 @@ void Chart::drawYAxisTitle(const int aYOffset, const int aXOffset) const {
 
 /**
  * draw Y thick line with indicators and labels
- * Draw Y thick line, such that 0 is on the line and 1 is beneath it.
+ * Draw Y thick line, such that X value 0 is on the line and X value 1 is beneath it.
  * renders indicators if labels but no grid are specified
  */
 void Chart::drawYAxisAndLabels() {
@@ -757,10 +761,10 @@ void Chart::drawYAxisAndLabels() {
      * Draw Y axis line, such that origin / 0 is on the line and 1 is beneath it.
      * Must be identical to the line in clear()
      * if mAxesSize is 1 then the term (mAxesSize - 1) is 0
-     * (mHeightY - 1) because we do not overwrite the X axis
+     * Second parameter should be theoretically (mPositionY - 1) because we do not overwrite the X axis
+     * and mPositionY is on uppermost point of X axis, but in reality we get a gap between it and the x axis
      */
-    DisplayForChart.fillRectRel(tPositionX - (mAxesSize - 1), mPositionY - (mHeightY - 1), mAxesSize, mHeightY + (mAxesSize - 1),
-            mAxesColor);
+    DisplayForChart.fillRectRel(tPositionX - (mAxesSize - 1), mPositionY, mAxesSize, -mHeightY, mAxesColor);
 
     if (mFlags & CHART_Y_LABEL_USED) {
         /*
@@ -835,11 +839,10 @@ void Chart::clear(void) {
      * clear graph area plus 1 pixel outside, but do not need to clear axes lines
      */
     DisplayForChart.fillRectRel(mPositionX + 1, mPositionY - mHeightY, mWidthX, mHeightY, mBackgroundColor);
-// draw X line
+    // redraw X line
     DisplayForChart.fillRectRel(mPositionX - (mAxesSize - 1), mPositionY, mWidthX + (mAxesSize - 1), mAxesSize, mAxesColor);
-//draw y line
-    DisplayForChart.fillRectRel(mPositionX - (mAxesSize - 1), mPositionY - (mHeightY - 1), mAxesSize, mHeightY + (mAxesSize - 1),
-            mAxesColor);
+    // redraw y line
+    DisplayForChart.fillRectRel(mPositionX - (mAxesSize - 1), mPositionY, mAxesSize, -mHeightY, mAxesColor);
 }
 
 /**
@@ -847,9 +850,7 @@ void Chart::clear(void) {
  * mYDataFactor Factor for uint16_t values to chart value (mYFactor) is used to compute display values
  * e.g. (3.0 / 4096) for ADC reading of 4096 for 3 (Volt)
  * @param aDataPointer pointer to raw data array
- * @param aDataEndPointer pointer to first element after data
  * @param aMode CHART_MODE_PIXEL, CHART_MODE_LINE or CHART_MODE_AREA
- * @return false if clipping occurs
  */
 void Chart::drawChartDataFloat(float *aDataPointer, const uint16_t aLengthOfValidData, const uint8_t aMode) {
 
@@ -869,13 +870,13 @@ void Chart::drawChartDataFloat(float *aDataPointer, const uint16_t aLengthOfVali
     uint16_t tXpos = mPositionX;
     bool tFirstValue = true;
 
-    const float *tDataEndPointer = aDataPointer + aLengthOfValidData;
+    const float *tDataEndPointer = aDataPointer + aLengthOfValidData; // first element after data
     int tXScaleCounter = mXDataScaleFactor;
     if (mXDataScaleFactor < CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5) {
         tXScaleCounter = -mXDataScaleFactor;
     }
 
-    for (int i = mWidthX; i > 0; i--) {
+    for (int i = mWidthX; i > 0 && aDataPointer < tDataEndPointer; i--) { // aDataPointer < tDataEndPointer stops when all data has been read
         /*
          *  get data and perform X scaling
          */
@@ -884,10 +885,10 @@ void Chart::drawChartDataFloat(float *aDataPointer, const uint16_t aLengthOfVali
         } else if (mXDataScaleFactor == CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5) { // == -1
             // compress by factor 1.5 - every second value is the average of the next two values
             tInputValue = *aDataPointer++;
-            tXScaleCounter--;                // starts with 1
+            tXScaleCounter--;           // starts with -1
             if (tXScaleCounter < 0) {
                 // get average of actual and next value
-                tInputValue += *aDataPointer++;
+                tInputValue += *aDataPointer++; // here we may read after end of buffer, which does not matter and avoiding this requires additional code.
                 tInputValue /= 2;
                 tXScaleCounter = 1;
             }
@@ -895,7 +896,7 @@ void Chart::drawChartDataFloat(float *aDataPointer, const uint16_t aLengthOfVali
             // compress - get average of multiple values
             tInputValue = 0;
             for (int j = 0; j < tXScaleCounter; ++j) {
-                tInputValue += *aDataPointer++;
+                tInputValue += *aDataPointer++; // here we may read after end of buffer, which does not matter and avoiding this requires additional code.
             }
             tInputValue /= tXScaleCounter;
         } else if (mXDataScaleFactor == CHART_X_AXIS_SCALE_FACTOR_EXPANSION_1_5) { // ==1
@@ -916,6 +917,11 @@ void Chart::drawChartDataFloat(float *aDataPointer, const uint16_t aLengthOfVali
             }
         }
 
+        // Check if last data pointer (aDataPointer - 1) was still in data buffer -> we have read only from buffer and can draw now
+        if (aDataPointer > tDataEndPointer) {
+            break;
+        }
+
         uint16_t tDisplayValue = tYDisplayFactor * (tInputValue - tYOffset);
 // clip to bottom line
         if (tYOffset > tInputValue) {
@@ -926,8 +932,7 @@ void Chart::drawChartDataFloat(float *aDataPointer, const uint16_t aLengthOfVali
             tDisplayValue = mHeightY - 1;
         }
         if (aMode == CHART_MODE_AREA) {
-            //since we draw a 1 pixel line for value 0
-            tDisplayValue += 1;
+            // We do not overwrite the X axis with 0 values, because fillRectRel does not render if height is 0
             DisplayForChart.fillRectRel(tXpos, mPositionY - tDisplayValue, 1, tDisplayValue, mDataColor);
         } else if (aMode == CHART_MODE_PIXEL || tFirstValue) { // even for line draw first value as pixel only
             tFirstValue = false;
@@ -937,11 +942,6 @@ void Chart::drawChartDataFloat(float *aDataPointer, const uint16_t aLengthOfVali
         }
         tLastValue = tDisplayValue;
         tXpos++;
-
-// check for data pointer still in data buffer area
-        if (aDataPointer >= tDataEndPointer) {
-            break;
-        }
     }
 }
 
@@ -950,9 +950,7 @@ void Chart::drawChartDataFloat(float *aDataPointer, const uint16_t aLengthOfVali
  * mYDataFactor Factor for uint16_t values to chart value (mYFactor) is used to compute display values
  * e.g. (3.0 / 4096) for ADC reading of 4096 for 3 (Volt)
  * @param aDataPointer pointer to input data array
- * @param aDataEndPointer pointer to first element after data
  * @param aMode CHART_MODE_PIXEL, CHART_MODE_LINE or CHART_MODE_AREA
- * @return false if clipping occurs
  */
 void Chart::drawChartData(int16_t *aDataPointer, const uint16_t aLengthOfValidData, const uint8_t aMode) {
 
@@ -975,7 +973,7 @@ void Chart::drawChartData(int16_t *aDataPointer, const uint16_t aLengthOfValidDa
         tXScaleCounter = -mXDataScaleFactor;
     }
 
-    int16_t *tDataEndPointer = aDataPointer + aLengthOfValidData;
+    int16_t *tDataEndPointer = aDataPointer + aLengthOfValidData; // first element after data
 
 #if defined(LOCAL_DEBUG)
     Serial.println();
@@ -991,7 +989,7 @@ void Chart::drawChartData(int16_t *aDataPointer, const uint16_t aLengthOfValidDa
 
     int tDisplayValue;
     int tLastPixelValue = 0; // used only in line mode
-    for (uint16_t i = 0; i < mWidthX; i++) {
+    for (uint16_t i = 0; i < mWidthX && aDataPointer < tDataEndPointer; i++) { // aDataPointer < tDataEndPointer stops when all data has been read
         /*
          *  get data and perform X scaling
          */
@@ -1000,20 +998,19 @@ void Chart::drawChartData(int16_t *aDataPointer, const uint16_t aLengthOfValidDa
         } else if (mXDataScaleFactor == CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5) {
             // compress by factor 1.5 - every second value is the average of the next two values
             tDisplayValue = *aDataPointer++;
-            tXScaleCounter--; // starts with 1
+            tXScaleCounter--; // starts with -1
             if (tXScaleCounter < 0) {
-                // get average of actual and next value
-                tDisplayValue += *aDataPointer++;
-                tDisplayValue /= 2;
+                // get average of actual and next value.
+                tDisplayValue = ((int32_t) tDisplayValue + *aDataPointer++) / 2; // here we may read after end of buffer, which does not matter and avoiding this requires additional code.
                 tXScaleCounter = 1;
             }
         } else if (mXDataScaleFactor <= CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5) {
             // compress - get average of multiple values
-            tDisplayValue = 0;
+            int32_t tDisplayValue32 = 0; // int32_t to avoid overflow
             for (int j = 0; j < tXScaleCounter; ++j) {
-                tDisplayValue += *aDataPointer++;
+                tDisplayValue32 += *aDataPointer++; // here we may read after end of buffer, which does not matter and avoiding this requires additional code.
             }
-            tDisplayValue /= tXScaleCounter;
+            tDisplayValue = tDisplayValue32 / tXScaleCounter;
         } else if (mXDataScaleFactor == CHART_X_AXIS_SCALE_FACTOR_EXPANSION_1_5) {
             // expand by factor 1.5 - every second value will be shown 2 times
             tDisplayValue = *aDataPointer++;
@@ -1032,6 +1029,19 @@ void Chart::drawChartData(int16_t *aDataPointer, const uint16_t aLengthOfValidDa
             }
         }
 
+        // Check if last data pointer (aDataPointer - 1) was still in data buffer -> we have read only from buffer and can draw now
+        if (aDataPointer > tDataEndPointer) {
+#if defined(LOCAL_DEBUG)
+            Serial.println();
+            Serial.print(F("DataPointer="));
+            Serial.print((uint16_t) aDataPointer);
+            Serial.print(F(" > DataEndPointer="));
+            Serial.print((uint16_t) tDataEndPointer);
+            Serial.println(F(" Data buffer is exhausted"));
+#endif
+            break;
+        }
+
         int tDisplayPixelValue = tYDisplayFactor * (tDisplayValue - tYDisplayOffset);
 
 // clip to bottom line
@@ -1042,30 +1052,17 @@ void Chart::drawChartData(int16_t *aDataPointer, const uint16_t aLengthOfValidDa
         if (tDisplayPixelValue > (int) mHeightY - 1) {
             tDisplayPixelValue = mHeightY - 1;
         }
-// draw first line value as pixel only
-        if (aMode == CHART_MODE_PIXEL || (tFirstValue && aMode == CHART_MODE_LINE)) {
+        if (aMode == CHART_MODE_AREA) {
+            // We do not overwrite the X axis with 0 values, because fillRectRel does not render if height is 0
+            DisplayForChart.fillRectRel(tXpos, mPositionY - tDisplayPixelValue, 1, tDisplayPixelValue, mDataColor);
+        } else if (aMode == CHART_MODE_PIXEL || tFirstValue) { // draw first line value as pixel only
             tFirstValue = false;
             DisplayForChart.drawPixel(tXpos, mPositionY - tDisplayPixelValue, mDataColor);
         } else if (aMode == CHART_MODE_LINE) {
             DisplayForChart.drawLineFastOneX(tXpos - 1, mPositionY - tLastPixelValue, mPositionY - tDisplayPixelValue, mDataColor);
-        } else if (aMode == CHART_MODE_AREA) {
-            DisplayForChart.fillRectRel(tXpos, mPositionY - tDisplayPixelValue, 1, tDisplayPixelValue, mDataColor);
         }
         tLastPixelValue = tDisplayPixelValue;
         tXpos++;
-
-// check for data pointer still in data buffer
-        if (aDataPointer >= tDataEndPointer) {
-#if defined(LOCAL_DEBUG)
-            Serial.println();
-            Serial.print(F("DataPointer="));
-            Serial.print((uint16_t) aDataPointer);
-            Serial.print(F(" >= DataEndPointer="));
-            Serial.print((uint16_t) tDataEndPointer);
-            Serial.println(F(" Data buffer is exhausted"));
-#endif
-            break;
-        }
     }
 }
 
@@ -1099,6 +1096,7 @@ void Chart::drawChartDataWithYOffset(uint8_t *aDataPointer, const uint16_t aLeng
      * and expanded with factor 2 we have 2 data values giving one line from 0 to 2
      * and compressed with factor 2 we have 8 data values resulting in 7 lines from 0 to 3.5
      */
+#if !defined(DISABLE_REMOTE_DISPLAY)
     uint16_t tMaximumRequiredData = reduceLongWithIntegerScaleFactor(mWidthX, mXDataScaleFactor);
     auto tLengthOfRequiredData = aLengthOfValidData;
     if (aLengthOfValidData > tMaximumRequiredData) {
@@ -1106,43 +1104,43 @@ void Chart::drawChartDataWithYOffset(uint8_t *aDataPointer, const uint16_t aLeng
     }
     DisplayForChart.drawChartByteBufferScaled(mPositionX, mPositionY, mXDataScaleFactor, -tYDisplayFactor, mAxesSize, aMode,
             mDataColor, COLOR16_NO_DELETE, 0, true, aDataPointer, tLengthOfRequiredData);
-
+#endif
 #if defined(SUPPORT_LOCAL_DISPLAY)
         uint16_t tXpos = mPositionX;
         bool tFirstValue = true;
 
         int tXScaleCounter = mXDataScaleFactor;
-        if (mXDataScaleFactor < -1) {
+        if (mXDataScaleFactor < CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5) {
             tXScaleCounter = -mXDataScaleFactor;
         }
 
-        const uint8_t *tDataEndPointer = aDataPointer + aLengthOfValidData;
+        const uint8_t *tDataEndPointer = aDataPointer + aLengthOfValidData; // first element after data
         int tDisplayValue;
         int tLastValue = 0; // used only in line mode
-        for (int i = mWidthX; i > 0; i--) {
+
+        for (int i = mWidthX; i > 0 && aDataPointer < tDataEndPointer; i--) { // aDataPointer < tDataEndPointer stops when all data has been read
             /*
              *  get data and perform X scaling
              */
-            if (mXDataScaleFactor == 0) {
+            if (mXDataScaleFactor == CHART_X_AXIS_SCALE_FACTOR_1) {
                 tDisplayValue = *aDataPointer++;
-            } else if (mXDataScaleFactor == -1) {
+            } else if (mXDataScaleFactor == CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5) {
                 // compress by factor 1.5 - every second value is the average of the next two values
                 tDisplayValue = *aDataPointer++;
-                tXScaleCounter--;// starts with 1
+                tXScaleCounter--;// starts with -1
                 if (tXScaleCounter < 0) {
                     // get average of actual and next value
-                    tDisplayValue += *aDataPointer++;
-                    tDisplayValue /= 2;
+                    tDisplayValue = (tDisplayValue + *aDataPointer++) / 2;
                     tXScaleCounter = 1;
                 }
-            } else if (mXDataScaleFactor <= -1) {
+            } else if (mXDataScaleFactor <= CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5) {
                 // compress - get average of multiple values
                 tDisplayValue = 0;
                 for (int j = 0; j < tXScaleCounter; ++j) {
                     tDisplayValue += *aDataPointer++;
                 }
                 tDisplayValue /= tXScaleCounter;
-            } else if (mXDataScaleFactor == 1) {
+            } else if (mXDataScaleFactor == CHART_X_AXIS_SCALE_FACTOR_EXPANSION_1_5) {
                 // expand by factor 1.5 - every second value will be shown 2 times
                 tDisplayValue = *aDataPointer++;
                 tXScaleCounter--;// starts with 1
@@ -1159,8 +1157,8 @@ void Chart::drawChartDataWithYOffset(uint8_t *aDataPointer, const uint16_t aLeng
                     tXScaleCounter = mXDataScaleFactor;
                 }
             }
-            // check for data pointer still in data buffer
-            if (aDataPointer >= tDataEndPointer) {
+            // Check if last data pointer (aDataPointer - 1) was still in data buffer -> we have read only from buffer and can draw now
+            if (aDataPointer > tDataEndPointer) {
                 break;
             }
 
@@ -1170,16 +1168,14 @@ void Chart::drawChartDataWithYOffset(uint8_t *aDataPointer, const uint16_t aLeng
             if (tDisplayValue > (int) mHeightY - 1) {
                 tDisplayValue = mHeightY - 1;
             }
-            // draw first value as pixel only
-            if (aMode == CHART_MODE_PIXEL || tFirstValue) {
+            if (aMode == CHART_MODE_AREA) {
+                // We do not overwrite the X axis with 0 values, because fillRectRel does not render if height is 0
+                LocalDisplay.fillRectRel(tXpos, mPositionY - tDisplayValue, 1, tDisplayValue, mDataColor);
+            } else if (aMode == CHART_MODE_PIXEL || tFirstValue) { // draw first value as pixel only
                 tFirstValue = false;
                 LocalDisplay.drawPixel(tXpos, mPositionY - tDisplayValue, mDataColor);
             } else if (aMode == CHART_MODE_LINE) {
                 LocalDisplay.drawLineFastOneX(tXpos - 1, mPositionY - tLastValue, mPositionY - tDisplayValue, mDataColor);
-            } else if (aMode == CHART_MODE_AREA) {
-                //since we draw a 1 pixel line for value 0
-                tDisplayValue += 1;
-                LocalDisplay.fillRectRel(tXpos, mPositionY - tDisplayValue, 1, tDisplayValue, mDataColor);
             }
             tLastValue = tDisplayValue;
             tXpos++;
@@ -1191,9 +1187,6 @@ void Chart::drawChartDataWithYOffset(uint8_t *aDataPointer, const uint16_t aLeng
  * Draws a chart of values of the uint8_t data array pointed to by aDataPointer.
  * Uses the BDFunction drawLineFastOneX() after X scaling the  data points.
  * Do not apply scale values etc.
- * @param aDataPointer
- * @param aDataLength
- * @param aMode
  * @return false if clipping occurs
  */
 bool Chart::drawChartDataDirect(const uint8_t *aDataPointer, const uint16_t aLengthOfValidData, const uint8_t aMode) {
@@ -1222,7 +1215,10 @@ bool Chart::drawChartDataDirect(const uint8_t *aDataPointer, const uint16_t aLen
             tValue = mHeightY - 1;
             tRetValue = false;
         }
-        if (aMode == CHART_MODE_PIXEL) {
+        if (aMode == CHART_MODE_AREA) {
+            // We do not overwrite the X axis with 0 values, because fillRectRel does not render if height is 0
+            DisplayForChart.fillRectRel(tXPixelPosition, mPositionY - tValue, 1, tValue, mDataColor);
+        } else if (aMode == CHART_MODE_PIXEL) {
             DisplayForChart.drawPixel(tXPixelPosition, mPositionY - tValue, mDataColor); // 0 is on the X axis
         } else if (aMode == CHART_MODE_LINE) {
 //          Should we use drawChartByteBuffer() instead?
@@ -1230,11 +1226,6 @@ bool Chart::drawChartDataDirect(const uint8_t *aDataPointer, const uint16_t aLen
 //          drawLine(tXpos, mPositionY - tLastValue, tXpos + 1, mPositionY - tValue,
 //                  aDataColor);
             tLastValue = tValue;
-        } else {
-            // aMode == CHART_MODE_AREA
-            if (tValue > 0) { // no bar for Zero value, because we do not draw over X axis
-                DisplayForChart.fillRectRel(tXPixelPosition, mPositionY - tValue, 1, tValue, mDataColor);
-            }
         }
         aDataPointer++;
         tXPixelPosition++;
@@ -1285,12 +1276,12 @@ void Chart::setXLabelDistance(uint8_t aXLabelDistance) {
  * Draw big label at every aXLabelDistance grid lines
  * If mXLabelDistance == mXBigLabelDistance no regular label is drawn
  */
-void Chart::setXBigLabelDistance(uint8_t aXBigLabelDistance) {
-    mXBigLabelDistance = aXBigLabelDistance;
+void Chart::setXBigDateLabelDistance(uint8_t aXBigDateLabelDistance) {
+    mXBigDateLabelDistance = aXBigDateLabelDistance;
 }
 
-void Chart::setXRegularAndBigLabelDistance(uint8_t aXLabelDistance) {
-    mXBigLabelDistance = mXLabelDistance = aXLabelDistance;
+void Chart::setXRegularAndBigDateLabelDistance(uint8_t aXLabelDistance) {
+    mXBigDateLabelDistance = mXLabelDistance = aXLabelDistance;
 }
 
 void Chart::setXGridOrLabelPixelSpacing(uint8_t aXGridOrLabelPixelSpacing) {
@@ -1353,6 +1344,9 @@ void Chart::setYLabelStartValue(float yLabelStartValueFloat) {
     mYLabelStartValue = yLabelStartValueFloat;
 }
 
+/*
+ * Set data interpretation factor for input to chart value - e.g. (3.0 / 4096) for ADC reading of 4096 for 3 Volt
+ */
 void Chart::setYDataFactor(float aYDataFactor) {
     mYDataFactor = aYDataFactor;
 }
@@ -1459,21 +1453,27 @@ int16_t Chart::computeXLabelAndXDataScaleFactor(uint16_t aDataLength) {
     if (aDataLength > mWidthX) {
         /*
          * Data is is longer than available chart length -> Compress data -> negative scale values
+         * E.g. -((101 + 99) / 100) = -2 (compression by factor 2)
          */
-        tNewScale = -(aDataLength / mWidthX);
-        if (tNewScale == -1) {
-            if (aDataLength >= (mWidthX + (mWidthX / 2))) {
-                tNewScale = CHART_X_AXIS_SCALE_FACTOR_1;
-            } // else tNewScale = CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5 (which is -1) :-)
+        tNewScale = -((aDataLength + (mWidthX - 1)) / mWidthX);
+        if (tNewScale == -2) {
+            if (aDataLength < (mWidthX + (mWidthX / 2))) {
+                // tNewScale = CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5 (which is -1) :-)
+                tNewScale = CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_1_5;
+            }
         }
     } else {
+        if (aDataLength == 0) {
+            return CHART_X_AXIS_SCALE_FACTOR_EXPANSION_12; // cannot return infinite
+        }
         /*
          * Data is is shorter than available chart length -> Expand data -> positive scale values
+         * E.g. 100 / 50 = 2 (expansion by factor 2), 100 / 67 = 1 (expansion by 1.5) -> must check for identity
          */
         tNewScale = mWidthX / aDataLength;
         if (tNewScale == 1) {
             if ((aDataLength + (aDataLength / 2)) >= mWidthX) {
-                tNewScale = CHART_X_AXIS_SCALE_FACTOR_1;
+                tNewScale = CHART_X_AXIS_SCALE_FACTOR_1; // identity
             } // else tNewScale = CHART_X_AXIS_SCALE_FACTOR_EXPANSION_1_5 (which is 1) :-)
         }
     }
@@ -1511,16 +1511,21 @@ void Chart::getIntegerScaleFactorAsString(char *tStringBuffer, int aIntegerScale
 #define DEMO_CHART_1_LENGTH 120
 #define DEMO_CHART_2_LENGTH 140
 #define DEMO_CHART_3_LENGTH 180
+#define DEMO_CHART_HEIGHT    90
+#define DEFAULT_Y_GRID_SPACING_PIXELS   15
 #if !defined(DISPLAY_HEIGHT)
 #define DISPLAY_HEIGHT_IS_DEFINED_LOCALLY
 #define DISPLAY_HEIGHT 240
 #endif
 void showChartDemo(void) {
-    static bool sChartHasNoGrid = false; // show markers instead of grid every 2. call
+    static bool sChartHasGrid = true; // show indicators instead of grid every 2. call
+    bool tDemoDataIsIncreasing = true;
+    int16_t tRandomValue;
     Chart ChartExample;
 
     /*
      * allocate memory for 180 int16_t values
+     * We could do this also on the stack, but this is a demo :-)
      */
     int16_t *tChartBufferPtr = (int16_t*) malloc(sizeof(int16_t) * DEMO_CHART_3_LENGTH);
     if (tChartBufferPtr == nullptr) {
@@ -1537,40 +1542,55 @@ void showChartDemo(void) {
         return;
     }
 
+    /**********************************************************************************************
+     * 1. Chart: 120 8-bit values, pixel with grid, no labels, height = 90, axes size = 2
+     * First value is 0, second is maximum, third is 0, last values are 1 and 0
+     **********************************************************************************************/
     /*
-     * 1. Chart: 120 8-bit values, pixel with grid, no labels, height = 90, axes size = 2, no grid
+     * Generate random data
+     */
+    char *tRandomByteFillPointer = (char*) tChartBufferPtr; // here we interpret it as byte array
+    *tRandomByteFillPointer++ = 0;
+    *tRandomByteFillPointer++ = DEMO_CHART_HEIGHT + 100; // DEMO_CHART_HEIGHT - 1 is maximum but this tests clipping
+    *tRandomByteFillPointer++ = 0;
+
+    for (unsigned int i = 3; i < (DEMO_CHART_1_LENGTH - 6); i++) {
+#if defined(ARDUINO)
+        tRandomValue = 30 + random(31); // values from 30 to 60
+#else
+        tRandomValue = 30 + (rand() >> 27);
+#endif
+        *tRandomByteFillPointer++ = tRandomValue;
+    }
+
+    *tRandomByteFillPointer++ = 20; // on lower grid
+    *tRandomByteFillPointer++ = 20;
+    *tRandomByteFillPointer++ = 80; // on upper grid
+    *tRandomByteFillPointer++ = 80;
+    *tRandomByteFillPointer++ = 1; // for testing
+    *tRandomByteFillPointer++ = 0; // Last element is 0 for testing
+
+    /*
+     * No labels
+     * Grid every 20 pixels
      */
     ChartExample.disableXLabel();
     ChartExample.disableYLabel();
     ChartExample.initChartColors(COLOR16_BLUE, COLOR16_RED, CHART_DEFAULT_GRID_COLOR, COLOR16_RED, COLOR16_RED, COLOR16_WHITE);
-    ChartExample.initChart(5, DISPLAY_HEIGHT - 20, DEMO_CHART_1_LENGTH, 90, 2, TEXT_SIZE_11, !sChartHasNoGrid, 0, 0);
-    ChartExample.setGridOrLabelPixelSpacing(20, 20);
-    ChartExample.drawAxesAndGrid();
+    ChartExample.initChart(5, DISPLAY_HEIGHT - 20, DEMO_CHART_1_LENGTH, DEMO_CHART_HEIGHT, 2, 0, sChartHasGrid, 20, 20);
+    ChartExample.drawAxesAndLabelsAndGrid(); // Draw grid if CHART_HAS_GRID bit is set in flags
 
-    char *tRandomByteFillPointer = (char*) tChartBufferPtr; // here we interpret it as byte array
-    *tRandomByteFillPointer++ = 0;
-    *tRandomByteFillPointer++ = 200; // chart height - 1 is maximum but this tests clipping
-//generate random data
-#if defined(ARDUINO)
-    for (unsigned int i = 2; i < (DEMO_CHART_1_LENGTH - 2); i++) {
-        *tRandomByteFillPointer++ = 30 + random(31);
-    }
-#else
-    srand(120);
-    for (unsigned int i = 2; i < (DEMO_CHART_1_LENGTH - 2); i++) {
-        *tRandomByteFillPointer++ = 30 + (rand() >> 27); // +/-16
-    }
-#endif
-    *tRandomByteFillPointer++ = 1; // for testing
-    *tRandomByteFillPointer++ = 0; // Last element is 0 for testing
     ChartExample.drawChartDataDirect((uint8_t*) tChartBufferPtr, DEMO_CHART_1_LENGTH, CHART_MODE_PIXEL);
 
-    delay(1000);
-    /*
+    delay(1000); // I saw drawing (not rendering)  times in android of around 1 second :-(
+
+    /****************************************************************************
      * 2. Chart: 140 16-bit values, with grid, with (negative) integer Y labels
      * and X label rendered as minutes time with offset 5 and 2 labels spacing
+     ****************************************************************************/
+    /*
+     * Generate new random data
      */
-// new random data
     int16_t *tRandomShortFillPointer = tChartBufferPtr;
     int16_t tDataValue = -15;
     *tRandomShortFillPointer++ = 0; // for testing zero value with grid
@@ -1579,68 +1599,145 @@ void showChartDemo(void) {
 
     for (unsigned int i = 3; i < DEMO_CHART_2_LENGTH; i++) {
 #if defined(ARDUINO)
-        tDataValue += random(-3, 6);
+        tRandomValue = random(-3, 5); // values from -3 to 4 (5 is exclusive)
 #else
-        tDataValue += rand() >> 29;
+        tRandomValue = rand() >> 29;
 #endif
+        tDataValue += tRandomValue;
         *tRandomShortFillPointer++ = tDataValue;
     }
 
+    /*
+     * X Timestamp label + title
+     * Start with 0 and increment by 10, minimum label format is "xx"
+     * Left offset of first label here "0" is 5, so it is not rendered
+     * Label is drawn at every 2. indicator
+     * Every second call X label values increment is doubled and therefore data is compressed
+     */
     ChartExample.initXLabelTimestampForLabelScaleIdentity(0, 10, 2);
-    ChartExample.setLabelStringFunction(ChartExample.convertMinutesToString);
-
-    if (sChartHasNoGrid) {
-// increment X label scale factor for every second call
-        ChartExample.setXLabelAndXDataScaleFactor(CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_2); // compression, label values increment is doubled
-    }
-    ChartExample.setXLabelAndGridOffset(5); // Left offset of first label: here "0"
+    ChartExample.setXLabelAndGridOffset(5);
     ChartExample.setXLabelDistance(2);
     ChartExample.setXTitleTextAndSize("Time", TEXT_SIZE_11);
+    ChartExample.setLabelStringFunction(ChartExample.convertMinutesToString);
+    if (!sChartHasGrid) {
+        ChartExample.setXLabelAndXDataScaleFactor(CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_2); // double X label scale factor at every second call
+    }
 
-    ChartExample.initYLabel(-20, 20, 20 / 15, 3, 0);
-    ChartExample.initChartColors(COLOR16_GREEN, COLOR16_RED, CHART_DEFAULT_GRID_COLOR, COLOR16_YELLOW, COLOR16_GREEN,
-    COLOR16_WHITE);
-    ChartExample.initChart(170, DISPLAY_HEIGHT - 20, DEMO_CHART_2_LENGTH, 88, 2, TEXT_SIZE_11, !sChartHasNoGrid, 15, 15);
+    /*
+     * Y Label + Title
+     * Start at -20 and increment by 20, data interpretation factor 1, 3,0 -> minimum label format is "xxx" i.e. "-20"
+     */
+    ChartExample.initYLabel(-20, 20, 1, 3, 0);
     ChartExample.setYTitleText("Count");
 
-    ChartExample.drawAxesAndGrid();
+    /*
+     * Chart and axis layout
+     * X label every 15 pixel, Y label every 15 pixel, grid every second call
+     */
+    ChartExample.initChart(170, DISPLAY_HEIGHT - 20, DEMO_CHART_2_LENGTH, 88, 2, TEXT_SIZE_11, sChartHasGrid, 15,
+    DEFAULT_Y_GRID_SPACING_PIXELS);
+    ChartExample.initChartColors(COLOR16_GREEN, COLOR16_RED, CHART_DEFAULT_GRID_COLOR, COLOR16_YELLOW, COLOR16_GREEN,
+    COLOR16_WHITE);
+
+    /*
+     * Draw axes and data
+     */
+    ChartExample.drawAxesAndLabelsAndGrid(); // Draw grid if CHART_HAS_GRID bit is set in flags
+    ChartExample.drawChartData(tChartBufferPtr, DEMO_CHART_2_LENGTH, CHART_MODE_LINE);
+    /*
+     * Draw titles
+     */
     ChartExample.drawXAxisTitle();
     ChartExample.drawYAxisTitle(-TEXT_SIZE_11); // draw Y title above grid
 
-    ChartExample.drawChartData(tChartBufferPtr, DEMO_CHART_2_LENGTH, CHART_MODE_LINE);
-
     /*
-     * 3. Chart: 140 16-bit values, without grid, with float labels, area mode
+     * Reset non standard values for next chart(s)
      */
-// new random data
+    ChartExample.setXLabelDistance(1);
+    ChartExample.setXLabelAndGridOffset(0);
+    ChartExample.setLabelStringFunction(nullptr);
+    ChartExample.setXLabelAndXDataScaleFactor(CHART_X_AXIS_SCALE_FACTOR_1);
+
+    delay(1000); // I saw drawing (not rendering)  times in android of around 1 second :-(
+
+    /**************************************************************************
+     * 3. Chart: 180 16-bit values, without grid, with float labels, area mode
+     **************************************************************************/
+    /*
+     * Generate new random data
+     */
     tRandomShortFillPointer = tChartBufferPtr;
     tDataValue = 0;
-
     for (unsigned int i = 0; i < DEMO_CHART_3_LENGTH; i++) {
 #if defined(ARDUINO)
-        tDataValue += random(-2, 4);
+        tRandomValue = random(-2, 6);
 #else
-        tDataValue += rand() >> 30;
+        tRandomValue = rand() >> 30;
 #endif
+        if (tDemoDataIsIncreasing) {
+            tDataValue += tRandomValue;
+            if (tDataValue > DEMO_CHART_HEIGHT) {
+                tDemoDataIsIncreasing = false;
+            }
+        } else {
+            tDataValue -= tRandomValue;
+            if (tDataValue < 0) {
+                tDemoDataIsIncreasing = true;
+            }
+        }
         *tRandomShortFillPointer++ = tDataValue;
     }
-    tChartBufferPtr[3] = 0; // 4. element is 0 for testing
 
-    ChartExample.initXLabel(0, 0.5, CHART_X_AXIS_SCALE_FACTOR_1, 3, 1);
-    ChartExample.setLabelStringFunction(nullptr);
+    // Test low values and zero. Double all values to see it also with compression
+    tChartBufferPtr[0] = 2;
+    tChartBufferPtr[1] = 2;
+    tChartBufferPtr[2] = 1;
+    tChartBufferPtr[3] = 1;
+    tChartBufferPtr[4] = 0;
+    tChartBufferPtr[5] = 0;
+    tChartBufferPtr[6] = 2;
+    tChartBufferPtr[7] = 2;
+    tChartBufferPtr[8] = 4;
+    tChartBufferPtr[9] = 4;
+    tChartBufferPtr[10] = 0.3 * 60 / 1.5; // on first grid 0.3 with grid factor 1.5 / 60
+    tChartBufferPtr[11] = 0.3 * 60 / 1.5;
+    tChartBufferPtr[12] = 60; // on 1.5 grid with factor 1.5 / 60 ((value / 60) * 1.5)
+    tChartBufferPtr[13] = 60;
 
-    if (!sChartHasNoGrid) {
-// increment X label scale factor for every second call
-        ChartExample.setXLabelAndXDataScaleFactor(CHART_X_AXIS_SCALE_FACTOR_COMPRESSION_2); // compression, label values increment is doubled
+    /*
+     * X Label
+     * Start at 0 and increment by 0.5, scale factor 1, 3,1 -> minimum label format is "x.y"
+     */
+    ChartExample.initXLabel(0.0, 0.5, CHART_X_AXIS_SCALE_FACTOR_1, 3, 1);
+
+    if (!sChartHasGrid) {
+        ChartExample.setXLabelAndXDataScaleFactor(CHART_X_AXIS_SCALE_FACTOR_EXPANSION_1_5); // expansion, label values increment is * 1.5
     }
-    ChartExample.initYLabel(0, 0.3, 1.3 / 60, 3, 1); // display 1.3 for raw value of 60
+
+    /*
+     * Y Label
+     * Start at 0 and increment by 0.3, data interpretation factor 1.5 for 60 pixel, 3,1 -> minimum label format is "x.y" i.e. "0.0"
+     */
+    ChartExample.initYLabel(0, 0.3, 1.5 / 60.0, 3, 1); // Interpret bar value of 60 pixel as 1.5 (factor is 0.025)
+
+    /*
+     * Chart and axis layout
+     * X label every 30 pixel, Y label every 15 pixel, grid every second call
+     * This means: here the length of a bar for value 60 is:
+     *      60 -> 1.5 by YDataFactor; 1.5 / 0.3 (per grid) = 5; 5 * 15 (pixel per grid) = 75 (pixel)
+     */
+    ChartExample.initChart(30, 100, DEMO_CHART_3_LENGTH, DEMO_CHART_HEIGHT, 2, TEXT_SIZE_11, sChartHasGrid, 30,
+    DEFAULT_Y_GRID_SPACING_PIXELS);
     ChartExample.initChartColors(COLOR16_RED, COLOR16_BLUE, COLOR16_GREEN, COLOR16_BLACK, COLOR16_BLACK, COLOR16_WHITE);
-    ChartExample.initChart(30, 100, DEMO_CHART_3_LENGTH, 90, 2, TEXT_SIZE_11, sChartHasNoGrid, 30, 16);
-    ChartExample.drawAxesAndGrid();
+
+    /*
+     * Draw it :-)
+     */
+    ChartExample.drawAxesAndLabelsAndGrid(); // Draw grid if CHART_HAS_GRID bit is set in flags
     ChartExample.drawChartData(tChartBufferPtr, DEMO_CHART_3_LENGTH, CHART_MODE_AREA);
 
     free(tChartBufferPtr);
-    sChartHasNoGrid = !sChartHasNoGrid; // switch grid display for next run, to see the markers, which are drawn instead of grid
+    sChartHasGrid = !sChartHasGrid; // switch grid display for next run, to see the indicators, which are drawn instead of grid
 }
 
 #if defined(DISPLAY_HEIGHT_IS_DEFINED_LOCALLY)

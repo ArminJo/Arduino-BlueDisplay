@@ -242,10 +242,10 @@ void setSwipeEndCallbackEnabled(bool aSwipeEndCallbackEnabled) {
 }
 #endif // #if !defined(DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS)
 
-bool delayMillisAndOptionallyCheckForFlag(unsigned int aDelayMillis, bool *aAddressOfFlagToCheckForTrue) {
-    if (aAddressOfFlagToCheckForTrue != nullptr) {
-        *aAddressOfFlagToCheckForTrue = false;
-    }
+/*
+ * Flag must be handled by application program itself
+ */
+bool delayMillisAndOptionallyCheckForFlag(unsigned long aDelayMillis, bool *aAddressOfFlagToCheckForTrue) {
     unsigned long tStartMillis = millis();
     while (millis() - tStartMillis < aDelayMillis) {
         checkAndHandleEvents();
@@ -268,9 +268,6 @@ bool delayMillisAndOptionallyCheckForFlag(unsigned int aDelayMillis, bool *aAddr
 void delayMillisAndHandleEvents(unsigned long aDelayMillis) {
     delayMillisAndOptionallyCheckForFlag(aDelayMillis, nullptr);
 }
-void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) { // Deprecated
-    delayMillisAndOptionallyCheckForFlag(aDelayMillis, nullptr);
-}
 
 /*
  * Special delay function for BlueDisplay. Returns prematurely if Event is received.
@@ -278,9 +275,7 @@ void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) { // Deprec
  * @return  true - as soon as event received
  */
 bool delayMillisHandleEventsAndBreakIfEventJustReceived(unsigned long aDelayMillis) {
-    return delayMillisAndOptionallyCheckForFlag(aDelayMillis, &sBDEventJustReceived);
-}
-bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) { // Deprecated
+    sBDEventJustReceived = false;
     return delayMillisAndOptionallyCheckForFlag(aDelayMillis, &sBDEventJustReceived);
 }
 
@@ -290,13 +285,31 @@ bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) { // Deprecated
  * Expands a one parameter function call to a two parameter call and thus saves space if used multiple times.
  * @return  true - as soon as a button turn to red is received
  */
-bool delayMillisHandleEventsAndBreakIfStopButtonPressed(unsigned int aDelayMillis) {
-    return delayMillisAndOptionallyCheckForFlag(aDelayMillis, &sButtonCalledWithFalse);
-}
-bool delayMillisAndCheckForStop(unsigned int aDelayMillis) { // Deprecated
+bool delayMillisHandleEventsAndBreakIfStopButtonPressed(unsigned long aDelayMillis) {
+    sButtonCalledWithFalse = false;
     return delayMillisAndOptionallyCheckForFlag(aDelayMillis, &sButtonCalledWithFalse);
 }
 
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
+void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis) { // Deprecated
+#if defined(ARDUINO) && !defined(DISABLE_REMOTE_DISPLAY)
+    delayMillisHandleEventsAndWaitIfReceiving(aDelayMillis);
+#else
+    delayMillisAndHandleEvents(aDelayMillis);
+#endif
+}
+void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) { // Deprecated
+    delayMillisAndOptionallyCheckForFlag(aDelayMillis, nullptr);
+}
+bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) { // Deprecated
+    sBDEventJustReceived = false;
+    return delayMillisAndOptionallyCheckForFlag(aDelayMillis, &sBDEventJustReceived);
+}
+bool delayMillisAndCheckForStop(unsigned int aDelayMillis) { // Deprecated
+    sButtonCalledWithFalse = false;
+    return delayMillisAndOptionallyCheckForFlag(aDelayMillis, &sButtonCalledWithFalse);
+}
+#endif
 
 /*
  * Assume that stop is requested, if a button is called with value 0/false, i.e. a Red/Green toggle button is set to red.
@@ -306,7 +319,7 @@ bool isStopRequested() {
     return sButtonCalledWithFalse;
 }
 
-#if defined(ARDUINO)
+#if defined(ARDUINO) && !defined(DISABLE_REMOTE_DISPLAY)
 /*
  * Like delayMillisAndHandleEvents, but extends wait, if receiving is active
  */
@@ -314,15 +327,12 @@ void delayMillisHandleEventsAndWaitIfReceiving(unsigned long aDelayMillis) {
     unsigned long tStartMillis = millis();
     while (millis() - tStartMillis < aDelayMillis || isReceivingActive()) {
         checkAndHandleEvents();
-#if defined(ESP8266)
+#  if defined(ESP8266)
         yield(); // required for ESP8266
-#endif
+#  endif
     }
 }
 
-void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis) { // Deprecated
-    delayMillisHandleEventsAndWaitIfReceiving(aDelayMillis);
-}
 /*
  * If receiving was started, wait until event was completely received and processed, but timeout after 40 ms
  */
@@ -337,7 +347,7 @@ void checkForStartedReceivingAndHandleEvents() {
         }
     } while (isReceivingActive());
 }
-#endif
+#endif // defined(ARDUINO) && !defined(DISABLE_REMOTE_DISPLAY)
 
 /**
  * Is called by main loop
@@ -467,9 +477,11 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 #if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
         sTouchIsStillDown = false; // to disable local touch up detection
 #endif
+        sButtonCalledWithFalse = (tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0] == false);
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
         { // "{" must be here to avoid nasty errors
-            LocalTouchButton *tLocalButton = LocalTouchButton::getLocalTouchButtonFromBDButtonHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
+            LocalTouchButton *tLocalButton = LocalTouchButton::getLocalTouchButtonFromBDButtonHandle(
+                    tEvent.EventData.GuiCallbackInfo.ObjectIndex);
             tLocalButton->mValue = tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.int16Values[0]; // we support only 16 bit values for buttons
             /*
              * We can not call performTouchAction() of the local button here.
@@ -483,10 +495,10 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
                 LocalTouchButton::playFeedbackTone();
             }
             // for autorepeat buttons, this is the mOriginalButtonOnTouchHandler and not the mOnTouchHandler
-            ((void (*)(BDButton*, int16_t)) tEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress)(tLocalButton->mBDButtonPtr, tLocalButton->mValue);
+            ((void (*)(BDButton*, int16_t)) tEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress)(tLocalButton->mBDButtonPtr,
+                    tLocalButton->mValue);
         }
 #elif !defined(SUPPORT_LOCAL_DISPLAY)
-        sButtonCalledWithFalse = (tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.uint16Values[0] == false);
         // The BDButton object is just a 8 bit (16 bit) unsigned integer holding the remote index of the button.
         // So every pointer to a memory location holding the index of the button is a valid pointer to BDButton :-).
         ((void (*)(BDButton*, int16_t)) tEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress)(
@@ -502,11 +514,13 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
 #endif
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
         { // "{" must be here to avoid nasty errors
-            LocalTouchSlider *tLocalSlider = LocalTouchSlider::getLocalSliderFromBDSliderHandle(tEvent.EventData.GuiCallbackInfo.ObjectIndex);
+            LocalTouchSlider *tLocalSlider = LocalTouchSlider::getLocalSliderFromBDSliderHandle(
+                    tEvent.EventData.GuiCallbackInfo.ObjectIndex);
             tLocalSlider->mActualTouchValue = tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.int16Values[0];
             // synchronize local slider - remote one is synchronized by local slider itself
             tLocalSlider->setValueAndDrawBar(tEvent.EventData.GuiCallbackInfo.ValueForGUICallback.int16Values[0]);
-            ((void (*)(BDSlider*, int16_t)) tEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress)(tLocalSlider->mBDSliderPtr, tLocalSlider->mActualTouchValue);
+            ((void (*)(BDSlider*, int16_t)) tEvent.EventData.GuiCallbackInfo.CallbackFunctionAddress)(tLocalSlider->mBDSliderPtr,
+                    tLocalSlider->mActualTouchValue);
         }
 #else
         // The BDSlider object is just a 8 bit (16 bit) unsigned integer holding the remote index of the slider.
@@ -632,14 +646,14 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
         copyDisplaySizeAndTimestampAndSetOrientation(&tEvent); // must be done before call of sConnectCallback()
         BlueDisplay1.mBlueDisplayConnectionEstablished = true;
 
-        // first write a 40 bytes NOP command for synchronizing
+        // first write a 56 bytes NOP command for synchronizing
         BlueDisplay1.sendSync();
 
         if (sConnectCallback != nullptr) {
             sConnectCallback();
         }
 #if !defined(ONLY_CONNECT_EVENT_REQUIRED)
-        tEventType = EVENT_REDRAW; // We also call redraw here, which in turn sets mCurrentDisplaySize and mHostUnixTimestamp
+        tEventType = EVENT_REDRAW; // We also call redraw here, which in turn sets mHostDisplaySize and mHostUnixTimestamp
 #endif
 
 #if defined(SUPPORT_REMOTE_AND_LOCAL_DISPLAY)
@@ -671,7 +685,7 @@ extern "C" void handleEvent(struct BluetoothEvent *aEvent) {
     if (tEventType == EVENT_REDRAW) {
         /*
          * Got current display size since host display size has changed (manually)
-         * sets mCurrentDisplaySize and mHostUnixTimestamp
+         * sets mHostDisplaySize and mHostUnixTimestamp
          */
         copyDisplaySizeAndTimestampAndSetOrientation(&tEvent);
         if (sRedrawCallback != nullptr) {
@@ -702,7 +716,7 @@ void copyDisplaySizeAndTimestampAndSetOrientation(struct BluetoothEvent *aEvent)
     BlueDisplay1.mHostUnixTimestamp = aEvent->EventData.DisplaySizeAndTimestamp.UnixTimestamp;
 }
 
-#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS) && !defined(ESP32) // ESP32 treats warnings as errors :-(
+#if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
 /**
  * Flag for displaying event touchpanel X/Y data on screen
  */
@@ -716,13 +730,9 @@ bool isDisplayXYValuesEnabled() {
  * show touchpanel data on screen
  */
 void printEventTouchPositionData(int x, int y, color16_t aColor, color16_t aBackgroundColor) {
-    char tStringBuffer[12];
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-truncation"
-// We want it this way, but we get a warning '%03i' directive output may be truncated writing between 3 and 5 bytes into a region of size between 2 and 4
+    char tStringBuffer[18]; // 12 would be sufficient for our 320 x 240 display, but the compiler is nagging with a warning '%03i' directive output may be truncated writing between 3 and 5 bytes into a region of size between 2 and 4
     snprintf(tStringBuffer, 12, "X:%03i Y:%03i", sCurrentPosition.TouchPosition.PositionX,
             sCurrentPosition.TouchPosition.PositionY);
-#pragma GCC diagnostic pop
     BlueDisplay1.drawText(x, y, tStringBuffer, TEXT_SIZE_11, aColor, aBackgroundColor);
 }
 #endif // !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)

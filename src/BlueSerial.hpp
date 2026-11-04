@@ -5,7 +5,7 @@
  * Includes also common serial functions.
  *
  *
- *  Copyright (C) 2014-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -136,8 +136,8 @@ bool USART_isBluetoothPaired(void) {
  * 2. byte Function token
  * 3. Short length of parameters (here 5*2)
  * 4. Short n parameters
+ * using this function saves 300 bytes for SimpleDSO
  */
-// using this function saves 300 bytes for SimpleDSO
 void sendUSART5Args(uint8_t aFunctionTag, uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
     if (USART_isBluetoothPaired()) {
         uint16_t tParamBuffer[7];
@@ -156,7 +156,6 @@ void sendUSART5Args(uint8_t aFunctionTag, uint16_t aStartX, uint16_t aStartY, ui
 
 /**
  *
- * @param aFunctionTag
  * @param aNumberOfArgs currently not more than 12 args (SHORT) are supported
  */
 void sendUSARTArgs(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs, ...) {
@@ -184,8 +183,12 @@ void sendUSARTArgs(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs, ...) {
 }
 
 /**
+ * send:
+ * 1. Sync byte A5
+ * 2. byte Function token
+ * 3. Short length of parameters (here 2 * aNumberOfArgs)
+ * 4. Short n parameters
  *
- * @param aFunctionTag
  * @param aNumberOfArgs currently not more than 12 args (SHORT) are supported
  * Last two arguments are length of buffer and buffer pointer (..., size_t aDataLength, uint8_t *aDataBufferPtr)
  */
@@ -198,15 +201,18 @@ void sendUSARTArgsAndByteBuffer(uint8_t aFunctionTag, uint_fast8_t aNumberOfArgs
         uint16_t tParamBuffer[MAX_NUMBER_OF_ARGS_FOR_BD_FUNCTIONS + 4];
         va_list argp;
         uint16_t *tBufferPointer = &tParamBuffer[0];
-        *tBufferPointer++ = aFunctionTag << 8 | SYNC_TOKEN; // add sync token
+        *tBufferPointer++ = aFunctionTag << 8 | SYNC_TOKEN; // add sync token and function tag
         va_start(argp, aNumberOfArgs);
 
-        *tBufferPointer++ = aNumberOfArgs * 2;
+        *tBufferPointer++ = aNumberOfArgs * 2; // add short length of parameters (here 2 * aNumberOfArgs)
         for (uint_fast8_t i = 0; i < aNumberOfArgs; ++i) {
             *tBufferPointer++ = va_arg(argp, int);
         }
-// add data field header
-        *tBufferPointer++ = DATAFIELD_TAG_BYTE << 8 | SYNC_TOKEN; // start new transmission block
+
+        /*
+         * add data field header
+         */
+        *tBufferPointer++ = DATAFIELD_TAG_BYTE << 8 | SYNC_TOKEN; // start new transmission block, add sync token and data field tag
         uint16_t tLength = va_arg(argp, int); // length in byte
         *tBufferPointer = tLength;
         uint8_t *aBufferPtr = (uint8_t*) va_arg(argp, int); // Buffer address
@@ -379,7 +385,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
      */
     while (aParameterBufferLength > 0) {
         // wait for USART send buffer to become empty
-#  if (defined(UCSR1A) && ! defined(USE_USB_SERIAL)) || ! defined(UCSR0A) // Use TX1 on MEGA and on Leonardo, which has no TX0
+#  if (defined(UCSR1A) && ! defined(BD_USE_USB_SERIAL)) || ! defined(UCSR0A) // Use TX1 on MEGA and on Leonardo, which has no TX0
         while (!((UCSR1A) & (1 << UDRE1))) {
             ;
         }
@@ -396,7 +402,7 @@ void sendUSARTBufferNoSizeCheck(uint8_t *aParameterBufferPointer, uint8_t aParam
     }
     while (aDataBufferLength > 0) {
         // wait for USART send buffer to become empty
-#  if (defined(UCSR1A) && ! defined(USE_USB_SERIAL)) || ! defined(UCSR0A) // Use TX1 on MEGA and on Leonardo, which has no TX0
+#  if (defined(UCSR1A) && ! defined(BD_USE_USB_SERIAL)) || ! defined(UCSR0A) // Use TX1 on MEGA and on Leonardo, which has no TX0
         while (!((UCSR1A) & (1 << UDRE1))) {
             ;
         }
@@ -448,7 +454,7 @@ void sendUSART(char aChar) {
 }
 
 void sendUSART(const char *aString) {
-    while (*aString != '0') {
+    while (*aString != '\0') {
         sendUSART(*aString);
         aString++;
     }
@@ -545,7 +551,7 @@ ISR(USART1_RX_vect) {
                         // we have one dedicated touch down event in order not to overwrite it with other events before processing it
                         // Yes it makes no sense if interrupts are allowed!
                         struct BluetoothEvent *tRemoteTouchEventPtr = &remoteEvent;
-#  if !defined(DO_NOT_NEED_BASIC_TOUCH)
+#  if !defined(DO_NOT_NEED_BASIC_TOUCH_EVENTS)
                         if (sReceivedEventType == EVENT_TOUCH_ACTION_DOWN
                                 || (remoteTouchDownEvent.EventType == EVENT_NO_EVENT && remoteEvent.EventType == EVENT_NO_EVENT)) {
                             tRemoteTouchEventPtr = &remoteTouchDownEvent; // Use remoteTouchDownEvent now
@@ -998,7 +1004,7 @@ void sendUSARTBuffer(uint8_t *aParameterBufferPointer, size_t aParameterBufferLe
             if (tSize < UART_SEND_BUFFER_SIZE) {
                 tSendSize = tSize;
             }
-            sendUSARTBufferNoSizeCheck(aDataBufferPointer, tSendSize, nullptr, 0);
+            sendUSARTBufferNoSizeCheck(nullptr, 0, aDataBufferPointer, tSendSize); // 2. parameter is 8 bit so must use 4. one for it
             aDataBufferPointer += UART_SEND_BUFFER_SIZE;
             tSize -= UART_SEND_BUFFER_SIZE;
         }

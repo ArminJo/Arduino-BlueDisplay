@@ -43,7 +43,7 @@
  * Macro to convert 3 version parts into an integer
  * To be used in preprocessor comparisons, such as #if VERSION_LCD_BIG_NUMBERS_HEX >= VERSION_HEX_VALUE(3, 0, 0)
  */
-#define VERSION_HEX_VALUE(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
+#define VERSION_HEX_VALUE(major, minor, patch) (((major) << 16) | ((minor) << 8) | (patch))
 #define VERSION_LCD_BIG_NUMBERS_HEX  VERSION_HEX_VALUE(VERSION_LCD_BIG_NUMBERS_MAJOR, VERSION_LCD_BIG_NUMBERS_MINOR, VERSION_LCD_BIG_NUMBERS_PATCH)
 
 // START - This is a copy from https://github.com/ArminJo/Arduino-Utils/blob/master/src/LCDPrintUtils.hpp

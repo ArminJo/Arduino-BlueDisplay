@@ -8,7 +8,7 @@
  * 40 Bytes per button on 32Bit ARM
  * 22 Bytes per button on Arduino
  *
- *  Copyright (C) 2012-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -145,15 +145,6 @@ public:
     void setTextColor(color16_t aTextColor);
 
     // Text
-#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
-    void drawCaption() __attribute__ ((deprecated ("Renamed to drawText")));
-    void setCaption(const char *aText, bool doDrawButton = false) __attribute__ ((deprecated ("Renamed to setText")));
-    void setCaption(const __FlashStringHelper *aPGMText, bool doDrawButton = false) __attribute__ ((deprecated ("Renamed to setText")));
-    void setCaptionForValueTrue(const char *aText) __attribute__ ((deprecated ("Renamed to setTextForValueTrue")));
-    void setCaptionForValueTrue(const __FlashStringHelper *aText) __attribute__ ((deprecated ("Renamed to setTextForValueTrue")));
-    void setCaptionAndDraw(const char *aText) __attribute__ ((deprecated ("Renamed to setTextAndDraw")));
-#endif
-
     void drawText();
     void setText(const char *aText, bool doDrawButton = false);
     void setText(const __FlashStringHelper *aPGMText, bool doDrawButton = false);
@@ -163,9 +154,6 @@ public:
 
     // Value
     void setValue(int16_t aValue);
-#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
-    void setColorForRedGreenButton(bool aValue) __attribute__ ((deprecated ("Renamed to setColorForToggleButton")));
-#endif
     void setColorForToggleButton(bool aValue);
     void setValueAndDraw(int16_t aValue);
 
@@ -182,6 +170,18 @@ public:
     uint16_t getPositionYBottom() const;
     bool isAutorepeatButton();
 
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
+    void drawCaption() __attribute__ ((deprecated ("Renamed to drawText")));
+    void setCaption(const char *aText, bool doDrawButton = false) __attribute__ ((deprecated ("Renamed to setText")));
+    void setCaption(const __FlashStringHelper *aPGMText, bool doDrawButton = false) __attribute__ ((deprecated ("Renamed to setText")));
+    void setCaptionForValueTrue(const char *aText) __attribute__ ((deprecated ("Renamed to setTextForValueTrue")));
+    void setCaptionForValueTrue(const __FlashStringHelper *aText) __attribute__ ((deprecated ("Renamed to setTextForValueTrue")));
+    void setCaptionAndDraw(const char *aText) __attribute__ ((deprecated ("Renamed to setTextAndDraw")));
+    void setColorForRedGreenButton(bool aValue) __attribute__ ((deprecated ("Renamed to setColorForToggleButton")));
+    static void activateAllButtons() __attribute__ ((deprecated ("Renamed to activateAll")));
+    static void deactivateAllButtons() __attribute__ ((deprecated ("Renamed to deactivateAll")));
+#endif
+
 #ifdef AVR
     uint8_t getCaptionLength(char *aTextPointer);
     uint8_t getTextLength(char *aTextPointer);
@@ -189,9 +189,6 @@ public:
     void toString(char *aStringBuffer) const;
 #  endif
 #endif
-
-    static void activateAllButtons() __attribute__ ((deprecated ("Renamed to activateAll")));
-    static void deactivateAllButtons() __attribute__ ((deprecated ("Renamed to deactivateAll")));
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
     LocalTouchButton(BDButton *aBDButtonPtr); // Constructor required for creating a (temporary) local button for an existing aBDButton at BDButton::init

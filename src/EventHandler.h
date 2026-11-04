@@ -2,7 +2,7 @@
  * EventHandler.h
  *
  *
- *  Copyright (C) 2014-2025  Armin Joachimsmeyer
+ *  Copyright (C) 2014-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -38,7 +38,7 @@
  * Move and swipe recognition is currently not implemented in ADS7846.hpp, if USE_TIMER_FOR_PERIODIC_LOCAL_TOUCH_CHECKS is not defined.
  */
 //#define USE_TIMER_FOR_PERIODIC_LOCAL_TOUCH_CHECKS // Use registerDelayCallback() and changeDelayCallback() for periodic touch checks
-//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS // Disables basic touch events down, move and up. Saves 170 bytes program memory and 14 bytes RAM
 
 #if !defined(IS_STOP_REQUESTED)
 #define IS_STOP_REQUESTED               isStopRequested()
@@ -86,6 +86,7 @@ void (* getTouchUpCallback(void))(struct TouchEvent * ); // returns current call
 void setTouchUpCallbackEnabled(bool aTouchUpCallbackEnabled);
 extern bool sTouchUpCallbackEnabled;
 extern bool sDisableMoveEventsUntilTouchUpIsDone; // Skip all touch move and touch up events until touch is released
+extern bool sDisableTouchUpOnce; // Disable next touch up detection. E.g. because we are already in a touch handler and don't want the end of this touch to be interpreted for a newly displayed button.
 
 extern struct TouchEvent sCurrentPosition; // for printEventTouchPositionData()
 extern bool sTouchIsStillDown;
@@ -99,17 +100,23 @@ void printEventTouchPositionData(int x, int y, color16_t aColor, color16_t aBack
 #endif
 
 bool isStopRequested(void);
-void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) __attribute__ ((deprecated ("Renamed to delayMillisAndHandleEvents()")));
 void delayMillisAndHandleEvents(unsigned long aDelayMillis);
-bool delayMillisAndOptionallyCheckForFlag(unsigned int aDelayMillis, bool *aAddressOfFlagToCheckForTrue = nullptr);
-void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis)__attribute__ ((deprecated ("Renamed to delayMillisHandleEventsAndWaitIfReceiving()")));
+//bool delayMillisAndOptionallyCheckForFlag(unsigned long aDelayMillis, bool *aAddressOfFlagToCheckForTrue = nullptr); // TODO does not work for stm32
+bool delayMillisAndOptionallyCheckForFlag(unsigned long aDelayMillis, bool *aAddressOfFlagToCheckForTrue);
+#if defined(ARDUINO) && !defined(DISABLE_REMOTE_DISPLAY)
 void delayMillisHandleEventsAndWaitIfReceiving(unsigned long aDelayMillis);
-bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) __attribute__ ((deprecated ("Renamed to delayMillisHandleEventsAndBreakIfEventJustReceived()")));
+void checkForStartedReceivingAndHandleEvents();
+#endif
 bool delayMillisHandleEventsAndBreakIfEventJustReceived(unsigned long aDelayMillis);
-bool delayMillisAndCheckForStop(unsigned int aDelayMillis) __attribute__ ((deprecated ("Renamed to delayMillisHandleEventsAndBreakIfStopButtonPressed()")));
-bool delayMillisHandleEventsAndBreakIfStopButtonPressed(unsigned int aDelayMillis);
-
+bool delayMillisHandleEventsAndBreakIfStopButtonPressed(unsigned long aDelayMillis);
 void checkAndHandleEvents(void);
+
+#if !defined(OMIT_BD_DEPRECATED_FUNCTIONS)
+void delayMillisWithCheckAndHandleEvents(unsigned long aDelayMillis) __attribute__ ((deprecated ("Renamed to delayMillisAndHandleEvents()")));
+void delayMillisWithCheckForStartedReceivingAndHandleEvents(unsigned long aDelayMillis)__attribute__ ((deprecated ("Renamed to delayMillisHandleEventsAndWaitIfReceiving()")));
+bool delayMillisAndCheckForEvent(unsigned long aDelayMillis) __attribute__ ((deprecated ("Renamed to delayMillisHandleEventsAndBreakIfEventJustReceived()")));
+bool delayMillisAndCheckForStop(unsigned int aDelayMillis) __attribute__ ((deprecated ("Renamed to delayMillisHandleEventsAndBreakIfStopButtonPressed()")));
+#endif
 
 #if !defined(DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS)
 /*
@@ -118,7 +125,6 @@ void checkAndHandleEvents(void);
 #define TOUCH_STANDARD_LONG_TOUCH_TIMEOUT_MILLIS 800 // Millis after which a touch is classified as a long touch
 extern void (*sLongTouchDownCallback)(struct TouchEvent*);
 extern uint32_t sLongTouchDownTimeoutMillis;
-extern bool sDisableTouchUpOnce; // Disable next touch up detection. E.g. because we are already in a touch handler and don't want the end of this touch to be interpreted for a newly displayed button.
 
 void registerLongTouchDownCallback(void (*aLongTouchCallback)(struct TouchEvent*), uint16_t aLongTouchTimeoutMillis);
 /*
@@ -149,7 +155,7 @@ void registerSensorChangeCallback(uint8_t aSensorType, uint8_t aSensorRate, uint
 // defines for backward compatibility
 #define registerSimpleConnectCallback(aConnectCallback) registerConnectCallback(aConnectCallback)
 #define registerSimpleResizeAndReconnectCallback(aRedrawCallback) registerRedrawCallback(aRedrawCallback)
-#define registerSimpleResizeAndConnectCallback registerRedrawCallback(aRedrawCallback)
+#define registerSimpleResizeAndConnectCallback(aRedrawCallback) registerRedrawCallback(aRedrawCallback)
 #define registerSimpleResizeCallback(aRedrawCallback) registerRedrawCallback(aRedrawCallback)
 #define getSimpleResizeAndConnectCallback() getRedrawCallback()
 

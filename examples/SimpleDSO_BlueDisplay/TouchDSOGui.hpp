@@ -808,7 +808,7 @@ void activateChartGui(void) {
  ************************************************************************/
 
 void redrawDisplay() {
-    BlueDisplay1.clearDisplay();
+    BlueDisplay1.clearDisplay(); // do not disable buttons and slider here
 
     if (MeasurementControl.isRunning) {
         /*

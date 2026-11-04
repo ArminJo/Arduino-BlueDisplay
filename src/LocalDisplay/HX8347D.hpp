@@ -336,12 +336,12 @@ inline void HX8347D::drawStop(void) {
     HX8347D_CS_DISABLE();
 }
 
-void HX8347D::drawPixel(uint16_t aPositionX, uint16_t aPositionY, color16_t aColor) {
-    if ((aPositionX >= LOCAL_DISPLAY_WIDTH) || (aPositionY >= LOCAL_DISPLAY_HEIGHT)) {
+void HX8347D::drawPixel(uint16_t aXPosition, uint16_t aYPosition, color16_t aColor) {
+    if ((aXPosition >= LOCAL_DISPLAY_WIDTH) || (aYPosition >= LOCAL_DISPLAY_HEIGHT)) {
         return;
     }
 
-    setArea(aPositionX, aPositionY, aPositionX, aPositionY);
+    setArea(aXPosition, aYPosition, aXPosition, aYPosition);
 
     drawStart();
     draw(aColor);
@@ -351,23 +351,23 @@ void HX8347D::drawPixel(uint16_t aPositionX, uint16_t aPositionY, color16_t aCol
 /*
  * needs an TFTDisplay.setArea(0, 0, LOCAL_DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1) first.
  */
-void HX8347D::drawPixelFast(uint16_t aPositionX, uint8_t aPositionY, color16_t aColor) {
+void HX8347D::drawPixelFast(uint16_t aXPosition, uint8_t aYPosition, color16_t aColor) {
 
 #if defined(SUPPORT_HY32D)
-    setArea(aPositionX, aPositionY, aPositionX, aPositionY);
+    setArea(aXPosition, aYPosition, aXPosition, aYPosition);
 #else
     uint8_t xUpper;
     static uint8_t lastXUpper;
 
     // set area fast
-    wr_cmd(0x03, (aPositionX >> 0)); //set x low byte
-    xUpper = (aPositionX >> 8);
+    wr_cmd(0x03, (aXPosition >> 0)); //set x low byte
+    xUpper = (aXPosition >> 8);
     //set x upper byte only when changed
     if (xUpper != lastXUpper) {
         wr_cmd(0x02, xUpper);
         lastXUpper = xUpper;
     }
-    wr_cmd(0x07, (aPositionY >> 0)); //set y low byte - y high byte is always 0
+    wr_cmd(0x07, (aYPosition >> 0)); //set y low byte - y high byte is always 0
 #endif
     drawStart();
     draw(aColor);
@@ -380,20 +380,20 @@ void HX8347D::drawPixelFast(uint16_t aPositionX, uint8_t aPositionY, color16_t a
  * Fast routine for drawing data charts
  * draws a line only from x to x+1
  * first pixel is omitted because it is drawn by preceeding line
- * uint16_t aStartX, uint16_t aStartY, uint16_t aEndY, color16_t aColor
+ * uint16_t aXStart, uint16_t aYStart, uint16_t aYEnd, color16_t aColor
  */
-void HX8347D::drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aEndY, color16_t aColor) {
+void HX8347D::drawLineFastOneX(uint16_t aXStart, uint16_t aYStart, uint16_t aYEnd, color16_t aColor) {
     uint8_t i;
     bool up = true;
     //calculate direction
-    int16_t deltaY = aEndY - aStartY;
+    int16_t deltaY = aYEnd - aYStart;
     if (deltaY < 0) {
         deltaY = -deltaY;
         up = false;
     }
     if (deltaY <= 1) {
         // constant y or one pixel offset => no line needed
-        drawPixel(aStartX + 1, aEndY, aColor);
+        drawPixel(aXStart + 1, aYEnd, aColor);
     } else {
         // draw line here
         // deltaY1 is == deltaYHalf for even numbers and deltaYHalf -1 for odd Numbers
@@ -403,14 +403,14 @@ void HX8347D::drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aEnd
             // for odd numbers, first part of line is 1 pixel shorter than second
             if (deltaY1 > 0) {
                 // first pixel was drawn by preceeding line :-)
-                setArea(aStartX, aStartY + 1, aStartX, aStartY + deltaY1);
+                setArea(aXStart, aYStart + 1, aXStart, aYStart + deltaY1);
                 drawStart();
                 for (i = deltaY1; i != 0; i--) {
                     draw(aColor);
                 }
                 drawStop();
             }
-            setArea(aStartX + 1, aStartY + deltaY1 + 1, aStartX + 1, aEndY);
+            setArea(aXStart + 1, aYStart + deltaY1 + 1, aXStart + 1, aYEnd);
             drawStart();
             for (i = deltaYHalf + 1; i != 0; i--) {
                 draw(aColor);
@@ -419,14 +419,14 @@ void HX8347D::drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aEnd
         } else {
             // for odd numbers, second part of line is 1 pixel shorter than first
             if (deltaYHalf > 0) {
-                setArea(aStartX, aStartY - deltaYHalf, aStartX, aStartY - 1);
+                setArea(aXStart, aYStart - deltaYHalf, aXStart, aYStart - 1);
                 drawStart();
                 for (i = deltaYHalf; i != 0; i--) {
                     draw(aColor);
                 }
                 drawStop();
             }
-            setArea(aStartX + 1, aEndY, aStartX + 1, (aStartY - deltaYHalf) - 1);
+            setArea(aXStart + 1, aYEnd, aXStart + 1, (aYStart - deltaYHalf) - 1);
             drawStart();
             for (i = deltaY1 + 1; i != 0; i--) {
                 draw(aColor);
@@ -436,32 +436,32 @@ void HX8347D::drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aEnd
     }
 }
 
-void HX8347D::drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor) {
-    drawLine(aStartX, aStartY, aStartX + aDeltaX, aStartY + aDeltaY, aColor);
+void HX8347D::drawLineRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor) {
+    drawLine(aXStart, aYStart, aXStart + aXDelta, aYStart + aYDelta, aColor);
 }
-void HX8347D::drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
+void HX8347D::drawLine(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor) {
     int16_t dx, dy, dx2, dy2, err, stepx, stepy;
 
-    if (aStartX >= LOCAL_DISPLAY_WIDTH) {
-        aStartX = LOCAL_DISPLAY_WIDTH - 1;
+    if (aXStart >= LOCAL_DISPLAY_WIDTH) {
+        aXStart = LOCAL_DISPLAY_WIDTH - 1;
     }
-    if (aEndX >= LOCAL_DISPLAY_WIDTH) {
-        aEndX = LOCAL_DISPLAY_WIDTH - 1;
+    if (aXEnd >= LOCAL_DISPLAY_WIDTH) {
+        aXEnd = LOCAL_DISPLAY_WIDTH - 1;
     }
-    if (aStartY >= LOCAL_DISPLAY_HEIGHT) {
-        aStartY = LOCAL_DISPLAY_HEIGHT - 1;
+    if (aYStart >= LOCAL_DISPLAY_HEIGHT) {
+        aYStart = LOCAL_DISPLAY_HEIGHT - 1;
     }
-    if (aEndY >= LOCAL_DISPLAY_HEIGHT) {
-        aEndY = LOCAL_DISPLAY_HEIGHT - 1;
+    if (aYEnd >= LOCAL_DISPLAY_HEIGHT) {
+        aYEnd = LOCAL_DISPLAY_HEIGHT - 1;
     }
 
-    if ((aStartX == aEndX) || (aStartY == aEndY)) //horizontal or vertical line
+    if ((aXStart == aXEnd) || (aYStart == aYEnd)) //horizontal or vertical line
             {
-        fillRect(aStartX, aStartY, aEndX, aEndY, aColor);
+        fillRect(aXStart, aYStart, aXEnd, aYEnd, aColor);
     } else {
         //calculate direction
-        dx = aEndX - aStartX;
-        dy = aEndY - aStartY;
+        dx = aXEnd - aXStart;
+        dy = aYEnd - aYStart;
         if (dx < 0) {
             dx = -dx;
             stepx = -1;
@@ -477,97 +477,109 @@ void HX8347D::drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint1
         dx2 = dx << 1;
         dy2 = dy << 1;
         //draw line
-        drawPixel(aStartX, aStartY, aColor);
+        drawPixel(aXStart, aYStart, aColor);
         if (dx > dy) {
             err = dy2 - dx;
-            while (aStartX != aEndX) {
+            while (aXStart != aXEnd) {
                 if (err >= 0) {
-                    aStartY += stepy;
+                    aYStart += stepy;
                     err -= dx2;
                 }
-                aStartX += stepx;
+                aXStart += stepx;
                 err += dy2;
-                drawPixel(aStartX, aStartY, aColor);
+                drawPixel(aXStart, aYStart, aColor);
             }
         } else {
             err = dx2 - dy;
-            while (aStartY != aEndY) {
+            while (aYStart != aYEnd) {
                 if (err >= 0) {
-                    aStartX += stepx;
+                    aXStart += stepx;
                     err -= dy2;
                 }
-                aStartY += stepy;
+                aYStart += stepy;
                 err += dx2;
-                drawPixel(aStartX, aStartY, aColor);
+                drawPixel(aXStart, aYStart, aColor);
             }
         }
     }
 }
 
-void HX8347D::drawRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
-    fillRect(aStartX, aStartY, aStartX, aEndY, aColor);
-    fillRect(aStartX, aEndY, aEndX, aEndY, aColor);
-    fillRect(aEndX, aStartY, aEndX, aEndY, aColor);
-    fillRect(aStartX, aStartY, aEndX, aStartY, aColor);
-}
-
-void HX8347D::fillRectRel(uint16_t aStartX, uint16_t aStartY, uint16_t aWidth, uint16_t aHeight, color16_t aColor) {
-    fillRect(aStartX, aStartY, aStartX + aWidth - 1, aStartY + aHeight - 1, aColor);
+void HX8347D::drawRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor) {
+    if (aXDelta == 0 || aYDelta == 0) {
+        return;
+    }
+    if (aXDelta < 0) {
+        aXDelta += 2;
+    }
+    if (aYDelta < 0) {
+        aYDelta += 2;
+    }
+    drawRect(aXStart, aYStart, aXStart + aXDelta - 1, aYStart + aYDelta - 1, aColor);
 }
 
 /**
- * Fill rectangle starting upper left with aStartX, aStartY
- * and ending lower right at aEndX, aEndY including these values
+ * draw rectangle starting upper left with aXStart, aYStart
+ * and ending lower right at aXEnd, aYEnd including these values
  */
-void HX8347D::fillRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor) {
+void HX8347D::drawRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor) {
+    fillRect(aXStart, aYStart, aXStart, aYEnd, aColor);
+    fillRect(aXStart, aYEnd, aXEnd, aYEnd, aColor);
+    fillRect(aXEnd, aYStart, aXEnd, aYEnd, aColor);
+    fillRect(aXStart, aYStart, aXEnd, aYStart, aColor);
+}
+
+void HX8347D::fillRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor) {
+    if (aXDelta == 0 || aYDelta == 0) {
+        return;
+    }
+    /*
+     * Checks for negative, because fillRect includes the end position
+     */
+    if (aXDelta < 0) {
+        aXDelta += 2;
+    }
+    if (aYDelta < 0) {
+        aYDelta += 2;
+    }
+    fillRect(aXStart, aYStart, aXStart + aXDelta - 1, aYStart + aYDelta - 1, aColor);
+}
+
+/**
+ * Fill rectangle starting upper left with aXStart, aYStart
+ * and ending lower right at aXEnd, aYEnd including these values
+ */
+void HX8347D::fillRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor) {
     uint32_t size;
-    uint16_t tmp, i;
+    uint16_t tmp;
 
     /*
      * Swap if values are not as required
      * Costs 27 bytes
      */
-    if (aStartX > aEndX) {
-        tmp = aStartX;
-        aStartX = aEndX;
-        aEndX = tmp;
+    if (aXStart > aXEnd) {
+        tmp = aXStart;
+        aXStart = aXEnd;
+        aXEnd = tmp;
     }
-    if (aStartY > aEndY) {
-        tmp = aStartY;
-        aStartY = aEndY;
-        aEndY = tmp;
-    }
-
-    if (aEndX >= LOCAL_DISPLAY_WIDTH) {
-        aEndX = LOCAL_DISPLAY_WIDTH - 1;
-    }
-    if (aEndY >= LOCAL_DISPLAY_HEIGHT) {
-        aEndY = LOCAL_DISPLAY_HEIGHT - 1;
+    if (aYStart > aYEnd) {
+        tmp = aYStart;
+        aYStart = aYEnd;
+        aYEnd = tmp;
     }
 
-    setArea(aStartX, aStartY, aEndX, aEndY);
+    if (aXEnd >= LOCAL_DISPLAY_WIDTH) {
+        aXEnd = LOCAL_DISPLAY_WIDTH - 1;
+    }
+    if (aYEnd >= LOCAL_DISPLAY_HEIGHT) {
+        aYEnd = LOCAL_DISPLAY_HEIGHT - 1;
+    }
+
+    setArea(aXStart, aYStart, aXEnd, aYEnd);
 
     drawStart();
-    size = (uint32_t) (1 + (aEndX - aStartX)) * (uint32_t) (1 + (aEndY - aStartY));
-    tmp = size / 8;
-    if (tmp != 0) {
-        for (i = tmp; i != 0; i--) {
-            draw(aColor); //1
-            draw(aColor); //2
-            draw(aColor); //3
-            draw(aColor); //4
-            draw(aColor); //5
-            draw(aColor); //6
-            draw(aColor); //7
-            draw(aColor); //8
-        }
-        for (i = size - tmp; i != 0; i--) {
-            draw(aColor);
-        }
-    } else {
-        for (i = size; i != 0; i--) {
-            draw(aColor);
-        }
+    size = (uint32_t) (1 + (aXEnd - aXStart)) * (uint32_t) (1 + (aYEnd - aYStart));
+    for (; size != 0; size--) {
+        draw(aColor);
     }
     drawStop();
 }

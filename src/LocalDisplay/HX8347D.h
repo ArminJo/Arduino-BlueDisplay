@@ -1,7 +1,7 @@
 /*
  * HX8347D.h
  *
- *  Copyright (C) 2012-2023  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2026  Armin Joachimsmeyer
  *
  *  This file is part of Arduino-BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of android-blue-display https://github.com/ArminJo/android-blue-display.
@@ -55,20 +55,21 @@ public:
     /*
      * Basic hardware functions required for the text draw functions in LocalDisplayInterface
      */
-    void fillRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
-    void setArea(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY);
+    void fillRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
+    void setArea(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd);
     void drawStart();
     void draw(color16_t aColor);
     void drawStop();
 
     void clearDisplay(uint16_t aColor);
-    void drawPixel(uint16_t x0, uint16_t y0, uint16_t color);
-    void drawPixelFast(uint16_t x0, uint8_t y0, uint16_t color);
-    void drawLine(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
-    void drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor);
-    void drawLineFastOneX(uint16_t aStartX, uint16_t aStartY, uint16_t aEndY, color16_t aColor);
-    void drawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color);
-    void fillRectRel(uint16_t aStartX, uint16_t aStartY, uint16_t aWidth, uint16_t aHeight, uint16_t aColor);
+    void drawPixel(uint16_t aXPosition, uint16_t aYPosition, uint16_t color);
+    void drawPixelFast(uint16_t aXPosition, uint8_t aYPosition, uint16_t color);
+    void drawLine(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
+    void drawLineRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
+    void drawLineFastOneX(uint16_t aXStart, uint16_t aYStart, uint16_t aYEnd, color16_t aColor);
+    void drawRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, uint16_t color);
+    void drawRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, uint16_t aColor);
+    void fillRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, uint16_t aColor);
 
     void drawCircle(uint16_t aCenterX, uint16_t aCenterY, uint16_t aRadius, uint16_t aColor);
     void fillCircle(uint16_t aCenterX, uint16_t aCenterY, uint16_t aRadius, uint16_t aColor);

@@ -64,19 +64,20 @@ public:
     void drawPixel(uint16_t aXPos, uint16_t aYPos, color16_t aColor);
     void drawCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor);
     void fillCircle(uint16_t aXCenter, uint16_t aYCenter, uint16_t aRadius, color16_t aColor);
-    void fillRectRel(uint16_t aXStart, uint16_t aYStart, uint16_t aWidth, uint16_t aHeight, color16_t aColor);
+    void fillRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
     void drawTextVertical(uint16_t aXPos, uint16_t aYPos, const char *aStringPointer, uint8_t aSize, color16_t aColor,
             uint16_t aBackgroundColor);
     void drawLine(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
-    void drawLineRel(uint16_t aStartX, uint16_t aStartY, int16_t aDeltaX, int16_t aDeltaY, color16_t aColor);
-    void drawLineFastOneX(uint16_t x0, uint16_t y0, uint16_t y1, color16_t color);
-    void drawRect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, color16_t color);
+    void drawLineRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
+    void drawLineFastOneX(uint16_t aXStart, uint16_t aYStart, uint16_t aYEnd, color16_t color);
+    void drawRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t color);
+    void drawRectRel(uint16_t aXStart, uint16_t aYStart, int16_t aXDelta, int16_t aYDelta, color16_t aColor);
 
     /*
      * Basic hardware functions required for the draw functions below
      */
-    void fillRect(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY, color16_t aColor);
-    void setArea(uint16_t aStartX, uint16_t aStartY, uint16_t aEndX, uint16_t aEndY);
+    void fillRect(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd, color16_t aColor);
+    void setArea(uint16_t aXStart, uint16_t aYStart, uint16_t aXEnd, uint16_t aYEnd);
     void drawStart();
     void draw(color16_t aColor);
     void drawStop();

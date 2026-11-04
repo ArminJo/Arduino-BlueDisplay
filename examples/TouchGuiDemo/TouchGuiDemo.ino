@@ -7,7 +7,7 @@
  *
  *  Tested on: Arduino Uno with mSD-Shield and MI0283QT Adapter from www.watterott.net
  *
- *  Copyright (C) 2012-2024  Armin Joachimsmeyer
+ *  Copyright (C) 2012-2026  Armin Joachimsmeyer
  *
  *  This file is part of BlueDisplay https://github.com/ArminJo/Arduino-BlueDisplay.
  *  This file is part of STMF3-Discovery-Demos https://github.com/ArminJo/STMF3-Discovery-Demos.
@@ -42,8 +42,8 @@
  * Settings to configure the BlueDisplay library and to reduce its size
  */
 //#define BLUETOOTH_BAUD_RATE BAUD_115200   // Activate this, if you have reprogrammed the HC05 module for 115200, otherwise 9600 is used as baud rate
-//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
-//#define DO_NOT_NEED_TOUCH_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events.
+//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves 170 bytes program memory and 14 bytes RAM
+//#define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS  // Disables LongTouchDown and SwipeEnd events.
 //#define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
 //#define BD_USE_SIMPLE_SERIAL                // Do not use the Serial object. Saves up to 1250 bytes program memory and 185 bytes RAM, if Serial is not used otherwise
 //#define BD_USE_USB_SERIAL                   // Activate it, if you want to force using Serial instead of Serial1 for direct USB cable connection* to your smartphone / tablet.
@@ -59,13 +59,13 @@
 #define FONT_8X12               // Font size used here
 #include "LocalHX8347DDisplay.hpp" // The implementation of the local display must be included first since it defines LOCAL_DISPLAY_HEIGHT etc.
 #define DISPLAY_HEIGHT LOCAL_DISPLAY_HEIGHT // Use local size for whole application
-#define REMOTE_DISPLAY_WIDTH  LOCAL_DISPLAY_WIDTH
+#define DISPLAY_WIDTH  LOCAL_DISPLAY_WIDTH
 #include "GUIHelper.hpp"        // Must be included before LocalGUI. For TEXT_SIZE_11, getLocalTextSize() etc.
 #include "LocalGUI.hpp"         // Includes the sources for LocalTouchButton etc.
 #else
 #include "BlueDisplay.hpp"         // Includes the sources for LocalTouchButton etc.
-#define DISPLAY_HEIGHT 240 // Use same size as local display
-#define REMOTE_DISPLAY_WIDTH  320
+#define DISPLAY_WIDTH  DISPLAY_HALF_VGA_WIDTH  // 320  Use same size as local display
+#define DISPLAY_HEIGHT DISPLAY_HALF_VGA_HEIGHT // 240
 void initDisplay(void);
 #endif
 
@@ -87,7 +87,7 @@ uint32_t sMillisOfLastLoop;
 #define Button              BDButton
 #define AutorepeatButton    BDButton
 #define Slider              BDSlider
-#define Display             BlueDisplay1
+#define Display             BlueDisplay1 // for GuiDemo.hpp
 #  endif
 #endif
 
@@ -118,8 +118,8 @@ void setRTCTime(uint8_t sec, uint8_t min, uint8_t hour, uint8_t dayOfWeek, uint8
 #endif
 
 #if defined(DEBUG)
-TouchButton TouchButtonDebug;
-void doDebug(TouchButton * const aTheTouchedButton, int aValue);
+Button TouchButtonDebug;
+void doDebug(Button * const aTheTouchedButton, int aValue);
 #endif
 
 /*
@@ -208,7 +208,7 @@ void loop() {
 
 #if !defined(DISABLE_REMOTE_DISPLAY)
 void initDisplay(void) {
-    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, REMOTE_DISPLAY_WIDTH, DISPLAY_HEIGHT);
+    BlueDisplay1.setFlagsAndSize(BD_FLAG_FIRST_RESET_ALL | BD_FLAG_USE_MAX_SIZE, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 #if defined(SUPPORT_LOCAL_DISPLAY)
     LocalTouchButton::createAllLocalButtonsAtRemote(); // Local buttons already exists, so recreate the remote ones
 #else

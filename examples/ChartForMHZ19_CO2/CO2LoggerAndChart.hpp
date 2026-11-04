@@ -29,7 +29,6 @@
 #ifndef _CO2_LOGGER_AND_CHART_HPP
 #define _CO2_LOGGER_AND_CHART_HPP
 
-//#define DO_NOT_NEED_BASIC_TOUCH_EVENTS    // Disables basic touch events down, move and up. Saves 620 bytes program memory and 36 bytes RAM
 #define DO_NOT_NEED_LONG_TOUCH_DOWN_AND_SWIPE_EVENTS    // Disables LongTouchDown and SwipeEnd events.
 #define DO_NOT_NEED_SPEAK_EVENTS            // Disables SpeakingDone event handling. Saves up to 54 bytes program memory and 18 bytes RAM.
 #define ONLY_CONNECT_EVENT_REQUIRED         // Disables reorientation, redraw and SensorChange events
@@ -575,8 +574,9 @@ void initCO2Chart() {
     sCO2ArrayDisplayStart = sCO2Array;
     CO2Chart.initXLabelTimestampForLabelScaleIdentity(0, SECONDS_IN_ONE_DAY / 2, 5); // Increment is 1/2 day at X label scale factor 1
     // PowerChart.setXLabelDistance(2); // Draw label at every 2. grid line except for 1/2 day => Actual label distance is set by doDays()
-    CO2Chart.setXBigLabelDistance(2);   // Show day date label bigger
+    CO2Chart.setXBigDateLabelDistance(2);   // Show day date label bigger
     CO2Chart.setLabelStringFunction(convertUnixTimestampToHourString);
+    CO2Chart.setBigDateLabelStringFunction(convertUnixTimestampToDateString);
 
     CO2Chart.initYLabel(CO2_BASE_VALUE, CHART_Y_LABEL_INCREMENT, CO2_COMPRESSION_FACTOR, 4, 0); // 200 ppm per grid, 5 for input 1 per 5 ppm , 4 is minimum label string width
 
@@ -648,11 +648,9 @@ void drawCO2Chart() {
     uint8_t tFullDays = ((sChartHoursToDisplay - 1) / HOURS_IN_ONE_DAY) + 1; // Results in 1 for values <= 24
 #if defined(USE_C_TIME)
     CO2Chart.drawXAxisAndDateLabels(
-            BlueDisplay1.getHostUnixTimestamp() - ((tFullDays * SECONDS_IN_ONE_DAY) + tDifferenceToLastMidnightInSeconds),
-            convertUnixTimestampToHourString);
+            BlueDisplay1.getHostUnixTimestamp() - ((tFullDays * SECONDS_IN_ONE_DAY) + tDifferenceToLastMidnightInSeconds));
 #else
-    CO2Chart.drawXAxisAndDateLabels(now() - ((tFullDays * SECONDS_IN_ONE_DAY) + tDifferenceToLastMidnightInSeconds),
-            convertUnixTimestampToDateString);
+    CO2Chart.drawXAxisAndDateLabels(now() - ((tFullDays * SECONDS_IN_ONE_DAY) + tDifferenceToLastMidnightInSeconds));
 #endif
 
     CO2Chart.drawYAxisAndLabels(); // this will restore the overwritten 400 label

@@ -16,7 +16,7 @@
   "license": "GPL-3.0-or-later",
   "frameworks": "arduino",
   "platforms": ["atmelavr", "atmelmegaavr", "espressif8266", "espressif32", "ststm32"],
-  "headers": "BlueDisplay.h",
+  "headers": "BlueDisplay.hpp",
   "examples": "examples/*/*.ino",
   "export": {"exclude": [".github", "pictures"]}
 }
